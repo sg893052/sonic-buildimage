@@ -40,6 +40,8 @@ If smaller features can get to the second pass within 1 to 2 weeks of starting, 
 
 ## 1.1 Requirements
 
+![](http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png)
+
 ### 1.1.1 Functional Requirements
 
 Requirement guidance: -
