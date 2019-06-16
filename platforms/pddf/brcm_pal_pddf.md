@@ -53,7 +53,11 @@ Platform Driver Development Framework (PDDF)
 | 0.2 | 06/06/2019  |  Systems Infra Team     | Incorporated feedback             |
 
 # About this Manual
-This document describes a data driven framework called Platform Driver Development Framework (PDDF). This framework  enables platform vendors to rapidly develop the device specific custom drivers and SONiC user space python plugins, using a data driven architecture, to manage platform devices like Fan, PSUs, LEDs, Optics, System EEPROM, etc., and validate a platform on SONiC. 
+Platform Driver Development Framework (PDDF) is part of SONiC Platform Development Kit (PDK) which optimizes the platform development. PDK consists of 
+ - PDDF (Platform Driver Development Framework): For optimized data-driven platform driver and SONiC plugin development
+ - PDE (Platform Development Environment): For optimized build and test of platform and SAI code
+
+PDE details are covered in another document. This document describes Platform Driver Development Framework (PDDF) which can be used as an alternative to the existing manually-written SONiC platform driver framework. It enables platform vendors to rapidly develop the device specific custom drivers and SONiC user space python plugins, using a data-driven architecture, to manage platform devices like Fan, PSUs, LEDs, Optics, System EEPROM, etc., and validate a platform on SONiC. 
 
 # Scope
 This document describes the high level design details of PDDF and its components. The PDDF consists of generic device drivers and user space platform API plugins which use the per platform specific data in the JSON descriptor files. This document describes the interaction between all the components and the tools used to support these drivers and plugins.  
@@ -65,7 +69,9 @@ This document describes the high level design details of PDDF and its components
 |--------------------------|-------------------------------------|
 | ODM                      | Original Design Manufacturer        |
 | OEM                      | Original Equipment Manufacturer        |
-| PDDF                      | Platform Driver Development Framework             |
+| PDDF                      | Platform Driver Development Framework         |
+| PDE                       | Platform Development Environment              |
+| PDK                      | Platform Development Kit              |
 | SAI                      | Switch Abstraction Interface |
 | PSU                      | Power Supply Unit |
 | I2C                      | Inter-integrated Circuit communication protocol |
@@ -212,11 +218,13 @@ These plugins use the per platform JSON descriptor files to use the appropriate 
 #### 3.1.4 Source code organization and Packaging
 PDDF source code is mainly organized into platform dependent data files(JSON descriptors), generic PDDF  driver modules, generic  plugins, generic utils, and start up scripts.
 
- - /service/sonic-buildimage/src/sonic-platform-common/pddf
+ - /service/sonic-buildimage/platform/pddf
 	  - modules
+	  - init
+
+ - /service/sonic-buildimage/src/sonic-platform-common/pddf
 	  - plugins
 	  - utils
-	  - init
 	  
  - JSON descriptor files should be placed in the "pddf/json" directory under the respective "/sonic-buildimage/platform/" directory path. For example:
 	 - sonic-buildimage/platform/broadcom/sonic-platform-modules-accton/as7712-32x/pddf/json/\<descriptor.json\>)
