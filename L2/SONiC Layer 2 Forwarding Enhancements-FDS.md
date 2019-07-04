@@ -360,74 +360,88 @@ If the number of VLANs in the range commands is high, the time it takes to perfo
 
 **Data structure changes**
 
-1. Verify that FDB internal map is updated properly when a FDB entry is added/deleted in hardware or when a static FDB entry is added/deleted.
+ 1. Verify that FDB internal map is updated properly when a FDB entry is added/deleted in hardware or when a static FDB entry is added/deleted.
 
-2. Verify that SAI Object ID to port/VLAN name mapping table is updated properly when a port/port-channel or VLAN is added/removed
+ 2. Verify that SAI Object ID to port/VLAN name mapping table is updated properly when a port/port-channel or VLAN is added/removed
 
 **FDB flush**
 
-3. Verify that dynamic fdb entries are flushed in hardware, orchagent data structure and other DBs when a port/portchannel operational state goes down.
+ 3. Verify that dynamic fdb entries are flushed in hardware, orchagent data structure and other DBs when a port/portchannel operational state goes down.
 
-4. Verify that dynamic fdb entries are flushed in hardware, orchagent data structure and other DBs when a port/portchannel admin state goes down.
+ 4. Verify that dynamic fdb entries are flushed in hardware, orchagent data structure and other DBs when a port/portchannel admin state goes down.
 
-5. Verify that FDB entries are added back properly when the port comes back operationally up.
+ 5. Verify that FDB entries are added back properly when the port comes back operationally up.
 
-6. Verify that both static and dynamic fdb entries are flushed in hardware, orchagent data structure, STATE_DB and ASIC_DB when a port is removed from VLAN.
+ 6. Verify that both static and dynamic fdb entries are flushed in hardware, orchagent data structure, STATE_DB and ASIC_DB when a port is removed from VLAN.
 
-7. Verify that the flushed static FDB entries are stored in saved FDB in orchagent.
+ 7. Verify that the flushed static FDB entries are stored in saved FDB in orchagent.
 
-8. Verify that FDB entries are added back properly when the port is added back to the vlan.
+ 8. Verify that FDB entries are added back properly when the port is added back to the vlan.
 
-9. Verify that dynamic fdb entries are flushed in hardware, orchagent data structure and other DBs when 'sonic-clear fdb all" command is issued.
+ 9. Verify that dynamic fdb entries are flushed in hardware, orchagent data structure and other DBs when 'sonic-clear fdb all" command is issued.
 
-10. Verify that dynamic fdb entries on a port are flushed in hardware, orchagent data structure and other DBs when 'sonic-clear fdb port" command is issued.
+ 10. Verify that dynamic fdb entries on a port are flushed in hardware, orchagent data structure and other DBs when 'sonic-clear fdb port" command is issued.
 
-11. Verify that dynamic fdb entries on a VLAN are flushed in hardware, orchagent data structure and other DBs when 'sonic-clear fdb vlan" command is issued.
+ 11. Verify that dynamic fdb entries on a VLAN are flushed in hardware, orchagent data structure and other DBs when 'sonic-clear fdb vlan" command is issued.
 
-12. Verify that mac are learnt properly again after flush due to 'sonic-clear' command.
+ 12. Verify that mac are learnt properly again after flush due to 'sonic-clear' command.
 
-13. Send traffic from same MAC, VLAN to a different port and verify that mac is updated in hardware, ASIC_DB, STATE_DB and orchagent data structure.
+ 13. Send traffic from same MAC, VLAN to a different port and verify that mac is updated in hardware, ASIC_DB, STATE_DB and orchagent data structure.
 
 **FDB Aging time configuration**
 
-14. Set FDB aging time from CLI and verify that FDB entries age out after that interval.
+ 14. Set FDB aging time from CLI and verify that FDB entries age out after that interval.
 
-15. Verify that FDB aging time takes effect after configuration is saved and switch is rebooted.
+ 15. Verify that FDB aging time takes effect after configuration is saved and switch is rebooted.
 
 **Static FDB entry configuration**
 
-16. Verify that Static FDB entry configured from CLI is added in hardware and all other DBs.
+ 16. Verify that Static FDB entry configured from CLI is added in hardware and all other DBs.
 
-18. Verify that if port is not member of VLAN, Static FDB entry is added in CONFIG_DB, APP_DB and saved FDB in orchagent.
+ 17. Verify that if port is not member of VLAN, Static FDB entry is added in CONFIG_DB, APP_DB and saved FDB in orchagent.
 
-19. Verify that Static FDB entry is effective after configuration is saved and switch is rebooted..
+ 18. Verify that Static FDB entry is effective after configuration is saved and switch is rebooted..
 
 **Warm restart**
 
-20. Verify that Aging time and static MAC configuration are re-applied after switch, swss docker, syncd and orchagent warm reboot.
+ 19. Verify that Aging time and static MAC configuration are re-applied after switch, swss docker, syncd and orchagent warm reboot.
 
-21. Verify that FDb entries are synchronized after Orchagent unplanned reboot if the reboot happens while FDB flush is in progress.
+ 20. Verify that FDb entries are synchronized after Orchagent unplanned reboot if the reboot happens while FDB flush is in progress.
 
 **Scale test**
 
-22. Verify 8K FDB entry learning. All entries should be added to various DBs, hardware and Orchagent data structure.
+ 21. Verify 8K FDB entry learning. All entries should be added to various DBs, hardware and Orchagent data structure.
 
-23. Verify 8K FDB entry aging. All entries should be deleted from various DBs, hardware and Orchagent data structures.
+ 22. Verify 8K FDB entry aging. All entries should be deleted from various DBs, hardware and Orchagent data structures.
 
-24. Verify 8K FDB entry flush per port, per VLAN and per port per VLAN.
+ 23. Verify 8K FDB entry flush per port, per VLAN and per port per VLAN.
 
-26. Learn 8K FDB entries on 4094 VLANs and verify the above cases.
+ 24. Learn 8K FDB entries on 4094 VLANs and verify the above cases.
 
 **VLAN Range:**
 
-27. Validate VLAN identifier in VLAN range commands.
-28. Check log messages (when '-w' option is provided) for overlapping and non-existent VLANs provided in VLAN range commands. Any conflicting configuration (for example: portchannel having an IP address configured being configured to participate in a VLAN) results in warning messages. Messages are grouped and displayed after the execution of the commands.
-29. Validate the port data provided in VLAN member range command.
-30. Validate the traffic flow after the VLANs are created and member ports are added.
-31. Ensure the ports removed from the VLANs are excluded from the hardware by sending matching traffic flows.
-32. Ensure the deletion of range of VLANs is successful.
-33. Create a range of VLANs and save the configuration. Check for the existence of VLANs after reload operation.
-34. Remove few VLANs randomly after executing the command to create a range of VLANs. Check for the existence of the rest of the VLANs.
+ 25. Validate VLAN identifier in VLAN range commands.
+ 26. Check log messages (when '-w' option is provided) for overlapping and non-existent VLANs provided in VLAN range commands. Any conflicting configuration (for example: portchannel having an IP address configured being configured to participate in a VLAN) results in warning messages. Messages are grouped and displayed after the execution of the commands.
+ 27. Validate the port data provided in VLAN member range command.
+ 28. Validate the traffic flow after the VLANs are created and member ports are added.
+ 29. Ensure the ports removed from the VLANs are excluded from the hardware by sending matching traffic flows.
+ 30. Ensure the deletion of range of VLANs is successful.
+ 31. Create a range of VLANs and save the configuration. Check for the existence of VLANs after reload operation.
+ 32. Remove few VLANs randomly after executing the command to create a range of VLANs. Check for the existence of the rest of the VLANs.
+
+**Negative UT cases:**
+
+ 33. Add static mac MAC1 with P1 and V1; create V1; Add P1 member of V1; check static mac is installed; remove P1 as member of V1; remove V1; remove MAC1
+ 34. Add mac address to a vlan which does not exist and later delete the mac address (operator typo errors and corrective action)
+ 35. Add mac address to an out of range vlan and later delete the mac address (operator typo errors and corrective action)
+ 36. Add mac address to an invalid port and later delete the mac address (operator typo errors and corrective action)
+ 37. Simulate mac learn event for a port which is not part of vlan (timing scenario between orchagent/syncd while updating ASIC-db).
+ 38. Simulate mac learn event for a vlan which does not exist (timing scenario between orchagent/syncd while updating ASIC-db).
+ 39. Simulate mac age event for a port which is not part of vlan (timing scenario between orchagent/syncd while updating ASIC-db).
+ 40. Simulate mac age event for a vlan which does not exist (timing scenario between orchagent/syncd while updating ASIC-db).
+ 41. Simulate mac age event for a mac address which does not exist (timing scenario between orchagent/syncd while updating ASIC-db).
+ 42. Simulate MAC_MOVE event for a bridgeport which does not exist (timing scenario between orchagent/syncd while updating ASIC-db).
+ 
 
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbMTU1NzM0MzYwNywtNjE4MzIyOCwxNzAzNj
@@ -438,3 +452,4 @@ MzI0Mzk0LDE1MzA1MDA2MDgsMzU4Nzg3NjE3LDQ3NzIyNzI2Ni
 wtMTk2MDMyNTE0OSwtMTQwOTUzNDYyNCwtMjA4NjI2MjIzOV19
 
 -->
+
