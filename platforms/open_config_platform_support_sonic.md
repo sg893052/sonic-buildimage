@@ -1,18 +1,15 @@
-﻿## Feature Name
+﻿# Feature Name
 Open Config Platform Model Support in SONiC
-
-## Heading
-Rev 0.1
 
 ## Table of Contents
  * [Revision](#revision)
  * [About This Manual](#about-this-manual)
- * [Requirements Overview](#requirements-overview)
-	 * [Open Config Platform Model Support](#open-config-platform-model-support)
-*	[Design](#design)
-	*	[Platform daemons and Utils](#platform-daemons-and-utils)
-	*	[DB Schema for Platform related data](#db-schema-for-platform-related-data)
-	*	[SONiC Plugins](#sonic-plugins)
+ * [Requirements Overview](#1-requirements-overview)
+	 * [Open Config Platform Model Support](#1_1-open-config-platform-model-support)
+*	[Design](#2-design)
+	*	[Platform daemons and Utils](#2_1-platform-daemons-and-utils)
+	*	[DB Schema for Platform related data](#2_2-db-schema-for-platform-related-data)
+	*	[SONiC Plugins](#2_3-sonic-plugins)
 
 # Revision
 | Rev |     Date    |       Author       | Change Description                |
@@ -23,43 +20,45 @@ Rev 0.1
 This document describes the support for open config platform models in SONiC, based on the old platform APIs. This support is based on the enhanced 1.0 platform model APIs, and follows the highlighted design in the new PMON enhancement design here:
 https://github.com/Azure/SONiC/blob/master/doc/pmon/pmon-enhancement-design.md]
 
-## 1. Requirements Overview
+## 1 Requirements Overview
 Support Open Config Platform data models in SONiC for the following components:
  - System EEPROM
  - FAN	
  - PSU (Power supply units)
  - Transceivers
-### 1.1	Open Config Platform Model Support
+### 1.1 Open Config Platform Model Support
 Support a subset of open config platform attributes for the following components:
  - System EEPROM
 	- base_mac_addr     : base mac address from syseeprom
 	- mac_addr_num      : mac address numbers from syseeprom
-	- manufacture_date  : manufature date from syseeprom 	
-	- manufacture       : manufaturer from syseeprom 	
-	- platform_name     : platform name from   syseeprom 	
+	- manufacture_date  : manufacture date from syseeprom 	
+	- manufacturer      : manufacturer from syseeprom 	
+	- platform_name     : platform name from syseeprom 	
 	- onie_version      : onie version from syseeprom
 
  - FAN
 	- status : Operational state of Fan
 	- speed : Fan speed in RPM 
+	- speed_rear : Rear Fan speed in RPM 
 	- direction : Fan Airflow direction (Intake/Exhaust)
 	- presence : Fan presence check
  - PSU
 	- status : Operational state of PSU
 	- presence : PSU presence check
-	- capacity : Power capacity of the PSU
-	- input_current : Input current
-	- input_voltage : Input Voltage
-	- output_voltage  : Output voltage
-	- output_current : Output current
-	- output_power : Output power
+	- model : PSU model name
+	- serial : PSU serial number
+	- mfr_id : Manufacturer Id of PSU
+	- output_voltage  : Output voltage in mV
+	- output_current : Output current in mA
+	- output_power : Output power in mW
+	- fan : Name of the PSU-fan
 	- fan_status : Operational state of Fan
 	- fan_speed : Fan speed in RPM 
 	- fan_direction : Fan Airflow direction (Intake/Exhaust)
 -	Transceiver
 <**TBD**> Need more time to analyze the open config model and the SONiC capabilities. Requires all round analysis.
 
-## 2. Design
+## 2 Design
 The design will follow the design proposed here:
 [https://github.com/Azure/SONiC/blob/master/doc/pmon/pmon-enhancement-design.md](https://github.com/Azure/SONiC/blob/master/doc/pmon/pmon-enhancement-design.md)
 
@@ -91,7 +90,8 @@ key                     = FAN_INFO|fan_name              ; information for the f
 presence                = BOOLEAN                        ; presence of the fan
 status                  = BOOLEAN                        ; status of the fan
 direction               = STRING                         ; direction of the fan
-speed                   = INT                            ; fan speed
+speed                   = INT                            ; fan speed in RPM (front fan in case of 2-fan tray)
+speed_rear              = INT                            ; rear fan speed in RPM
 ```
 #### 2.2.3 PSU Table
 This table would be used to store the PSU information. Following attributes shall be leveraged. 
@@ -106,29 +106,26 @@ status                  = BOOLEAN                        ; status of the fan
 Following attributes are proposed to be added to the PMON enhancement design:
 ```
 ; field                 = value
-capacity                = STRING                        ; Power capacity of the PSU
-input_current 			= STRING 						; Input current
-input_voltage 			= STRING						; Input Voltage
-output_voltage  		= STRING 						; Output voltage
-output_current 			= STRING 						; Output current
-output_power 			= STRING 						; Output power
+mfr_id					= STRING                        ; Manufacturer Id of the PSU
+output_voltage          = STRING                        ; Output voltage in mV
+output_current          = STRING                        ; Output current in mA
+output_power            = STRING                        ; Output power in mW
 ```
 Following PSU Fan related information shall be stored in the FAN table
 ```
 ; Defines information for a PSU fan
-key                     = FAN_INFO|fan_name              ; information for the fan
+key                     = PSU_FAN_INFO|fan_name          ; information for the fan
 ; field                 = value
-presence                = BOOLEAN                        ; presence of the fan
-status                  = BOOLEAN                        ; status of the fan
-direction               = STRING                         ; direction of the fan
-speed                   = INT                            ; fan speed
+presence                = BOOLEAN                        ; presence of the PSU-fan
+status                  = BOOLEAN                        ; status of the PSU-fan
+direction               = STRING                         ; direction of the PSU-fan
+speed                   = INT                            ; PSU-fan speed in RPM
 ```
 ### 2.3 SONiC Plugins
-SONiC 1.0 platform APIs  supported only the following plugins:
+SONiC 1.0 platform APIs  support only the following plugins:
 
 -	PsuBase
 -	SfpUtilBase
--	
 
 SONiC 2.0 platform APIs support newer plugins. However to support platforms implementing 1.0 APIs, following changes are proposed:
 
@@ -138,21 +135,24 @@ SONiC 2.0 platform APIs support newer plugins. However to support platforms impl
 #### 2.3.1 FanBase
 ```
 class FanBase(object):
-	@abc.abstractmethod
+    @abc.abstractmethod
     def get_num_fans(self):
     
     @abc.abstractmethod
-    def get_fan_status(self, index):
+    def get_status(self, index):
     
     @abc.abstractmethod
-    def get_fan_presence(self, index):
+    def get_presence(self, index):
     
     @abc.abstractmethod
-    def get_fan_direction(self, index):
+    def get_direction(self, index):
     
     @abc.abstractmethod
-    def get_fan_speed(self, index):
+    def get_speed(self, index):
     
+    @abc.abstractmethod
+    def get_speed_rear(self, index):
+
     @abc.abstractmethod
     def set_speed(self, val):
 ```
@@ -161,27 +161,32 @@ class FanBase(object):
 ```
 class PsuBase:
 
-	@abc.abstractmethod
+    @abc.abstractmethod
     def get_num_psus(self):
 
-	@abc.abstractmethod
+    @abc.abstractmethod
     def get_psu_status(self, index):
 
-	@abc.abstractmethod
+    @abc.abstractmethod
     def get_psu_presence(self, index):
     
 	; New APIs
 	
-    def get_psu_output_voltage(self, idx):
+    def get_model(self, idx):
 
-    def get_psu_output_current(self, idx):
+    def get_mfr_id(self, idx):
 
-    def get_psu_output_power(self, idx):
+    def get_serial(self, idx):
 
-    def get_psu_fan1_rpm(self, idx):
+    def get_output_voltage(self, idx):
+
+    def get_output_current(self, idx):
+
+    def get_output_power(self, idx):
+
+    def get_fan_rpm(self, psu_idx, fan_index):
 	
-	def get_psu_fan1_direction(self, idx):
+    def get_direction(self, idx):
 	
-	def get_psu_fan1_status(self, idx):
    ```
 
