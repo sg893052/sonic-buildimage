@@ -451,23 +451,23 @@ This command shows the threshold breaches recorded by the system.
 
 ### 3.6.4 Clear commands
 
-1) clear priority-group threshold {port_alias} {PGindex} {shared \| headroom}
+1) sonic-clear priority-group threshold {port_alias} {PGindex} {shared \| headroom}
 
 This command can be used to clear a previously configured threshold on shared/headroom priority-group buffer of a port.
 
-2) clear priority-group threshold 
+2) sonic-clear priority-group threshold 
 
 This command can be used to clear all currently configured priority-group thresholds. 
 	
-3) clear queue threshold {port_alias} {queueindex} {unicast \| multicast}
+3) sonic-clear queue threshold {port_alias} {queueindex} {unicast \| multicast}
 
 This command can be used to clear a previously configured threshold on unicast/multicast queue buffer of a port.
 
-4) clear queue threshold 
+4) sonic-clear queue threshold 
 
 This command can be used to clear all currently configured priority-group thresholds.
 
-5) clear threshold breach {eventid}
+5) sonic-clear threshold breach {eventid}
 
 This command can be used to clear all/particular threshold breaches recorded by the system. The event-id when provided specifies the breach event index (index is indicated in the output of show threshold breaches).
 
