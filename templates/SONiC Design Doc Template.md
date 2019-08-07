@@ -1,3 +1,4 @@
+
 # Feature Name
 Layer 2 Forwarding Enhancements.
 # High Level Design Document
@@ -54,8 +55,17 @@ See example file in template folder
 Which UI's will be provided for the feature? 
 How will those UI's be implemented. Options might be:
 - "Old" SONiC CLI (as of 201904 release)
-- New SONiC Management Framework (Broadcom-provided in 201908 and beyond)
-- Use/extend existing non-SONiC UI (e.g. FRR)
+- New SONiC Management Framework (Broadcom-provided in 201908 and beyond). CLI commands should be implemented in the SONiC IS-CLI within the KLISH framework. Any exceptions to this should be highlighted for discussion.
+- Commands should be added in the appropriate manner, including:
+--  Command modes
+-- Authorization
+-- Following IS-CLI syntax (incl "no" form)
+-- Usage / Help string
+-- Command line completion options
+-- Error messages
+-- Proper show output formats
+
+- [Use/extend] existing non-SONiC UI ([e.g.] FRR)
 
 ### 1.1.3 Scalability Requirements
 key scaling factors
@@ -81,9 +91,9 @@ Wordy description
 
 # 3 Design
 ## 3.1 Overview
-big picture view of the actors involved
+big picture view of the actors involved.
 ## 3.2 DB Changes
-Describe changes to existing DBs or any new DB being added
+Describe changes to existing DBs or any new DB being added.
 ### 3.2.1 CONFIG DB
 ### 3.2.2 APP DB
 ### 3.2.3 STATE DB
@@ -93,15 +103,34 @@ Describe changes to existing DBs or any new DB being added
 ## 3.3 Switch State Service Design
 ### 3.3.1 Orchestration Agent
 ### 3.3.2 Other Process 
-Describe changes to other process within SwSS if applicable
+Describe changes to other process within SwSS if applicable.
 
 ## 3.4 SyncD
-Describe changes to syncd if applicable
+Describe changes to syncd if applicable.
 
 ## 3.5 SAI
-Describe new/existing SAI APIs used by this feature
+Describe new/existing SAI APIs used by this feature.
 
 ## 3.6 CLI
+### 3.6.2 IS-CLI Compliance
+The following table maps SONIC CLI commands to corresponding IS-CLI commands. The compliance column identifies how the command comply to the IS-CLI syntax:
+
+- **IS-CLI drop-in replace**  – meaning that it follows exactly the format of a pre-existing IS-CLI command.
+- **IS-CLI-like**  – meaning that the exact format of the IS-CLI command could not be followed, but the command is similar to other commands for IS-CLI (e.g. IS-CLI may not offer the exact option, but the command can be positioned is a similar manner as others for the related feature).
+- **SONIC** - meaning that no IS-CLI-like command could be found, so the command is derived specifically for SONIC.
+
+|CLI Command|Compliance|IS-CLI Command (if applicable)| Link to the web site identifying the IS-CLI command (if applicable)|
+|:---:|:-----------:|:------------------:|-----------------------------------|
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+
+**Deviations from IS-CLI:** If there is a deviation from IS-CLI, Please state the reason(s).
+
 ### 3.6.1 Data Models
 Can be reference to YANG if applicable
 ### 3.6.2 Configuration Commands
@@ -110,23 +139,23 @@ Can be reference to YANG if applicable
 ### 3.6.5 REST API Support
 
 # 4 Flow Diagrams
-Provide flow diagrams for inter-container and intra-container interactions
+Provide flow diagrams for inter-container and intra-container interactions.
 
 # 5 Error Handling
-Provide details about incorporating error handling into the design and functionality of this feature
+Provide details about incorporating error handling feature into the design and functionality of this feature.
 
 # 6 Serviceability and Debug
-Logging, counters, stats, trace considerations
+Logging, counters, stats, trace considerations. Please make sure you have incorporated the debugging framework feature. e.g., ensure your code registers with the debugging framework and add your dump routines for any debug info you want to be collected. 
 
 # 7 Warm Boot Support
-Describe expected behavior and any limitation
+Describe expected behavior and any limitation.
 
 # 8 Scalability
-Describe key scaling factor and considerations
+Describe key scaling factor and considerations.
 
 # 9 Unit Test
-List unit test cases added for this feature including warm boot
+List unit test cases added for this feature including warm boot.
 
 # 10 Internal Design Information
-Internal BRCM information to be removed before sharing with the community
- 
+Internal BRCM information to be removed before sharing with the community.
+
