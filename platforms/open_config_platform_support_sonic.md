@@ -10,11 +10,13 @@ Open Config Platform Model Support in SONiC
 	*	[Platform daemons and Utils](#2_1-platform-daemons-and-utils)
 	*	[DB Schema for Platform related data](#2_2-db-schema-for-platform-related-data)
 	*	[SONiC Plugins](#2_3-sonic-plugins)
+	*	[SONiC CLI (Click-based) Support](#2_4-sonic-cli-click-based-support)
 
 # Revision
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 07/17/2019  |  Babu Rajaram     | Initial version                   |
+| 0.2 | 08/23/2019  |  Syd Logan        | Describe CLI support              |
 
 # About this Manual
 This document describes the support for open config platform models in SONiC, based on the old platform APIs. This support is based on the enhanced 1.0 platform model APIs, and follows the highlighted design in the new PMON enhancement design here:
@@ -188,5 +190,89 @@ class PsuBase:
 	
     def get_direction(self, idx):
 	
-   ```
+```
+### 2.4 SONiC CLI (Click-based) Support
+
+The following "show" CLI commands are added to support display of
+psu and fan data. These commands obtain the data displayed directly
+from the Redis DB as described above. The commands are:
+
+  - show platform psusummary
+  - show platform fanstatus
+
+#### 2.4.1 show platform psusummary
+
+Usage: 
+
+```
+show platform psusummary
+```
+
+On platforms that do not support the additional PSU summary attributes, the following would be displayed:
+
+```
+root@sonic:~# show platform psusummary
+PSU 1: OK
+Manufacturer Id: None
+Model: None
+Serial Number: None
+Output Voltage (mV): None
+Output Current (mA): None
+Output Power (mW): None
+Fan Direction: None
+Fan Speed (RPM): None
+
+PSU 2: NOT OK
+root@sonic:~# 
+```
+
+When supported:
+
+```
+root@sonic:~# show platform psusummary
+PSU 1: OK
+Manufacturer Id: 3Y POWER
+Model: YM-2651
+Serial Number: SA250N091714082869
+Output Voltage (mV): 11953
+Output Current (mA): 9984
+Output Power (mW): 117000
+Fan Direction: INTAKE
+Fan Speed (RPM): 4896
+
+PSU 2: NOT OK
+root@sonic:~# 
+```
+
+Note that in the above, PSU 1 is present and has a status of 'true' in 
+the database, while PSU 2 is present but has a status of 'false'.
+
+#### 2.4.2 show platform fanstatus
+
+Usage:
+
+```
+show platform fanstatus
+```
+
+On platforms that do not support the Fan plugin, the command generates no output:
+
+```
+root@sonic:~# show platform fanstatus
+root@sonic:~# 
+```
+
+When supported, a list of fans and associated status are displayed:
+
+```
+root@sonic:~# show platform fanstatus
+FAN    Status      Front Speed (RPM)    Rear Speed (RPM)  Direction
+-----  --------  -------------------  ------------------  -----------
+FAN 1  OK                       7700                7100  INTAKE
+FAN 2  OK                       7700                7100  INTAKE
+FAN 3  OK                       7600                6900  INTAKE
+FAN 4  OK                       7500                6900  INTAKE
+FAN 5  OK                       7800                7000  INTAKE
+FAN 6  OK                       7700                6900  INTAKE
+```
 
