@@ -1,6 +1,6 @@
 # Debug Framework in SONiC
 # Design Specification
-#### Rev 0.3
+#### Rev 0.4
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -15,7 +15,8 @@
   * [5. Serviceability and Debug](#5-serviceability-and-debug)
   * [6. Warm Boot Support](#6-warm-boot-support)
   * [7. Scalability](#7-scalability)
-  * [8. Unit Test](#8-unit-test)
+  * [8. Usage Guidelines](#8-usage-guidelines)
+  * [9. Unit Test](#9-unit-test)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)  
@@ -27,6 +28,7 @@
 | 0.1 | 05/19/2019 | Anil Sadineni, Laveen T     | Initial version            |
 | 0.2 | 05/31/2019 | Anil Sadineni, Laveen T     | Address comments from Ben  |
 | 0.3 | 07/22/2019 | Anil Sadineni, Laveen T     | Internal review comments   |
+| 0.4 | 08/23/2019 | Anil Sadineni, Laveen T     | Updated CLI Section and added Usability details|
 
 # About this Manual
 This document provides general information about the debug framework and additional debug features implementation in SONiC.
@@ -49,7 +51,7 @@ This document describes the above scope.
 
 | **Term**          | **Meaning**                                                                                           |
 |-------------------|-------------------------------------------------------------------------------------------------------|
-|   Singleton       |  The singleton pattern is a design pattern that restricts the instantiation of a class to one object. |              |
+|   Singleton       |  The singleton pattern is a design pattern that restricts the instantiation of a class to one object. |
 
 # 1 Requirements
 ## 1.1 Functional Requirements
@@ -204,28 +206,27 @@ DebugDumpOrch
 
 ##### 3.1.1.1.2 Triggers to OrchAgent 
 
-show commands will act as triggers for OrchAgent.  
+show commands will act as triggers for OrchAgent.
+
 Syntax:  `show debug <component> <command> <option-1> <option-2> ... <option-n>`  
 
-Definition of command and required options are left to the component module owners. Sample CLI section descripes few examples on how the "show debug" CLI command can be used.  
+Definition of command and required options are left to the component module owners. Debug CLI section below descripes few examples on how the "show debug" CLI command can be used.  
 
-##### 3.1.1.1.3 Sample CLI
-*RouteOrch:*  
+##### 3.1.1.1.3 Debug CLI - RouteOrch
 
-| Syntax                                                  | Description                                                                                 |
-|---------------------------------------------------------|---------------------------------------------------------------------------------------------|  
-|show debug routeOrch routes -v <vrf-name> -p <ip-prefix> | Dump all Routes or routes specific to a prefix                                              |
-|show debug routeOrch nhgrp                               | NexthopGroup/ECMP info from RouteOrch::m_syncdNextHopGroups                                 |
-|show debug routeOrch all                                 | Translates to list of APIs to dump, which can be used for specific component based triggers |
- 
-*NeighborOrch:*  
- 
-| Syntax                    | Description        |
-|---------------------------|--------------------|  
-|show debug NeighOrch nhops | Dump Nexthops info |
-|show debug NeighOrch neigh | Dump Neighbor info |
+**Debug Routeorch Routes**
 
-##### 3.1.1.1.4 Sample Output
+This command displays the routes added in Routeorch. Routes displayed are added to ASIC_DB.
+
+- Usage: show debug routeOrch routes -v <vrf-name> -p <ip-prefix>
+
+```
+Options:
+  -v, --vrf <name>     Display VRF route table info
+  -p, --prefix <addr>  Display Route matching the IP Prefix
+```
+
+- Example:
 
 ```
 root@sonic:~# show debug routeorch routes -v VrfRED
@@ -245,7 +246,16 @@ Prefix               NextHop                   SAI-OID
 VRF_Name = VrfRED VRF_SAI_OID = 0x30000000005b1
 Prefix               NextHop                   SAI-OID
 2001:100:120:120::/64 Ethernet8                 0x60000000005b4
+```
 
+**Debug Routeorch Nexthop Group:**
+
+This command displays the Nexthop group / ECMP info in Routeorch.
+
+- Usage: show debug routeorch nhgrp
+
+- Example:
+```
 root@sonic:~# show debug routeorch nhgrp
 Max Nexthop Group - 512
 NHGrpKey             SAI-OID               NumPath    RefCnt
@@ -253,7 +263,27 @@ NHGrpKey             SAI-OID               NumPath    RefCnt
                                1: 100.120.120.10|Ethernet8
                                2: 100.120.120.11|Ethernet8
                                3: 100.120.120.12|Ethernet8
+```
 
+**Debug Routeorch all:**
+
+This command is the superset of all routeorch debug commands. This command displays 
+- All VRF route table info for both IPv4 and IPv6.
+- Nexthop Group table
+
+- Usage: show debug routeOrch all
+
+ 
+##### 3.1.1.1.4 Debug CLI - NeighborOrch
+ 
+**Debug NeighborOrch Nexthops:**
+
+This command displays the nexthops added in NeighorOrch. Nexthops displayed are added to ASIC_DB and has their corresponding SAI object ID.
+
+- Usage: show debug NeighOrch nhops
+
+- Example:
+```
 root@sonic:~# show debug neighorch nhops
 
 NHIP                 Intf             SAI-OID           RefCnt    Flags
@@ -267,8 +297,16 @@ fe80::fc54:ff:fe44:de2    Ethernet12       0x40000000005d4   0          0
 fe80::fc54:ff:fe78:5fac   Ethernet8        0x40000000005d2   0          0
 fe80::fc54:ff:fe88:6f80   Ethernet4        0x40000000005d0   0          0
 fe80::fc54:ff:fe8e:d91f   Ethernet0        0x40000000005d1   0          0
+```
 
-root@sonic:~#
+**Debug NeighborOrch Neighbors:**
+
+This command displays the Neighbor entry and their corresponding MAC added in NeighorOrch.
+
+- Usage: show debug NeighOrch neigh
+
+- Example:
+```
 root@sonic:~# show debug neighorch neigh
 NHIP                  Intf             MAC
 100.120.120.10        Ethernet8        00:00:11:22:00:10
@@ -281,10 +319,10 @@ fe80::fc54:ff:fe44:de2     Ethernet12       fe:54:00:44:0d:e2
 fe80::fc54:ff:fe78:5fac    Ethernet8        fe:54:00:78:5f:ac
 fe80::fc54:ff:fe88:6f80    Ethernet4        fe:54:00:88:6f:80
 fe80::fc54:ff:fe8e:d91f    Ethernet0        fe:54:00:8e:d9:1f
-
 ```
 
 #### 3.1.1.3 Configuring Framework
+
 Debug framework will initialize with below default parameters and shall be considered if options are not specified as arguments in the triggers.  
 
 # Table 2: Configuration Options and Defaults
@@ -302,6 +340,7 @@ Debug framework will initialize with below default parameters and shall be consi
 ### 3.1.2 Assert Framework
 
 #### 3.1.2.1 Overview
+
 Asserts are added in the program execution sequence to confirm that the data/state at a certain point is valid/true. During developement, if the programming sequence fails in an assert condition then the program execution is stopped by crash/exception. In production code, asserts are normally removed. This framework enhances/extendes the assert to provide more debug details when an assert fails.  
 
 Classify assert failure conditions based on following types, assert() will have type and the module as additional arguments  
@@ -351,13 +390,58 @@ RESPONSE_TYPE      = < enum DumpResponse::result >  ; pending/failure/successful
 
 ### 3.3.1 Show Commands
 
-|Syntax                         | Description                                                                   |
-|-------------------------------|-------------------------------------------------------------------------------|
-|show debug all                 | This command will invoke dump routines for all components with default action |
-|show debug < component >       | This command will invoke dump routine for specific component                  |
-|show debug actions < options > | This command will display the configured framework actions                    |  
+**Show debug all:**
+
+This command will invoke dump routines for all registered components with default action (save to file, path: var/log/<component>.log)
+
+- Usage: show debug all
+
+**Show debug component:**
+
+This command invokes dump routine of specific component.
+
+- Usage: show debug < component name >
+
+**Show debug tosyslog:**
+
+This command redirects the dump routine output to syslog.
+
+- Usage: show debug tosyslog [all | component <component name>]
+
+```
+Commands:
+  all        Collect debugging information from all components
+  component  Collect debugging information for a given component name
+```
+
+- Example:
+```
+root@sonic:~# show debug tosyslog component routeorch
+root@sonic:~# show logging
+Aug 26 04:40:24.154460 sonic DEBUG swss#orchagent: RouteOrch Dump All Start --->
+Aug 26 04:40:24.154605 sonic DEBUG swss#orchagent: RouteOrch Dump Route Table --->
+Aug 26 04:40:24.154628 sonic DEBUG swss#orchagent: ------------IPv4 Route Table ------------
+Aug 26 04:40:24.154720 sonic DEBUG swss#orchagent: VRF_Name = Default VRF_SAI_OID = 0x3000000000047
+Aug 26 04:40:24.154748 sonic DEBUG swss#orchagent: Prefix               NextHop                   SAI-OID
+Aug 26 04:40:24.154811 sonic DEBUG swss#orchagent: 0.0.0.0/0            DROP                      0xffffffffffffffff
+Aug 26 04:40:24.154910 sonic DEBUG swss#orchagent: 100.0.0.0/16         Vlan100                   0x6000000000c0d
+Aug 26 04:40:24.154946 sonic DEBUG swss#orchagent:
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: ------------IPv6 Route Table ------------
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: VRF_Name = Default VRF_SAI_OID = 0x3000000000047
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: Prefix               NextHop                   SAI-OID
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: ::/0                 DROP                      0xffffffffffffffff
+Aug 26 04:40:24.155558 sonic DEBUG swss#orchagent: 1001::/64            Vlan100                   0x6000000000c0d
+Aug 26 04:40:24.155558 sonic DEBUG swss#orchagent:
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: RouteOrch Dump Route Table END--->
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: RouteOrch Dump NexhopGroup Table --->
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: Max Nexthop Group - 1024
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: NHGrpKey             SAI-OID               NumPath    RefCnt
+Aug 26 04:40:24.155588 sonic DEBUG swss#orchagent:
+Aug 26 04:40:24.155595 sonic DEBUG swss#orchagent: RouteOrch Dump All END <---
+```
 
 ### 3.3.2 Debug/Error Interface counters
+
 show interfaces pktdrop is added to display debug/error counters for all interfaces.
 
 # 4 Flow Diagrams
@@ -365,20 +449,147 @@ show interfaces pktdrop is added to display debug/error counters for all interfa
 ![Framework and component interaction](images/debug_framework_flow_diagram.png)
 
 # 5 Serviceability and Debug
+
 None
 
 # 6 Warm Boot Support
 
 No change.
 
-
-
 # 7 Scalability
+
 No Change
 
+# 8 Usage Guidelines
 
-# 8 Unit Test
-### 8.1.1 Debug Framework
+## 8.1 Integrating Dump Routines
+
+### 8.1.1 Framework Creates Thread
+
+#### 8.1.1.1 Implement Dump Routines
+
+Implement a dump routine with 2 input arguments: componentName & args
+- Use the componentName argument to validate before dumping data/info
+- Ignore args if your component always would dump same info regardless of args
+- Dump the relevant data-structures/debug-info by calling the SWSS_DEBUG_PRINT macro as shown in the example below
+- Wrap all the dump within SWSS_DEBUG_BEGIN & SWSS_DEBUG_END
+- Ensure that this routine is thread safe and necessary semaphores/locks are taken 
+
+Example:
+```
+void sampleDump(std::string componentName, KeyOpFieldsValuesTuple args){
+      SWSS_DEBUG_BEGIN(componentName); // Add this before any debug print
+
+      SWSS_DEBUG_PRINT(componentName, "INFO_X");
+      SWSS_DEBUG_PRINT(componentName, "INFO_Y"); 
+
+      SWSS_DEBUG_END(componentName);  // Add this after all debug print
+}
+```
+
+#### 8.1.1.2 Register with Framework
+
+Register the dump routine with the debug framework by invoking the linkWithFramework API as shown below:
+
+```
+Debugframework::linkWithFramework(componentName, sampleDump);
+```
+- componentName is the name of your component; will be passed as the first argument by the framework while invoking the dump routine for validation
+- sampleDump is the name of your dump routine
+
+When there is a trigger to debug/dump either using CLI or either using Python utility script  `dumpinfo` you can find the information dumped by your routine `sampleDump` in one of 2 places:
+- syslog or
+- written into /var/log/ComponentName_debug.log file in compressed format
+
+### 8.1.2 Framework Doesn't create Thread
+
+#### 8.1.2.1 Implement Dump Routines
+
+Implement a dump routine with input argument: args of type KeyOpFieldsValuesTuple 
+- Ignore args if your component always would dump same info regardless of args
+- Dump the relevant data-structures/debug-info by calling the SWSS_DEBUG_PRINT macro as shown in the example below
+- Wrap all the dump within SWSS_DEBUG_BEGIN & SWSS_DEBUG_END
+
+Example:
+```
+void sampleDump(KeyOpFieldsValuesTuple args){
+      SWSS_DEBUG_BEGIN(componentName);
+
+      SWSS_DEBUG_PRINT(componentName, "INFO_X");
+      SWSS_DEBUG_PRINT(componentName, "INFO_Y"); 
+
+      SWSS_DEBUG_END(componentName);
+}
+```
+
+#### 8.1.2.2 Register with Framework
+
+Register the component with the debug framework by invoking the linkWithFrameworkNoThread API as shown below with only one argument componentName
+```
+Debugframework::linkWithFrameworkNoThread(componentName);
+```
+
+#### 8.1.2.3 Subscribe with Redis
+
+- Subscribe with Redis on APPL_DB and channel name APP_DEBUG_COMPONENT_TABLE_NAME
+- When an event in received on the subscribed channel validate the key against componentName and invoke the dump routine with received args `sampleDump(KeyOpFieldsValuesTuple args)`
+- Indicate Done event for framework to proceed with subsequent actions by posting event to Redis on APPL_DB and channel APP_DEBUG_COMP_DONE_TABLE_NAME
+- You can find the information dumped by your routine `sampleDump` in one of 2 places:
+    - syslog or
+    - written into /var/log/ComponentName_debug.log file in compressed format
+
+
+### 8.1.3 Default/Optional Args to Registered routines
+
+Arguments are passed as KeyOpFieldsValuesTuple: 
+- Key is going to be ComponentName for validation
+- Op value is set to "SET" and it may be ignored 
+- FieldValueTuples : 
+    - Common optional argument: DETAIL:SHORT   or  DETAIL:FULL 
+    - Custom arguments specific to component also as <Field, Value> tuples based on triggers 
+
+
+## 8.2 Trigger to dump debug info
+
+### 8.2.1 Python Show CLI
+
+Please refer to CLI section for details.
+
+### 8.2.2 Python Utility Script "dumpinfo"
+
+Dumpinfo script can be used as an alternative to full fledged CLI. Dumpinfo script sends notification to framework and the framework will invoke the registered routine corresponding to the component with the optional arguments.
+
+usage: dumpinfo [-h] [-u] [-c] [-s] [-l] [-o]
+
+```
+optional arguments:
+  -h,  --help         show this help message and exit
+  -u,  --action       post-action upload default is compress
+  -c,  --component    dump info for specified component
+  -s,  --detail       short summary default is full
+  -l,  --location     target location syslog, default is /var/log/xx_debug.log
+  -o,  --optargs      optional additional arguments to components
+```
+
+### 8.2.3 Component custom CLI or scripts
+
+When the component has multiple optional arguments and/or the component wants specific debug commands to be built, please use the below python object and its methods.
+
+```
+Import and create a python object: DebugDump 
+
+    set_dump_target(self, location):
+    set_dump_component(self, component_name):
+    set_detail_level(self, level):
+    set_post_action(self, action):
+    add_args_for_component(self, field, value): 
+    invoke_dump_trigger(self, componentName, optargList):
+
+Note: All agrs are strings
+```
+
+# 9 Unit Test
+## 9.1 Debug Framework
 1.  Verify that Framework provides a shared library  (a) for components to link and register with the framework and (b) for the utilities to issue triggers.
 2.  Verify that on a running system, without any triggers framework does not add any CPU overhead. 
 3.  Verify that dump routines are invoked when a trigger is issued with all arguments from the trigger utilities/ show debug commands.
@@ -391,4 +602,5 @@ No Change
 10. Verify that framework handles multiple consecutive triggers and handles triggers independently. 
 
 Go back to [Beginning of the document](#Debug-Framework-in-SONiC).
+
 
