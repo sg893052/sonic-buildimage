@@ -1,4 +1,3 @@
-
 # Feature Name
 Layer 2 Forwarding Enhancements.
 # High Level Design Document
@@ -9,7 +8,7 @@ Layer 2 Forwarding Enhancements.
   * [Revision](#revision)
   * [About This Manual](#about-this-manual)
   * [Scope](#scope)
-  * [Definition/Abbreviation](#definitionabbreviation)
+  * [[Definition/Abbreviation](http://10.59.132.240:8008/sonic-documents/s?path=Definition/Abbreviation&project=documents)](#definitionabbreviation)
   
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -24,7 +23,7 @@ This document provides general information about the Layer 2 Forwarding Enhancem
 # Scope
 This document describes the high level design of Layer 2 Forwarding Enhancements feature. Call out any related design that is not covered by this document
 
-# Definition/Abbreviation
+# [Definition/Abbreviation](http://10.59.132.240:8008/sonic-documents/s?path=Definition/Abbreviation&project=documents)
 ### Table 1: Abbreviations
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
@@ -40,8 +39,8 @@ If smaller features can get to the second pass within 1 to 2 weeks of starting, 
 
 
 ## 1.1 Requirements
+![]([http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png](http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png))
 
-![](http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png)
 
 ### 1.1.1 Functional Requirements
 
@@ -109,10 +108,17 @@ Describe changes to other process within SwSS if applicable.
 Describe changes to syncd if applicable.
 
 ## 3.5 SAI
-Describe new/existing SAI APIs used by this feature.
+Describe [new/existing] SAI APIs used by this feature.
 
-## 3.6 CLI
-### 3.6.2 IS-CLI Compliance
+## 3.6 User Interface
+### 3.6.1 Data Models
+Can be reference to YANG if applicable. Also cover gNMI here.
+
+### 3.6.2 CLI
+#### 3.6.2.1 Configuration Commands
+#### 3.6.2.2 Show Commands
+#### 3.6.2.3 Debug Commands
+#### 3.6.2.4 IS-CLI Compliance
 The following table maps SONIC CLI commands to corresponding IS-CLI commands. The compliance column identifies how the command comply to the IS-CLI syntax:
 
 - **IS-CLI drop-in replace**  – meaning that it follows exactly the format of a pre-existing IS-CLI command.
@@ -131,12 +137,7 @@ The following table maps SONIC CLI commands to corresponding IS-CLI commands. Th
 
 **Deviations from IS-CLI:** If there is a deviation from IS-CLI, Please state the reason(s).
 
-### 3.6.1 Data Models
-Can be reference to YANG if applicable
-### 3.6.2 Configuration Commands
-### 3.6.3 Show Commands
-### 3.6.4 Debug Commands
-### 3.6.5 REST API Support
+### 3.6.3 REST API Support
 
 # 4 Flow Diagrams
 Provide flow diagrams for inter-container and intra-container interactions.
@@ -158,4 +159,5 @@ List unit test cases added for this feature including warm boot.
 
 # 10 Internal Design Information
 Internal BRCM information to be removed before sharing with the community.
+
 
