@@ -2,7 +2,7 @@
 Open Config Platform Model Support in SONiC
 
 ## Table of Contents
- * [Revision](#revision)
+ * [Revision](#revision) 
  * [About This Manual](#about-this-manual)
  * [Requirements Overview](#1-requirements-overview)
 	 * [Open Config Platform Model Support](#1_1-open-config-platform-model-support)
@@ -12,23 +12,23 @@ Open Config Platform Model Support in SONiC
 	*	[SONiC Plugins](#2_3-sonic-plugins)
 	*	[SONiC CLI (Click-based) Support](#2_4-sonic-cli-click-based-support)
 
-# Revision
+# Revision <a name="revision"></a>
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 07/17/2019  |  Babu Rajaram     | Initial version                   |
 | 0.2 | 08/23/2019  |  Syd Logan        | Describe CLI support              |
 
-# About this Manual
+# About this Manual <a name="about-this-manual"></a>
 This document describes the support for open config platform models in SONiC, based on the old platform APIs. This support is based on the enhanced 1.0 platform model APIs, and follows the highlighted design in the new PMON enhancement design here:
 https://github.com/Azure/SONiC/blob/master/doc/pmon/pmon-enhancement-design.md]
 
-## 1 Requirements Overview
+## 1 Requirements Overview <a name="1-requirements-overview"></a>
 Support Open Config Platform data models in SONiC for the following components:
  - System EEPROM
  - FAN	
  - PSU (Power supply units)
  - Transceivers
-### 1.1 Open Config Platform Model Support
+### 1.1 Open Config Platform Model Support <a name="1_1-open-config-platform-model-support"></a> 
 Support a subset of open config platform attributes for the following components:
  - System EEPROM
 	- base_mac_addr     : base mac address from syseeprom
@@ -60,11 +60,11 @@ Support a subset of open config platform attributes for the following components
 -	Transceiver
 <**TBD**> Need more time to analyze the open config model and the SONiC capabilities. Requires all round analysis.
 
-## 2 Design
+## 2 Design <a name="2-design"></a>
 The design will follow the design proposed here:
 [https://github.com/Azure/SONiC/blob/master/doc/pmon/pmon-enhancement-design.md](https://github.com/Azure/SONiC/blob/master/doc/pmon/pmon-enhancement-design.md)
 
-### 2.1 Platform daemons and Utils
+### 2.1 Platform daemons and Utils <a name="2_1-platform-daemons-and-utils"></a>
 Currently, these platform daemons would rely on the 1.0 platform APIs. In future, these would be migrated to the newer 2.0 platform APIs
 
 Following new daemons would be added:
@@ -77,7 +77,7 @@ Following daemons would be modified to support newer attributes
 Following util would be added to support System EEPROM:
 	- syseeprom_db_util - To populate System EEPROM data in DB. Since this is a static data, this can be initialized once pmon start up. 
 
-### 2.2 DB Schema for Platform related data
+### 2.2 DB Schema for Platform related data <a name="2_2-db-schema-for-platform-related-data"></a>
 The DB schema proposed in this design would be leveraged. Any new additions are highlighted below:
 
 #### 2.2.1 Chassis Table
@@ -123,7 +123,7 @@ status                  = BOOLEAN                        ; status of the PSU-fan
 direction               = STRING                         ; direction of the PSU-fan
 speed                   = INT                            ; PSU-fan speed in RPM
 ```
-### 2.3 SONiC Plugins
+### 2.3 SONiC Plugins <a name="2_3-sonic-plugins"></a>
 SONiC 1.0 platform APIs  support only the following plugins:
 
 -	PsuBase
@@ -191,7 +191,7 @@ class PsuBase:
     def get_direction(self, idx):
 	
 ```
-### 2.4 SONiC CLI (Click-based) Support
+### 2.4 SONiC CLI (Click-based) Support <a name="2_4-sonic-cli-click-based-support"></a>
 
 The following "show" CLI commands are added to support display of
 psu and fan data. These commands obtain the data displayed directly
