@@ -8,7 +8,7 @@ Layer 2 Forwarding Enhancements.
   * [Revision](#revision)
   * [About This Manual](#about-this-manual)
   * [Scope](#scope)
-  * [[Definition/Abbreviation](http://10.59.132.240:8008/sonic-documents/s?path=Definition/Abbreviation&project=documents)](#definitionabbreviation)
+  * [Definition/Abbreviation](#definitionabbreviation)
   
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -23,7 +23,8 @@ This document provides general information about the Layer 2 Forwarding Enhancem
 # Scope
 This document describes the high level design of Layer 2 Forwarding Enhancements feature. Call out any related design that is not covered by this document
 
-# [Definition/Abbreviation](http://10.59.132.240:8008/sonic-documents/s?path=Definition/Abbreviation&project=documents)
+# Definition/Abbreviation
+
 ### Table 1: Abbreviations
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
@@ -39,8 +40,8 @@ If smaller features can get to the second pass within 1 to 2 weeks of starting, 
 
 
 ## 1.1 Requirements
-![]([http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png](http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png))
 
+![](http://10.59.132.240:9009/projects/csg_sonic/documentation/graphics/templates/test1.png)
 
 ### 1.1.1 Functional Requirements
 
