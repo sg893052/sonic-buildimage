@@ -93,6 +93,7 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
+| 4 | Sep-7-2-19 | v4 | Added VRRP config and show commands |
 | 3 |  Jun-26-2019 |v3 | Update based on 201904 (build#19) release, "config interface" command changes related to interfacename order, FRR/Quagga show command changes, platform specific changes, ACL show changes and few formatting changes |
 | 2 |  Apr-22-2019 |v2 | CLI Guide for SONiC 201811 version (build#32) with complete "config" command set |
 | 1 |  Mar-23-2019 |v1 | Initial version of CLI Guide with minimal command set |
@@ -1186,6 +1187,260 @@ This command displays either all the IPv6 neighbor mac addresses, or for a parti
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Watermark-Configuration-And-Show)
 
 
+# VRRP Configuration And Show Commands
+
+This section explains all the VRRP show commands and VRRP configuation commands that are supported in SONiC.
+Most of the VRRP show commands start with "show vrrp". Detailed show commands examples for VRRP are provided for each of the commands
+
+## VRRP show commands  
+
+**show vrrp**
+
+This command displays the summary of all VRRP instances for all the VRRP enabled interfaces. Each row in the command output represent one VRRP instance for an interface. The row displays configuration as well as the dynamic state of a VRRP instance. 
+
+- Usage:   
+  show vrrp
+  
+- Example:
+  ```
+  admin@sonic:~$ show vrrp
+  Interface_Name  VRID   State             VIP  Cfg_Prio  Curr_Prio
+           Vlan1     1  Backup       4.1.1.100       100        120
+           Vlan2     2  Backup       4.1.2.100       100        100
+         Vlan100     1  Master  125.125.125.50       100        100
+         Vlan100     2  Master  126.126.126.50       100        100
+         Vlan100     3  Master  128.128.128.50       100        100
+         Vlan100     4  Master  127.127.127.50       100        100
+      Vlan1000     1  Backup     40.10.1.101       100        100
+        Vlan1000     2  Backup     40.10.2.101       100        100
+        Vlan1000     3  Backup     40.10.3.101       100        100
+  ```
+  
+
+**show vrrp <interface_name> <vrid>**
+
+This command displays all the details of a particular VRRP instance on an VRRP enabled interface. The above command "show vrrp" displays the summary of all the VRRP instances in the system whereas this command displays a particular VRRP instance in verbose mode with full configuration and state details. <interface_name> and <vr_id> both are mandatory parameter. <interface_name> is name of an interface where VRRP is enabled, example Ethernet40 or PortChannel003 or Vlan349. <vrid> is an integer between 1 and 255 and represents the instance ID of VRRP on an interface.
+
+This command also display the list of interfaces that are being tracked by this VRRP instance along with their state (Up or Down) and their configured priority.
+
+
+- Usage:  
+  show vrrp <interface_name> <vr_id>   
+  
+- Example:
+  ```
+  admin@sonic:~$ show vrrp Vlan1 1
+  Vlan1, VRID 1
+  Version is 2
+  State is Backup
+  Virtual IP address:
+    4.1.1.100
+  Virtual MAC address is 0000.5e00.0101
+  Track interface:
+    Intfname       State  Priority
+    Ethernet7      Up     10
+    PortChannel001 Up     10
+    Vlan100        Up     10
+    Vlan200        Down   20
+    Vlan300        Down   30
+    Vlan400        Down   40
+  Configured Priority is 100, Current Priority is 130
+  Advertisement interval is 1 sec
+  Preemption is enabled
+  ```
+  
+  
+
+## VRRP config commands  
+
+This sub-section explains the various configuration commands available for VRRP module for both IPv4 address family.
+
+The list of possible VRRP config commands are given below.
+
+	interface
+	    vrrp
+	        add <interface_name> <vrid>
+	        remove <interface_name> <vrid>
+	        vip
+	            add <interface_name> <vrid> <virtual_ip_address>
+	            remove <interface_name> <vrid> <virtual_ip_address>
+	        priority <interface_name> <vrid> <priority>
+	        adv_interval <interface_name> <vrid> <interval>
+	        pre_empt
+	            enable <interface_name> <vrid>
+	            disable <interface_name> <vrid>
+	        track_interface
+	            add <interface_name> <vrid> <track_interface> <weight>
+	            remove <interface_name> <vrid> <track_interface>
+
+**config interface vrrp add <interface_name> <vrid>** **  
+
+This command enables user to create a new VRRP instance on an interface. This is an indirect way to enabling or configuring VRRP on an interface. Interface name can be any available L3 interface like Ethernet4 or Vlan206 or PortChannel003. <vrid> is a one byte integer between 1 and 255 whose scope is only for an interface. 
+
+  - Usage:  
+    sudo config interface vrrp add <interface_name> <vrid>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface vrrp add Vlan206 13
+  ```
+  
+  ```
+  admin@sonic:~$ sudo config interface vrrp add PortChannel007 34
+  ```
+
+**config interface vrrp remove <interface_name> <vrid>**  
+
+This command deletes a VRRP instance from an interface
+
+  - Usage:  
+    sudo config vrrp remove <interface_name> <vrid>
+  
+- Examples:  
+  ```
+  admin@sonic:~$ sudo config interface vrrp remove Vlan206 13
+  ```
+  
+  ```
+  admin@sonic:~$ sudo config interface vrrp remove PortChannel007 34
+  ```
+
+**config interface vrrp vip add <interface_name> <vrid> <virtual_ip_address>**  
+
+This command enables users to add one or more virtual IP address for a VRRP instance on an interface. Virtual IP address must be in interface's IP subnet. The command will be rejected of IP address doesn't belong to the interface's IP subnet.
+
+  - Usage:     
+    sudo config interface vrrp vip add <interface_name> <vrid> <virtual_ip_address>`
+
+- Examples:  
+  ``` 
+  admin@sonic:~$ sudo config interface vrrp vip add Vlan206 13 72.41.61.101
+  ```
+  
+  ```
+  admin@sonic:~$ sudo config interface vrrp vip add PortChannel007 34 206.52.72.201
+  ```
+
+**config interface vrrp vip remove <interface_name> <vrid> <virtual_ip_address>**  
+
+This command allows user to delete an existing VIP from a VRRP instance on an interface.
+
+  - Usage:  
+    sudo config interface vrrp vip remove <interface_name> <vrid> <virtual_ip_address>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface vrrp vip remove Vlan206 13 72.41.61.101
+  ```
+  
+  ```
+  admin@sonic:~$ sudo config interface vrrp vip remove PortChannel007 34 206.52.72.201
+  ```
+
+**config interface vrrp priority <interface_name> <vrid> <priority>**  
+
+This command allows user to configure priority for a VRRP instance on an interface. Priority should be in the range 1 to 254. Default priority is 100. Priority value decides the election of a Master VRRP node for a VRRP instance.
+
+- Usage:  
+  sudo config interface vrrp priority <interface_name> <vrid> <priority>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp priority Vlan206 13 120
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp priority PortChannel007 34 80
+  ```
+
+**config interface vrrp adv_interval <interface_name> <vrid> <interval>**  
+
+This command allows user to configure advertisement interval in seconds for a VRRP instance on an interface. Advertisement interval should be in the range 1 to 255 sec. Default advertisement interval is 1sec. Advertisement interval dictates the periodicity of VRRP hello advertisement for a VRRP instance.
+
+- Usage:  
+  sudo config interface vrrp adv_interval <interface_name> <vrid> <interval>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp adv_interval Vlan206 13 2
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp adv_interval PortChannel007 34 5
+  ```
+
+**config interface vrrp pre_empt enable <interface_name> <vrid>**  
+
+This command allows user to configure whether a Master VRRP role can be preempted by a new high priority VRRP node for a VRRP instance on an interface. By default, preemption of VRRP Master node is enabled. 
+
+- Usage:  
+  sudo config interface vrrp pre_empt enable <interface_name> <vrid>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp pre_empt enable Vlan206 13
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp pre_empt enable PortChannel007 34
+  ```
+
+**config interface vrrp pre_empt disable <interface_name> <vrid>**  
+
+This command allows user to disable premeption of a Master VRRP role by a new high priority VRRP node for a VRRP instance on an interface. By default, preemption of VRRP Master node is enabled. 
+
+- Usage:  
+  sudo config interface vrrp pre_empt disable <interface_name> <vrid>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp pre_empt disable Vlan206 13
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp pre_empt disable PortChannel007 34
+  ```
+
+**config interface vrrp track_interface add <interface_name> <vrid> <track_interface> <weight>**  
+
+This command allows user to add a track interface for a VRRP instance on an interface. The operational status of track interface determines the effective priority of VRR instance. When track interface is up, the effective priority of VRRP instance is <priority>+<weight>. When track interface goes down, the effective priority becomes <priority>-<weight>. This change in effective priority triggers election of a new master. Any interface L2 or L3 can be tracked using VRRP. <weight> is an integer in the range 1 to 254. A maximum of eight track interfaces can be added per VRRP instance.
+
+- Usage:  
+  sudo config interface vrrp track_interface add <interface_name> <vrid> <track_interface> <weight>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp track_interface add Vlan206 13 Ethernet8 10
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp track_interface add PortChannel007 34 Vlan1 20
+  ```
+
+**config interface vrrp track_interface remove <interface_name> <vrid> <track_interface> <weight>**  
+
+This command enables user to delete a track interface for a VRRP instance on an interface. 
+
+- Usage:  
+  sudo config interface vrrp track_interface remove <interface_name> <vrid> <track_interface>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp track_interface remove Vlan206 13 Ethernet8
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp track_interface remove PortChannel007 34 Vlan1
+  ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
+
 # BGP Configuration And Show Commands
 
 This section explains all the BGP show commands and BGP configuation commands in both "Quagga" and "FRR" routing software that are supported in SONiC.
@@ -1194,7 +1449,6 @@ Most of the FRR show commands start with "show bgp". Similar commands in Quagga 
 Detailed show commands examples for Quagga are provided at the end of this document.This section captures only the commands supported by FRR.
 
 ## BGP show commands  
-
 
 **show bgp summary (for default FRR in 201904+ version) **  
 **show ip bgp summary (for Quagga in 201811- version) **  
@@ -1206,46 +1460,47 @@ This command displays the summary of all IPv4 & IPv6 bgp neighbors that are conf
   show ip bgp summary (for Quagga in 201811- version)   
 
 - Example:
+
   ```
    root@sonic-z9264f-9251:~# show bgp summary
-
+  
    IPv4 Unicast Summary:
    BGP router identifier 10.1.0.32, local AS number 65100 vrf-id 0
    BGP table version 6465
    RIB entries 12807, using 2001 KiB of memory
    Peers 4, using 83 KiB of memory
    Peer groups 2, using 128 bytes of memory
-
+  
    Neighbor        V         AS MsgRcvd MsgSent   TblVer  InQ OutQ  Up/Down State/PfxRcd
    10.0.0.57       4      64600    3995    4001        0    0    0 00:39:32         6400
    10.0.0.59       4      64600    3995    3998        0    0    0 00:39:32         6400
    10.0.0.61       4      64600    3995    4001        0    0    0 00:39:32         6400
    10.0.0.63       4      64600    3995    3998        0    0    0 00:39:32         6400
-
+  
    Total number of neighbors 4
- 
+   
    IPv6 Unicast Summary:
    BGP router identifier 10.1.0.32, local AS number 65100 vrf-id 0
    BGP table version 12803
    RIB entries 12805, using 2001 KiB of memory
    Peers 4, using 83 KiB of memory
    Peer groups 2, using 128 bytes of memory
-
+  
    Neighbor        V         AS MsgRcvd MsgSent   TblVer  InQ OutQ  Up/Down State/PfxRcd
    fc00::72        4      64600    3995    5208        0    0    0 00:39:30         6400
    fc00::76        4      64600    3994    5208        0    0    0 00:39:30         6400
    fc00::7a        4      64600    3993    5208        0    0    0 00:39:30         6400
    fc00::7e        4      64600    3993    5208        0    0    0 00:39:30         6400
-
+  
    Total number of neighbors 4
   ```
+
   Click [here](#Quagga-BGP-Show-Commands) to see the example for "show ip bgp summary" for Quagga. 
 
 
 
 **show bgp neighbors (for default FRR in 201904+ version)**   
 **show ip bgp neighbors (for Quagga in 201811- version)**   
-
 
 This command displays all the details of IPv4 & IPv6 BGP neighbors when no optional argument is specified. 
 
@@ -1255,12 +1510,12 @@ Command has got additional optional arguments to display only the advertised rou
 
 In order to get details for an IPv6 neigbor, use "show bgp ipv6 neighbor <ipv6_address>" command.
 
-
 - Usage:  
   show bgp neighbors [\<ipv4-address\> [advertised-routes | received-routes | routes]] (for default FRR in 201904+ version)  
   show ip bgp neighbors [\<ipv4-address\> [advertised-routes | received-routes | routes]] (for Quagga in 201811- version)  
 
 - Example:
+
   ```
    admin@sonic:~$ show bgp neighbors
    BGP neighbor is 10.0.0.57, remote AS 64600, local AS 65100, external link
@@ -1296,14 +1551,14 @@ In order to get details for an IPv6 neigbor, use "show bgp ipv6 neighbor <ipv6_a
      Capability:             0          0
      Total:               4055       4050
    Minimum time between advertisement runs is 0 seconds
-
+  
   For address family: IPv4 Unicast
    Update group 1, subgroup 1
    Packet Queue length 0
    Inbound soft reconfiguration allowed
    Community attribute sent to this neighbor(all)
    6400 accepted prefixes
-
+  
    Connections established 1; dropped 0
    Last reset 00:42:37, due to NOTIFICATION sent (Cease/Connection collision resolution)
    Local host: 10.0.0.56, Local port: 179
@@ -1318,19 +1573,19 @@ In order to get details for an IPv6 neigbor, use "show bgp ipv6 neighbor <ipv6_a
 
 - Optionally, you can specify an IP address in order to display only that particular neighbor. In this mode, you can optionally specify whether you want to display all routes advertised to the specified neighbor, all routes received from the specified neighbor or all routes (received and accepted) from the specified neighbor.
 
-
 - Example:
-  ``` 
+
+  ```
     admin@sonic:~$ show bgp neighbors 10.0.0.57
-
+  
     admin@sonic:~$ show bgp neighbors 10.0.0.57 advertised-routes
-
+  
     admin@sonic:~$ show bgp neighbors 10.0.0.57 received-routes
-
+  
     admin@sonic:~$ show bgp neighbors 10.0.0.57 routes
   
   ```
-  
+
   Click [here](#Quagga-BGP-Show-Commands) to see the example for "show ip bgp neighbors" for Quagga. 
 
 
@@ -1345,6 +1600,7 @@ This command displays the summary of all IPv6 bgp neighbors that are configured 
   show ipv6 bgp summary (for Quagga in 201811- version)    
 
 - Example:
+
   ```
   admin@sonic:~$ show bgp ipv6 summary
   BGP router identifier 10.1.0.32, local AS number 65100 vrf-id 0
@@ -1352,16 +1608,17 @@ This command displays the summary of all IPv6 bgp neighbors that are configured 
   RIB entries 12805, using 2001 KiB of memory
   Peers 4, using 83 KiB of memory
   Peer groups 2, using 128 bytes of memory
-
+  
   Neighbor        V         AS MsgRcvd MsgSent   TblVer  InQ OutQ  Up/Down State/PfxRcd
   fc00::72        4      64600    3995    5208        0    0    0 00:39:30         6400
   fc00::76        4      64600    3994    5208        0    0    0 00:39:30         6400
   fc00::7a        4      64600    3993    5208        0    0    0 00:39:30         6400
   fc00::7e        4      64600    3993    5208        0    0    0 00:39:30         6400
-
+  
   Total number of neighbors 4
   
   ```
+
   Click [here](#Quagga-BGP-Show-Commands) to see the example for "show ipv6 bgp summary" for Quagga. 
 
 
@@ -1369,23 +1626,23 @@ This command displays the summary of all IPv6 bgp neighbors that are configured 
 **show bgp ipv6 neighbors (for default FRR in 201904+ version)**  
 **show ipv6 bgp neighbors (for Quagga in 201811- version)**  
 
-
 This command displays all the details of one particular IPv6 Border Gateway Protocol (BGP) neighbor. Option is also available to display only the advertised routes, or the received routes, or all routes.
 
-
-  - Usage:  
-    show bgp ipv6 neighbors [\<ipv6-address\> [(advertised-routes | received-routes | routes)]] (for default FRR in 201904+ version)   
-    show ipv6 bgp neighbors [\<ipv6-address\> [(advertised-routes | received-routes | routes)]] (for Quagga in 201811- version)   
+- Usage:  
+  show bgp ipv6 neighbors [\<ipv6-address\> [(advertised-routes | received-routes | routes)]] (for default FRR in 201904+ version)   
+  show ipv6 bgp neighbors [\<ipv6-address\> [(advertised-routes | received-routes | routes)]] (for Quagga in 201811- version)   
 
 - Example:
+
   ```
    admin@sonic:~$ show bgp ipv6 neighbors fc00::72 advertised-routes
-
+  
    admin@sonic:~$ show bgp ipv6 neighbors fc00::72 received-routes
-
+  
    admin@sonic:~$ show bgp ipv6 neighbors fc00::72 routes  
    
   ```
+
   Click [here](#Quagga-BGP-Show-Commands) to see the example for "show ip bgp summary" for Quagga. 
 
 
@@ -1394,11 +1651,11 @@ This command displays all the details of one particular IPv6 Border Gateway Prot
 
 This command displays the routing policy that takes precedence over the other route processes that are configured.
 
-  - Usage:  
-    show route-map
-  
-  - Example:
-  ``` 
+- Usage:  
+  show route-map
+- Example:
+
+```
 	admin@T1-2:~$ show route-map
 	ZEBRA:
 	route-map RM_SET_SRC, permit, sequence 10
@@ -1438,8 +1695,7 @@ This command displays the routing policy that takes precedence over the other ro
 	  Call clause:
 	  Action:
 		Exit routemap
-  ```
-
+```
 
 ## BGP config commands 
 
@@ -1447,23 +1703,26 @@ This sub-section explains the list of configuration options available for BGP mo
 
 The list of possible BGP config commands are given below.
 
-	bgp
-	    shutdown
-	        all
-	        neighbor
-	    startup
-	        all
-	        neighbor
+```
+bgp
+    shutdown
+        all
+        neighbor
+    startup
+        all
+        neighbor
+```
 
 **config bgp shut down all**  
 
 This command is used to shutdown all the BGP IPv4 & IPv6 sessions.
 When the session is shutdown using this command, BGP state in "show ip bgp summary" is displayed as "Idle (Admin)"
 
-  - Usage:  
-    sudo config bgp shutdown all
+- Usage:  
+  sudo config bgp shutdown all
 
 - Examples:
+
   ```
   admin@sonic:~$ sudo config bgp shutdown all
   ```
@@ -1472,48 +1731,50 @@ When the session is shutdown using this command, BGP state in "show ip bgp summa
 
 This command is to shut down a BGP session with a neighbor by that neighbor's IP address or hostname
 
-  - Usage:  
-    sudo config bgp shutdown (<ip-address> | <hostname>)
-  
+- Usage:  
+  sudo config bgp shutdown (<ip-address> | <hostname>)
+
 - Examples:  
+
   ```
   admin@sonic:~$ sudo config bgp shutdown neighbor 192.168.1.124
   ```
+
   ```
   admin@sonic:~$ sudo config bgp shutdown neighbor SONIC02SPINE
   ```
-
 
 **config bgp startup all**  
 
 This command is used to start up all the IPv4 & IPv6 BGP neighbors
 
-  - Usage:     
-    sudo config bgp startup all`
+- Usage:     
+  sudo config bgp startup all`
 
 - Examples:  
-  ``` 
+
+  ```
   admin@sonic:~$ sudo config bgp startup all
   ```
-
 
 **config bgp startup <neighbor>**  
 
 This command is used to start up the particular IPv4 or IPv6 BGP neighbor using either the IP address or hostname.
 
-  - Usage:  
-    sudo config bgp startup (<ip-address> | <hostname>)`
+- Usage:  
+  sudo config bgp startup (<ip-address> | <hostname>)`
 
 - Examples:
+
   ```
   admin@sonic:~$ sudo config bgp startup neighbor 192.168.1.124
   ```
+
   ```
   admin@sonic:~$ sudo config bgp startup neighbor SONIC02SPINE
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
-
 
 # ECN Configuration And Show Commands
 
