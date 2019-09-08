@@ -10,6 +10,8 @@ Table of Contents
    * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)  
          * [ACL and Mirroring](#acl-and-mirroring)  
          * [BGP Sessions](#bgp-sessions)  
+         * [BGP Error Handling](#bgp-error-handling)  
+         * [Bidirectional Forwarding Detection (BFD)](#bfd)  
          * [BUFFER_PG](#buffer_pg)   
          * [Buffer pool](#buffer-pool)  
          * [Buffer profile](#buffer-profile)  
@@ -34,6 +36,7 @@ Table of Contents
          * [Portchannel member](#portchannel-member)  
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
+         * [Spanning Tree (PVST)](#stp-pvst)  
          * [Tacplus Server](#tacplus-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)  
@@ -51,7 +54,7 @@ Table of Contents
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 2Draft |  6-JUN-2019 | Updated with more examples| ConfigDB for SONiC 201811 version (build#32) with complete "config DB" set |
-| 1 |  NA |v1 | Initial version of Config DB Guide with minimal set | 
+| 1 |  NA |v1 | Initial version of Config DB Guide with minimal set |
 
 # INTRODUCTION																																									
 This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.  																																																																					
@@ -333,6 +336,56 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
         ]
     }
   }
+}
+```
+
+### BGP Error Handling
+```
+"BGP_ERROR_CFG_TABLE": {
+	"config": {
+		"enable": "true"
+	}
+}
+```
+
+### Bidirectional Forwarding Detection (BFD)
+
+To enable BFD for a BGP neighbor, it can be configured in BGP_NEIGHBOR table as below:
+```
+{
+"BGP_NEIGHBOR": {
+	"10.0.0.61": {
+		"local_addr": "10.0.0.60",
+		"asn": 64015,
+		"name": "ARISTA15T0",
+		"bfd": 1
+	}
+}
+```
+BFD_PEER table can be used to configure BFD sessions for a peer IP address as below:
+
+```
+{
+"BFD_PEER": {
+	"2.2.2.2|null|null": {
+		"transmit_interval":"400", 
+		"receive_interval":"300", 
+		"echo_mode":"true", 
+		"echo_interval":"44", 
+		"multiplier":"5",
+		"label":"mylabel"
+	}, 
+	"3.3.3.3|1.1.1.1|null": {
+		"admin_status":"down"
+	},
+	"4.4.4.4|null|Ethernet0": {
+	},
+	"5.5.5.5|1.1.1.1|Ethernet0": {
+		"admin_status":"up"
+	},
+	"6.6.6.6|1.1.1.1|null|multihop": {
+		"admin_status":"up"
+	}
 }
 ```
 
@@ -965,6 +1018,72 @@ name as object key and member list as attribute.
 }
 ```
 
+### Spanning Tree (PVST+)
+
+Spanning Tree can be configured Globally, per VLAN, per interface and per VLAN-interface as below:
+```
+"STP":
+{
+    "GLOBAL": {
+        "forward_delay": "15", 
+        "hello_time": "2", 
+        "max_age": "20", 
+        "mode": "pvst", 
+        "priority": "32768", 
+        "rootguard_timeout": "30"
+    }
+}
+
+"STP_INTF":
+{
+    "Ethernet0": {
+        "bpdu_guard": "false", 
+        "bpdu_guard_do_disable": "false", 
+        "enabled": "true", 
+        "portfast": "true", 
+        "root_guard": "false", 
+        "uplink_fast": "false"
+    }, 
+    "PortChannel100": {
+        "bpdu_guard": "false", 
+        "bpdu_guard_do_disable": "false", 
+        "enabled": "true", 
+        "portfast": "true", 
+        "root_guard": "false", 
+        "uplink_fast": "false"
+    }
+}
+
+"STP_VLAN":
+{
+    "Vlan100": {
+        "enabled": "true", 
+        "forward_delay": "15", 
+        "hello_time": "2", 
+        "max_age": "20", 
+        "priority": "32768"
+    },
+    "Vlan200": {
+        "enabled": "true", 
+        "forward_delay": "15", 
+        "hello_time": "2", 
+        "max_age": "20", 
+        "priority": "32768"
+    }
+}
+
+"STP_VLAN_INTF":
+{
+    "Vlan100|Ethernet0": {
+        "path_cost": "100", 
+        "priority": "10"
+    }, 
+    "Vlan200|PortChannel100": {
+        "path_cost": "100", 
+        "priority": "10"
+    }
+}
+```
 
 ### Tacplus Server
 

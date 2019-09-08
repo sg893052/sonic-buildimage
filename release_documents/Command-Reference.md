@@ -27,9 +27,16 @@ Table of Contents
    * [ARP &amp; NDP](#arp--ndp)
       * [ARP show commands](#arp-show-commands)
       * [NDP show commands](#ndp-show-commands)
+   * [Bidirectional Forwarding Detection](#bfd)
+      * [BFD show commands](#bfd-show-commands)
+      * [BFD debug commands](#bfd-config-commands)
    * [BGP Configuration And Show Commands](#bgp-configuration-and-show-commands)
       * [BGP show commands](#bgp-show-commands)
       * [BGP config commands](#bgp-config-commands)
+      * [BGP error handling](#bgp-error-handling)
+          * [Configuration Commands](#bgp-error-handling-config-commands)
+          * [Show Commands](#bgp-error-handling-show-commands)
+          * [Clear Commands](#bgp-error-handling-clear-commands)
    * [ECN Configuration And Show Commands](#ecn-configuration-and-show-commands)
       * [ECN show commands](#ecn-show-commands)
       * [ECN config commands](#ecn-config-commands)
@@ -59,6 +66,12 @@ Table of Contents
    * [PortChannel Configuration And Show](#portchannel-configuration-and-show)
       * [PortChannel Show commands](#portchannel-show-commands)
       * [PortChannel Config commands](#portchannel-config-commands)
+   * [Spanning Tree](#spanning-tree)
+      * [Per VLAN Spanning Tree](#spanning-tree-pvst)
+         * [Configuration commands](#spanning-tree-pvst-config-commands)
+         * [Show commands](#spanning-tree-pvst-show-commands)
+         * [Debug commands](#spanning-tree-pvst-debug-commands)
+         * [Clear Commands](#spanning-tree-pvst-clear-commands)
    * [QoS Configuration &amp; Show](#qos-configuration--show)
       * [QoS Show commands](#qos-show-commands)
          * [PFC](#pfc)
@@ -1441,6 +1454,46 @@ This command enables user to delete a track interface for a VRRP instance on an 
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
 
+# Bidirectional Forwarding Detection (BFD)
+
+This section explains BFD show and debug commands. 
+
+## BFD show commands
+
+**show bfd peers brief** 
+
+To display all the BFD peers in brief use **show bfd peers brief** command. 
+
+Note: This command is available in FRR BGP container vtysh shell.
+
+Sample output:
+
+```
+sonic# show bfd peers brief
+Session count: 1
+SessionId      LocalAddr                NeighAddr                        State
+=========      =========                =========                        =====
+1              192.168.0.1              192.168.0.2                       UP
+```
+
+## BFD debug commands
+
+**debug bfd**
+
+To enable BFD debug logs for trouble shooting, a new command is added. Use **no debug bfd** to disable debug logging for BFD. 
+
+Note: This command is available in FRR BGP container vtysh shell.
+
+- Usage: 
+  [no] debug bfd
+
+- Example:
+  ```
+  sonic# debug bfd
+  ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#bfd)
+
 # BGP Configuration And Show Commands
 
 This section explains all the BGP show commands and BGP configuation commands in both "Quagga" and "FRR" routing software that are supported in SONiC.
@@ -1772,6 +1825,112 @@ This command is used to start up the particular IPv4 or IPv6 BGP neighbor using 
 
   ```
   admin@sonic:~$ sudo config bgp startup neighbor SONIC02SPINE
+  ```
+
+**config routing_config_mode**  
+
+This command is used to configure routing configuration mode. This command requires config reload or system reboot for the configurations to take effect.
+
+- Usage:  
+  sudo config routing_config_mode {unified|split|separated}
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config routing_config_mode unified
+  ```
+
+  ```
+  admin@sonic:~$ sudo config routing_config_mode split
+  ```
+## BGP Error Handling
+
+When BGP learns a prefix, it sends the route to route table manager(Zebra) to install in data plane.  The routes are installed in kernel and also sent to APP_DB via fpmsyncd. The Orchagent reads the route from APP_DB, creates new resources like nexthop or nexthop group Id and installs the route in ASIC_DB. The syncd triggers the appropriate SAI API and route is installed in hardware. Due to resource allocation failures in hardware, SAI API calls can fail and these failures should be notified to Zebra and BGP. On learning the prefix, BGP can immediately advertise the prefix to its neighbors. However, if the BGP error-handling feature is enabled, BGP waits for success notification from hardware installation before advertising the route to its peers. If the hardware installation returns error, the routes are not advertised to the peers.
+
+### Configuration Commands
+
+**bgp error-handling**
+
+Below configuration command is added to enable or disable BGP error handling feature. BGP error handling feature is disabled by default. 
+
+Note: This command is available in SONIC CLIs. 
+
+- Usage: 
+
+  config bgp error-handling {enable|disable}
+
+- Example
+
+  ```
+  root@sonic:~# sudo config bgp error-handling enable
+  
+  root@sonic:~# sudo config bgp error-handling disable
+  ```
+
+### Show Commands
+
+**show ip route not-installed**
+
+A new command is added with this feature, to display the failed routes. 
+
+Note: This command is available in FRR BGP vtysh shell.  
+
+- Usage: 
+
+  show {ip | ipv6} route not-installed [prefix/mask]
+
+- Example
+
+  ```
+  sonic# show ip route not-installed
+  Codes: K - kernel route, C - connected, S - static, R - RIP,
+         O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+         T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
+         F - PBR,
+         > - selected route, * - FIB route # - not installed in hardware
+  B> # 22.1.1.1/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 22.1.1.2/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.1/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.2/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.3/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.4/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.5/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.6/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.7/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  B> # 30.1.1.8/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
+  ```
+
+*show bgp {ipv4|ipv6}* and *show ip route* CLI outputs are also enhanced to display the routes that are failed to install in the hardware with different status code. 
+
+Example: 
+
+```
+sonic# show ip route
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
+       F - PBR,
+       > - selected route, * - FIB route, # - Not installed in hardware
+
+K>* 0.0.0.0/0 [0/0] via 10.59.128.1, eth0, 09:44:37
+C>* 4.1.1.0/24 is directly connected, Ethernet4, 00:01:48
+C>* 10.1.0.1/32 is directly connected, lo, 09:44:37
+C>* 10.59.128.0/20 is directly connected, eth0, 09:44:37
+B># 21.21.21.21/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:07
+```
+
+### Debug Commands
+
+To retry installation of failed routes from Zebra, a clear command has been provided.
+
+- Usage:
+
+  clear {ip | ipv6} route {not-installed | <prefix/mask>}
+
+- Example 
+
+  ```
+  root@sonic:~# clear ip route not-installed
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
@@ -3186,6 +3345,370 @@ Some of the example QOS configurations that users can modify are given below.
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#QoS-Configuration-And-Show)
 
+# Spanning Tree
+
+The Spanning Tree Protocol (STP) prevents Layer 2 loops in a network and provides redundant links. If a primary link fails, the backup link is activated and network traffic is not affected. STP also ensures that the least cost path is taken when multiple paths exist between the devices.
+
+When spanning tree is used, the network switches transform the real network topology into a spanning tree topology. In an STP topology any LAN in the network can be reached from any other LAN through a unique path. The network switches recalculate a new spanning tree topology whenever there is a change to the network topology.
+
+
+## Per VLAN Spanning Tree (PVST)
+
+PVST+ allows for running multiple instances of spanning tree on per VLAN basis. Following sections explain PVST configuration and show commands.  
+
+### Configuration commands 
+
+#### Global commands
+
+Following command allow to enable or disable PVST globally and to configure STP parameters globally. 
+
+**config spanning_tree enable or disable pvst**
+
+This command allows enabling or disabling spanning tree mode (pvst) for the device globally. 
+
+Note: When global pvst mode is enabled, by default spanning tree will be enabled on the VLANs for VLANs up to maximum PVST instances are supported on the hardware, for rest of the VLANs spanning tree will be disabled.
+
+- Usage: 
+  config spanning_tree {enable|disable} {pvst}
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree enable pvst
+```
+
+**config spanning_tree root_guard_timeout **
+
+This command allows configuring a root guard timeout value. Once superior BPDUs stop coming on the port, device will wait for a period until root guard timeout before moving the port to forwarding state(default = 30 secs), range 5-600.
+
+- Usage: 
+  config spanning_tree root_guard_timeout <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree root_guard_timeout 40
+```
+
+**config spanning_tree forward_delay **
+
+This command allows configuring the forward delay time in seconds (default = 15), range 4-30.
+
+- Usage: 
+  config spanning_tree forward_delay <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree forward_delay 20
+```
+
+**config spanning_tree hello**
+
+This command allows configuring hello interval in secs for transmission of BPDUs (default = 2), range 1-10.
+
+- Usage: 
+  config spanning_tree hello <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree hello 3
+```
+
+**config spanning_tree max_age **
+
+This command allows configuring the maximum time to listen for root bridge in seconds (default = 20), range 6-40.
+
+- Usage: 
+  config spanning_tree max_age <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree max_age 25
+```
+
+**config spanning_tree priority **
+
+This command allows configuring the bridge priority in increments of 4096 (default = 32768), range 0-61440.
+
+- Usage: 
+  config spanning_tree priority <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree priority 4096
+```
+
+#### VLAN commands
+
+Following commands allow to enable or disable PVST per VLAN and configure STP parameters per VLAN.
+
+**config spanning_tree vlan enable or disable**
+
+This command allows enabling or disabling spanning-tree on a particular VLAN.
+
+- Usage: 
+  config spanning_tree vlan {enable|disable} <vlan\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree vlan enable 100
+```
+
+**STP VLAN parameters**
+
+Below commands are similar to the global level commands but allow configuring STP parameters on per VLAN basis.
+
+- Usage: 
+  config spanning_tree vlan {forward_delay|hello|max_age|priority} <vlan\> <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree vlan forward_delay 100 20
+  admin@sonic:~$ sudo config spanning_tree vlan hello 100 3
+  admin@sonic:~$ sudo config spanning_tree vlan max_age 100 25
+  admin@sonic:~$ sudo config spanning_tree vlan priority 100 4096  
+```
+
+#### Interface commands
+
+Following command allow to enable or disable PVST per interface and configure STP parameters per interface.
+
+**config spanning_tree interface enable or disable** 
+
+This command allows enabling or disabling of STP on an interface, by default STP will be enabled on the interface if global STP mode is configured.
+
+- Usage: 
+  config spanning_tree interface {enable|disable} <if-name\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface enable Ethernet0
+  admin@sonic:~$ sudo config spanning_tree interface enable PortChannel100
+```
+
+**config spanning_tree interface priority**
+
+This command allows to configure the port level priority value, range 0 - 240 (default 128)
+
+- Usage: 
+  config spanning_tree interface priority <if-name\> <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface priority Ethernet0 64
+  admin@sonic:~$ sudo config spanning_tree interface priority PortChannel100 64
+```
+
+**configure spanning_tree interface cost**
+
+This command allows to configure the port level cost value, range 1 - 200000000
+
+- Usage: 
+  configure spanning_tree interface cost <if-name\> <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface cost Ethernet0 100
+  admin@sonic:~$ sudo config spanning_tree interface cost PortChannel100 100
+```
+
+**config spanning_tree interface root_guard **
+
+This command allow enabling or disabling of root guard on an interface.
+
+- Usage: 
+  config spanning_tree interface root_guard {enable|disable} <if-name\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface root_guard enable Ethernet0
+```
+
+**config spanning_tree interface bpdu_guard**
+
+This command allows enabling or disabling of bpdu guard on an interface. By default, BPDU guard will only generate a syslog indicating the condition, for taking an action like disabling the port use shutdown option. 
+
+- Usage: 
+  config spanning_tree interface bpdu_guard {enable|disable} <ifname\> [--shutdown | -s]
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface bpdu_guard enable Ethernet0
+  admin@sonic:~$ sudo config spanning_tree interface bpdu_guard enable Ethernet0 --shutdown  
+```
+
+**config spanning_tree interface portfast**
+
+This command allows enabling or disabling of portfast on an interface. Portfast command is enabled by default on all ports.  
+
+- Usage: 
+  config spanning_tree interface portfast {enable|disable} <if-name\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface portfast disable Ethernet0 
+```
+
+**config spanning_tree interface uplink_fast**
+
+This command allows enabling or disabling of uplink_fast on an interface. uplink_fast command is disabled by default on all ports. 
+
+- Usage: 
+  config spanning_tree interface uplink_fast {enable|disable} <if-name\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree interface uplink_fast enable Ethernet0 
+```
+
+#### VLAN, Interface commands
+
+Following command allow to configure port cost and port priority per VLAN, interface port.
+
+**config spanning_tree vlan interface cost**
+
+This command allows to configure the port cost value per VLAN, interface basis, range 1 - 200000000
+
+- Usage: 
+  config spanning_tree vlan interface cost <vlan\> <if-name\> <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree vlan interface cost 100 Ethernet0 100
+  admin@sonic:~$ sudo config spanning_tree vlan interface cost 100 PortChannel100 100
+```
+
+**config spanning_tree vlan interface priority**
+
+This command allows to configure the port priority value VLAN, interface basis, range 0 - 240 (default 128)
+
+- Usage: 
+  config spanning_tree vlan interface priority <vlan\> <if-name\> <value\>
+- Example:
+
+```
+  admin@sonic:~$ sudo config spanning_tree vlan interface priority 100 Ethernet0 100
+  admin@sonic:~$ sudo config spanning_tree vlan interface priority 100 PortChannel100 100
+```
+
+### Show commands 
+
+Use following command to display information about spanning tree in the system.
+
+**show spanning_tree**
+
+This command shows information about spanning tree state information. 
+
+- Usage: 
+  show spanning_tree vlan <vlanid\> interface <if-name\>
+
+- Example:
+
+  ```
+  admin@sonic:~$ show spanning_tree
+  Spanning-tree Mode: PVST
+  VLAN 100 - STP instance 3
+  --------------------------------------------------------------------
+  STP Bridge Parameters:
+  
+  Bridge           Bridge Bridge Bridge Hold  LastTopology Topology
+  Identifier       MaxAge Hello  FwdDly Time  Change       Change
+  hex              sec    sec    sec    sec   sec          cnt
+  8000002438eefbc3 20     2      15     1     0            0       
+  
+  RootBridge       RootPath  DesignatedBridge Root  Max Hel Fwd
+  Identifier       Cost      Identifier       Port  Age lo  Dly
+  hex                        hex                    sec sec sec
+  8000002438eefbc3 0         8000002438eefbc3 Root  20  2   15  
+  
+  STP Port Parameters:
+  
+  Port        Prio Path Port Uplink   State      Designated  Designated       Designated
+  Num         rity Cost Fast Fast                Cost        Root             Bridge
+  Ethernet13  128  4    Y    N        FORWARDING 0           8000002438eefbc3 8000002438eefbc3 
+  ```
+
+**show spanning_tree bpdu_guard**
+This command displays the interfaces which are BPDU guard enabled and also the state if the interface is disabled due to BPDU guard.
+
+- Usage: 
+  show spanning_tree bpdu_guard
+- Example: 
+
+```
+admin@sonic:~$ show spanning_tree bpdu_guard
+PortNum            Shutdown      Port shut
+                   Configured    due to BPDU guard
+-------------------------------------------------
+Ethernet1            Yes          Yes
+Ethernet2            Yes          No
+Port-Channel2        No           NA
+```
+
+**show spanning_tree root_guard**
+This command displays the interfaces where root guard is active and the pending time for root guard timer expiry
+
+- Usage: 
+  show spanning_tree root_guard
+- Example: 
+
+```
+admin@sonic:~$ show spanning_tree root_guard
+Root guard timeout: 120 secs
+
+Port         VLAN    Current State
+-------------------------------------------------
+Ethernet1    1       Inconsistent state (102 seconds left on timer)
+Ethernet8    100     Consistent state
+```
+
+**show spanning_tree statistics**
+
+This command displays the spanning-tree bpdu statistics. Statistics will be synced to APP DB every 10 seconds.
+
+- Usage: 
+  show spanning_tree statistics [vlan <vlanid\>]
+
+- Example: 
+
+  ```
+  admin@sonic:~$ show spanning_tree statistics 
+  VLAN 100 - STP instance 3
+  --------------------------------------------------------------------
+  PortNum           BPDU Tx     BPDU Rx     TCN Tx      TCN Rx             
+  Ethernet13        10	      4           3          4
+  PortChannel15     20	      6           4          1
+  ```
+
+### Debug commands
+
+Following debug commands can be used for enabling additional logging which can be viewed in /var/log/syslog and packet logs can be viewed in /var/log/stp_dbg.log (in STP container)
+- debug spanning_tree bpdu [rx/tx]
+- debug spanning_tree event
+- debug spanning_tree vlan <id\>
+- debug spanning_tree interface <if-name\>
+- debug spanning_tree verbose
+
+To disable the debugging controls enabled, '-d' or '--disable' option can be used. An example of disabling bpdu debugging is shown below:
+
+```
+admin@sonic:~$ sudo debug spanning_tree bpdu -d 
+```
+
+Following commands can be used to reset and display the debugging controls enabled respectively
+- debug spanning_tree reset
+- debug spanning_tree show
+
+Following debug commands will be supported for displaying internal data structures
+- debug spanning_tree dump global
+- debug spanning_tree dump vlan <vid\>
+- debug spanning_tree dump interface <vid\> <if-name\>
+
+### Clear Commands
+
+Following clear commands can use to clear STP counters. 
+- sonic-clear spanning_tree statistics
+- sonic-clear spanning_tree statistics vlan <vid\>
+- sonic-clear spanning_tree statistics vlan-interface <vid\> <if-name\>
+- sonic-clear spanning_tree statistics interface <if-name\>
 
 # Startup & Running Configuration
 
