@@ -51,7 +51,7 @@ Table of Contents
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 2Draft |  6-JUN-2019 | Updated with more examples| ConfigDB for SONiC 201811 version (build#32) with complete "config DB" set |
-| 1 |  NA |v1 | Initial version of Config DB Guide with minimal set | 
+| 1 |  NA |v1 | Initial version of Config DB Guide with minimal set |
 
 # INTRODUCTION																																									
 This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.  																																																																					
@@ -214,6 +214,8 @@ and migration plan
 
 ***Below ACL table added by comparig minigraph.xml & config_db.json***
 
+Note below that REDIRECT clause requires {IP, Interface} instead of just {IP} as IP address alone is not sufficient to decide the egress interface in multi-VRF scenario.
+
 ```
 {
 "ACL_TABLE": {
@@ -267,7 +269,7 @@ and migration plan
         },
         "SNMP_ACL|RULE_2": {
             "PRIORITY": "9998",
-            "PACKET_ACTION": "ACCEPT",
+            "PACKET_ACTION": "REDIRECT:20.1.1.93|Ethernet10",
             "SRC_IP": "2.2.2.2/32",
             "IP_PROTOCOL": "17"
         },
@@ -278,7 +280,7 @@ and migration plan
         },
         "SSH_ONLY|RULE_1": {
             "PRIORITY": "9999",
-            "PACKET_ACTION": "ACCEPT",
+            "PACKET_ACTION": "REDIRECT:27.3.11.219|Ethernet92,65.31.46.161|Ethernet72",
             "SRC_IP": "4.4.4.4/8",
             "IP_PROTOCOL": "6"
         }
@@ -553,15 +555,22 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
 ### Data Plane L3 Interfaces
 
 IP configuration for data plane are defined in **INTERFACE**,
-**PORTCHANNEL_INTERFACE**, and **VLAN_INTERFACE** table. The objects
-in all three tables have the interface (could be physical port, port
-channel, or vlan) that IP address is attached to as first-level key, and
-IP prefix as second-level key. IP interface objects don't have any
-attributes.
+**PORTCHANNEL_INTERFACE**, **VLAN_INTERFACE** and **LOOPBACK_INTERFACE** table. The objects
+in all four tables have the interface (could be physical port, port
+channel, vlan, or loopback) that IP address is attached to as first-level key, and
+IP prefix as second-level key. IP interface objects have VRF name as an
+attribute. In the example below, Ethernet0 belongs to Vrf-Edge, Ethernet8 belongs to Vrf-Core and Ethernet4 belongs to default VRF. For every interface bound to the default VRF, an entry is required with empty VRF name like "Vlan1000":{}.
 
 ```
 {
 "INTERFACE": {
+        "Ethernet0":{
+                "vrf_name":"Vrf-Edge"
+        },
+        "Ethernet4":{}, // it means this interface belongs to global/default VRF. It is necessary even user doesnt use vrf.
+        "Ethernet8":{
+                "vrf_name":"Vrf-Core"
+        },        
         "Ethernet0|10.0.0.0/31": {},
         "Ethernet4|10.0.0.2/31": {},
         "Ethernet8|10.0.0.4/31": {}
@@ -569,6 +578,10 @@ attributes.
     },
 	
 "PORTCHANNEL_INTERFACE": {
+        "PortChannel01":{},
+        "PortChannel02":{
+                "vrf_name":"Vrf-Red"
+        },
         "PortChannel01|10.0.0.56/31": {},
         "PortChannel01|FC00::71/126": {},
         "PortChannel02|10.0.0.58/31": {},
@@ -576,10 +589,23 @@ attributes.
 		...
     },
 "VLAN_INTERFACE": {
+        "Vlan1000":{},
         "Vlan1000|192.168.0.1/27": {}
-    }
+    },
+    
+"LOOPBACK_INTERFACE":{
+        "Loopback0":{
+                "vrf_name":"Vrf-yellow"
+        },
+        "Loopback23": {},
+        "Loopback64": {},
+        "Loopback129": {},
+        "Loopback531": {},
+        "Loopback0|14.14.14.1/32":{},
+        "Loopback23|23.45.67.89/32": {},
+        "Loopback531|192.168.131.217/32": {}
+    },
 }
-
 ```
 
 
@@ -1129,6 +1155,70 @@ The packet action could be:
 }
 ```
 
+### VRF
+
+The VRF table allows to insert or update a new virtual router
+instance. The key of the instance is VRF name. The attributes in the
+table allow to change properties of a VRF. Attributes:
+
+- 'fallback' contains boolean value 'true' or 'false'. This knob dictates the forwarding behavior when route lookup fails in an user VRF. This attribute is not yet supported.
+
+```
+{
+         "VRF": {
+                "Vrf-Core": {
+                        "fallback": "false"
+                },
+                "Vrf-Green": {
+                        "fallback": "false"
+                },
+                "Vrf-Yellow": {
+                        "fallback": "false"
+                }
+        }
+}
+```
+
+### VRRP
+
+The VRRP table allows to insert or update a VRRP instance entry.
+The key of the entry is {<interface_name>, <vrid>}. Interface name could be any Layer-3 interface in systems, like Ethernet12, Vlan43, PortChannel37. The attributes in the
+table allow to change properties of a VRRP instance. Attributes:
+
+- 'adv_interval' contains integer value between 1 and 255. Default is 1 and the unit is in seconds. This attributes decides how frequently VRRP hellos will be sent out.
+- 'priority' conatins an integer value between 1 and 254. Default is 100. This attribute control the election of Master VRRP node for an instance. Highest priority node becomes the master.
+- 'pre_empt' contains boolean value 'true' or 'false'. Default is 'true'. This attribute controls if a Master node can be premepted when a higher priority VRRP node comes online.
+- 'state' conatins a string to denote the current state of VRRP instance. Currently this is not used.
+- 'version' contains an integer value to denote the VRRP version. Currently only Version 2 is supported and hence this attribute is always 2.
+- 'vip' contains a list of IP address in dotted decimal format. This attribute is virtual IP address for a given VRRP instance
+- 'vrid' is an integer and specifies the VRID of the associated VRRP instance.
+- 'track_interface' is a list of tuples {<interface_name>, weight, <weight>}. This attribute enables user to configure track interface for a VRRP instance.
+
+```
+{    
+    "VRRP": {
+        "Vlan23|37": {
+            "adv_interval": "1",
+            "pre_empt": "True",
+            "priority": "140",
+            "state": "",
+            "track_interface": "Ethernet7|weight|10,PortChannel17|weight|10,",
+            "version": "2",
+            "vip": "4.1.1.100,",
+            "vrid": "37"
+        },
+        "PortChannel29|64": {
+            "adv_interval": "1",
+            "pre_empt": "True",
+            "priority": "80",
+            "state": "",
+            "track_interface": "",
+            "version": "2",
+            "vip": "4.1.2.100,",
+            "vrid": "64"
+        },
+}
+```
 
 ### WRED_PROFILE
 
