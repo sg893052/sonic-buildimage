@@ -93,7 +93,8 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
-| 4 | Sep-7-2-19 | v4 | Added VRRP config and show commands |
+| 5 | Sep-8-2019 | v5 | Added VRF config and display commands |
+| 4 | Sep-7-2019 | v4 | Added VRRP config and show commands |
 | 3 |  Jun-26-2019 |v3 | Update based on 201904 (build#19) release, "config interface" command changes related to interfacename order, FRR/Quagga show command changes, platform specific changes, ACL show changes and few formatting changes |
 | 2 |  Apr-22-2019 |v2 | CLI Guide for SONiC 201811 version (build#32) with complete "config" command set |
 | 1 |  Mar-23-2019 |v1 | Initial version of CLI Guide with minimal command set |
@@ -1186,6 +1187,192 @@ This command displays either all the IPv6 neighbor mac addresses, or for a parti
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Watermark-Configuration-And-Show)
 
+# VRF Configuration And Show Commands
+
+This section describes all the VRF show commands and VRF configuation commands that are supported in SONiC.
+Most of the VRRP show commands start with "show vrf". Detailed show commands examples for VRF are provided for each of the commands. 
+
+VRF feature enables other modules in SONiC to use VRF to provide virtualizattion and multi-instances for L3 routers. These components' confiiguration and how commands have been extended to accept VRF as an optional CLI keyword. These CLI extensions are described in individual modules' sections.
+
+## VRF show commands  
+
+**show vrf [<vrf_name>] [--verbose]**
+
+This command displays the summary of all VRFs in SONIC along with their associated interfaces. "--verbose" is an optional CLI keyword and this additionally displays VRF-ID and Table ID for each VRF.  This command allows user to display a particular VRF in summary or verbose mode by entering <vrf_name> on CLI
+
+- Usage:   
+  show vrf
+
+- Example:
+
+  ```
+  admin@sonic:~$ show vrf
+  VRF         Interfaces
+  ----------  --------------
+  Vrf-Core    Ethernet200
+              Ethernet204
+              Ethernet208
+              Ethernet212
+              PortChannel213
+              Vlan234
+  Vrf-Edge    Ethernet108
+              Ethernet100
+              Ethernet112
+              Ethernet104
+              Vlan100
+  Vrf-Green   Ethernet12
+              Vlan27
+  Vrf-Red     Ethernet4
+              PortChannel017
+  Vrf-Yellow  Ethernet32
+              Vlan45
+              Vlan134
+  ```
+
+- Usage:   
+  show vrf --verbose
+
+- Example:
+
+  ```
+  admin@sonic:~$ show vrf --verbose
+  VRF         Table Id    Vrf Id    Interfaces
+  ----------  ----------  --------  --------------
+  Vrf-Core    1005        81        Ethernet200
+                                    Ethernet204
+                                    Ethernet208
+                                    Ethernet212
+                                    PortChannel213
+                                    Vlan234
+  Vrf-Edge    1004        80        Ethernet108
+                                    Ethernet100
+                                    Ethernet112
+                                    Ethernet104
+                                    Vlan100
+  Vrf-Green   1002        78        Ethernet12
+                                    Vlan27
+  Vrf-Red     1001        77        Ethernet4
+                                    PortChannel017
+  Vrf-Yellow  1003        79        Ethernet32
+                                    Vlan45
+                                    Vlan134
+  ```
+
+- Usage:   
+  show vrf <vrf_name>
+
+- Example:
+
+  ```
+  admin@sonic:~$ show vrf Vrf-Core
+  VRF       Interfaces
+  --------  --------------
+  Vrf-Core  Ethernet200
+            Ethernet204
+            Ethernet208
+            Ethernet212
+            PortChannel213
+            Vlan234
+  ```
+
+- Usage:   
+  show vrf <vrf_name> --verbose
+
+- Example:
+
+  ```
+  admin@sonic:~$ show vrf Vrf-Core --verbose
+  VRF       Table Id    Vrf Id    Interfaces
+  --------  ----------  --------  --------------
+  Vrf-Core  1005        81        Ethernet200
+                                  Ethernet204
+                                  Ethernet208
+                                  Ethernet212
+                                  PortChannel213
+                                  Vlan234
+  ```
+
+## VRF config commands  
+
+This sub-section explains the various configuration commands available for VRF module 
+
+The list of possible VRF config commands are given below.
+
+```
+vrf
+    add <vrf_name>
+    del <vrf_name>
+```
+
+**config vrf add <vrf_name>**  
+
+This command enables user to create a new VRF in SONIC. User can associate interface and config routing protocols after a VRF is created. Vrf name must start with "Vrf" prefix with "V" in upper case.
+
+- Usage:  
+  sudo config vrf add <vrf_name>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config vrf add Vrf-Core
+  ```
+
+  ```
+  admin@sonic:~$ sudo config vrf add Vrf-Red
+  ```
+
+**config vrf del <vrf_name>**  
+
+This command enables user to delete a existing VRF in SONIC. All the associated interfaces in this particular VRF will move to default VRF and their IP addresses will be automatically deleted.
+
+- Usage:  
+  sudo config vrf del <vrf_name>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config vrf del Vrf-Core
+  ```
+
+  ```
+  admin@sonic:~$ sudo config vrf del Vrf-Red
+  ```
+
+**config route add [vrf <vrf_name>] prefix <prefix>/<mask> next-hop [vrf <vrf_name>] {<nh_ip> | dev <dev_name>}**  
+
+This command allows user to create a static route in SONIC. The static route can be created in a VRF with next-hop belongng to a different VRF. This is the typical case of a inter VRF route. When next-hop VRF is not entered, the next-hop VRF is same as the prefix VRF. If prefix VRF is not entered by user, then the static route gets created in default VRF.
+
+- Usage:  
+  config route add [vrf <vrf_name>] prefix <prefix>/<mask> next-hop [vrf <vrf_name>] {<nh_ip> | dev <dev_name>}
+
+- Examples:
+
+  The below command creates a static route 192.168.34.0/24 in VRF Vrf-Core with next-hop 10.17.34.71 in Vrf-Core.
+
+  ```
+  admin@sonic:~$ config route add vrf Vrf-Red prefix 192.168.34.0/24 next-hop vrf Vrf-Core 10.17.34.71
+  ```
+
+- ```
+  admin@sonic:~$ config route add vrf Vrf-Edge prefix 71.39.196.0/27 next-hop 27.58.64.1
+  ```
+
+**config route del [vrf <vrf_name>] prefix <prefix>/<mask> next-hop [vrf <vrf_name>] {<nh_ip> | dev <dev_name>}**  
+
+This command allows user to delete an already existing static route in SONIC. 
+
+- Usage:  
+  config route del [vrf <vrf_name>] prefix <prefix>/<mask> next-hop [vrf <vrf_name>] {<nh_ip> | dev <dev_name>}
+
+- Examples:
+
+  ```
+  admin@sonic:~$ config route del vrf Vrf-Red prefix 192.168.34.0/24 next-hop vrf Vrf-Core 10.17.34.71
+  ```
+
+- ```
+  admin@sonic:~$ config route del vrf Vrf-Edge prefix 71.39.196.0/27 next-hop 27.58.64.1
+  ```
 
 # VRRP Configuration And Show Commands
 
@@ -1211,7 +1398,7 @@ This command displays the summary of all VRRP instances for all the VRRP enabled
          Vlan100     2  Master  126.126.126.50       100        100
          Vlan100     3  Master  128.128.128.50       100        100
          Vlan100     4  Master  127.127.127.50       100        100
-      Vlan1000     1  Backup     40.10.1.101       100        100
+        Vlan1000     1  Backup     40.10.1.101       100        100
         Vlan1000     2  Backup     40.10.2.101       100        100
         Vlan1000     3  Backup     40.10.3.101       100        100
   ```
@@ -2069,6 +2256,7 @@ NOTE: In SONiC versions until 201811, syntax was "config <interface_name> ip add
   
 
 **IP Address Configuration for Vlan Interface**  
+
 - Usage:  
     config interface ip add <ip_addr> <vlan_IDName>
 
@@ -2097,6 +2285,7 @@ NOTE: In versions until 201811, syntax is "config  interface <interface_name> ip
   
 
 **IP Address Removal for Vlan Interface**  
+
 - Usage:  
     config interface ip remove <vlan_IDName> <ip_addr> 
 
@@ -2106,12 +2295,38 @@ NOTE: In versions until 201811, syntax is "config  interface <interface_name> ip
   ```
 NOTE: In versions until 201811, syntax is "config interface <vlan_ID> ip remove <ip_addr>"
 
-  
-  
 
-**config interface pfc asymmetric <interface_name> (for 201904+ version)**  
-**config interface <interface_name> pfc asymmetric (for 201811- version)**  
-This command is used for setting the asymmetric PFC for an interface to either "on" or "off". Once if it is configured, use "show interfaces status" to check the same.
+
+
+**Loopback interface creation**  
+
+Introduction of VRF feature in SONIC allows user to have per VRF loopback interface. With this, new commands have been introduced to create and delete Loopback interfaces. Loopback interface must start with "Loopback" with "L" in upper case. Once Loopback interface is created, user can bind it to a VRF, can assign IP address etc. like a regular interface.
+
+- Usage:  
+  config loopback add Loopback<0-999> 
+
+- Example:
+
+  ```
+  admin@sonic:~$ sudo config loopback add Loopback7 
+  ```
+
+**Loopback interface deletion**  
+
+This command allows user to delete an already existing loopback interface
+
+- Usage:  
+  config loopback del Loopback<0-999> 
+
+- Example:
+
+  ```
+  admin@sonic:~$ sudo config loopback del Loopback7 
+  ```
+
+  **config interface pfc asymmetric <interface_name> (for 201904+ version)**  
+  **config interface <interface_name> pfc asymmetric (for 201811- version)**  
+  This command is used for setting the asymmetric PFC for an interface to either "on" or "off". Once if it is configured, use "show interfaces status" to check the same.
 
 - Usage:  
     config interface pfc asymmetric <interface_name> on/off (for 201904+ version)
@@ -2176,6 +2391,50 @@ NOTE: In versions until 201811, syntax is "config interface <interface_name> spe
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#interface-configuration-and-show-commands)
 
+# Associating/disassociating an Interface to/from a VRF
+
+## Binding an interface to a VRF
+
+This command allows user to bind an interface to a particular VRF. By default, all interfaces are part of default VRF. 
+
+If an interface is already associated with a user VRF, user can execute this command to move the interface to a different VRF without disassociating the interface from the prior VRF. However, when an interface is moved from one VRF to another, SONIC will automatically delete all the IP/IPv6 address configured on that interface. In order to remove an interface from user VRF to default VRF, please use "vrf unbind" command. The interface and VRF must exist in order for this command to succeed. Interface can be Ethernet or Vlan or PortChannel or Loopback.
+
+In order to successfully bind an interface to VRF, interface should not be a member of a PortChannel or a Vlan
+
+**sudo config interface vrf bind <interface_name> <vrf_name>**  
+
+- Usage:  
+  config interface vrf bind <interface_name> <vrf_name>
+
+- Example:
+
+  ```
+  admin@sonic:~$ sudo config interface vrf bind Ethernet12 Vrf-Green
+  admin@sonic:~$ sudo config interface vrf bind PortChannel017 Vrf-Red
+  admin@sonic:~$ sudo config interface vrf bind Vlan27 Vrf-Green
+  ```
+
+## Unbinding an interface from a VRF
+
+This command allows user to disassociate an interface from a particular VRF and move the interface to default VRF.  While disassociating the interface, the IP/IPv6 addresses configured on that interface will automatically be deleted.
+
+**sudo config interface vrf unbind <interface_name> <vrf_name>**  
+
+- Usage:  
+  config interface vrf unbind <interface_name> <vrf_name>
+
+- Example:
+
+  ```
+  admin@sonic:~$ sudo config interface vrf unbind Ethernet12 Vrf-Green
+  admin@sonic:~$ sudo config interface vrf unbind PortChannel017 Vrf-Red
+  admin@sonic:~$ sudo config interface vrf unbind Vlan27 Vrf-Green
+  ```
+
+## Interface naming mode config commands
+
+**config interface naming mode**  
+This command is used to change the interface naming mode. 
 
 # Interface Naming Mode
 
@@ -2260,10 +2519,10 @@ This sub-section explains the various IP protocol specific show commands that ar
 
 **show ip route**  
 
-This command displays either all the route entries from the routing table or a specific route.
+This command displays either all the route entries from the routing table or a specific route. VRF is an optional keyword for this CLI that allows user to view IP routes in a given VRF or all VRFs. If VRF parameter is not entered by user, then routes from default VRF are displayed.
 
   - Usage:  
-    show ip route [\<ip_address\>]
+    show ip route [\<ip_address\>] [vrf {all | <vrf_name>}]
 
 
 - Example:
@@ -2294,9 +2553,27 @@ This command displays either all the route entries from the routing table or a s
 	  * directly connected, Ethernet112
   ```
 
+- Optionally, user can specify a VRF name in order to display routes in that particular VRF
+
+- Example:
+
+  ```
+  admin@sonic:~$ show ip route vrf Vrf-Core
+  Codes: K - kernel route, C - connected, S - static, R - RIP,
+         O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+         T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
+         F - PBR, f - OpenFabric,
+         > - selected route, * - FIB route # - not installed in hardware
+  
+  
+  VRF Vrf-Core:
+  C>*  179.13.79.0/24 is directly connected, Ethernet204, 00:00:40
+  C>*  192.168.42.0/24 is directly connected, Ethernet208, 00:00:37
+  ```
+
 **show ip interfaces**  
 
-This command displays the details about all the Layer3 IP interfaces in the device for which IP address has been assigned. 
+This command displays the details about all the Layer3 IP interfaces in the device for which IP address has been assigned. This command output has been extnded to display the asscoiated VRF for each L3 interface. A new column has been inserted to display the associated VRF name. If an interface belongs to default VRF, the VRF name displayed is blank.
 The type of interfaces include the following.
 1) Front panel physical ports.
 2) PortChannel.
@@ -2311,22 +2588,20 @@ The type of interfaces include the following.
 - Example:
   ```  
 	admin@sonic:~$ show ip interfaces
-	Interface        IPv4 address/mask    Admin/Oper
-	---------------  -------------------  ------------
-	Ethernet112      10.1.1.0/31          up/up
-	Ethernet116      10.1.1.2/31          up/up
-	PortChannel0001  10.0.1.1/31          up/down
-	PortChannel0002  10.0.1.3/31          up/down
-	Vlan100          1.1.2.2/16           up/down
-	docker0          240.127.1.1/24       up/down
-	eth0             10.11.162.42/24      up/up
-	lo               127.0.0.1/8          up/up
-					 10.1.0.1/32
-					 10.1.0.32/32
-					 10.12.0.102/32	
+	Interface       IPv4 address/mask    Master    Admin/Oper
+	--------------  -------------------  --------  ------------
+	Ethernet100     161.29.39.25/27      Vrf-Edge  up/down
+	                12.46.83.58/29
+	Ethernet200     64.27.33.48/21       Vrf-Core  up/down
+	Ethernet204     179.13.79.31/24      Vrf-Core  up/up
+	Ethernet208     192.168.42.91/24     Vrf-Core  up/up
+	Ethernet212     27.135.72.19/24      Vrf-Core  up/down
+	PortChannel213  71.141.26.9/24       Vrf-Core  up/down
+	Vlan234         10.27.22.219/31      Vrf-Core  down/down
+	docker0         240.127.1.1/24                 up/down
+	eth0            10.59.143.45/20                up/up
+	lo              127.0.0.1/8                    up/up
   ```
-
-
 
 **show ip protocol**  
 
@@ -2369,10 +2644,10 @@ This sub-section explains the various IPv6 protocol specific show commands that 
 
 **show ipv6 route**  
 
-This command displays either all the IPv6 route entries from the routing table or a specific IPv6 route.
+This command displays either all the IPv6 route entries from the routing table or a specific IPv6 route. This command has been extended to display IPv6 routes from a particular VRF or all VRFs by entering optional VRF parameter on the CLI. If VRF parameter is not entered by user, the routes are displayed from default VRF.
 
   - Usage:  
-    show ipv6 route [\<ipv6_address\>]
+    show ipv6 route [\<ipv6_address\>] [vrf {all | <vrf_name>}]
 	
 - Example:
   ```
@@ -2406,9 +2681,28 @@ This command displays either all the IPv6 route entries from the routing table o
 	  * directly connected, lo
   ```
 
+- Optionally, user can specify VRF parameter on CLI in order to display routes from that particular VRF
+
+- Example:
+
+  ```
+  admin@sonic:~$ show ipv6 route vrf Vrf-Core
+  Codes: K - kernel route, C - connected, S - static, R - RIPng,
+         O - OSPFv3, I - IS-IS, B - BGP, N - NHRP, T - Table,
+         v - VNC, V - VNC-Direct, A - Babel, D - SHARP, F - PBR,
+         f - OpenFabric,
+         > - selected route, * - FIB route # - not installed in hardware
+  
+  
+  VRF Vrf-Core:
+  C *  fe80::/64 is directly connected, Ethernet208, 00:17:01
+  C>*  fe80::/64 is directly connected, Ethernet204, 00:17:04
+  K>*  ff00::/8 [0/256] is directly connected, Ethernet208, 00:17:01
+  ```
+
 **show ipv6 interfaces**  
 
-This command displays the details about all the Layer3 IPv6 interfaces in the device for which IPv6 address has been assigned. 
+This command displays the details about all the Layer3 IPv6 interfaces in the device for which IPv6 address has been assigned. The comand output has been extended to display each interface's associated VRF. A new column has been inserted in command output to display the associated VRF. A blan VRF name indicate that the interface belongs to default VRF.
 The type of interfaces include the following.
 1) Front panel physical ports.
 2) PortChannel.
@@ -2423,24 +2717,23 @@ The type of interfaces include the following.
 - Example:
   ```  
 	admin@sonic:~$ show ipv6 interfaces
-	Interface        IPv6 address/mask                            Admin/Oper
-	---------------  -------------------------------------------  ------------
-	Bridge           fe80::d494:dcff:fe37:535e%Bridge/64          up/down
-	Ethernet112      2018:2001::1/126                             up/up
-					 fe80::3617:ebff:fe38:100%Ethernet112/64
-	Ethernet116      2018:2002::1/126                             up/up
-					 fe80::3617:ebff:fe38:100%Ethernet116/64
-	PortChannel0001  2018:1002::2/126                             up/down
-	PortChannel0002  2018:1002::6/126                             up/down
-	PortChannel0011  fe80::3617:ebff:fe38:100%PortChannel0011/64  up/up
-	Vlan100          fe80::3617:ebff:fe38:100%Vlan100/64          up/down
-	eth0             fc00:2::102/128                              up/up
-					 fe80::3617:ebff:fe38:100%eth0/64
-	lo               fc00:1::102/128                              up/up
-					 fc00:1::32/128
-					 ::1/128
-
-  ```
+	Interface       IPv6 address/mask                         Master     Admin/Oper
+	--------------  ----------------------------------------  ---------  ------------
+	Bridge          fe80::d494:dcff:fe37:535e%Bridge/64                  up/down
+	Ethernet200     3001::1/64                                Vrf-Core   up/down
+	Ethernet204     2001::1/64                                Vrf-Core   up/up
+	                fe80::3e2c:99ff:fe2d:8235%Ethernet204/64
+	Ethernet208     fe80::3e2c:99ff:fe2d:8235%Ethernet208/64  Vrf-Core   up/up
+	Ethernet112     2018:2001::1/126                          Vrf-Red    up/up
+	                fe80::3617:ebff:fe38:100%Ethernet112/64
+	Ethernet116     2018:2002::1/126                          Vrf-Green  up/up
+	                fe80::3617:ebff:fe38:100%Ethernet116/64
+	PortChannel213  4001::1/64                                Vrf-Core   up/down
+	Vlan27          6001::1/64                                Vrf-Green  down/down
+	Vlan100         5001::1/64                                Vrf-Edge   down/down
+	eth0            fe80::3e2c:99ff:fe2d:8235%eth0/64                    up/up
+	lo              ::1/128                                              up/up
+```
 
 **show ipv6 protocol**  
 
