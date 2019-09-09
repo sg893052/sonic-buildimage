@@ -41,7 +41,8 @@ Table of Contents
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
          * [Virtual router](#virtual-router)  
-         * [WRED_PROFILE](#wred_profile)  
+         * [WRED_PROFILE](#wred_profile) 
+         * [NAT](#nat)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1151,6 +1152,62 @@ The packet action could be:
         "red_drop_probability": "5"
     }
   }
+}
+```
+### NAT
+
+NAT configuration is defined in **NAT_GLOBAL**, **NAT_POOL**, **NAT_BINDINGS**, **STATIC_NAT**, **STATIC_NAPT** tables. The NAT zone configuration is part of **INTERFACE** table.
+
+```
+{
+    "NAT_GLOBAL": {
+        "Values": {
+            "admin_mode": "enabled",
+            "nat_tcp_timeout": "6000",
+            "nat_udp_timeout": "300"
+        }
+    },
+    "NAT_POOL": {
+        "nat1": {
+            "nat_ip": "2.0.0.5",
+            "nat_port": "10-200"
+        }
+    },
+    "NAT_BINDINGS": {
+        "bind1": {
+            "access_list": "",
+            "nat_pool": "nat1"
+        }
+    },
+    "STATIC_NAT": {
+        "65.54.0.1": {
+            "local_ip": "10.0.0.1"
+        },
+        "112.0.0.1": {
+            "local_ip": "111.0.0.2",
+            "nat_type": "dnat",
+            "twice_nat_id": "1"
+        },
+        "112.0.0.2": {
+            "local_ip": "111.0.0.3",
+            "nat_type": "snat",
+            "twice_nat_id": "1"
+        }
+    },
+    "STATIC_NAPT": {
+        "112.0.0.1|UDP|250": {
+            "local_ip": "10.0.0.1",
+            "local_port": "111"
+        }
+    },
+    "INTERFACE": {
+        "Ethernet0": {
+            "nat_zone": "1"
+        },
+        "Ethernet2": {
+            "nat_zone": "2"
+        },
+    },
 }
 ```
 
