@@ -1,4 +1,4 @@
-# SONiC COMMAND LINE INTERFACE GUIDE
+﻿# SONiC COMMAND LINE INTERFACE GUIDE
 
 Table of Contents
 =================
@@ -2895,7 +2895,8 @@ The type of interfaces include the following.
 	Vlan100         5001::1/64                                Vrf-Edge   down/down
 	eth0            fe80::3e2c:99ff:fe2d:8235%eth0/64                    up/up
 	lo              ::1/128                                              up/up
-```
+
+
 
 **show ipv6 protocol**  
 
@@ -3027,6 +3028,71 @@ This command displays more details about all LLDP neighbors or only the neighbor
 		PortDescr:    T0-2:hundredGigE1/29
 	-------------------------------------------------------------------------------
   
+  ```
+
+
+**show lldp statistics**  
+
+This command displays LLDP packet statistics for all interfaces or a specific interface. 
+
+  - Usage:  
+    show lldp statistics [INTERFACENAME]
+
+
+- Example1: To display statistics for all interfaces
+  ```
+    show lldp statistics 
+    -------------------------------------------------------------------------------
+    LLDP statistics:
+    -------------------------------------------------------------------------------
+    Interface:    Ethernet0
+    Transmitted:  150
+    Received:     145
+    Discarded:    1
+    Unrecognized: 0
+    Ageout:       0
+    Inserted:     0
+    Deleted:      0
+    -------------------------------------------------------------------------------
+    Interface:    Ethernet1
+    Transmitted:  0
+    Received:     0
+    Discarded:    1
+    Unrecognized: 0
+    Ageout:       0
+    Inserted:     0
+    Deleted:      0
+    -------------------------------------------------------------------------------
+    Interface:    Ethernet2
+    Transmitted:  0
+    Received:     0
+    Discarded:    1
+    Unrecognized: 0
+    Ageout:       0
+    Inserted:     0
+    Deleted:      0
+    -------------------------------------------------------------------------------
+    
+  ```
+  
+  
+  - Optionally, you can specify an interface name in order to display only that particular interface
+
+- Example2:
+  ```
+  admin@sonic:~$ show lldp statistics Ethernet6
+    -------------------------------------------------------------------------------
+    LLDP statistics:
+    -------------------------------------------------------------------------------
+    Interface:    Ethernet6
+    Transmitted:  1460
+    Received:     1465
+    Discarded:    1
+    Unrecognized: 2
+    Ageout:       0
+    Inserted:     2
+    Deleted:      0
+    -------------------------------------------------------------------------------
   ```
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#LLDP)
 
@@ -3976,7 +4042,7 @@ This command displays the spanning-tree bpdu statistics. Statistics will be sync
 
 ### Debug commands
 
-Following debug commands can be used for enabling additional logging which can be viewed in /var/log/syslog and packet logs can be viewed in /var/log/stp_dbg.log (in STP container)
+Following debug commands can be used for enabling additional logging which can be viewed in /var/log/stpd.log 
 - debug spanning_tree bpdu [rx/tx]
 - debug spanning_tree event
 - debug spanning_tree vlan <id\>
