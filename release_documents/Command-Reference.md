@@ -104,6 +104,9 @@ Table of Contents
       * [NAT show commands](#nat-show-commands)
       * [NAT configuration commands](#nat-configuration-commands)
       * [NAT clear commands](#nat-clear-commands)
+   * [Error Handling Framework Configuration and Show Commands](#error-handling-framework-configuration-and-show-commands)
+      * [Error Handling Framework show commands](#error-handling-framework-show-commands)
+      * [Error Handling Framework clear commands](#error-handling-framework-clear-commands)
 
 # Document History
 
@@ -5564,5 +5567,57 @@ root@sonic:/home/admin# sonic-clear nat translations
 
 Dynamic NAT entries are cleared.
 ```
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
 
+# Error Handling Framework Configuration and Show Commands
+
+This section explains all the Error Handling Framework show commands and configuation commands that are supported in SONiC.
+
+## Error Handling Framework show commands
+
+**show error_database [tablename]**
+
+This command displays the failure entries logged in the error database.
+
+- Usage:
+show error_database [tablename]
+
+- Example:
+```
+admin@sonic:/home/admin# show error_database
+Prefix         Nexthop    Interface    Error Code      Operation
+-------------  ---------  -----------  --------------  -----------
+600::/64       2000::2    Ethernet28   SWSS_RC_EXISTS  create
+12.12.12.0/24  10.1.1.2   Ethernet28   SWSS_RC_EXISTS  create
+IP address    MAC address        Interface    Error Code          Operation
+------------  -----------------  -----------  ------------------  -----------
+2000::3       00:00:00:00:00:02  Ethernet28   SWSS_RC_TABLE_FULL  create
+2000::4                          Ethernet28   SWSS_RC_NOT_FOUND   remove
+10.1.1.3      00:00:00:00:00:01  Ethernet28   SWSS_RC_TABLE_FULL  create
+10.1.1.3                         Ethernet28   SWSS_RC_NOT_FOUND   remove
+
+admin@sonic:/home/admin# show error_database ERROR_ROUTE_TABLE
+Prefix         Nexthop            Interface              Error Code      Operation
+-------------  -----------------  ---------------------  --------------  -----------
+12.12.12.0/24  10.1.1.2,20.1.1.2  Ethernet28,Ethernet30  SWSS_RC_EXISTS  create
+13.13.13.0/24  10.1.1.2           Ethernet28             SWSS_RC_EXISTS  create
+```
+
+## Error Handling Framework clear commands
+
+**sonic-clear error_database [tablename]**
+
+This command clears the failure entries logged in the error database.
+
+- Usage:
+sonic-clear error_database [tablename]
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear error_database
+ERROR DB entries are cleared.
+
+admin@sonic:/home/admin# sudo sonic-clear error_database ERROR_ROUTE_TABLE
+('ERROR DB entries are cleared from Table.', 'ERROR_ROUTE_TABLE')
+```
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
