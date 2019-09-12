@@ -27,6 +27,12 @@ Table of Contents
    * [ARP &amp; NDP](#arp--ndp)
       * [ARP show commands](#arp-show-commands)
       * [NDP show commands](#ndp-show-commands)
+   * [VRF Configuration And Show Commands](#vrf)
+      * [VRF show commands](#vrf-show-commands)
+      * [VRF config commands](#vrf-config-commands) 
+   * [VRRP Configuration And Show Commands](#vrrp)
+      * [VRRP show commands](#vrrp-show-commands)
+      * [VRRP config commands](#vrrp-show-commands) 
    * [Bidirectional Forwarding Detection](#bfd)
       * [BFD show commands](#bfd-show-commands)
       * [BFD debug commands](#bfd-config-commands)
@@ -2898,6 +2904,7 @@ The type of interfaces include the following.
 	Vlan100         5001::1/64                                Vrf-Edge   down/down
 	eth0            fe80::3e2c:99ff:fe2d:8235%eth0/64                    up/up
 	lo              ::1/128                                              up/up
+	```
 
 
 

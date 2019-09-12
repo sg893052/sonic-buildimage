@@ -38,7 +38,7 @@ Table of Contents
       * [6.5 Isolate SONiC Device from the Network](#65-isolate-sonic-device-from-the-network)
 
 
- 
+
 
 # Introduction
 SONiC is an open source network operating system based on Linux that runs on switches from multiple vendors and ASICs. SONiC offers a full-suite of network functionality, like BGP and RDMA, that has been production-hardened in the data centers of some of the largest cloud-service providers. It offers teams the flexibility to create the network solutions they need while leveraging the collective strength of a large ecosystem and community.
@@ -52,7 +52,7 @@ After logging into the device, SONiC software can be configured in following thr
  1) [Command Line Interface](https://github.com/Azure/SONiC/wiki/Command-Reference)
  2) [config_db.json](https://github.com/Azure/SONiC/wiki/Configuration) 
  3) [minigraph.xml](https://github.com/Azure/SONiC/wiki/Configuration-with-Minigraph-(~Sep-2017))
- 
+
 Users can use all of the above methods or choose either one method to configure and to view the status of the device.
 This user manual explains the common commands & related configuration/show examples on how to use the SONiC device. Refer the above documents for more detailed information.
 
@@ -98,7 +98,7 @@ This sub-section explains how to transfer the image from remote server into the 
 #### 1.1.2.1 Install SONiC ONIE Image
 
 1. Connect to switch via serial console.
-  
+
   **Note**: By default, the SONiC console baud rate is 9600. You may need to change the baud rate in case you cannot see anything from the console after reboot.
 
 1. (Optional) Some switches may come with a NOS which will require you to uninstall the existing NOS first before you install SONiC. To do so, simply boot into ONIE and select `Uninstall OS`:
@@ -241,7 +241,7 @@ This TSG gives the instruction of how to reset a SONiC switch password.
 1. Edit Grub boot menu options
 1.1 First you need to get into grub menu options. This menu is displayed right at the beginning of the boot.  You should get something similar to this, but not the exactly the same. 
 Choose the choice Start with SONiC-:
-  ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-1.png)
+    ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-1.png)
 
 1.2 Now we attempt to edit grub's boot option. Press "e" to edit the first grub menu option and navigate to kernel line:
  ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-2.png)
@@ -263,9 +263,9 @@ mount -o remount,rw /proc
 3 Reset password
 3.1 To reset an actual password is now simple as typing :
 `passwd admin`
- 
+
   ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-5.png)
- 
+
 ```
 sync
 sudo reboot -f
@@ -282,7 +282,7 @@ SONiC is managing configuration in a single source of truth - a redisDB instance
 Details about ConfigDB and schema design, please find it [here](https://github.com/Azure/SONiC/wiki/Configuration) 
 
 Before Sep 2017, we were using an XML file named minigraph.xml to configure SONiC devices. For historical documentation, please refer to [Configuration with Minigraph](https://github.com/Azure/SONiC/wiki/Configuration-with-Minigraph-(~Sep-2017))
- 
+
 SONiC includes commands that allow user to show platform, transceivers, L2, IP, BGP status, etc.
 
 - [Command Reference](Command-Reference.md)
@@ -302,12 +302,12 @@ SONiC does not provide a CLI to configure the static IP for the management inter
       - Example:
    ```
    admin@sonic:~$ /sbin/ifconfig eth0 10.11.12.13/24
-   ```   
+   ```
 Note that SONiC does not support management VRF and hence it is not possible to differentiate data traffic and management traffic. Work is in progress to support the mgmtVRF in Aug2019 release. 
 
    2) use config_db.json and configure the MGMT_INTERFACE key with the appropriate values. Refer [here](https://github.com/Azure/SONiC/wiki/Configuration#Management-Interface) 
-   
-   
+
+
    Add the following example configuration in a file (ex: mgmt_ip.json) and load it as follows.
    ```
    "MGMT_INTERFACE": {
@@ -317,22 +317,22 @@ Note that SONiC does not support management VRF and hence it is not possible to 
    }
    ```
    NOTE: If the interface IP address and default gateway were already present, users should remove them before loading the above configuration.
-   
+
    Users can use the "show runningconfiguration all" to check the already configured MGMT_INTERFACE. Or, users can use the "redis-cli" command as follows to check the same.
 ```
    root@T1-2:/etc/sonic# redis-cli -n 4 keys "MGMT_INTERFACE*"
 	1) "MGMT_INTERFACE|eth0|10.20.30.40/24"
-```   
+```
    In the above redis-cli command example, it gets the keys starting with MGMT_INTERFACE and it displays the already configured MGMT_INTERFACE in the CONFIG_DB.
    To remove this key from CONFIG_DB, users shall use the following redis-cli command.
 ```   
    redis-cli -n 4 DEL "MGMT_INTERFACE|eth0|10.20.30.40/24"
-```   
+```
    After removing the key, users can load the new configuration using "config load mgmt_ip.json" command and then do "systemctl restart interfaces-config" to make it effective. Users shall verify the configured management interface IP address value using "ifconfig" linux command.
       
-   
+
    3) use minigraph.xml and configure "ManagementIPInterfaces" tag inside "DpgDesc" tag as given at the [page](https://github.com/Azure/SONiC/wiki/Configuration-with-Minigraph-(~Sep-2017))
-   
+
 Once the IP address is configured, the same can be verified using "/sbin/ifconfig eth0" linux command.
 Users can SSH login to this management interface IP address from their management network.
 
@@ -342,13 +342,13 @@ Users can SSH login to this management interface IP address from their managemen
    eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
          inet 10.11.11.13  netmask 255.255.255.0  broadcast 10.11.12.255
    ```
-   
+
 The same method shall be used to configure the loopback interface address as follows.
 1) "/sbin/ifconfig lo" linux command shall be used, OR,
 2) Add the key LOOPBACK_INTERFACE & value in config_db.json and load it, OR,
 3) use minigraph.xml and configure LoopbackIPInterfaces tag inside the "DpgDesc" tag.
 
-   
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Basic-Configuration-And-Show)
 
 
@@ -357,7 +357,7 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 This section explains how to check the current version of the software running in the device, how to check the features available in the version and how to upgrade/downgrade to different versions.
 
 ### 3.2.1 Show Versions 
- 
+
 **show version**  
 This command displays software component versions of the currently running SONiC image. This includes the SONiC image version as well as Docker image versions.
 This command displays relevant information as the SONiC and Linux kernel version being utilized, as well as the commit-id used to build the SONiC image. The second section of the output displays the various docker images and their associated id?s. 
@@ -417,7 +417,7 @@ SONiC software can be installed in two methods, viz, using "ONIE Installer" or b
 ### 3.2.3.1 SONiC Installer
 This is a command line tool available as part of the SONiC software; If the device is already running the SONiC software, this tool can be used to install an alternate image in the partition.
 This tool has facility to install an alternate image, list the available images and to set the next reboot image.
- 
+
 **sonic_installer install**  
 
 This command is used to install a new image on the alternate image partition.  This command takes a path to an installable SONiC image or URL and installs the image.
@@ -520,7 +520,7 @@ This command is used to remove the unused SONiC image from the disk. Note that i
 
   Image removed
   ```
- 
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Software-Installation-Commands)
 
 
@@ -584,7 +584,10 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 3 |  ACL |[ACL CLI](Command-Reference.md#ACL-Configuration-And-Show) | [ACL ConfigDB](Configuration.md)| To view the details about the ACL |
 | 4 |  COPP |COPP CLI Not Available | [COPP ConfigDB](Configuration.md)| To view the details about the COPP |
 | 5 |  Mirroring |[Mirroring CLI](Command-Reference.md#Mirroring-Configuration-And-Show) | [Mirroring ConfigDB](Configuration.md)| To view the details about the Mirroring |
-
+| 6 | BFD |[BFD CLI](Command-Reference.md#bfd) | [BFD ConfigDB](Configuration.md) | To view the details about the BFD |
+| 7 | STP |[STP CLI](Command-Reference.md##spanning-tree) | [STP ConfigDB](Configuration.md) | To view the details about the STP |
+| 8 | VRF |[VRF CLI](Command-Reference.md##vrf) | [VRF ConfigDB](Configuration.md) | To view the details about the VRF |
+| 9 | VRRP |[VRRP CLI](Command-Reference.md##vrrp) | [VRF ConfigDB](Configuration.md) | To view the details about the VRRP |
 
 
 # 5 Example Configuration
@@ -631,7 +634,7 @@ Few details that the dump includes are given below:
   ```
 
 **syslog**  
-  
+
 -	System logs and event messages  from all dockers are captured via rsyslog  and saved in /var/log/syslog 
 -	Console logs can be viewed using "show logging" command also. This command prints the information in syslog in console .
 -	Show logging -f  will tail the output of syslogs in  console/ssh session.
@@ -726,7 +729,7 @@ root@sonic-z9100-02:~# redis-dump -d 1 -k  "ASIC_STATE:SAI_OBJECT_TYPE_PORT:oid:
     }
   }
 ```
-  
+
 Following is an example for checking the port status for Broadcom ASICs.
 From command line, enter "bcmsh" to enter into Broadcom shell. Users can use "Ctrcl c" to come out of Broadcom shell.
 In the broadcom shell, users shall use "ps" command to check the port state.
