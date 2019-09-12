@@ -1,4 +1,4 @@
-﻿# SONiC COMMAND LINE INTERFACE GUIDE
+# SONiC COMMAND LINE INTERFACE GUIDE
 
 Table of Contents
 =================
@@ -113,6 +113,15 @@ Table of Contents
    * [Error Handling Framework Configuration and Show Commands](#error-handling-framework-configuration-and-show-commands)
       * [Error Handling Framework show commands](#error-handling-framework-show-commands)
       * [Error Handling Framework clear commands](#error-handling-framework-clear-commands)
+   * [Threshold Configuration and Show commands](#threshold-configuration-and-show-commands)
+      * [Threshold show commands](#threshold-show-commands)
+      * [Threshold configuration commands](#threshold-configuration-commands)
+      * [Threshold clear commands](#threshold-clear-commands)
+   * [IFA Configuration and Show commands](#ifa-configuration-and-show-commands)
+      * [IFA show commands](#ifa-show-commands)
+      * [IFA configuration commands](#ifa-configuration-commands)
+      * [IFA clear commands](#ifa-clear-commands)
+
 
 # Document History
 
@@ -5640,7 +5649,9 @@ root@sonic:/home/admin# sonic-clear nat translations
 
 Dynamic NAT entries are cleared.
 ```
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
+
 
 # Error Handling Framework Configuration and Show Commands
 
@@ -5693,4 +5704,418 @@ ERROR DB entries are cleared.
 admin@sonic:/home/admin# sudo sonic-clear error_database ERROR_ROUTE_TABLE
 ('ERROR DB entries are cleared from Table.', 'ERROR_ROUTE_TABLE')
 ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
+
+# Threshold Configuration and Show Commands
+
+This section explains all the Threshold show and configuration commands that are supported in SONiC.
+
+## Threshold show commands
+
+**show priority-group threshold [shared/headroom]**
+
+This command displays the currently configured thresholds on all port's priority-group shared or headroom buffer according to the command executed.
+
+- Usage:
+show priority-group threshold shared
+show priority-group threshold headroom
+
+- Example:
+
+```
+	root@sonic:/home/admin# show priority-group threshold shared 
+	Ingress shared pool threshold per PG:
+	       Port    PG0    PG1    PG2    PG3    PG4    PG5    PG6    PG7
+	-----------  -----  -----  -----  -----  -----  -----  -----  -----
+	        CPU      0      0      0      0      0      0      0      0
+	  Ethernet0      0      0      0      0      0      0      0      5
+	  Ethernet4      0      0      0      0      0      0      0      0
+	  Ethernet8      0      0      0      0      0      0      0      0
+	 Ethernet12      0      0      0      0      0      0      0      0
+	 Ethernet16      0      0      0      0      0      0      0      0
+	 Ethernet20      0      0      0      0      0      0      0      0
+	 Ethernet24      0      0      0      0      0      0      0      0
+	 Ethernet28      0      0      0      0      0      0      0      0
+	 Ethernet32      0      0      0      0      0      0      0      0
+	 Ethernet36      0      0      0      0      0      0      0      0
+	 Ethernet40      0      0      0      0      0      0      0      0
+	 Ethernet44      0      0      0      0      0      0      0      0
+	 Ethernet48      0      0      0      0      0      0      0      0
+	 Ethernet52      0      0      0      0      0      0      0      0
+	 Ethernet56      0      0      0      0      0      20     0      0
+	 Ethernet60      0      0      0      0      0      0      0      0
+	 Ethernet64      0      0      0      0      0      0      0      0
+	 Ethernet68      0      0      0      0      0      0      0      0
+	 Ethernet72      0      0      0      0      0      0      0      0
+	 Ethernet76      0      0      0      0      0      0      0      0
+ 	 Ethernet80      0      0      0      0      0      0      0      0
+ 	 Ethernet84      0      0      0      0      0      0      0      0
+   	 Ethernet88      0      0      0      0      0      0      0      0
+ 	 Ethernet92      0      0      0      0      0      0      0      0
+  	 Ethernet96      0      0      0      0      0      0      0      0
+	Ethernet100      0      0      0      0      0      0      0      0
+	Ethernet104      0      0      0      0      0      0      0      0
+	Ethernet108      0      0      0      0      0      0      0      0
+	Ethernet112      0      0      0      0      0      0      0      0
+	Ethernet116      0      0      0      0      0      0      0      0
+	Ethernet120      0      0      0      0      0      0      0      0
+	Ethernet124      0      0      0      0      0      0      0      0
+```
+
+**show queue threshold [unicast/multicast]**
+
+This command displays threshold configuration for the unicast/multicast queue buffers of all ports.
+
+- Usage:
+show queue threshold unicast
+show queue threshold multicast
+
+- Example:
+```
+root@sonic:/home/admin# show queue threshold unicast 
+Egress shared pool threshold per unicast queue:
+       Port    UC0    UC1    UC2    UC3    UC4    UC5    UC6    UC7
+-----------  -----  -----  -----  -----  -----  -----  -----  -----
+        CPU      0      0      0      0      0      0      0      0
+  Ethernet0      0      0      0      0      0      0      0      0
+  Ethernet4      0      0      0      0      0      0      0      0
+  Ethernet8      0      0      0      0      0      0      0      0
+ Ethernet12     10      0      0      0      0      0      0      0
+ Ethernet16      0      0      0      0      0      0      0      0
+ Ethernet20      0      0      0      0      0      0      0      0
+ Ethernet24      0      0      0      0      0      0      0      0
+ Ethernet28      0      0      0      0      0      0      0      0
+ Ethernet32      0      0      0      0      0      0      0      0
+ Ethernet36      0      0      0      0      0      0      0      0
+ Ethernet40      0      0      0      0      0      0      0      0
+ Ethernet44      0      20     0      0      0      0      0      0
+ Ethernet48      0      0      0      0      0      0      0      0
+ Ethernet52      0      0      0      0      0      0      0      0
+ Ethernet56      0      0      0      0      0      0      0      0
+ Ethernet60      0      0      0      0      0      0      0      0
+ Ethernet64      0      0      0      0      0      0      0      0
+ Ethernet68      0      0      0      0      0      0      0      0
+ Ethernet72      0      0      0      0      0      0      0      0
+ Ethernet76      0      0      0      0      0      0      0      0
+ Ethernet80      0      0      0      0      0      0      0      0
+ Ethernet84      0      0      0      0      0      0      0      0
+ Ethernet88      0      0      0      0      0      0      0      0
+ Ethernet92      0      0      0      0      0      0      0      0
+ Ethernet96      0      0      0      0      0      0      0      0
+Ethernet100      0      0      0      0      0      0      0      0
+Ethernet104      0      0      0      0      0      0      0      0
+Ethernet108      0      0      0      0      0      0      0      0
+Ethernet112      0      0      0      0      0      0      0      0
+Ethernet116      0      0      0      0      0      0      0      0
+Ethernet120      0      0      0      0      0      0      0      0
+Ethernet124      0      0      0      0      0      0      0      0
+
+```
+
+**show threshold breaches <numbreaches>**
+
+This command displays the threshold breaches recorded by the system. Optionally, this command can display only the last "numbreaches" recorded by the system.
+
+- Usage:
+show threshold breaches
+
+- Example:
+```
+root@sonic:/home/admin# show threshold breaches 2
+Event-id          Buffer       Type        Port    Index    Breach Value(%)    Breach Value(bytes)           Time-stamp
+----------  --------------  ---------  ----------  -------  -----------------  ---------------------  -------------------
+75  priority-group     shared   Ethernet8        7                  9                1198288  2019-09-04.05:48:51
+74  priority-group     shared   Ethernet8        7                  9                1198288  2019-09-04.05:48:51
+```
+
+## Threshold configuration commands
+ 
+This sub-section lists the configuration options available for Threshold module.
+
+**config priority-group threshold {port\_alias} {PG\_index} {shared/headroom} {threshold\_value}**
+
+This command is used to configure a threshold on a port's priority-group shared/headroom buffer. The threshold is configured in percentage. The valid values for PG\_index are 0-7.
+
+- Example:
+```
+root@sonic:/home/admin# config priority-group threshold Ethernet8 7 shared 5
+root@sonic:/home/admin# config priority-group threshold Ethernet9 7 headroom 40
+```
+
+**config queue threshold {port\_alias} {queue\_index} {unicast/multicast} {threshold\_value}**
+
+This command is used to configure a threshold on a port's unicast/multicast queue buffer. The threshold is configured in percentage. The valid values for queue\_index are 0-7.
+
+- Example:
+```
+root@sonic:/home/admin# config queue threshold Ethernet8 0 unicast 20
+root@sonic:/home/admin# config queue threshold Ethernet10 7 multicast 10
+```
+
+## Threshold clear commands
+
+This sub-section lists the clear commands available for Threshold module.
+
+**sonic-clear priority-group threshold {port\_alias} {PGindex} {shared/headroom}**
+
+This command is used to clear the threshold configuration on priority-groups.
+
+- Usage:
+sonic-clear priority-group threshold - Clears threshold configuration on all port's priority-groups shared and headroom buffers.
+sonic-clear priority-group threshold Ethernet8 7 shared - Clears threshold configuration on Ethernet8's priority-group 7 shared buffer.
+
+- Example:
+
+```
+admin@sonic:/home/admin# sudo sonic-clear priority-group threshold
+admin@sonic:/home/admin# sudo sonic-clear priority-group threshold Ethernet8 7 shared
+```
+
+**sonic-clear queue threshold {port\_alias} {queueindex} {unicast/multicast}**
+
+This command is used to clear the threshold configuration on queues.
+
+- Usage:
+sonic-clear queue threshold - Clears threshold configuration on all port's unicast and multicast queue buffers.
+sonic-clear queue threshold Ethernet8 7 unicast - Clears threshold configuration on Ethernet8's unicast queue 7 buffer.
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear queue threshold
+admin@sonic:/home/admin# sudo sonic-clear queue threshold Ethernet8 7 unicast
+```
+
+**sonic-clear threshold breach {eventid}**
+
+This command is used to clear the threshold breaches recorded by the system. A specific breach event can also be cleared by specifying the eventid as a parameter to the clear command.
+
+- Usage:
+sonic-clear threshold breach - Clears all threshold breaches recorded by the system.
+sonic-clear threshold breach 2 - Clears threshold breach event-id 2.
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear threshold breach
+admin@sonic:/home/admin# sudo sonic-clear threshold breach 2
+```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
+
+
+# IFA Configuration and Show Commands
+
+This section explains all the IFA show and configuration commands that are supported in SONiC.
+
+## IFA show commands
+
+
+**show ifa supported**
+
+This command displays if IFA is supported on the platform. 
+
+- Usage:
+show ifa supported
+
+- Example:
+```
+root@sonic:/home/admin# show ifa supported
+IFA Supported -  True                     
+```
+
+**show ifa enabled**
+
+This command displays if IFA is enabled. 
+
+- Usage:
+show ifa enabled
+
+- Example:
+```
+root@sonic:/home/admin# show ifa enabled
+IFA Enabled -  True                                         
+```
+
+**show ifa status**
+
+This command displays the current status of IFA. 
+
+- Usage:
+show ifa status
+
+- Example:
+```
+root@sonic:/home/admin# show ifa status                                      
+Device Identifier    -  2345                                                 
+Device Type          -  intermediate                                         
+Number of flows      -  2                                                    
+Number of collectors -  1                                                    
+```
+
+**show ifa statistics {{flow\_name}|all}**
+
+This command displays IFA statistics across all flows/per flow.
+
+- Usage:
+show ifa statistics all
+show ifa statistics newflow
+
+- Example:
+```
+root@sonic:/home/admin# show ifa statistics FLOW1
+  FLOW NAME    RULE NAME    TABLE NAME    PACKETS COUNT    BYTES COUNT
+-----------  -----------  ------------  ---------------  -------------
+      FLOW1        flow1           IFA                0              0
+```
+
+**show ifa device**
+
+This command displays IFA device information.
+
+- Usage:
+show ifa device
+
+- Example:
+```
+root@sonic:/home/admin# show ifa device    
+IFA Device identifier                      
+-------------------------------            
+Device Identifier    -  2345               
+Device Type          -  intermediate       
+```
+
+**show ifa flow {{flow\_name} | all}**
+
+This command displays information about all the configured flows or a specific flow.
+
+- Usage:
+show ifa device
+
+- Example:
+```
+root@sonic:/home/admin# show ifa flow                                                                                                           
+  NAME    ACL NAME    SAMPLINGRATE                                                                              
+------  ----------  --------------                                                                              
+ flow1        acl1             100                                                                              
+ flow2        acl2                                                                                              
+```
+
+**show ifa collector {{collector-name} \| all }**
+
+This command displays information about all the configured collectors or a specific collector.
+
+- Usage:
+show ifa collector all
+show ifa collector collector1
+
+- Example:
+```
+root@sonic:/home/admin# show ifa collector 
+      NAME    IP TYPE           IP    PORT 
+----------  ---------  -----------  ------ 
+collector1       ipv4  10.20.30.40    2233 
+```
+
+
+## IFA configuration commands 
+
+This sub-section explains the list of configuration options available for IFA module.
+
+**config ifa enable**
+
+This command is used to enable IFA functionality.
+
+- Example:
+```
+root@sonic:/home/admin# config ifa enable
+```
+
+**config ifa device-id {value}**
+
+This command is used to configure an IFA device identifier.
+
+- Example:
+```
+root@sonic:/home/admin# config ifa device-id 56663
+```
+
+**config ifa flow {flow_name} {{{acl_name} {sampling-rate}} \| {acl_name}}**
+
+This command is used to specify flow criteria to match against incoming flow and tag with IFA data accordingly. One packet will be sampled out of the number of packets specified in sampling-rate.
+
+- Example:
+```
+root@sonic:/home/admin# config ifa flow flow1 acl_ifa 2
+root@sonic:/home/admin# config ifa flow flow2 acl2
+```
+
+**config ifa collector {collector-name} {ipv4 \| ipv6} {collector-ip} {collector-port}**
+
+This command is used to configure IFA collector and IFA report will be forwarded to the collector accordingly. IFA collector configuration is valid only on IFA egress type node.
+
+- Example:
+```
+root@sonic:/home/admin# config ifa collector collector1 ipv4 10.130.10.250 9070
+```
+
+**config ifa device-type intermediate**
+This command is used to configure IFA device type as intermediate.
+
+- Example:
+```
+root@sonic:/home/admin# config ifa device-type intermediate
+```
+
+## IFA clear commands
+
+This sub-section lists the clear commands available for IFA module.
+
+**sonic-clear ifa device-id**
+
+This command can be used to clear IFA device information and IFA configuration from hardware will be cleared.
+
+- Usage:
+sonic-clear ifa device-id
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear ifa device-id
+```
+
+**sonic-clear ifa collector {collector-name}**
+
+This command can be used to clear IFA collector configuration.
+
+- Usage:
+sonic-clear ifa collector {collector-name}
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear ifa collector collector1
+```
+
+**sonic-clear ifa flow {flow-name}**
+
+This command can be used to clear IFA flow configuration.
+
+- Usage:
+sonic-clear ifa flow flow1 
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear ifa flow flow1
+```
+
+**sonic-clear ifa device-type intermediate**
+
+This command can be used to clear IFA device type intermediate configuration.
+
+- Usage:
+sonic-clear ifa device-type intermediate
+
+- Example:
+```
+admin@sonic:/home/admin# sudo sonic-clear ifa device-type intermediate
+```
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)

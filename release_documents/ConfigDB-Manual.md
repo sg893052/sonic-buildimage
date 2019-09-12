@@ -44,8 +44,10 @@ Table of Contents
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
          * [Virtual router](#virtual-router)  
-         * [WRED_PROFILE](#wred_profile) 
-         * [NAT](#nat)  
+         * [WRED_PROFILE](#wred_profile)
+         * [NAT](#nat)
+         * [Threshold](#threshold)
+         * [IFA](#ifa)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1419,6 +1421,76 @@ NAT configuration is defined in **NAT_GLOBAL**, **NAT_POOL**, **NAT_BINDINGS**, 
     },
 }
 ```
+
+### Threshold
+
+Threshold configuration is defined in **THRESHOLD\_TABLE** table. The key for a **THRESHOLD\_TABLE** entry is {buffer, buffer\_type, port\_alias, buffer\_index}. The attributes are {threshold: value in percentage}.
+
+```
+{
+    "THRESHOLD_TABLE": {
+        "priority-group|headroom|Ethernet0|7": {
+            "threshold": "40"
+        },
+        "priority-group|shared|Ethernet8|7": {
+            "threshold": "2"
+        },
+        "queue|multicast|Ethernet16|7": {
+            "threshold": "20"
+        },
+        "queue|unicast|Ethernet12|0": {
+            "threshold": "10"
+        }
+    }
+}
+```
+
+### IFA
+
+IFA configuration is defined in **IFA\_DEVICE**, **IFA\_FLOW** and **IFA\_COLLECTOR** tables. **ACL\_RULE** and **ACL\_TABLE** tables are used in the case of intermediate nodes.
+
+```
+{                                                       
+    "ACL_RULE": {                                       
+        "IFA_Transit|Transit": {                        
+            "IP_PROTOCOL": "253",                       
+            "PACKET_ACTION": "INT_UPDATE",              
+            "PRIORITY": "255"                           
+        }                                               
+    },                                                  
+    "ACL_TABLE": {                                      
+        "IFA_Transit": {                                
+            "policy_desc": "IFA policy for transit device", 
+            "ports": "all",                                 
+            "stage": "ingress",                             
+            "type": "IFA"                                   
+        }                                                   
+    },                                                      
+    "IFA_COLLECTOR_TABLE": {                                
+        "collector1": {                                     
+            "ipaddress": "10.20.30.40",                     
+            "ipaddress-type": "ipv4",                       
+            "port": "2233"                                  
+        }                                                   
+    },                                                      
+    "IFA_DEVICE_TABLE": {                                   
+        "device": {                                         
+            "deviceid": "2345",                             
+            "devicetype": "intermediate"                    
+        }                                                   
+    },                                                      
+    "IFA_FLOW_TABLE": {                                     
+        "flow1": {                                          
+            "acl-name": "acl1",                             
+            "sampling-rate": "100"                          
+        },                                                  
+        "flow2": {                                          
+            "acl-name": "acl2"                              
+        }                                                   
+    }
+}
+```
+
 
 For Developers
 ==============
