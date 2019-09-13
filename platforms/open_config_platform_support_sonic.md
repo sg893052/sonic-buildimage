@@ -27,7 +27,6 @@ Support Open Config Platform data models in SONiC for the following components:
  - System EEPROM
  - FAN	
  - PSU (Power supply units)
- - Transceivers
 ### 1.1 Open Config Platform Model Support <a name="1_1-open-config-platform-model-support"></a> 
 Support a subset of open config platform attributes for the following components:
  - System EEPROM
@@ -75,13 +74,33 @@ Following daemons would be modified to support newer attributes
 	- xcvrd - Transceiver daemon
 
 Following util would be added to support System EEPROM:
-	- syseeprom_db_util - To populate System EEPROM data in DB. Since this is a static data, this can be initialized once pmon start up. 
+	- sysupdate.py - To populate System EEPROM data in DB. Since this is a static data, this will be initialized during pmon start up. 
 
 ### 2.2 DB Schema for Platform related data <a name="2_2-db-schema-for-platform-related-data"></a>
 The DB schema proposed in this design would be leveraged. Any new additions are highlighted below:
 
 #### 2.2.1 Chassis Table
-This chassis table would be used to store the System EEPROM information identified above
+
+The chassis table would be used to store the System EEPROM information as below:
+```
+; Defines information for a chassis
+key                     = CHASSIS_INFO|chassis_name      ; infomation for the chassis
+; field                 = value
+model                   = STRING                         ; model number from syseeprom
+serial_num              = STRING                         ; serial number from syseeprom
+part_num                = STRING                         ; Part number from syseeprom
+base_mac_addr           = STRING                         ; base mac address from syseeprom
+product_name            = STRING                         ; product name from syseeprom
+mac_addr_num            = INT                            ; mac address numbers from syseeprom
+manufacture_date        = STRING                         ; manufature date from syseeprom
+manufacturer            = STRING                         ; manufacturer from syseeprom
+platform_name           = STRING                         ; platform name from syseeprom
+hardware_version        = STRING                         ; Hardware revision (Label Revision) from syseeprom
+onie_version            = STRING                         ; onie version from syseeprom
+crc32_checksum          = INT                            ; CRC-32 checksum from syseeprom
+
+```
+
 
 #### 2.2.2 Fan Table
 This table would be used to store the FAN related information. This includes both Fan, and PSU Fans. Following attributes will be leveraged from PMON enhancement design.  
