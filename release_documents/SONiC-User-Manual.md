@@ -7,10 +7,10 @@ Table of Contents
    * [Introduction](#introduction)
    * [1 Quick Start Guide](#1-quick-start-guide)
       * [1.1 Download Image](#11-download-image)
-         * [1.1.1 Installation using a USB Thumb Drive](#111-installation-using-a-usb-thumb-drive)
-         * [1.1.2 Installation Over The Network](#112-installation-over-the-network)
-            * [1.1.2.1 Install SONiC ONIE Image](#1121-install-sonic-onie-image)
-            * [1.1.2.2 Install SONiC EOS Image](#1122-install-sonic-eos-image)
+         * [1.1.1 Installation Over The Network](#111-installation-over-the-network)
+            * [1.1.1.1 Install SONiC ONIE Image](#1111-install-sonic-onie-image)
+            * [1.1.1.2 Install SONiC EOS Image](#1112-install-sonic-eos-image)
+         * [1.1.2 Installation using a USB Thumb Drive](#112-installation-using-a-usb-thumb-drive)
    * [2 Login Username &amp; Password](#2-login-username--password)
       * [2.1 Default Login](#21-default-login)
       * [2.2 Configuring Username &amp; Password](#22-configuring-username--password)
@@ -82,20 +82,14 @@ We have one SONiC Image per ASIC vendor. You can download SONiC Image [here](htt
 
 You can also build SONiC from source and the instructions can be found [here](https://github.com/Azure/sonic-buildimage).
 
-Once the image is available in your local machine, the image can be installed either by installing using a USB thumb drive or over the network as given in following sub-sections.
+Once the image is available in your local machine, the image can be installed via ONIE either by installing over the network or using a USB thumb drive as given in following sub-sections.
 In case if the device is already preloaded with SONiC image, the device can be booted without the installation process.
 
-### 1.1.1 Installation using a USB Thumb Drive
-This sub-section explains how to transfer the image from an USB thumb drive into the device and install it.
-Copy the downloaded SONiC image on the USB thumb drive. 
-Remove the USB drive from your machine and insert it into the USB port on the front (or rear) panel of your ONIE enabled device. 
-Power on the device and ONIE will discover the onie-installer file on the root of the USB drive and execute it.
-TBD1: The above method need to be reviewed and corrected. The above information is taken from https://opencomputeproject.github.io/onie/user-guide/index.html
 
-### 1.1.2 Installation Over The Network
+### 1.1.1 Installation Over The Network
 This sub-section explains how to transfer the image from remote server into the device and install it.
 
-#### 1.1.2.1 Install SONiC ONIE Image
+#### 1.1.1.1 Install SONiC ONIE Image
 
 1. Connect to switch via serial console.
 
@@ -158,7 +152,7 @@ When NOS installation finishes, the box will reboot into SONiC by default.
 ```
 
 
-#### 1.1.2.2 Install SONiC EOS Image
+#### 1.1.1.2 Install SONiC EOS Image
 
 - **This section is only applicable if you plan to install a SONiC image on Arista switches.**
 
@@ -182,6 +176,28 @@ Debian GNU/Linux 8 sonic ttyS0
  
 sonic login:
 ```
+
+### 1.1.2 Installation using a USB Thumb Drive
+
+This sub-section explains how to transfer the SONiC image to an USB thumb drive and install it using ONIE on the device
+
+To install via USB simply copy the installer image (For eg., sonic-broadcom.bin) to the root directory of the USB thumb drive, using the file name onie-installer.
+
+For the purposes of this guide, assume the NOS installer image is named sonic-broadcom.bin. Let us assume the USB drive shows up at /dev/sdd1 under Linux (it might be different on your system and OS).
+
+Copy the installer file to the root of the USB thumb drive like this:
+
+```
+linux:~$ sudo mkdir /mnt/usb
+linux:~$ sudo mount /dev/sdd1 /mnt/usb
+linux:~$ sudo cp sonic-broadcom.bin /mnt/usb/onie-installer
+linux:~$ sudo umount /mnt/usb
+```
+Now remove the USB drive from your computer and insert it into the USB port on the front (or rear) panel of your ONIE enabled device. Power on the device. 
+
+On Reboot, follow the steps mentioned above to boot into "ONIE" menu, and select "ONIE: Install OS" option.  Device will boot into ONIE, and ONIE will discover the onie-installer file on the root of the USB drive and execute it. 
+
+When NOS installation finishes, the box will reboot into SONiC by default.
 
 # 2 Login Username & Password
 This section explains the default username & password and how to change the password
