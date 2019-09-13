@@ -27,6 +27,7 @@ Table of Contents
          * [3.3.2 Modify Configuration](#332-modify-configuration)
             * [3.3.2.1 Modify config_db.json](#3321-modify-config_dbjson)
             * [3.3.2.2 Modify minigraph.xml](#3322-modify-minigraphxml)
+         * [3.3.3 Zero Touch Provisioning](#333-zero-touch-provisioning)
    * [4 Detailed Configuration &amp; Show](#4-detailed-configuration--show)
       * [4.2 Links to Different Configuration Sections](#42-links-to-different-configuration-sections)
    * [5 Example Configuration](#5-example-configuration)
@@ -570,6 +571,100 @@ Users can directly edit & modify the file /etc/sonic/mingraph.xml or do a SCP an
 User can either do "config load_minigraph" command to load this new configuration, or users can simply reboot to make it effective.
 Or, users can modify the "enabled" flag in /etc/sonic/updategraph.conf to true and then reboot the device as explained above.
 
+### 3.3.3 Zero Touch Provisioning
+
+The Zero Touch Provisioning (ZTP) service is used by switch administrators to configure a fleet of switches using common configuration templates. Switches booting from a factory default state should be able to communicate with a remote provisioning server, download  relevant configuration files and scripts to kick start more complex configuration steps. The SONiC ZTP service processes this provisioning information in the form of a JSON file called ZTP JSON file.
+
+
+
+#### SONiC ZTP Service
+
+On a switch bootup, the ZTP service starts and checks for the presence of the startup configuration file */etc/sonic/config_db.json*.  If the startup configuration file is not found on disk, the ZTP service creates a temporary switch configuration to perform DHCP discovery in order to receive information about the location of the ZTP JSON file. If the ZTP admin mode is disabled, the ZTP service exits and the switch proceeds to boot with factory default configuration.
+
+
+
+The DHCP discovery is performed on all connected in-band interfaces and the out-of-band management interface. Also, both DHCPv4 and DHCPv6 address discovery are performed on all the interfaces. The first interface that receives a valid DHCP offer is used to determine the URL specifying the location of the ZTP JSON file to be downloaded from. At the DHCP server end, the DHCP offer must include the DHCPv4 Option 67 or the DHCPv6 Option 59 to specify the ZTP JSON file URL.
+
+
+
+If a ZTP JSON file is already present on the switch,  the ZTP service continues to process it and does not download a new ZTP JSON. This allows the ZTP service to perform configuration steps which may involve multiple switch reboots.
+
+
+
+The SONiC ZTP service exits only after a ZTP JSON file is downloaded and processed by it. After processing the ZTP JSON file, if the startup configuration file  */etc/sonic/config_db.json* is not found, the ZTP service restarts DHCP discovery to obtain a new ZTP JSON file and start processing it.
+
+At any given point of time, the user can choose to stop a SONiC ZTP operation by executing the *config ztp disable* command. The disable action creates a factory default configuration and saves it as the switch startup configuration.  The switch continues to operate with the loaded factory default configuration.
+
+More details about the SONiC ZTP service exit criteria and configuration options to change the default behavior can be found in the [SONiC ZTP design document](https://github.com/Azure/SONiC/blob/master/doc/ztp/ztp.md).
+
+
+
+#### SONiC ZTP Flow Diagram
+
+Below flow diagram pictorially explains in detail the sequence of events performed by a SONiC switch up on bootup.
+
+
+
+![](images\sonic_config_flow.png)
+
+
+
+#### ZTP JSON
+
+SONiC consists of many pre-installed software modules that are part of the default image. Some of these modules are network protocol applications (e.g FRR) and others provide support services (e.g syslog, DNS). The data and logic to configure various SONiC modules is encoded in a user defined input file in JSON format. This data file is the ZTP JSON file.
+
+When a SONiC switch boots for the first time, the ZTP service checks if there is an existing ZTP JSON file. If no such file exists, DHCP Option 67 value is used to obtain the URL of the ZTP JSON file. The ZTP service then downloads the ZTP JSON file and processes it. If the DHCP Option 67 value is not available, the ZTP service waits forever till it is provided by the DHCP server. Other switch services including the SWSS service continue to boot.
+
+
+
+Typically in a ZTP JSON, file multiple configuration sections are defined by the user. They are all enclosed within a ztp object. Following is an example ZTP JSON file that has four configuration sections *01-firmware*, *02-configdb-json*, *03-provisioning-script* and *04-connectivity-check* which are included as part of the value of *ztp* object. The top level ztp object also has other objects which specify the progress of whole the ZTP service and also input to the ZTP service on how to process the ZTP JSON file. In a ZTP JSON file it is mandatory to have a *ztp* object defined as the first object and rest of the objects must appear nested under it. The ZTP service will not parse the JSON data if the top level *ztp* object is not found. Also the ZTP JSON file must be syntactically correct.
+
+The configuration sections defined in the ZTP JSON file are processed in the lexical order of their names. So it is convenient if user can name them with a leading numerical number, like in the example, indicating the order in which they need to be executed.
+
+In the example ZTP JSON file, the following steps are performed on first boot:
+
+1. SONiC firmware image is downloaded and installed on to the switch. The switch is then automatically rebooted to start using the newly installed image
+2. The startup configuration file config_db.json associated with the switch is downloaded and loaded. The  config_db.json is stored with the file name  *$hostname_config_db.json* at the webroot of the HTTP server with address 192.168.1.1. This allows the ZTP service to uniquely identify the configuration file associated with the switch.
+3. A post-provisioning script post_install.sh is downloaded and executed. The switch is rebooted if post_install.sh script exits with successful exit code 0.
+4. Post boot, connectivity check is performed by pinging hosts 10.1.1.1 and yahoo.com to verify connectivity
+
+```json
+{
+  "ztp": {
+    "01-firmware": {
+      "install": {
+        "url": "http://192.168.1.1/broadcom-sonic-v1.0.bin"
+      }
+    },
+    "02-configdb-json": {
+      "dynamic-url": {
+        "source": {
+          "prefix": "http://192.168.1.1/",
+          "identifier": "hostname",
+          "suffix": "_config_db.json"
+        }
+      }
+    },
+    "03-provisioning-script": {
+      "plugin": {
+        "url":"http://192.168.1.1/post_install.sh"
+      },
+      "reboot-on-success": true
+    },
+    "04-connectivity-check": {
+      "ping-hosts": [ "10.1.1.1", "yahoo.com" ]
+    }
+  }
+}
+```
+
+
+The ZTP JSON file provides a wide variety of options to the user to fine tune and extend configuration actions.  Please refer to the [SONiC ZTP design document](https://github.com/Azure/SONiC/blob/master/doc/ztp/ztp.md) for more details.
+
+#### ZTP Status
+
+The *show ztp status* command displays detailed information about current state of a ZTP session and also displays the current ZTP configuration of the switch. It displays information related to all the configuration sections defined in the ZTP JSON file that is currently being processed. It also displays information about the previous completed ZTP session. More details about the ztp commands can be found [here](Command-Reference.md#ztp-configuration-and-show-commands).
+
 
 # 4 Detailed Configuration & Show  
 
@@ -588,6 +683,7 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 7 | STP |[STP CLI](Command-Reference.md##spanning-tree) | [STP ConfigDB](Configuration.md) | To view the details about the STP |
 | 8 | VRF |[VRF CLI](Command-Reference.md##vrf) | [VRF ConfigDB](Configuration.md) | To view the details about the VRF |
 | 9 | VRRP |[VRRP CLI](Command-Reference.md##vrrp) | [VRF ConfigDB](Configuration.md) | To view the details about the VRRP |
+| 10 | ZTP |[ZTP CLI](Command-Reference.md#ztp-configuration-and-show-commands) | N/A | To view the details about the ZTP |
 
 
 # 5 Example Configuration
