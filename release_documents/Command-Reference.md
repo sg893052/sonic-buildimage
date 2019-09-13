@@ -1142,13 +1142,15 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 This command displays the ARP entries in the device with following options.
 1) Display the entire table.
 2) Display the ARP entries learnt on a specific interface.
-3) Display the ARP of a specific ip-address.
+3) Display the ARP entry of a specific ip-address.
+4) Display the ARP entries learnt in a specific VRF.
 
   - Usage:  
-    show arp [-if \<if_name\>] [\<ip_address\>]
+    show arp [-if \<if_name\>] [\<ip_address\>] [-vrf \<vrf_name\>]
     show arp - displays all entries
-    show arp -if <ifname> - displays the ARP specific to the specified interface.
-    show arp <ip-address> - displays the ARP specific to the specicied ip-address.
+    show arp -if <ifname> - displays the ARP entries specific to the interface.
+    show arp <ip-address> - displays the ARP entries specific to the ip-address.
+    show arp -vrf <vrf_name> - displays the ARP entries specific to the VRF.
 
 
 - Example:
@@ -1195,42 +1197,67 @@ This command displays the ARP entries in the device with following options.
   
   ```
 
+  - Optionally, you can specify a VRF in order to display entries learnt in the VRF
+
+- Example:
+  ```
+    root@sonic:~# show arp -vrf Vrf-blue
+    Address     MacAddress         Iface      Vlan
+    ----------  -----------------  ---------  ------
+    192.85.2.2  00:10:94:00:00:02  Ethernet4  -
+    192.85.2.3  00:10:94:00:00:02  Ethernet4  -
+    Total number of entries 2
+    root@sonic:~#
+  ```
+
 ## NDP show commands
 
 **show ndp**  
-This command displays either all the IPv6 neighbor mac addresses, or for a particular IPv6 neighbor, or for all IPv6 neighbors reachable via a specific interface.
+This command displays:
+1) Mac addresses of all IPv6 neighbors
+2) Mac address of a particular IPv6 neighbor
+3) Mac addresses of all IPv6 neighbors reachable via a specific interface.
+4) Mac addresses of all IPv6 neighbors reachable in a specific VRF
 
   - Usage:  
-    show ndp [-if|--iface \<interface_name\>] [IPv6_ADDRESS]
+    show ndp [-if|--iface \<interface_name\>] [IPv6_ADDRESS] [-vrf|--vrf \<vrf_name\>]
 
 
 - Example:
   ```
     **ALL IPv6 NEIGHBORS:**
-	admin@sonic:~$ show ndp
-	Address                   MacAddress         Iface    Vlan    Status
-	------------------------  -----------------  -------  ------  ---------
-	fe80::20c:29ff:feb8:b11e  00:0c:29:b8:b1:1e  eth0     -       REACHABLE
-	fe80::20c:29ff:feb8:cff0  00:0c:29:b8:cf:f0  eth0     -       REACHABLE
-	fe80::20c:29ff:fef9:324   00:0c:29:f9:03:24  eth0     -       REACHABLE
-	Total number of entries 3 
-	
-	**SPECIFIC IPv6 NEIGHBOR**
-	admin@sonic:~$ show ndp fe80::20c:29ff:feb8:b11e
-	Address                   MacAddress         Iface    Vlan    Status
-	------------------------  -----------------  -------  ------  ---------
-	fe80::20c:29ff:feb8:b11e  00:0c:29:b8:b1:1e  eth0     -       REACHABLE
-	Total number of entries 1 
-	
-	**SPECIFIC INTERFACE**
-	admin@sonic:~$ show ndp -if eth0
-	Address                   MacAddress         Iface    Vlan    Status
-	------------------------  -----------------  -------  ------  ---------
-	fe80::20c:29ff:feb8:b11e  00:0c:29:b8:b1:1e  eth0     -       REACHABLE
-	fe80::20c:29ff:feb8:cff0  00:0c:29:b8:cf:f0  eth0     -       REACHABLE
-	fe80::20c:29ff:fef9:324   00:0c:29:f9:03:24  eth0     -       REACHABLE
-	Total number of entries 3 
+    admin@sonic:~$ show ndp
+    Address                   MacAddress         Iface    Vlan    Status
+    ------------------------  -----------------  -------  ------  ---------
+    fe80::20c:29ff:feb8:b11e  00:0c:29:b8:b1:1e  eth0     -       REACHABLE
+    fe80::20c:29ff:feb8:cff0  00:0c:29:b8:cf:f0  eth0     -       REACHABLE
+    fe80::20c:29ff:fef9:324   00:0c:29:f9:03:24  eth0     -       REACHABLE
+    Total number of entries 3
 
+    **SPECIFIC IPv6 NEIGHBOR**
+    admin@sonic:~$ show ndp fe80::20c:29ff:feb8:b11e
+    Address                   MacAddress         Iface    Vlan    Status
+    ------------------------  -----------------  -------  ------  ---------
+    fe80::20c:29ff:feb8:b11e  00:0c:29:b8:b1:1e  eth0     -       REACHABLE
+    Total number of entries 1
+
+    **SPECIFIC INTERFACE**
+    admin@sonic:~$ show ndp -if eth0
+    Address                   MacAddress         Iface    Vlan    Status
+    ------------------------  -----------------  -------  ------  ---------
+    fe80::20c:29ff:feb8:b11e  00:0c:29:b8:b1:1e  eth0     -       REACHABLE
+    fe80::20c:29ff:feb8:cff0  00:0c:29:b8:cf:f0  eth0     -       REACHABLE
+    fe80::20c:29ff:fef9:324   00:0c:29:f9:03:24  eth0     -       REACHABLE
+    Total number of entries 3
+
+    **SPECIFIC VRF**
+    root@sonic:~# show ndp -vrf Vrf-blue
+    Address    MacAddress         Iface      Vlan    Status
+    ---------  -----------------  ---------  ------  ---------
+    2001::2    00:10:94:00:00:02  Ethernet4  -       REACHABLE
+    2001::3    00:10:94:00:00:02  Ethernet4  -       REACHABLE
+    Total number of entries 2
+    root@sonic:~#
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Watermark-Configuration-And-Show)
