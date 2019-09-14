@@ -18,6 +18,7 @@ Table of Contents
          * [Buffer queue](#buffer-queue)  
          * [Cable length](#cable-length)  
          * [COPP_TABLE](#copp_table)  
+         * [CORE DUMP](#core-dump)  
          * [CRM](#crm)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [Device Metadata](#device-metadata)   
@@ -581,6 +582,17 @@ BFD_PEER table can be used to configure BFD sessions for a peer IP address as be
 }
 ```
 
+
+
+### CORE DUMP
+
+```json
+"COREDUMP": {
+    "config": {
+        "enabled": "true"
+    }
+}
+```
 ### CRM
 
 ```

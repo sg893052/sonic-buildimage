@@ -43,6 +43,9 @@ Table of Contents
           * [Configuration Commands](#bgp-error-handling-config-commands)
           * [Show Commands](#bgp-error-handling-show-commands)
           * [Clear Commands](#bgp-error-handling-clear-commands)
+  * [Core Dump Configuration And Show Commands](#core-dump-configuration-and-show-commands)
+      * [Core Dump Show Commands](#core-dump-show-commands)
+      * [Core Dump Configuration Commands](#core-dump-config-commands)
    * [ECN Configuration And Show Commands](#ecn-configuration-and-show-commands)
       * [ECN show commands](#ecn-show-commands)
       * [ECN config commands](#ecn-config-commands)
@@ -130,6 +133,7 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
+| 7 | Sep-14-2019 | v7 | Added core dump commands |
 | 6 | Sep-12-2019 | v6 | Added ZTP config and display commands |
 | 5 | Sep-8-2019 | v5 | Added VRF config and display commands |
 | 4 | Sep-7-2019 | v4 | Added VRRP config and show commands |
@@ -2146,6 +2150,110 @@ To retry installation of failed routes from Zebra, a clear command has been prov
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
+
+
+
+# Core Dump Configuration And Show Commands
+
+This section provides details about various configuration and show commands for the core dump feaure supported in SONiC.
+
+## Core Dump Show Commands
+
+This sub-section explains the list all the commands available for viewing core dump feature configuration and the core dump events recorded.
+
+**show core**
+
+This command is used to display list of current core files available and their information. This is a wrapper command for the *coredumpctl* utility provided by *systemd-coredump* package. Configuration related to administrative mode of core dump feature can also be viewed using this command.
+
+
+
+- Usage:     
+  show core [ config | info | list ]
+- Example:
+
+Display core dump feature administration mode.
+
+```
+root@sonic:/home/admin# show core config
+Coredump : Enabled
+```
+
+Display the list of application core events recorded.
+
+```
+root@sonic:/home/admin# show cores list
+TIME                            PID   UID   GID SIG COREFILE EXE
+Sat 2019-09-14 12:05:50 UTC   24547     0     0   6 present  /usr/bin/vlanmgrd
+Sat 2019-09-14 12:06:11 UTC   26780     0     0   6 present  /usr/bin/natmgrd
+
+root@sonic:/home/admin# show cores list natmgrd
+TIME                            PID   UID   GID SIG COREFILE EXE
+Sat 2019-09-14 12:06:11 UTC   26780     0     0   6 present  /usr/bin/natmgrd
+```
+
+
+
+Display detailed information of an application core event.
+
+```
+root@sonic:/home/admin# show cores info natmgrd
+           PID: 26780 (natmgrd)
+           UID: 0 (root)
+           GID: 0 (root)
+        Signal: 6 (ABRT)
+     Timestamp: Sat 2019-09-14 12:06:11 UTC (2min 22s ago)
+  Command Line: /usr/bin/natmgrd
+    Executable: /usr/bin/natmgrd
+ Control Group: /docker/b0774b109cca85b1c55cc632b4970a34224f27859b1c26df6174482419dc8671
+         Slice: -.slice
+       Boot ID: c5a8a9e4f02c49e4929361cbb5c6ce62
+    Machine ID: 4e9149cb5654460eb41223b1f9755598
+      Hostname: sonic
+       Storage: /var/lib/systemd/coredump/core.natmgrd.0.c5a8a9e4f02c49e4929361cbb5c6ce62.26780.1568462771000000000000.lz4
+       Message: Process 26780 (natmgrd) of user 0 dumped core.
+
+                Stack trace of thread 23:
+                #0  0x00007fa597ed6303 epoll_wait (libc.so.6)
+                #1  0x00007fa598e83ad8 _ZN4swss6Select16poll_descriptorsEPPNS_10SelectableEj (libswsscommon.so.0)
+                #2  0x00007fa598e83d0b _ZN4swss6Select6selectEPPNS_10SelectableEi (libswsscommon.so.0)
+                #3  0x000055ac9c8c1270 n/a (/usr/bin/natmgrd)
+```
+
+
+
+## Core Dump Config Commands
+
+This sub-section explains the list of the configuration options available for core dump file generation feature in SONiC.
+
+**config core enable**
+
+Use this command to enable the capability of application core dump file generation.
+
+- Usage: config core enable
+- Example:
+
+```
+root@sonic:/home/admin# config core enable
+```
+
+
+
+**config core disable**
+
+Use this command to disable the capability of application core dump file generation. Even though application core dump file generation is disabled, information about the application fault is still available to view.	
+
+- Usage: config core disable
+- Example:
+
+```
+root@sonic:/home/admin# config core disable
+```
+
+
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
+
+
 
 # ECN Configuration And Show Commands
 
@@ -5834,7 +5942,7 @@ Event-id          Buffer       Type        Port    Index    Breach Value(%)    B
 ```
 
 ## Threshold configuration commands
- 
+
 This sub-section lists the configuration options available for Threshold module.
 
 **config priority-group threshold {port\_alias} {PG\_index} {shared/headroom} {threshold\_value}**
@@ -6242,9 +6350,9 @@ Running command: ztp enable
 Use this command to disable ZTP administrative mode.  This command can also be used to abort a current ZTP session and load the factory default switch configuration.
 
 - Usage:
-  config disable
+  config ztp disable
 
-  config disable -y
+  config ztp disable -y
 
 - Example:
 
@@ -6261,9 +6369,9 @@ Running command: ztp disable -y
 Use this command to manually restart a new ZTP session.  This command deletes the existing */etc/sonic/config_db.json* file and stats ZTP service. It also erases the previous ZTP session data. ZTP configuration is loaded on to the switch and ZTP discovery is performed.
 
 - Usage:
-  config run
+  config ztp run
 
-  config run -y
+  config ztp run -y
 
 - Example:
 
