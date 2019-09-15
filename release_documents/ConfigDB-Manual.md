@@ -19,6 +19,7 @@ Table of Contents
          * [Cable length](#cable-length)  
          * [COPP_TABLE](#copp_table)  
          * [CORE DUMP](#core-dump)  
+         * [Export Service](#export-service)  
          * [CRM](#crm)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [Device Metadata](#device-metadata)   
@@ -593,6 +594,27 @@ BFD_PEER table can be used to configure BFD sessions for a peer IP address as be
     }
 }
 ```
+
+
+### Export Service
+
+```json
+"EXPORT": {
+    "export": {
+        "config": "enable",
+        "servername": "11.11.11.11",
+        "destdir": "/techsupport",
+        "username": "admin",
+        "password": "kITEzO3OICpvMXEHMA==",
+        "protocol": "scp",
+        "interval": "30"
+    }
+}
+```
+
+
+
+
 ### CRM
 
 ```

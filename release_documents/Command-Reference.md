@@ -46,6 +46,9 @@ Table of Contents
   * [Core Dump Configuration And Show Commands](#core-dump-configuration-and-show-commands)
       * [Core Dump Show Commands](#core-dump-show-commands)
       * [Core Dump Configuration Commands](#core-dump-config-commands)
+  * [Tech-support export Configuration And Show Commands](#Tech-support-export-configuration-and-show-commands)
+      * [export Show Commands](#export-show-commands)
+      * [export Config Commands](#export-config-commands)
    * [ECN Configuration And Show Commands](#ecn-configuration-and-show-commands)
       * [ECN show commands](#ecn-show-commands)
       * [ECN config commands](#ecn-config-commands)
@@ -2248,6 +2251,112 @@ Use this command to disable the capability of application core dump file generat
 ```
 root@sonic:/home/admin# config core disable
 ```
+
+
+# Tech-support export Configuration And Show Commands
+
+This section provides details about various configuration and show commands for the techsupport export feaure supported in SONiC.
+
+## export Show Commands
+
+This sub-section explains the list all the commands available for viewing techsupport export feature configuration.
+
+**show export**
+
+This command is used to display list of current configuration of techsupport export feature and their information.
+
+
+
+- Usage:     
+  show export
+- Example:
+
+```
+root@sonic:/home/admin# show export
+Export Info : {'username': 'admin', 'servername': '10.22.33.44', 'protocol': 'scp', 'destdir': './supportsave'}
+```
+
+
+
+## Tech-support export Config Commands
+
+This section explains the list of the configuration options available for the techsupport export feature in SONiC.
+
+Subsequent pages explain each of these commands in detail.
+
+```
+root@sonic:/home/admin# config export --help
+Usage: config export [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  disable   Disable the tech-support export service
+  enable    Enable the tech-support export service
+  interval  Configure the tech-support export interval
+  server    Configure the remote server name to connect
+
+
+This section explains the list of the configuration options available for techsupport export feature in SONiC.
+
+In order to capture and export techsupport data to an remote server, the export service should be configured with necessary remote machine credentials.
+
+root@sonic:/home/admin# config export server
+```
+
+**config export server username destdir protocol <remote address> <username> <destination directory> <protocol- scp/sftp> **
+
+Use this command to configure the techsupport export service.
+
+- Usage: config export server username destdir protocol <remote address> <username> <destination directory> <protocol- scp/sftp>
+
+# config export server username destdir protocol  --help
+Usage: config export server username destdir protocol [OPTIONS] <server name>
+                                                      <user name> <destination
+                                                      directory> <protocol:
+                                                      scp/sftp>
+
+  Configures the export service to upload the tech-support data to a remote
+  server
+
+     <server name> -  Configure the remote server name to connect
+     <user name>   -  Configure the remote server user name to upload
+     <dest dir>    -  Configure the remote server directory to save the tech-support data
+     <protocol>    -  Configure the protocol type[scp/sftp] to upload the tech-support data
+
+Options:
+  --help  Show this message and exit.
+
+- Example:
+root@sonic:/home/admin# config export server username destdir protocol 10.59.132.52 admin ./supportsave scp
+Note: User is prompted for the remote server password.
+```
+
+**config export [enable/disable]**
+
+Use this command to enable/disable the tech-support export service. By default techsupport export is disabled.	
+
+- Usage: config core enable
+- Example:
+
+```
+root@sonic:/home/admin# config core enable
+```
+
+
+**config export interval**
+
+Use this command to change the techsupport interval. By default the techsupport export interval is configured as 30 mintues. If interval is 0, periodic techsupport export service is disabled.	
+
+- Usage: config export interval <interval in minutes>
+- Example:
+
+```
+root@sonic:/home/admin# config export interval 120
+```
+
+
 
 
 
