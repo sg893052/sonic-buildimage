@@ -130,12 +130,15 @@ Table of Contents
    * [ZTP Configuration And Show Commands](#ztp-configuration-and-show-commands)
       * [ ZTP show commands](#ztp-show-commands)
       * [ZTP configuration commands](#ztp-configuration-commands)
-
+   * [Debug Framework Commands](#debug-framework-commands)
+      * [Debug Framework Show Commands](#debug-framework-show-commands)
+      * [Component Specific Show Commands](#component-specific-show-commands)
 
 # Document History
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
+| 8 | Sep-16-2019 | v7 | Added Debug Framework commands |
 | 7 | Sep-14-2019 | v7 | Added core dump commands |
 | 6 | Sep-12-2019 | v6 | Added ZTP config and display commands |
 | 5 | Sep-8-2019 | v5 | Added VRF config and display commands |
@@ -6489,5 +6492,171 @@ root@sonic:/home/admin# config ztp run
 ZTP will be restarted. You may lose switch data and connectivity, continue? [y/N]: y
 Running command: ztp run -y
 ```
+
+
+# Debug Framework Commands
+
+## Debug Framework Show Commands
+
+**Show debug all:**
+
+This command will invoke dump routines for all registered components with default action (save to file, path: var/log/<component>.log). Dump routine should provide all debug output required for debugging corresponding components. This command will also be captured as part of "show techsupport".
+
+- Usage: show debug all
+
+**Show debug component:**
+
+This command invokes dump routine of specific component with default action (save to file, path: Docker::var/log/<component>\_debug.log). Component specific dump routine which outputs all required debugs.
+
+- Usage: show debug component < component name >
+
+**Show debug tosyslog:**
+
+This command redirects the dump routine output to syslog.
+
+- Usage: show debug tosyslog [all | component <component name>]
+
+```
+Commands:
+  all        Collect debugging information from all components
+  component  Collect debugging information for a given component name
+```
+
+- Example:
+```
+root@sonic:~# show debug tosyslog component routeorch
+root@sonic:~# show logging
+Aug 26 04:40:24.154460 sonic DEBUG swss#orchagent: RouteOrch Dump All Start --->
+Aug 26 04:40:24.154605 sonic DEBUG swss#orchagent: RouteOrch Dump Route Table --->
+Aug 26 04:40:24.154628 sonic DEBUG swss#orchagent: ------------IPv4 Route Table ------------
+Aug 26 04:40:24.154720 sonic DEBUG swss#orchagent: VRF_Name = Default VRF_SAI_OID = 0x3000000000047
+Aug 26 04:40:24.154748 sonic DEBUG swss#orchagent: Prefix               NextHop                   SAI-OID
+Aug 26 04:40:24.154811 sonic DEBUG swss#orchagent: 0.0.0.0/0            DROP                      0xffffffffffffffff
+Aug 26 04:40:24.154910 sonic DEBUG swss#orchagent: 100.0.0.0/16         Vlan100                   0x6000000000c0d
+Aug 26 04:40:24.154946 sonic DEBUG swss#orchagent:
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: ------------IPv6 Route Table ------------
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: VRF_Name = Default VRF_SAI_OID = 0x3000000000047
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: Prefix               NextHop                   SAI-OID
+Aug 26 04:40:24.155540 sonic DEBUG swss#orchagent: ::/0                 DROP                      0xffffffffffffffff
+Aug 26 04:40:24.155558 sonic DEBUG swss#orchagent: 1001::/64            Vlan100                   0x6000000000c0d
+Aug 26 04:40:24.155558 sonic DEBUG swss#orchagent:
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: RouteOrch Dump Route Table END--->
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: RouteOrch Dump NexhopGroup Table --->
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: Max Nexthop Group - 1024
+Aug 26 04:40:24.155577 sonic DEBUG swss#orchagent: NHGrpKey             SAI-OID               NumPath    RefCnt
+Aug 26 04:40:24.155588 sonic DEBUG swss#orchagent:
+Aug 26 04:40:24.155595 sonic DEBUG swss#orchagent: RouteOrch Dump All END <---
+```
+
+## Component Specific Show Commands
+
+### Component: RouteOrch
+
+**Debug Routeorch Routes**
+
+This command displays the routes added in Routeorch. Routes displayed are added to ASIC_DB.
+
+- Usage: show debug routeOrch routes -v <vrf-name> -p <ip-prefix>
+
+```
+Options:
+  -v, --vrf <name>     Display VRF route table info
+  -p, --prefix <addr>  Display Route matching the IP Prefix
+```
+
+- Example:
+
+```
+root@sonic:~# show debug routeorch routes -v VrfRED
+------------IPv4 Route Table ------------
+
+VRF_Name = VrfRED VRF_SAI_OID = 0x30000000005b1
+Prefix               NextHop                   SAI-OID
+100.100.4.0/24       Ethernet4                 0x60000000005b3
+33.33.33.0/24        0x55c1ca5b3b98     (ECMP) 0x50000000005db
+33.33.44.0/24        100.120.120.11|Ethernet8  0x40000000005d9
+33.33.55.0/24        100.120.120.12|Ethernet8  0x40000000005da
+100.102.102.0/24     Ethernet12                0x60000000005d3
+100.120.120.0/24     Ethernet8                 0x60000000005b4
+
+------------IPv6 Route Table ------------
+
+VRF_Name = VrfRED VRF_SAI_OID = 0x30000000005b1
+Prefix               NextHop                   SAI-OID
+2001:100:120:120::/64 Ethernet8                 0x60000000005b4
+```
+
+**Debug Routeorch Nexthop Group:**
+
+This command displays the Nexthop group / ECMP info in Routeorch.
+
+- Usage: show debug routeorch nhgrp
+
+- Example:
+```
+root@sonic:~# show debug routeorch nhgrp
+Max Nexthop Group - 512
+NHGrpKey             SAI-OID               NumPath    RefCnt
+0x55c1ca5b7bd0       0x50000000005db        3          1
+                               1: 100.120.120.10|Ethernet8
+                               2: 100.120.120.11|Ethernet8
+                               3: 100.120.120.12|Ethernet8
+```
+
+**Debug Routeorch all:**
+
+This command is the superset of all routeorch debug commands. This command displays 
+- All VRF route table info for both IPv4 and IPv6.
+- Nexthop Group table
+
+- Usage: show debug routeOrch all
+
+### Component: NeighborOrch 
+ 
+**Debug NeighborOrch Nexthops:**
+
+This command displays the nexthops added in NeighorOrch. Nexthops displayed are added to ASIC_DB and has their corresponding SAI object ID.
+
+- Usage: show debug NeighOrch nhops
+
+- Example:
+```
+root@sonic:~# show debug neighorch nhops
+
+NHIP                 Intf             SAI-OID           RefCnt    Flags
+100.120.120.10       Ethernet8        0x40000000005d8   1          0
+100.120.120.11       Ethernet8        0x40000000005d9   2          0
+100.120.120.12       Ethernet8        0x40000000005da   2          0
+
+NHIP                      Intf             SAI-OID           RefCnt    Flags
+fe80::648a:79ff:fe5d:6b2a Ethernet4        0x40000000005df   0          0
+fe80::fc54:ff:fe44:de2    Ethernet12       0x40000000005d4   0          0
+fe80::fc54:ff:fe78:5fac   Ethernet8        0x40000000005d2   0          0
+fe80::fc54:ff:fe88:6f80   Ethernet4        0x40000000005d0   0          0
+fe80::fc54:ff:fe8e:d91f   Ethernet0        0x40000000005d1   0          0
+```
+
+**Debug NeighborOrch Neighbors:**
+
+This command displays the Neighbor entry and their corresponding MAC added in NeighorOrch.
+
+- Usage: show debug NeighOrch neigh
+
+- Example:
+```
+root@sonic:~# show debug neighorch neigh
+NHIP                  Intf             MAC
+100.120.120.10        Ethernet8        00:00:11:22:00:10
+100.120.120.11        Ethernet8        00:00:11:22:00:11
+100.120.120.12        Ethernet8        00:00:11:22:00:12
+
+NHIP                       Intf             MAC
+fe80::648a:79ff:fe5d:6b2a  Ethernet4        fe:54:00:35:18:bb
+fe80::fc54:ff:fe44:de2     Ethernet12       fe:54:00:44:0d:e2
+fe80::fc54:ff:fe78:5fac    Ethernet8        fe:54:00:78:5f:ac
+fe80::fc54:ff:fe88:6f80    Ethernet4        fe:54:00:88:6f:80
+fe80::fc54:ff:fe8e:d91f    Ethernet0        fe:54:00:8e:d9:1f
+```
+
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
