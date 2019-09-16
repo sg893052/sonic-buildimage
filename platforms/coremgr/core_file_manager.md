@@ -77,7 +77,7 @@ This document describes new mechanisms to manage the core files that are generat
 
  	 b.  Strip Core files sensitive information 
 
- 2.  Add a new SONIC service to collect and export the tech-support data s follows:-
+ 2.  Add a new SONIC service to collect and export the tech-support data as follows:-
 
 	 a.  Collect tech-support data when a new core dump is discovered, and export it to a remote server.
 
@@ -127,7 +127,7 @@ The [systemd-coredump](https://www.freedesktop.org/software/systemd/man/systemd-
 
 1.  Configures kernel to dump a core when application performs unexpected exit. The process ID, UID, GID, signal received, time of termination, command name of the terminated process are collected. The core dump generate may be affected by ulimit settings. Care should be taken that ulimit settings do not conflict with systemd-coredump configuration.
     
-2.  Maintains a record of all crashes that have occured. The list is searchable using various key patterns. More about the [coredumpctl](https://www.freedesktop.org/software/systemd/man/coredumpctl.html#) tool can be found [here](https://www.freedesktop.org/software/systemd/man/coredumpctl.html#).
+2.  Maintains a record of all crashes that have occurred. The list is searchable using various key patterns. More about the [coredumpctl](https://www.freedesktop.org/software/systemd/man/coredumpctl.html#) tool can be found [here](https://www.freedesktop.org/software/systemd/man/coredumpctl.html#).
     
 3.  If core files are deleted, a record is still maintained with some minimal information about the crash that has happened and indicating that the core file is missing. This helps maintain a historic record of all crash events even when core files have been deleted.
     
@@ -151,7 +151,7 @@ Current SONiC code has some basic support for generation and compression of core
 
 >-   Install “systemd-coredump” as part of build_debian.sh
 >-   Remove coredump directory entry in “/usr/lib/tmpfiles.d/systemd.conf” so that core files are not deleted by the tmpfile cleanup service.
->-   Setting of “kerne.core_pattern” in “build_debian.sh” is removed as systemd-coredump sets this parameter.
+>-   Setting of “kernel/core_pattern” in “build_debian.sh” is removed as systemd-coredump sets this parameter.
 >-   A symlink /var/core is created to point to the systemd-coredump standard core file destination “var/lib/systemd/coredump”
 >-   “show techsupport” command is modified to capture the core files from the symlink “/var/core”. It is also modified to consider that core files are lz4 compressed instead of gz files.
  
@@ -316,7 +316,15 @@ NA
 
 ## Unit Test
 
-https://drive.google.com/drive/u/0/folders/1jzVr93Kf9lY-eYmxjmUO86ugQzFLVp0J?ths=true
+SNO|   Testcase|  Description   | Result
+:---: | :-----:  | :------  | :---------:|:-----:
+1| Service Startup| 1. Check the coredump service on startup <br>2. Check the export service on startup  | Pass
+2| coredumpctl | 1. List the core files <br> 2. Verify the contents (backtrace) of the core file <br> -- coredumpctl list <br> -- coredumpctl info| Pass
+3| show export service | 1. List the export service info <br> -- show export <br> 2. Verify the coonfig db by show running config <br> -- show runningconfiguration all | Pass
+4| config export service | 1. Verify the config export with different CLI options <br> 2. Verify the export service enable/disable | Pass
+5|  tech-support export | 1. Verify the tech-support export <br> -- When a new core is generated <br> -- On a periodic interval | Pass
+6| Invalid arguments| Verify the various arguments with an invalid combination | Pass
+
 
 
 <!--stackedit_data:
