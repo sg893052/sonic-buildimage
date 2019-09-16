@@ -265,6 +265,7 @@ Commands:
 * ```thresholds acl group [entry|counter] [low|high] <value>```
 * ```thresholds fdb type [percentage|used|count]```
 * ```thresholds fdb [low|high] <value>```
+* ```clear```
 #### 2.7.1.2 CRM utility show syntax
 * ```summary```
 * ```[resources|thresholds] all```
