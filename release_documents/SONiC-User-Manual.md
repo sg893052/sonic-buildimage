@@ -37,6 +37,9 @@ Table of Contents
       * [6.3 Investigating Packet Drops](#63-investigating-packet-drops)
       * [6.4 Physical Link Signal](#64-physical-link-signal)
       * [6.5 Isolate SONiC Device from the Network](#65-isolate-sonic-device-from-the-network)
+      * [6.6 NAT troubleshooting](#66-nat-troubleshooting)
+
+
 
 
 
@@ -700,7 +703,8 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 8 | VRF |[VRF CLI](Command-Reference.md##vrf) | [VRF ConfigDB](Configuration.md) | To view the details about the VRF |
 | 9 | VRRP |[VRRP CLI](Command-Reference.md##vrrp) | [VRF ConfigDB](Configuration.md) | To view the details about the VRRP |
 | 10 | ZTP |[ZTP CLI](Command-Reference.md#ztp-configuration-and-show-commands) | N/A | To view the details about the ZTP |
-
+| 11 | NAT |[NAT CLI](Command-Reference.md#nat-configuration-and-show-commands) | [NAT ConfigDB](Configuration.md) | To view the config schema details for NAT |
+| 12 | Error handling |[Error handling CLI](Command-Reference.md#error-handling-framework-configuration-and-show-commands) | N/A | To view the details about the Error handling framework |
 
 # 5 Example Configuration
 
@@ -962,3 +966,16 @@ You can shut down BGP sessions to neighbors using a form of the `config bgp shut
   admin@sonic:~$ sudo config bgp shutdown all
   ```
 
+## 6.6 NAT troubleshooting 
+
+All NAT related configuration done via CLI is saved in the REDIS database (CONFIG_DB). Please following the below troubleshooting steps for debugging NAT issues.
+
+- Check if NAT global mode is enabled using `show nat config` CLI command to display all the NAT configuration done.
+- Check if ingress and egress L3 interfaces are configured in different NAT zones. Use bcmcmd `l3 intf show` to check the zones configured in the hardware.
+- Check if the NAT miss packets are reaching Linux stack. Use `tcpdump` Linux command to monitor the ingress L3 interface.
+- Check if the NAT translation entries are learned by the Linux kernel. Use `conntrack -j -L`  and `iptables -t nat -nv -L` Linux commands.
+- Check if NAT translation entry is created in CONFIG_DB/APPL_DB/ASIC_DB. Use `show nat statistics`, `show nat translations` and `redis-cli` commands.
+- Check if the NAT translation entries are installed in the switching ASIC. Use bcmcmd `l3 nat_ingress show` and `l3 nat_egress show` BCM shell commands.
+- Check if the packet counters for the installed NAT entries are incrementing. Use `show nat statistics` command to monitor packet and byte counter per entry.
+- Ensure that the translated source IP address for the outbound traffic belongs to one of the L3 interfaces in the system.
+- Check whether the translated destination IP address for the inbound traffic is reachable via one of the L3 interfaces in the system.
