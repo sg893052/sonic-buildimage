@@ -38,9 +38,9 @@ Table of Contents
       * [6.4 Physical Link Signal](#64-physical-link-signal)
       * [6.5 Isolate SONiC Device from the Network](#65-isolate-sonic-device-from-the-network)
       * [6.6 NAT troubleshooting](#66-nat-troubleshooting)
-
-
-
+      * [6.7 Orchagent troubleshooting](#67-Orchagent-troubleshooting)
+   * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
+      * [7.1 Debug Framework](#71-debug-framework)
 
 
 
@@ -981,3 +981,17 @@ All NAT related configuration done via CLI is saved in the REDIS database (CONFI
 - Check if the packet counters for the installed NAT entries are incrementing. Use `show nat statistics` command to monitor packet and byte counter per entry.
 - Ensure that the translated source IP address for the outbound traffic belongs to one of the L3 interfaces in the system.
 - Check whether the translated destination IP address for the inbound traffic is reachable via one of the L3 interfaces in the system.
+
+## 6.7 Orchagent troubleshooting
+
+Orchagent components like RouteOrch, NeighOrch, FdbOrch internal cache/datastructures can be debugged using "show debug <component> <cmd>" commands. For details please refer [here](Command-Reference.md#debug-framework-commands)
+
+
+# 7 Common Framework Development & Usage 
+
+## 7.1 Debug Framework 
+
+Debug Framework provides mechanism for new modules/components to register with the framework & dump its internal data for debugging.
+
+Please refer to [Debug framework HLD](https://github.com/Azure/SONiC/pull/398) on how to register components and implement dump routines.
+
