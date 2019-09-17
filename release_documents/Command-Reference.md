@@ -49,6 +49,9 @@ Table of Contents
   * [Tech-support export Configuration And Show Commands](#Tech-support-export-configuration-and-show-commands)
       * [export Show Commands](#export-show-commands)
       * [export Config Commands](#export-config-commands)
+   * [CRM Configuration And Show Commands](#crm-configuration-and-show-commands)
+      * [CRM config commands](#crm-config-commands)
+      * [CRM show commands](#crm-show-commands)
    * [ECN Configuration And Show Commands](#ecn-configuration-and-show-commands)
       * [ECN show commands](#ecn-show-commands)
       * [ECN config commands](#ecn-config-commands)
@@ -75,6 +78,11 @@ Table of Contents
    * [NTP](#ntp)
       * [NTP show command](#network-time-protocol-show-command)
    * [Platform Specific Commands](#platform-specific-commands)
+   * [PFC Configuration And Show Commands](#pfc-configuration-and-show-commands)
+      * [PFC config commands](#pfc-config-commands)
+      * [PFC show commands](#pfc-show-commands)
+      * [pfcstat command](#pfcstat-command)
+      * [PFC watchdog commands](#pfc-watchdog-commands)
    * [PortChannel Configuration And Show](#portchannel-configuration-and-show)
       * [PortChannel Show commands](#portchannel-show-commands)
       * [PortChannel Config commands](#portchannel-config-commands)
@@ -182,8 +190,7 @@ It is assumed that all configuration commands start with the keyword ?config? as
 Any other scripts/utilities/commands  that need user configuration control are wrapped as sub-commands under the ?config? command.
 The direct scripts/utilities/commands (examples given below) that are not wrapped under the "config" command are not in the scope of this document.
   1)	Acl_loader ? This script is already wrapped inside ?config acl? command; i.e. any ACL configuration that user is allowed to do is already part of ?config acl? command; users are not expected to use the acl_loader script directly and hence this document need not explain the ?acl_loader? script.
-  2)	Crm ? this command is not explained in this document. 
-  3)	Sonic-clear, sfputil, etc., This document does not explain these scripts also. 
+  2)	Sonic-clear, sfputil, etc., This document does not explain these scripts also. 
 
 # Basic Configuration And Show  
 
@@ -2394,6 +2401,419 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 
 
 
+# CRM Configuration And Show Commands
+
+This section explains all the Critical Resource Management(CRM) show commands and CRM configuation options that are supported in SONiC.
+
+## CRM config commands
+
+This sub-section contains the configuration commands that can configure the CRM related configuration.
+1) clear - Removes the CRM polling and threshold related configuration
+2) polling - Configures the CRM polling related configuration
+3) thresholds - Configures threshold configuration
+
+**CRM config**  
+
+This command configures the CRM related configuration.
+
+  - Usage:<br>
+    crm config [OPTIONS] COMMAND [ARGS]...<br>
+         
+<pre>
+    Options:
+       --help  Show this message and exit.
+
+    Commands:
+      clear       CRM config clear
+      polling     CRM polling configuration
+      thresholds  CRM thresholds configuration
+</pre>
+      
+
+**clear**
+
+This command removes the crm polling interval and threshold related configuration for all CRM resources.
+
+- Usage:<br>
+    crm config clear
+
+- Example:  
+  ```
+  admin@sonic:~$ crm config clear
+  ```
+
+**polling**
+
+This command configures the polling interval for all CRM resources.
+
+
+- Usage:<br>
+    crm config polling interval <value\>
+
+- Example:  
+  ```
+  admin@sonic:~$ crm config polling interval 100
+  ```
+
+**thresholds [critical resource] high**
+
+These commands configure the high threshold value for a critical resource. 
+
+- Usage:<br>
+    crm config thresholds acl group high <value\><br>
+    crm config thresholds acl group counter high <value\><br>
+    crm config thresholds acl group entry high <value\><br>
+    crm config thresholds acl table high <value\><br>
+    crm config thresholds fdb high <value\><br>
+    crm config thresholds ipv4 neighbor high <value\><br>
+    crm config thresholds ipv4 nexthop high <value\><br>
+    crm config thresholds ipv4 route high <value\><br>
+    crm config thresholds ipv6 neighbor high <value\><br>
+    crm config thresholds ipv6 nexthop high <value\><br>
+    crm config thresholds ipv6 route high <value\><br>
+    crm config thresholds nexthop group object high <value\><br>
+    crm config thresholds nexthop group member high <value\><br>
+
+
+- Example:  
+  ```
+  admin@sonic:~$ crm config thresholds acl group high 70
+  admin@sonic:~$ crm config thresholds acl group counter high 75
+  admin@sonic:~$ crm config thresholds acl group table 80
+  admin@sonic:~$ crm config thresholds ipv4 route 90
+  admin@sonic:~$ crm config thresholds ipv6 nexthop 70
+  admin@sonic:~$ crm config thresholds nexthop group object high 95
+  admin@sonic:~$ crm config thresholds nexthop group member high 50
+  ```
+
+**thresholds [critical resource] low**
+
+These commands configure the low threshold value for a critical resource. 
+
+- Usage:<br>
+    crm config thresholds acl group low <value\><br>
+    crm config thresholds acl group counter low <value\><br>
+    crm config thresholds acl group entry low <value\><br>
+    crm config thresholds acl table low <value\><br>
+    crm config thresholds fdb low <value\><br>
+    crm config thresholds ipv4 neighbor low <value\><br>
+    crm config thresholds ipv4 nexthop low <value\><br>
+    crm config thresholds ipv4 route low <value\><br>
+    crm config thresholds ipv6 neighbor low <value\><br>
+    crm config thresholds ipv6 nexthop low <value\><br>
+    crm config thresholds ipv6 route low <value\><br>
+    crm config thresholds nexthop group object low <value\><br>
+    crm config thresholds nexthop group member low <value\><br>
+
+- Example:  
+  ```
+  admin@sonic:~$ crm config thresholds acl group low 60
+  admin@sonic:~$ crm config thresholds acl group counter low 65
+  admin@sonic:~$ crm config thresholds acl group table 60
+  admin@sonic:~$ crm config thresholds ipv4 route 40
+  admin@sonic:~$ crm config thresholds ipv6 nexthop 30
+  admin@sonic:~$ crm config thresholds nexthop group object low 20
+  admin@sonic:~$ crm config thresholds nexthop group member low 50
+  ```
+
+**thresholds [critical resource] type**
+
+These commands configure the thresholds type for a critical resource. Threshold type can be percentage, used or free.
+
+- Usage:<br>
+    crm config thresholds acl group type [percentage|used|free]<br>
+    crm config thresholds acl group counter type [percentage|used|free]<br>
+    crm config thresholds acl group entry type [percentage|used|free]<br>
+    crm config thresholds acl table type [percentage|used|free]<br>
+    crm config thresholds fdb type [percentage|used|free]<br>
+    crm config thresholds ipv4 neighbor type [percentage|used|free]<br>
+    crm config thresholds ipv4 nexthop type [percentage|used|free]<br>
+    crm config thresholds ipv4 route type [percentage|used|free]<br>
+    crm config thresholds ipv6 neighbor type [percentage|used|free]<br>
+    crm config thresholds ipv6 nexthop type [percentage|used|free]<br>
+    crm config thresholds ipv6 route type [percentage|used|free]<br>
+    crm config thresholds nexthop group object type [percentage|used|free]<br>
+    crm config thresholds nexthop group member type [percentage|used|free]<br>
+
+- Example:  
+  ```
+  admin@sonic:~$ crm config thresholds acl group type percentage
+  admin@sonic:~$ crm config thresholds acl group counter type used
+  admin@sonic:~$ crm config thresholds acl group table free
+  admin@sonic:~$ crm config thresholds ipv4 route used
+  admin@sonic:~$ crm config thresholds ipv6 nexthop free
+  admin@sonic:~$ crm config thresholds nexthop group object type percentage
+  admin@sonic:~$ crm config thresholds nexthop group member type used
+  ```
+
+## CRM show commands
+
+**CRM show**  
+
+This command displays the CRM related general, resource usage and thresholds information.
+
+  - Usage:<br>
+   crm show [OPTIONS] COMMAND [ARGS]...
+
+      
+<pre>
+    Options:
+       --help  Show this message and exit.
+
+    Commands:
+      resources   Show CRM resources information
+      summary     Show CRM general information
+      thresholds  Show CRM thresholds information
+</pre>
+
+**resources [critical resource]**
+
+These commands display currently USED and AVAILABLE number of entries for a critical resource.<br> 
+"crm show resources all" displays these entries for all the critical resources.
+
+- Usage:<br>
+    crm show resources acl group<br>
+    crm show resources acl table<br>
+    crm show resources all<br>
+    crm show resources fdb<br>
+    crm show resources ipv4 neighbor<br>
+    crm show resources ipv4 nexthop<br>
+    crm show resources ipv4 route<br>
+    crm show resources ipv6 neighbor<br>
+    crm show resources ipv6 nexthop<br>
+    crm show resources ipv6 route<br>
+    crm show resources nexthop group object<br>
+    crm show resources nexthop group member<br>
+
+- Example:  
+  ```
+  admin@sonic:$ crm show resources all
+  
+  
+  Resource Name           Used Count    Available Count
+  --------------------  ------------  -----------------
+  ipv4_route                    1007              48145
+  ipv6_route                    1004              11284
+  ipv4_nexthop                   100              32544
+  ipv6_nexthop                   122              32544
+  ipv4_neighbor                  100              20180
+  ipv6_neighbor                  122              10090
+  nexthop_group_member           200              16184
+  nexthop_group                    4                124
+  fdb_entry                       30              40929
+  
+  
+  
+  
+  Stage    Bind Point    Resource Name      Used Count    Available Count
+  -------  ------------  ---------------  ------------  -----------------
+  INGRESS  PORT          acl_group                   1               1023
+  INGRESS  PORT          acl_table                   2                  2
+  INGRESS  LAG           acl_group                   0               1023
+  INGRESS  LAG           acl_table                   0                  2
+  INGRESS  VLAN          acl_group                   0               1023
+  INGRESS  VLAN          acl_table                   0                  5
+  INGRESS  RIF           acl_group                   0               1023
+  INGRESS  RIF           acl_table                   0                  5
+  INGRESS  SWITCH        acl_group                   0               1023
+  INGRESS  SWITCH        acl_table                   0                  5
+  EGRESS   PORT          acl_group                   0               1023
+  EGRESS   PORT          acl_table                   0                  2
+  EGRESS   LAG           acl_group                   0               1023
+  EGRESS   LAG           acl_table                   0                  2
+  EGRESS   VLAN          acl_group                   0               1023
+  EGRESS   VLAN          acl_table                   0                  2
+  EGRESS   RIF           acl_group                   0               1023
+  EGRESS   RIF           acl_table                   0                  2
+  EGRESS   SWITCH        acl_group                   0               1023
+  EGRESS   SWITCH        acl_table                   0                  2
+  
+  
+  
+  
+  Table ID         Resource Name      Used Count    Available Count
+  ---------------  ---------------  ------------  -----------------
+  0x70000000009e3  acl_entry                  20                492
+  0x70000000009e3  acl_counter                20              30148
+
+  admin@sonic:$ crm show resources acl group
+
+
+  Stage    Bind Point    Resource Name      Used Count    Available Count
+  -------  ------------  ---------------  ------------  -----------------
+  INGRESS  PORT          acl_group                   0               1024
+  INGRESS  PORT          acl_table                   0                  3
+  INGRESS  LAG           acl_group                   0               1024
+  INGRESS  LAG           acl_table                   0                  3
+  INGRESS  VLAN          acl_group                   0               1024
+  INGRESS  VLAN          acl_table                   0                  9
+  INGRESS  RIF           acl_group                   0               1024
+  INGRESS  RIF           acl_table                   0                  9
+  INGRESS  SWITCH        acl_group                   0               1024
+  INGRESS  SWITCH        acl_table                   0                  9
+  EGRESS   PORT          acl_group                   0               1024
+  EGRESS   PORT          acl_table                   0                  2
+  EGRESS   LAG           acl_group                   0               1024
+  EGRESS   LAG           acl_table                   0                  2
+  EGRESS   VLAN          acl_group                   0               1024
+  EGRESS   VLAN          acl_table                   0                  2
+  EGRESS   RIF           acl_group                   0               1024
+  EGRESS   RIF           acl_table                   0                  2
+  EGRESS   SWITCH        acl_group                   0               1024
+  EGRESS   SWITCH        acl_table                   0                  2
+
+
+  admin@sonic:$ crm show resources fdb
+
+
+  Resource Name      Used Count    Available Count
+  ---------------  ------------  -----------------
+  fdb_entry                   2              40957
+
+
+  admin@sonic:$ crm show resources ipv4 route
+
+
+  Resource Name      Used Count    Available Count
+  ---------------  ------------  -----------------
+  ipv4_route                  1              49151
+
+
+  admin@sonic:$ crm show resources ipv6 neighbor
+
+
+  Resource Name      Used Count    Available Count
+  ---------------  ------------  -----------------
+  ipv6_neighbor               0              10240
+
+
+  admin@sonic:$ crm show resources nexthop group object
+
+
+  Resource Name      Used Count    Available Count
+  ---------------  ------------  -----------------
+  nexthop_group               0                128
+
+
+  admin@sonic:$ crm show resources nexthop group member
+
+
+  Resource Name           Used Count    Available Count
+  --------------------  ------------  -----------------
+  nexthop_group_member             0              16384
+
+  ```
+
+**summary**
+
+This command displays the polling interval for CRM.
+
+- Usage:<br>
+    crm show summary
+
+- Example:  
+  ```
+  admin@sonic:~$ crm show summary 
+  
+  Polling Interval: 100 second(s)
+
+**thresholds [critical resource]**
+
+These commands display threshold type, low and high thresholds configured for a critical resource.
+
+- Usage:<br>
+  crm show thresholds acl group<br>
+  crm show thresholds acl table<br>
+  crm show thresholds all<br>
+  crm show thresholds fdb<br>
+  crm show thresholds ipv4 neighbor<br>
+  crm show thresholds ipv4 nexthop<br>
+  crm show thresholds ipv4 route<br>
+  crm show thresholds ipv6 neighbor<br>
+  crm show thresholds ipv6 nexthop<br>
+  crm show thresholds ipv6 route<br>
+  crm show thresholds nexthop group object<br>
+  crm show thresholds nexthop group member<br>
+  
+- Example:  
+  ```
+  admin@sonic:$ crm show thresholds acl group
+
+
+  Resource Name    Threshold Type      Low Threshold    High Threshold
+  ---------------  ----------------  ---------------  ----------------
+  acl_group        used                           30                90
+
+
+  admin@sonic:$ crm show thresholds acl table
+
+
+  Resource Name    Threshold Type      Low Threshold    High Threshold
+  ---------------  ----------------  ---------------  ----------------
+  acl_table        used                           30                90
+
+
+  admin@sonic:$ crm show thresholds all
+
+
+  Resource Name         Threshold Type      Low Threshold    High Threshold
+  --------------------  ----------------  ---------------  ----------------
+  ipv4_route            used                           30                90
+  ipv6_route            used                           30                90
+  ipv4_nexthop          used                           30                90
+  ipv6_nexthop          used                           30                90
+  ipv4_neighbor         used                           30                90
+  ipv6_neighbor         used                           30                90
+  nexthop_group_member  used                           30                90
+  nexthop_group         used                           30                90
+  acl_table             used                           30                90
+  acl_group             used                           30                90
+  acl_entry             used                           30                90
+  acl_counter           used                           30                90
+  fdb_entry             used                           30                90
+
+  admin@sonic:$ crm show thresholds fdb
+
+
+  Resource Name    Threshold Type      Low Threshold    High Threshold
+  ---------------  ----------------  ---------------  ----------------
+  fdb_entry        used                           30                90
+
+
+  admin@sonic:$ crm show thresholds ipv4 nexthop
+
+
+  Resource Name    Threshold Type      Low Threshold    High Threshold
+  ---------------  ----------------  ---------------  ----------------
+  ipv4_nexthop     used                           30                90
+
+
+  admin@sonic:$ crm show thresholds ipv6 neighbor
+
+
+  Resource Name    Threshold Type      Low Threshold    High Threshold
+  ---------------  ----------------  ---------------  ----------------
+  ipv6_neighbor    used                           30                90
+
+
+
+  admin@sonic:$ crm show thresholds nexthop group object
+
+
+  Resource Name    Threshold Type      Low Threshold    High Threshold
+  ---------------  ----------------  ---------------  ----------------
+  nexthop_group    used                           30                90
+
+
+  admin@sonic:$ crm show thresholds nexthop group member
+
+
+  Resource Name         Threshold Type      Low Threshold    High Threshold
+  --------------------  ----------------  ---------------  ----------------
+  nexthop_group_member  used                           30                90
+  ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#CRM-Configuration-And-Show-Commands)
 # ECN Configuration And Show Commands
 
 This section explains all the Explicit Congestion Notification (ECN) show commands and ECN configuation options that are supported in SONiC.
@@ -3649,6 +4069,322 @@ In order to avoid that confirmation the -y / --yes option should be used.
   NOTE: In order to avoid that confirmation the -y / --yes option should be used.
   ```
 
+# PFC Configuration And Show Commands
+This section explains Priority Flow Control configuation and show options that are supported in SONiC.
+
+## PFC config commands
+**PFC config**
+
+This command enables/disables the asymmmetric mode on an interface or all interfaces.
+- Usage:<br>
+    pfc config asymmetric <on|off> {<interface_name>|all}
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfc config asymmetric on Ethernet9
+  admin@sonic:~$ sudo pfc config asymmetric on all
+  admin@sonic:~$ sudo pfc config asymmetric off Ethernet8
+  
+  ```
+
+## PFC show commands
+This command displays the configured PFC mode on an interface or all interfaces. By default all the interfaces are configured in symmetric PFC mode.
+- Usage:<br>
+    pfc show asymmetric <interface_name>
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfc show asymmetric Ethernet9
+  
+  
+  Interface    Asymmetric
+  -----------  ------------
+  Ethernet9    on
+
+
+  admin@sonic:~$ sudo pfc show asymmetric 
+  
+  
+  Interface    Asymmetric
+  -----------  ------------
+  Ethernet0    N/A
+  Ethernet4    on
+  Ethernet5    N/A
+  Ethernet6    N/A
+  Ethernet7    N/A
+  Ethernet8    off
+  Ethernet9    on
+  Ethernet10   N/A
+  Ethernet11   N/A
+  Ethernet12   on
+  Ethernet16   N/A
+  Ethernet20   N/A
+  Ethernet24   N/A
+  Ethernet28   N/A
+  Ethernet32   N/A
+  Ethernet36   N/A
+  Ethernet40   N/A
+  Ethernet44   N/A
+  Ethernet48   N/A
+  Ethernet52   N/A
+  Ethernet56   N/A
+  Ethernet60   N/A
+  Ethernet64   N/A
+  Ethernet68   N/A
+  Ethernet72   N/A
+  Ethernet76   N/A
+  Ethernet80   N/A
+  Ethernet84   N/A
+  Ethernet88   N/A
+  Ethernet92   N/A
+  Ethernet96   N/A
+  Ethernet100  N/A
+  ```
+
+## pfcstat command
+This command displays/removes the Pause Frames statistics for Rx and Tx priority queues of all interfaces.
+
+- Usage:<br>
+  pfcstat [-h] [-v] [-c] [-d]
+
+  Display the pfc counters
+
+  optional arguments:<br>
+    -h, --help     show this help message and exit<br>
+    -v, --version  show program's version number and exit<br>
+    -c, --clear    Clear previous stats and save new ones<br>
+    -d, --delete   Delete saved stats<br>
+
+- Example:  
+  ```
+    admin@sonic:~$ sudo pfcstat 
+      Port Rx    PFC0    PFC1    PFC2    PFC3    PFC4    PFC5    PFC6    PFC7
+  -----------  ------  ------  ------  ------  ------  ------  ------  ------
+          CPU       0       0       0       0       0       0       0       0
+    Ethernet0       0       0       0       0       0       0       0       0
+    Ethernet4       0       0       0       0       0       0       0       0
+    Ethernet5       0       0       0       0       0       0       0       0
+    Ethernet6       0       0       0       0       0       0       0       0
+    Ethernet7       0       0       0       0       0       0       0       0
+    Ethernet8       0       0       0       0       0       0       0       0
+    Ethernet9       0       0       0       0       0       0       0       0
+   Ethernet10       0       0       0       0       0       0       0       0
+   Ethernet11       0       0       0       0       0       0       0       0
+   Ethernet12       0       0       0       0       0       0       0       0
+   Ethernet16       0       0       0       0       0       0       0       0
+   Ethernet20       0       0       0       0       0       0       0       0
+   Ethernet24       0       0       0       0       0       0       0       0
+   Ethernet28       0       0       0       0       0       0       0       0
+   Ethernet32       0       0       0       0       0       0       0       0
+   Ethernet36       0       0       0       0       0       0       0       0
+   Ethernet40       0       0       0       0       0       0       0       0
+   Ethernet44       0       0       0       0       0       0       0       0
+   Ethernet48       0       0       0       0       0       0       0       0
+   Ethernet52       0       0       0       0       0       0       0       0
+   Ethernet56       0       0       0       0       0       0       0       0
+   Ethernet60       0       0       0       0       0       0       0       0
+   Ethernet64       0       0       0       0       0       0       0       0
+   Ethernet68       0       0       0       0       0       0       0       0
+   Ethernet72       0       0       0       0       0       0       0       0
+   Ethernet76       0       0       0       0       0       0       0       0
+   Ethernet80       0       0       0       0       0       0       0       0
+   Ethernet84       0       0       0       0       0       0       0       0
+   Ethernet88       0       0       0       0       0       0       0       0
+   Ethernet92       0       0       0       0       0       0       0       0
+   Ethernet96       0       0       0       0       0       0       0       0
+  Ethernet100       0       0       0       0       0       0       0       0
+  Ethernet104       0       0       0       0       0       0       0       0
+  Ethernet108       0       0       0       0       0       0       0       0
+  Ethernet112       0       0       0       0       0       0       0       0
+  Ethernet116       0       0       0       0       0       0       0       0
+  Ethernet120       0       0       0       0       0       0       0       0
+  Ethernet124       0       0       0       0       0       0       0       0
+  
+      Port Tx    PFC0    PFC1    PFC2    PFC3    PFC4    PFC5    PFC6    PFC7
+  -----------  ------  ------  ------  ------  ------  ------  ------  ------
+          CPU       0       0       0       0       0       0       0       0
+    Ethernet0       0       0       0       0       0       0       0       0
+    Ethernet4       0       0       0   11805       0       0       0       0
+    Ethernet5       0       0       0   11805       0       0       0       0
+    Ethernet6       0       0       0       0       0       0       0       0
+    Ethernet7       0       0       0       0       0       0       0       0
+    Ethernet8       0       0       0       0       0       0       0       0
+    Ethernet9       0       0       0       0       0       0       0       0
+   Ethernet10       0       0       0       0       0       0       0       0
+   Ethernet11       0       0       0       0       0       0       0       0
+   Ethernet12       0       0       0       0       0       0       0       0
+   Ethernet16       0       0       0       0       0       0       0       0
+   Ethernet20       0       0       0       0       0       0       0       0
+   Ethernet24       0       0       0       0       0       0       0       0
+   Ethernet28       0       0       0       0       0       0       0       0
+   Ethernet32       0       0       0       0       0       0       0       0
+   Ethernet36       0       0       0       0       0       0       0       0
+   Ethernet40       0       0       0       0       0       0       0       0
+   Ethernet44       0       0       0       0       0       0       0       0
+   Ethernet48       0       0       0       0       0       0       0       0
+   Ethernet52       0       0       0       0       0       0       0       0
+   Ethernet56       0       0       0       0       0       0       0       0
+   Ethernet60       0       0       0       0       0       0       0       0
+   Ethernet64       0       0       0       0       0       0       0       0
+   Ethernet68       0       0       0       0       0       0       0       0
+   Ethernet72       0       0       0       0       0       0       0       0
+   Ethernet76       0       0       0       0       0       0       0       0
+   Ethernet80       0       0       0       0       0       0       0       0
+   Ethernet84       0       0       0       0       0       0       0       0
+   Ethernet88       0       0       0       0       0       0       0       0
+   Ethernet92       0       0       0       0       0       0       0       0
+   Ethernet96       0       0       0       0       0       0       0       0
+  Ethernet100       0       0       0       0       0       0       0       0
+  Ethernet104       0       0       0       0       0       0       0       0
+  Ethernet108       0       0       0       0       0       0       0       0
+  Ethernet112       0       0       0       0       0       0       0       0
+  Ethernet116       0       0       0       0       0       0       0       0
+  Ethernet120       0       0       0       0       0       0       0       0
+  Ethernet124       0       0       0       0       0       0       0       0
+  
+  admin@sonic:~$ sudo pfcstat -c
+  Clear saved counters
+  
+      
+  ```
+
+## PFC watchdog commands
+This section explains PFC Watchdog related commands that are supported in SONiC. 
+
+**pfcwd counter_poll**
+
+This command enables/disables the PFC watchdog counter monitoring.
+- Usage:<br>
+    pfcwd counter_poll <enable/disable>
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfcwd counter_poll disable
+  admin@sonic:~$ sudo pfcwd counter_poll enable
+  ```
+**pfcwd interval**
+
+This command configures the PFC watchdog counter monitoring interval(in msecs). 
+- Usage:<br>
+    pfcwd interval <value\>
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfcwd interval 100
+  ```
+**pfcwd start**
+
+This command configures the detection period of PFC storm detection and enables watchdog on a specified port(s) and can specify the action [drop|forward|alert] to be performed on detection of storm. Restoration time is 2 times the detection time (if not specified). 
+
+ 
+- Usage:<br>
+    pfcwd start --action [drop|forward|alert] ports <interface_name> detection-time <value\> --restoration-time <value\>
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfcwd start --action drop ports Ethernet9 detection-time 100
+  restoration time not defined; default to 2 times detection time: 200 ms
+
+  admin@sonic:~$ sudo pfcwd start --action drop ports all detection-time 400 --restoration-time 3000
+
+  admin@sonic:~$ sudo pfcwd start --action drop ports all detection-time 400 --restoration-time 300000
+  Usage: pfcwd start [OPTIONS] [PORTS]... DETECTION_TIME
+
+  Error: Invalid value for "--restoration-time" / "-r": 300000 is not in the valid range of 100 to 60000.
+  admin@sonic:~$ sudo pfcwd start --action drop ports all detection-time 30000 --restoration-time 3000
+  Usage: pfcwd start [OPTIONS] [PORTS]... DETECTION_TIME
+
+  Error: Invalid value for "detection-time": 30000 is not in the valid range of 100 to 5000.
+  ```
+
+**pfcwd stop**
+
+This command disables PFC watchdog on a specified port(s). If the interface_name is not specified, PFC watchdog is disabled for all the interfaces.
+
+ 
+- Usage:<br>
+    pfcwd stop [<interface_name>]
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfcwd stop Ethernet10
+  admin@sonic:~$ sudo pfcwd stop
+  ```
+**pfcwd show config**
+
+This command displays the PFC watchdog configuration like action, detection time and restoration time for a port(s). If the interface_name is not specified, it displays the PFC watchdog configuration for all the interfaces.
+- Usage:<br>
+    pfcwd show config <interface_name>
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfcwd show config Ethernet8
+  Changed polling interval to 100ms
+       PORT    ACTION    DETECTION TIME    RESTORATION TIME
+  ---------  --------  ----------------  ------------------
+  Ethernet8      drop               400                3000
+
+  admin@sonic:~$ sudo pfcwd show config 
+  Changed polling interval to 100ms
+         PORT    ACTION    DETECTION TIME    RESTORATION TIME
+  -----------  --------  ----------------  ------------------
+    Ethernet0      drop               400                3000
+    Ethernet4      drop               400                3000
+    Ethernet5      drop               400                3000
+    Ethernet6      drop               400                3000
+    Ethernet7      drop               400                3000
+    Ethernet8      drop               400                3000
+    Ethernet9      drop               400                3000
+   Ethernet10      drop               400                3000
+   Ethernet11      drop               400                3000
+   Ethernet12      drop               400                3000
+   Ethernet16      drop               400                3000
+   Ethernet20      drop               400                3000
+   Ethernet24      drop               400                3000
+   Ethernet28      drop               400                3000
+   Ethernet32      drop               400                3000
+   Ethernet36      drop               400                3000
+   Ethernet40      drop               400                3000
+   Ethernet44      drop               400                3000
+   Ethernet48      drop               400                3000
+   Ethernet52      drop               400                3000
+   Ethernet56      drop               400                3000
+   Ethernet60      drop               400                3000
+   Ethernet64      drop               400                3000
+   Ethernet68      drop               400                3000
+   Ethernet72      drop               400                3000
+   Ethernet76      drop               400                3000
+   Ethernet80      drop               400                3000
+   Ethernet84      drop               400                3000
+   Ethernet88      drop               400                3000
+   Ethernet92      drop               400                3000
+   Ethernet96      drop               400                3000
+  Ethernet100      drop               400                3000
+  Ethernet104      drop               400                3000
+  Ethernet108      drop               400                3000
+  Ethernet112      drop               400                3000
+  Ethernet116      drop               400                3000
+  Ethernet120      drop               400                3000
+  Ethernet124      drop               400                3000
+  
+  ```
+
+**pfcwd show stats**
+
+This command displays the PFC watchdog stats on the system.
+If the interface_name is not specified, it displays the PFC watchdog configuration for all the interfaces.
+- Usage:<br>
+    pfcwd show stats <interface_name>
+
+- Example:  
+  ```
+  admin@sonic:~$ sudo pfcwd show config Ethernet32
+           QUEUE       STATUS    STORM DETECTED/RESTORED       TX OK/DROP    RX OK/DROP    TX LAST OK/DROP    RX LAST OK/DROP
+    ------------  -----------  -------------------------  ---------------  ------------  -----------------  -----------------
+    Ethernet32:3  operational                        4/4  1024381/1444477           0/0       32333/459167                0/0
+  ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#PFC-Configuration-And-Show-Commands)
 # PortChannel Configuration And Show
 
 ## PortChannel Show commands
