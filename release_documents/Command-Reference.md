@@ -2366,6 +2366,7 @@ Options:
   --help  Show this message and exit.
 
 - Example:
+```
 root@sonic:/home/admin# config export server username destdir protocol 10.59.132.52 admin ./supportsave scp
 Note: User is prompted for the remote server password.
 ```
