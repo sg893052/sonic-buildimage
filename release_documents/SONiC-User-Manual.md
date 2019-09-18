@@ -266,7 +266,7 @@ Choose the choice Start with SONiC-:
 1.2 Now we attempt to edit grub's boot option. Press "e" to edit the first grub menu option and navigate to kernel line:
  ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-2.png)
 
-1.3 Remove quiet  and add  init=/bin/bash
+1.3 Remove quiet and add  init=/bin/bash
  ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-3.png)
 
 1.4 Press Ctrl-x to boot
@@ -380,7 +380,7 @@ This section explains how to check the current version of the software running i
 
 **show version**  
 This command displays software component versions of the currently running SONiC image. This includes the SONiC image version as well as Docker image versions.
-This command displays relevant information as the SONiC and Linux kernel version being utilized, as well as the commit-id used to build the SONiC image. The second section of the output displays the various docker images and their associated id?s. 
+This command displays relevant information as the SONiC and Linux kernel version being utilized, as well as the commit-id used to build the SONiC image. The second section of the output displays the various docker images and their associated IDs. 
 
 - Usage:  
   show version  
@@ -424,7 +424,7 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 ## 3.2.2 Check features available in this version
 
 [SONiC roadmap planning](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) explains the various features that are added in every software release.
-TBD: Is this enough? Need information from Xin.
+TBD: Is this enough Need information from Xin.
 
 
 ## 3.2.3 Upgrade Or Downgrade Version 
@@ -701,7 +701,7 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 6 | BFD |[BFD CLI](Command-Reference.md#bfd) | [BFD ConfigDB](Configuration.md) | To view the details about the BFD |
 | 7 | STP |[STP CLI](Command-Reference.md##spanning-tree) | [STP ConfigDB](Configuration.md) | To view the details about the STP |
 | 8 | VRF |[VRF CLI](Command-Reference.md##vrf) | [VRF ConfigDB](Configuration.md) | To view the details about the VRF |
-| 9 | VRRP |[VRRP CLI](Command-Reference.md##vrrp) | [VRF ConfigDB](Configuration.md) | To view the details about the VRRP |
+| 9 | VRRP |[VRRP CLI](Command-Reference.md##vrrp) | [VRRP ConfigDB](Configuration.md) | To view the details about the VRRP |
 | 10 | ZTP |[ZTP CLI](Command-Reference.md#ztp-configuration-and-show-commands) | N/A | To view the details about the ZTP |
 | 11 | NAT |[NAT CLI](Command-Reference.md#nat-configuration-and-show-commands) | [NAT ConfigDB](Configuration.md) | To view the config schema details for NAT |
 | 12 | Error handling |[Error handling CLI](Command-Reference.md#error-handling-framework-configuration-and-show-commands) | N/A | To view the details about the Error handling framework |
@@ -773,7 +773,7 @@ When user need to debug/troubleshoot any issue, the best is to verify all of the
 3) Check the ASIC related programming state and the status in ASIC_DB.
 4) Check the actual ASIC.
 
-1) How to check the configuration & status of ports?
+1) How to check the configuration & status of ports
 
 Following "show" commands can be used to check the port status.
 
@@ -854,7 +854,7 @@ In the broadcom shell, users shall use "ps" command to check the port state.
 
 Example:
 ```
-BCM : bcmcmd ?ps?
+BCM : bcmcmd ps
        port      ena/link  Lanes  Speed Duplex   LinkScan  AutoNeg?   STPstate    pause  discrd  LrnOps   Interface MaxFrame  CutThru?  Loopback
        xe0( 50)  down      2      50G   FD       SW        No         Forward            None    FA       KR2       9122      No
        xe1( 51)  down      2      50G   FD       SW        No         Forward            None    FA       KR2       9122      No
@@ -862,7 +862,7 @@ BCM : bcmcmd ?ps?
 
 ```
 
-## ?6.3 Investigating Packet Drops 
+## 6.3 Investigating Packet Drops 
 Packet drops can be investigated by viewing counters using the `show interfaces counters` command.
 
 - **RX_ERR/TX_ERR** includes all physical layer (layer-2) related drops, such as FCS error, RUNT frames. If there is RX_ERR or TX_ERR, it usually indicates some physical layer link issues.
@@ -887,7 +887,7 @@ Packet drops can be investigated by viewing counters using the `show interfaces 
    Ethernet24   33,543,533,441   36.59 MB/s      0.71%         0     1,613         0   43,066,076,370   49.92 MB/s      0.97%         0         0         0
   ```
 
-## 6.4 Physical Link Signa??l 
+## 6.4 Physical Link Signal 
 
 Use the following command to get optical signal strength. Note: not all types of links have such channel monitor values. The AOC and DAC cables do not have such values.
 
@@ -944,7 +944,7 @@ Generally, optical power should be greater than -10dBm.
   ```
 
 
-## 6.5 Isolate SONiC Device from the Ne?twork 
+## 6.5 Isolate SONiC Device from the Network 
 
 When there is suspicion that a SONiC device is dropping traffic and behaving abnormally, you may want to isolate the device from the network. Before isolating the device, please generate SONiC tech-support first.
 

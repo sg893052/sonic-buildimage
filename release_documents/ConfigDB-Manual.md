@@ -49,7 +49,6 @@ Table of Contents
          * [WRED_PROFILE](#wred_profile)
          * [NAT](#nat)
          * [Threshold](#threshold)
-         * [IFA](#ifa)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -95,8 +94,8 @@ load_minigraph`.
 
 The design of ConfigDB supports incremental configuration - application
 could subscribe to changes in ConfigDB and response correspondingly.
-However, this feature is not implemented by all applications yet. By Sep
-2017 now, the only application that supports incremental configuration
+However, this feature is not implemented by all applications yet. By
+ now, the only application that supports incremental configuration
 is BGP (docker-fpm-quagga). For other applications, a manual restart is
 required after configuration changes in ConfigDB.
 
@@ -1475,52 +1474,6 @@ Threshold configuration is defined in **THRESHOLD\_TABLE** table. The key for a 
         "queue|unicast|Ethernet12|0": {
             "threshold": "10"
         }
-    }
-}
-```
-
-### IFA
-
-IFA configuration is defined in **IFA\_DEVICE**, **IFA\_FLOW** and **IFA\_COLLECTOR** tables. **ACL\_RULE** and **ACL\_TABLE** tables are used in the case of intermediate nodes.
-
-```
-{                                                       
-    "ACL_RULE": {                                       
-        "IFA_Transit|Transit": {                        
-            "IP_PROTOCOL": "253",                       
-            "PACKET_ACTION": "INT_UPDATE",              
-            "PRIORITY": "255"                           
-        }                                               
-    },                                                  
-    "ACL_TABLE": {                                      
-        "IFA_Transit": {                                
-            "policy_desc": "IFA policy for transit device", 
-            "ports": "all",                                 
-            "stage": "ingress",                             
-            "type": "IFA"                                   
-        }                                                   
-    },                                                      
-    "IFA_COLLECTOR_TABLE": {                                
-        "collector1": {                                     
-            "ipaddress": "10.20.30.40",                     
-            "ipaddress-type": "ipv4",                       
-            "port": "2233"                                  
-        }                                                   
-    },                                                      
-    "IFA_DEVICE_TABLE": {                                   
-        "device": {                                         
-            "deviceid": "2345",                             
-            "devicetype": "intermediate"                    
-        }                                                   
-    },                                                      
-    "IFA_FLOW_TABLE": {                                     
-        "flow1": {                                          
-            "acl-name": "acl1",                             
-            "sampling-rate": "100"                          
-        },                                                  
-        "flow2": {                                          
-            "acl-name": "acl2"                              
-        }                                                   
     }
 }
 ```
