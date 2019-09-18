@@ -391,6 +391,7 @@ This command displays relevant information as the SONiC and Linux kernel version
   ```
   admin@sonic:~$ show version
   SONiC Software Version: SONiC.Broadcom_SONiC_2.0
+  Product: Broadcom Cloud Base
   Distribution: Debian 9.9
   Kernel: 4.9.0-9-2-amd64
   Build commit: 4ef307ee
