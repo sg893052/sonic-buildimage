@@ -146,7 +146,7 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
-| 8 | Sep-16-2019 | v7 | Added Debug Framework commands |
+| 8 | Sep-16-2019 | v8 | Added Debug Framework commands |
 | 7 | Sep-14-2019 | v7 | Added core dump commands |
 | 6 | Sep-12-2019 | v6 | Added ZTP config and display commands |
 | 5 | Sep-8-2019 | v5 | Added VRF config and display commands |
@@ -158,9 +158,9 @@ Table of Contents
 # Introduction
 SONiC is an open source network operating system based on Linux that runs on switches from multiple vendors and ASICs. SONiC offers a full-suite of network functionality, like BGP and RDMA, that has been production-hardened in the data centers of some of the largest cloud-service providers. It offers teams the flexibility to create the network solutions they need while leveraging the collective strength of a large ecosystem and community.
 
-SONiC software shall be loaded in these [supported devices](https://github.com/Azure/SONiC/wiki/Supported-Devices-and-Platforms) and this CLI guide shall be used to configure the devices as well as to display the configuration, state and status.
+SONiC software shall be loaded on supported devices and this CLI guide shall be used to configure the devices as well as to display the configuration, state and status.
 
-Follow the [Quick Start Guide](https://github.com/Azure/SONiC/wiki/Quick-Start) to boot the device in ONIE mode, install the SONiC software using the steps specified in the document and login to the device using the default username and password.
+Follow the user manual to boot the device in ONIE mode, install the SONiC software using the steps specified in the document and login to the device using the default username and password.
 
 After logging into the device, SONiC software can be configured in following three methods.
  1) Command Line Interface (CLI)
@@ -186,10 +186,10 @@ Note that the command list given in this document is just a subset of all possib
 Please follow config_db.json based configuration for the complete list of configuration options.
 
 **Scope Of The Document**  
-It is assumed that all configuration commands start with the keyword ?config? as prefix. 
-Any other scripts/utilities/commands  that need user configuration control are wrapped as sub-commands under the ?config? command.
+It is assumed that all configuration commands start with the keyword "config" as prefix. 
+Any other scripts/utilities/commands  that need user configuration control are wrapped as sub-commands under the "config" command.
 The direct scripts/utilities/commands (examples given below) that are not wrapped under the "config" command are not in the scope of this document.
-  1)	Acl_loader ? This script is already wrapped inside ?config acl? command; i.e. any ACL configuration that user is allowed to do is already part of ?config acl? command; users are not expected to use the acl_loader script directly and hence this document need not explain the ?acl_loader? script.
+  1)	Acl_loader: This script is already wrapped inside "config acl" command; i.e. any ACL configuration that user is allowed to do is already part of "config acl" command; users are not expected to use the acl_loader script directly and hence this document need not explain the "acl_loader" script.
   2)	Sonic-clear, sfputil, etc., This document does not explain these scripts also. 
 
 # Basic Configuration And Show  
@@ -390,36 +390,51 @@ This command displays relevant information as the SONiC and Linux kernel version
 - Example:
   ```
   admin@sonic:~$ show version
-  SONiC Software Version: SONiC.HEAD.32-21ea29a
-  Distribution: Debian 9.8
-  Kernel: 4.9.0-8-amd64
-  Build commit: 21ea29a
-  Build date: Fri Mar 22 01:55:48 UTC 2019
-  Built by: johnar@jenkins-worker-4
+  SONiC Software Version: SONiC.Broadcom_SONiC_2.0
+  Distribution: Debian 9.9
+  Kernel: 4.9.0-9-2-amd64
+  Build commit: 4ef307ee
+  Build date: Tue Aug 13 08:22:41 UTC 2019
+  Built by: sonicbld@sonic-server
+
+  Platform: x86_64-accton_as7326_56x-r0
+  HwSKU: Accton-AS7326-56X
+  ASIC: broadcom
+  Serial Number: 732656XXXXXXXXX
+  Uptime: 17:51:44 up 35 min,  1 user,  load average: 0.44, 0.59, 1.14
 
   Docker images:
-  REPOSITORY                 TAG                 IMAGE ID            SIZE
-  docker-syncd-brcm          HEAD.32-21ea29a     434240daff6e        362MB
-  docker-syncd-brcm          latest              434240daff6e        362MB
-  docker-orchagent-brcm      HEAD.32-21ea29a     e4f9c4631025        287MB
-  docker-orchagent-brcm      latest              e4f9c4631025        287MB
-  docker-lldp-sv2            HEAD.32-21ea29a     9681bbfea3ac        275MB
-  docker-lldp-sv2            latest              9681bbfea3ac        275MB
-  docker-dhcp-relay          HEAD.32-21ea29a     2db34c7bc6f4        257MB
-  docker-dhcp-relay          latest              2db34c7bc6f4        257MB
-  docker-database            HEAD.32-21ea29a     badc6fc84cdb        256MB
-  docker-database            latest              badc6fc84cdb        256MB
-  docker-snmp-sv2            HEAD.32-21ea29a     e2776e2a30b7        295MB
-  docker-snmp-sv2            latest              e2776e2a30b7        295MB
-  docker-teamd               HEAD.32-21ea29a     caf957cd2ad1        275MB
-  docker-teamd               latest              caf957cd2ad1        275MB
-  docker-router-advertiser   HEAD.32-21ea29a     b1a62023958c        255MB
-  docker-router-advertiser   latest              b1a62023958c        255MB
-  docker-platform-monitor    HEAD.32-21ea29a     40b40a4b2164        287MB
-  docker-platform-monitor    latest              40b40a4b2164        287MB
-  docker-fpm-quagga          HEAD.32-21ea29a     546036fe6838        282MB
-  docker-fpm-quagga          latest              546036fe6838        282MB
-
+  REPOSITORY                 TAG                               IMAGE ID            SIZE
+  docker-fpm-frr             latest                            1c32fd90d830        477MB
+  docker-fpm-frr             Broadcom_SONiC_2.0   1c32fd90d830        477MB
+  docker-orchagent           latest                            df15e4f011e5        447MB
+  docker-orchagent           Broadcom_SONiC_2.0   df15e4f011e5        447MB
+  docker-vrrp                latest                            e6284352dcd8        444MB
+  docker-vrrp                Broadcom_SONiC_2.0   e6284352dcd8        444MB
+  docker-stp                 latest                            28edfe4c92fe        429MB
+  docker-stp                 Broadcom_SONiC_2.0   28edfe4c92fe        429MB
+  docker-teamd               latest                            fa79c9545898        430MB
+  docker-teamd               Broadcom_SONiC_2.0   fa79c9545898        430MB
+  docker-nat                 latest                            d4d7efc58d8b        433MB
+  docker-nat                 Broadcom_SONiC_2.0   d4d7efc58d8b        433MB
+  docker-syncd-brcm          latest                            63870c20e45a        443MB
+  docker-syncd-brcm          Broadcom_SONiC_2.0   63870c20e45a        443MB
+  docker-tam                 latest                            59b95af125ae        675MB
+  docker-tam                 Broadcom_SONiC_2.0   59b95af125ae        675MB
+  docker-lldp-sv2            latest                            3d1643706454        333MB
+  docker-lldp-sv2            Broadcom_SONiC_2.0   3d1643706454        333MB
+  docker-snmp-sv2            latest                            95253ab2447c        343MB
+  docker-snmp-sv2            Broadcom_SONiC_2.0   95253ab2447c        343MB
+  docker-platform-monitor    latest                            fee943fc2389        376MB
+  docker-platform-monitor    Broadcom_SONiC_2.0   fee943fc2389        376MB
+  docker-sonic-telemetry     latest                            cd8f502a0ee6        312MB
+  docker-sonic-telemetry     Broadcom_SONiC_2.0   cd8f502a0ee6        312MB
+  docker-dhcp-relay          latest                            c56dddd78a74        292MB
+  docker-dhcp-relay          Broadcom_SONiC_2.0   c56dddd78a74        292MB
+  docker-database            latest                            e5c7e3fa6540        282MB
+  docker-database            Broadcom_SONiC_2.0   e5c7e3fa6540        282MB
+  docker-router-advertiser   latest                            301ca6f95737        281MB
+  docker-router-advertiser   Broadcom_SONiC_2.0   301ca6f95737        281MB
   ```
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Basic-Configuration-And-Show)
 
@@ -572,7 +587,7 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 
 ## Show Hardware Platform
 
-The information displayed in this set of commands partially overlaps with the one generated by ?show envinronment? instruction. In this case though, the information is presented in a more succinct fashion. In the future these two CLI stanzas may end up getting combined.
+The information displayed in this set of commands partially overlaps with the one generated by "show environment" instruction. In this case though, the information is presented in a more succinct fashion. In the future these two CLI stanzas may end up getting combined.
 
 **show platform summary**  
 This command displays a summary of the device's hardware platform
@@ -1071,7 +1086,7 @@ This command updates only the ACL rules and it does not disturb the ACL tables; 
 
 When "--session_name" optional argument is specified, command sets the session_name for the ACL table with this mirror session name. It fails if the specified mirror session name does not exist.
 
-When the optional argument "max_priority"  is specified, each rule?s priority is calculated by subtracting its ?sequence_id? value from the ?max_priority?. If this value is not passed, the default ?max_priority? 10000 is used.
+When the optional argument "max_priority"  is specified, each rules priority is calculated by subtracting its "sequence_id" value from the "max_priority". If this value is not passed, the default "max_priority" 10000 is used.
 		
 - Usage:  
   config acl update full FILE_NAME  
