@@ -5572,6 +5572,21 @@ This command displays all the vlan configuration.
 
   ```
 
+**show vlan count**  
+
+This command displays the count of the number  of VLAN
+
+
+  - Usage:  
+    show vlan count
+
+
+- Example:
+  ```
+  admin@sonic:~$ show vlan count
+  Total Vlan count:1 
+
+  ```
 
 ### VLAN Config commands
 
@@ -5804,6 +5819,22 @@ This command displays the MAC (FDB) entries either in full or partial as given b
    18    1000  C6:C9:5E:AE:24:42  Ethernet192
   Total number of entries 18 
   ```
+
+**show mac count**  
+
+This command displays the count of the number of MAC (FDB) entries
+
+
+  - Usage:  
+    show mac count
+
+
+- Example:
+  ```
+  admin@sonic:~$ show mac count
+  Total MAC count:1 
+  ```
+
 
 **sonic-clear fdb**
 
