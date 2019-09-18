@@ -35,7 +35,8 @@ Table of Contents
       * [VRRP config commands](#vrrp-show-commands) 
    * [Bidirectional Forwarding Detection](#bfd)
       * [BFD show commands](#bfd-show-commands)
-      * [BFD debug commands](#bfd-config-commands)
+      * [BFD debug commands](#bfd-debug-commands)
+      * [BFD clear commands](#bfd-clear-commands)	  
    * [BGP Configuration And Show Commands](#bgp-configuration-and-show-commands)
       * [BGP show commands](#bgp-show-commands)
       * [BGP config commands](#bgp-config-commands)
@@ -1758,6 +1759,24 @@ Note: This command is available in FRR BGP container vtysh shell.
 - Example:
   ```
   sonic# debug bfd
+  ```
+
+## BFD clear commands
+
+**clear bfd peer counters**
+
+To clear BFD session counters a new command is added.  
+
+Note: This command is available in FRR BGP container vtysh shell.
+
+- Usage: 
+  clear bfd peer {label|A.B.C.D|X:X::X:X} 
+  [multihop|{local-address A.B.C.D|X:X::X:X}|{interface if-name}] counters
+
+- Example:
+  ```
+  sonic# clear bfd peer 10.1.1.1 counters
+  sonic# clear bfd peer 20.1.1.1 local-address 10.1.1.1 counters
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#bfd)
