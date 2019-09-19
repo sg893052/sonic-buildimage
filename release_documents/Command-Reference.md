@@ -3314,7 +3314,7 @@ NOTE: In versions until 201811, syntax is "config interface <interface_name> sta
 **config interface <interface_name> speed (for 201811- version)**  
 
 This command is used to configure the speed for the Physical interface. Use the value 40000 for setting it to 40G and 100000 for 100G. Users need to know the device to configure it properly. 
-Dynamic breakout feature is yet to be supported in SONiC and hence uses cannot configure any values other than 40G and 100G.
+Dynamic breakout feature is yet to be supported in SONiC and hence users cannot configure any values other than 40G and 100G.
 
 - Usage:  
     config interface speed <interface_name> <speed_value>  (for 201904+ version)  
@@ -3378,8 +3378,8 @@ The FEC mode can be changed for multiple interfaces using a single command by pr
   admin@sonic:~$ sudo config interface fec Ethernet0-76 none
   ```
 
-NOTE: This command is not supported in  201904 or prior versions.
-
+NOTE: This command is not supported in  201904 or prior versions.  
+  
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#interface-configuration-and-show-commands)
 
