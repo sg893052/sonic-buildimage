@@ -30,7 +30,6 @@ Table of Contents
          * [Loopback Interface](#loopback-interface)  
          * [Management Interface](#management-interface)  
          * [Management port](#management-port)  
-         * [Management VRF](#management-vrf)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
          * [Port](#port)  
@@ -45,7 +44,6 @@ Table of Contents
          * [Versions](#versions)  
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
-         * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)
          * [NAT](#nat)
          * [Threshold](#threshold)
@@ -898,19 +896,6 @@ instead of data network.
  
 ```
 
-
-### Management VRF
-
-```
-{
-"MGMT_VRF_CONFIG": {
-    "vrf_global": {
-        "mgmtVrfEnabled": "true"
-     }
-  }
-}
-```
-
 ### MAP_PFC_PRIORITY_TO_QUEUE
 
 ```
@@ -1264,49 +1249,6 @@ channel name as object key, and tagging mode as attributes.
 		"tagging_mode": "tagged"
 	}
   }
-}
-```
-
-### Virtual router
-
-The virtual router table allows to insert or update a new virtual router
-instance. The key of the instance is its name. The attributes in the
-table allow to change properties of a virtual router. Attributes:
-
--   'v4' contains boolean value 'true' or 'false'. Enable or
-    disable IPv4 in the virtual router
--   'v6' contains boolean value 'true' or 'false'. Enable or
-    disable IPv6 in the virtual router
--   'src_mac' contains MAC address. What source MAC address will be
-    used for packets egressing from the virtual router
--   'ttl_action' contains packet action. Defines the action for
-    packets with TTL == 0 or TTL == 1
--   'ip_opt_action' contains packet action. Defines the action for
-    packets with IP options
--   'l3_mc_action' contains packet action. Defines the action for
-    unknown L3 multicast packets
-
-The packet action could be:
-
--   'drop'
--   'forward'
--   'copy'
--   'copy_cancel'
--   'trap'
--   'log'
--   'deny'
--   'transit'
-
-
-***TBD***
-```
-'VRF:rid1': {
-	'v4': 'true',
-	'v6': 'false',
-	'src_mac': '02:04:05:06:07:08',
-	'ttl_action': 'copy',
-	'ip_opt_action': 'deny',
-	'l3_mc_action': 'drop'
 }
 ```
 

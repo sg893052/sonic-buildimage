@@ -1441,7 +1441,7 @@ This command allows user to create a static route in SONIC. The static route can
 
 - Examples:
 
-  The below command creates a static route 192.168.34.0/24 in VRF Vrf-Core with next-hop 10.17.34.71 in Vrf-Core.
+  The below command creates a static route 192.168.34.0/24 in VRF Vrf-Red with next-hop 10.17.34.71 in Vrf-Core.
 
   ```
   admin@sonic:~$ config route add vrf Vrf-Red prefix 192.168.34.0/24 next-hop vrf Vrf-Core 10.17.34.71
@@ -3276,6 +3276,7 @@ In order to successfully bind an interface to VRF, interface should not be a mem
   admin@sonic:~$ sudo config interface vrf bind Ethernet12 Vrf-Green
   admin@sonic:~$ sudo config interface vrf bind PortChannel017 Vrf-Red
   admin@sonic:~$ sudo config interface vrf bind Vlan27 Vrf-Green
+  admin@sonic:~$ sudo config interface vrf bind Loopback7 Vrf-Green
   ```
 
 ## Unbinding an interface from a VRF
@@ -3293,6 +3294,7 @@ This command allows user to disassociate an interface from a particular VRF and 
   admin@sonic:~$ sudo config interface vrf unbind Ethernet12 Vrf-Green
   admin@sonic:~$ sudo config interface vrf unbind PortChannel017 Vrf-Red
   admin@sonic:~$ sudo config interface vrf unbind Vlan27 Vrf-Green
+  admin@sonic:~$ sudo config interface vrf unbind Loopback7 Vrf-Green
   ```
 
 ## Interface naming mode config commands
