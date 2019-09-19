@@ -9,7 +9,7 @@ Table of Contents
       * [SSH Login](#ssh-login)
       * [Configuring Management Interface](#configuring-management-interface)
       * [Config Help](#config-help)
-	  * [Show Help](#show-help)
+      * [Show Help](#show-help)
       * [Show Versions](#show-versions)
       * [Show System Status](#show-system-status)
       * [Show Hardware Platform](#show-hardware-platform)
@@ -142,6 +142,7 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
+| 9 | Sep-19-2019 | v8 | Added/modified interface commands |
 | 8 | Sep-16-2019 | v8 | Added Debug Framework commands |
 | 7 | Sep-14-2019 | v7 | Added core dump commands |
 | 6 | Sep-12-2019 | v6 | Added ZTP config and display commands |
@@ -2930,15 +2931,18 @@ Subsequent pages explain each of these commands in detail.
 
 **show interfaces counters**  
 
-This show command displays packet counters for all interfaces since the last time the counters were cleared. There is no facility to display counters for one specific interface. Optional argument "-a" does not have any significance in this command.
-Optional argument "-c" can be used to clear the counters for all interfaces.
-Optional argument "-p" specify a period (in seconds) with which to gather counters over.
+This show command displays packet counters for all interfaces since the last time the counters were cleared.  
+Optional argument "-a" will display two additional counters - RX_PPS and TX_PPS.  
+Optional argument "-c" can be used to clear the counters for all interfaces. 
+Optional argument "-i" can be used to apply this command per interface. 
+Optional argument "-p" specify a period (in seconds) with which to gather counters over. 
 
   - Usage:  
     show interfaces counters [OPTIONS]  
       OPTIONS:  
       -a, --printall  
       -c, --clear  
+      -i, --interface TEXT  
       -p, --period TEXT
 
 
@@ -2972,6 +2976,50 @@ Optional argument "-p" specify a period (in seconds) with which to gather counte
   Ethernet24        U      173   16.09 KB/s      0.00%         0         0         0      169   11.39 KB/s      0.00%         0         0         0
   ```
 
+  - The option to display the detailed counters of an interface is also available. 
+  - Example:
+  ```
+  admin@sonic:~$ show interfaces counters detailed Ethernet48
+  Last rate cached time was 2019-09-18 21:31:58.094196
+  Packets Received 64 Octets..................... 4
+  Packets Received 65-127 Octets................. 0
+  Packets Received 128-255 Octets................ 842
+  Packets Received 256-511 Octets................ 6
+  Packets Received 512-1023 Octets............... 0
+  Packets Received 1024-1518 Octets.............. 0
+  Packets Received 1519-2047 Octets.............. 0
+  Packets Received 2048-4095 Octets.............. 0
+  Packets Received 4096-9216 Octets.............. 0
+  Packets Received 9217-16383 Octets............. 0
+
+  Total Packets Received Without Errors.......... 852
+  Unicast Packets Received....................... 0
+  Multicast Packets Received..................... 846
+  Broadcast Packets Received..................... 6
+
+  Jabbers Received............................... 0
+  Fragments Received............................. 0
+  Undersize Received............................. 0
+  Overruns Received.............................. 0
+
+  Packets Transmitted 64 Octets.................. 1
+  Packets Transmitted 65-127 Octets.............. 0
+  Packets Transmitted 128-255 Octets............. 835
+  Packets Transmitted 256-511 Octets............. 0
+  Packets Transmitted 512-1023 Octets............ 0
+  Packets Transmitted 1024-1518 Octets........... 0
+  Packets Transmitted 1519-2047 Octets........... 0
+  Packets Transmitted 2048-4095 Octets........... 0
+  Packets Transmitted 4096-9216 Octets........... 0
+  Packets Transmitted 9217-16383 Octets.......... 0
+
+  Total Packets Transmitted Successfully......... 836
+  Unicast Packets Transmitted.................... 0
+  Multicast Packets Transmitted.................. 836
+  Broadcast Packets Transmitted.................. 0
+  Time Since Counters Last Cleared............... None
+  admin@sonic:~$
+  ```
 
 **show interfaces description**  
 
@@ -3083,17 +3131,22 @@ This command is already explained [here](#Transceivers)
 
 ## Interface Config Commands
 This sub-section explains the following list of configuration on the interfaces.
-1) ip - To add or remove IP address for the interface
-2) pfc - to set the PFC configuration for the interface
-3) shutdown - to administratively shut down the interface
-4) speed - to set the interface speed
-5) startup - to bring up the administratively shutdown interface
+1) ip - to add or remove IP address for the interface.
+2) pfc - to set the PFC configuration for the interface.
+3) shutdown - to administratively shut down the interface.
+4) speed - to set the interface speed.
+5) startup - to bring up the administratively shutdown interface.
+6) description - to set a description for the interface.
+7) fec - to set the forward-error-correction mode to rs, fc or none.
+8) mtu - to set the MTU to a value in the range 1548-9216. 
+9) vrf - to bind or unbind interface to a VRF.
+10) vrrp - to apply VRRP configurations on interface.
 
 From 201904 release onwards, the ?config interface? command syntax is changed and the format is as follows    
 
 - config interface  interface_subcommand <interface_name>   
 i.e Interface name comes after the subcommand  
-- Ex: config interface startup Ethernet63  
+- Example: config interface startup Ethernet63  
 
 The syntax for all such interface_subcommands are given below under each command  
 
@@ -3221,15 +3274,18 @@ NOTE: In versions until 201811, syntax is "config interface <interface_name> shu
 **config interface startup <interface_name> (for 201904+ version)**  
 **config interface <interface_name> startup (for 201811- version)**  
 
-This command is used for administratively bringing up the Physical interface or port channel interface.Once if it is configured, use "show interfaces status" to check the same.
+This command is used for administratively bringing up the physical interface or port channel interface.  
+The  bring-up of multiple physical interfaces can be done  by providing  range of interfac names, as shown in the example.
+The command, "show interfaces status" can be used to check the status after issuing startup command.
 
 - Usage:   
-    config interface startup <interface_name> (for 201904+ version)  
+    config interface startup <interface_name(s)> (for 201904+ version)  
     config interface <interface_name> startup (for 201811- version)
 
 - Example:
   ```
   admin@sonic:~$ sudo config interface startup Ethernet63
+  admin@sonic:~$ sudo config interface startup Ethernet0-62
   ```
 NOTE: In versions until 201811, syntax is "config interface <interface_name> startup"
 
@@ -3251,6 +3307,59 @@ Dynamic breakout feature is yet to be supported in SONiC and hence uses cannot c
   ```
 
 NOTE: In versions until 201811, syntax is "config interface <interface_name> speed <4000>"
+
+**config interface description <interface_name> <interface_description>**  
+
+This command is used to configure a user defined description to an interface. The description can be cleared by giving value for description as "None".  
+The command, "show interface description", can be used to view the descriptions of interfaces. 
+
+- Usage:  
+    config interface description <interface_name> <interface_description>  
+
+- Example:
+  ```
+  admin@sonic:~$ sudo config interface description Ethernet60 South-bound  
+  admin@sonic:~$ sudo config interface description Ethernet64 "North-bound interface to Spine1"  
+  show interfaces description
+  show interfaces description Ethernet64
+  admin@sonic:~$ show interfaces description Ethernet64
+    Interface    Oper    Admin          Alias                      Description
+  -----------  ------  -------  -------------  -------------------------------
+   Ethernet64    down       up  hundredGigE53  North-bound interface to Spine1
+  admin@sonic:~$ sudo config interface description Ethernet60 None
+  ```
+
+NOTE: This command is not supported in  201904 or prior versions.
+
+**config interface mtu <interface_name> <1548-9216>**  
+
+This command is used to the maximum transmission unit(MTU) for the physical interface.  
+The permitted range of MTU value is 1548B to 9216B.
+
+- Usage:  
+    config interface mtu <interface_name> <1548-9216>  
+
+- Example:
+  ```
+  admin@sonic:~$ sudo config interface mtu Ethernet48 9200
+  ```
+
+**config interface fec <interface_name> <fec_mode>**  
+
+This command is used to configure the forward error correction mode for the physical interface.  
+The permitted modes are rs(RS-FEC) , fc(FC-FEC)  and none. The default mode is none.  
+The FEC mode can be changed for multiple interfaces using a single command by providing range of interface names as shown in the example.
+
+- Usage:  
+    config interface fec <interface_name(s)> <fec_mode>  
+
+- Example:
+  ```
+  admin@sonic:~$ sudo config interface fec Ethernet63 rs
+  admin@sonic:~$ sudo config interface fec Ethernet0-76 none
+  ```
+
+NOTE: This command is not supported in  201904 or prior versions.
 
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#interface-configuration-and-show-commands)
