@@ -40,10 +40,6 @@ Table of Contents
    * [BGP Configuration And Show Commands](#bgp-configuration-and-show-commands)
       * [BGP show commands](#bgp-show-commands)
       * [BGP config commands](#bgp-config-commands)
-      * [BGP error handling](#bgp-error-handling)
-          * [Configuration Commands](#bgp-error-handling-config-commands)
-          * [Show Commands](#bgp-error-handling-show-commands)
-          * [Clear Commands](#bgp-error-handling-clear-commands)
   * [Core Dump Configuration And Show Commands](#core-dump-configuration-and-show-commands)
       * [Core Dump Show Commands](#core-dump-show-commands)
       * [Core Dump Configuration Commands](#core-dump-config-commands)
@@ -124,10 +120,7 @@ Table of Contents
    * [NAT Configuration and Show Commands](#nat-configuration-and-show-commands)
       * [NAT show commands](#nat-show-commands)
       * [NAT configuration commands](#nat-configuration-commands)
-      * [NAT clear commands](#nat-clear-commands)
-   * [Error Handling Framework Configuration and Show Commands](#error-handling-framework-configuration-and-show-commands)
-      * [Error Handling Framework show commands](#error-handling-framework-show-commands)
-      * [Error Handling Framework clear commands](#error-handling-framework-clear-commands)
+      * [NAT clear commands](#nat-clear-commands) 
    * [Threshold Configuration and Show commands](#threshold-configuration-and-show-commands)
       * [Threshold show commands](#threshold-show-commands)
       * [Threshold configuration commands](#threshold-configuration-commands)
@@ -2130,95 +2123,6 @@ This command is used to configure routing configuration mode. This command requi
 
   ```
   admin@sonic:~$ sudo config routing_config_mode split
-  ```
-## BGP Error Handling
-
-When BGP learns a prefix, it sends the route to route table manager(Zebra) to install in data plane.  The routes are installed in kernel and also sent to APP_DB via fpmsyncd. The Orchagent reads the route from APP_DB, creates new resources like nexthop or nexthop group Id and installs the route in ASIC_DB. The syncd triggers the appropriate SAI API and route is installed in hardware. Due to resource allocation failures in hardware, SAI API calls can fail and these failures should be notified to Zebra and BGP. On learning the prefix, BGP can immediately advertise the prefix to its neighbors. However, if the BGP error-handling feature is enabled, BGP waits for success notification from hardware installation before advertising the route to its peers. If the hardware installation returns error, the routes are not advertised to the peers.
-
-### Configuration Commands
-
-**bgp error-handling**
-
-Below configuration command is added to enable or disable BGP error handling feature. BGP error handling feature is disabled by default. 
-
-Note: This command is available in SONIC CLIs. 
-
-- Usage: 
-
-  config bgp error-handling {enable|disable}
-
-- Example
-
-  ```
-  root@sonic:~# sudo config bgp error-handling enable
-  
-  root@sonic:~# sudo config bgp error-handling disable
-  ```
-
-### Show Commands
-
-**show ip route not-installed**
-
-A new command is added with this feature, to display the failed routes. 
-
-Note: This command is available in FRR BGP vtysh shell.  
-
-- Usage: 
-
-  show {ip | ipv6} route not-installed [prefix/mask]
-
-- Example
-
-  ```
-  sonic# show ip route not-installed
-  Codes: K - kernel route, C - connected, S - static, R - RIP,
-         O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
-         T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
-         F - PBR,
-         > - selected route, * - FIB route # - not installed in hardware
-  B> # 22.1.1.1/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 22.1.1.2/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.1/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.2/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.3/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.4/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.5/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.6/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.7/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  B> # 30.1.1.8/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:20
-  ```
-
-*show bgp {ipv4|ipv6}* and *show ip route* CLI outputs are also enhanced to display the routes that are failed to install in the hardware with different status code. 
-
-Example: 
-
-```
-sonic# show ip route
-Codes: K - kernel route, C - connected, S - static, R - RIP,
-       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
-       T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
-       F - PBR,
-       > - selected route, * - FIB route, # - Not installed in hardware
-
-K>* 0.0.0.0/0 [0/0] via 10.59.128.1, eth0, 09:44:37
-C>* 4.1.1.0/24 is directly connected, Ethernet4, 00:01:48
-C>* 10.1.0.1/32 is directly connected, lo, 09:44:37
-C>* 10.59.128.0/20 is directly connected, eth0, 09:44:37
-B># 21.21.21.21/32 [20/0] via 4.1.1.2, Ethernet4, 00:00:07
-```
-
-### Debug Commands
-
-To retry installation of failed routes from Zebra, a clear command has been provided.
-
-- Usage:
-
-  clear {ip | ipv6} route {not-installed | <prefix/mask>}
-
-- Example 
-
-  ```
-  root@sonic:~# clear ip route not-installed
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
@@ -6809,61 +6713,6 @@ Use this command to clear all dynamic NAT translations.
 root@sonic:/home/admin# sonic-clear nat translations        
 
 Dynamic NAT entries are cleared.
-```
-
-Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
-
-
-# Error Handling Framework Configuration and Show Commands
-
-This section explains all the Error Handling Framework show commands and configuation commands that are supported in SONiC.
-
-## Error Handling Framework show commands
-
-**show error_database [tablename]**
-
-This command displays the failure entries logged in the error database.
-
-- Usage:
-show error_database [tablename]
-
-- Example:
-```
-admin@sonic:/home/admin# show error_database
-Prefix         Nexthop    Interface    Error Code      Operation
--------------  ---------  -----------  --------------  -----------
-600::/64       2000::2    Ethernet28   SWSS_RC_EXISTS  create
-12.12.12.0/24  10.1.1.2   Ethernet28   SWSS_RC_EXISTS  create
-IP address    MAC address        Interface    Error Code          Operation
-------------  -----------------  -----------  ------------------  -----------
-2000::3       00:00:00:00:00:02  Ethernet28   SWSS_RC_TABLE_FULL  create
-2000::4                          Ethernet28   SWSS_RC_NOT_FOUND   remove
-10.1.1.3      00:00:00:00:00:01  Ethernet28   SWSS_RC_TABLE_FULL  create
-10.1.1.3                         Ethernet28   SWSS_RC_NOT_FOUND   remove
-
-admin@sonic:/home/admin# show error_database ERROR_ROUTE_TABLE
-Prefix         Nexthop            Interface              Error Code      Operation
--------------  -----------------  ---------------------  --------------  -----------
-12.12.12.0/24  10.1.1.2,20.1.1.2  Ethernet28,Ethernet30  SWSS_RC_EXISTS  create
-13.13.13.0/24  10.1.1.2           Ethernet28             SWSS_RC_EXISTS  create
-```
-
-## Error Handling Framework clear commands
-
-**sonic-clear error_database [tablename]**
-
-This command clears the failure entries logged in the error database.
-
-- Usage:
-sonic-clear error_database [tablename]
-
-- Example:
-```
-admin@sonic:/home/admin# sudo sonic-clear error_database
-ERROR DB entries are cleared.
-
-admin@sonic:/home/admin# sudo sonic-clear error_database ERROR_ROUTE_TABLE
-('ERROR DB entries are cleared from Table.', 'ERROR_ROUTE_TABLE')
 ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
