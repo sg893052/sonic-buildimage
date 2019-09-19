@@ -193,7 +193,6 @@ and migration plan
 }
 ```
 
-***Below ACL table added as per the mail***
 ```
 {
 "ACL_TABLE": {
