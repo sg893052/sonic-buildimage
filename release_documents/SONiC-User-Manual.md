@@ -41,6 +41,7 @@ Table of Contents
       * [6.7 Orchagent troubleshooting](#67-Orchagent-troubleshooting)
    * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
       * [7.1 Debug Framework](#71-debug-framework)
+   * [8 Chef](#8-chef)
 
 
 
@@ -995,3 +996,5 @@ Debug Framework provides mechanism for new modules/components to register with t
 
 Please refer to [Debug framework HLD](https://github.com/Azure/SONiC/pull/398) on how to register components and implement dump routines.
 
+# 8 Chef 
+The need for configuring a large number of devices arises with the continuous growth of data center and cloud environments. To make this task of configuration easy and automatic, different suite of tools are being developed. Chef is one such tool which helps the IT and Network configuration automation. Please refer the Chef User Guide for Chef usage in SONiC and for supported SONiC cookbook operations.
