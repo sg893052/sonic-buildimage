@@ -40,10 +40,13 @@ Table of Contents
    * [BGP Configuration And Show Commands](#bgp-configuration-and-show-commands)
       * [BGP show commands](#bgp-show-commands)
       * [BGP config commands](#bgp-config-commands)
-  * [Core Dump Configuration And Show Commands](#core-dump-configuration-and-show-commands)
+   * [COPP Configuration And Show Commands](#copp-configuration-and-show-commands)
+      * [COPP Show Commands](#copp-show-commands)
+      * [COPP Config Commands](#copp-config-commands)
+   * [Core Dump Configuration And Show Commands](#core-dump-configuration-and-show-commands)
       * [Core Dump Show Commands](#core-dump-show-commands)
       * [Core Dump Configuration Commands](#core-dump-config-commands)
-  * [Tech-support export Configuration And Show Commands](#Tech-support-export-configuration-and-show-commands)
+   * [Tech-support export Configuration And Show Commands](#Tech-support-export-configuration-and-show-commands)
       * [export Show Commands](#export-show-commands)
       * [export Config Commands](#export-config-commands)
    * [CRM Configuration And Show Commands](#crm-configuration-and-show-commands)
@@ -60,7 +63,7 @@ Table of Contents
       * [Interface naming mode config commands](#interface-naming-mode-config-commands)
    * [IP](#ip)
       * [IP show commands](#ip-show-commands)
-	  * [IPv6 show commands](#ipv6-show-commands)
+      * [IPv6 show commands](#ipv6-show-commands)
    * [LLDP](#lldp)
       * [LLDP show commands](#lldp-show-commands)
    * [Loading, Reloading And Saving Configuration](#loading-reloading-and-saving-configuration)
@@ -361,6 +364,7 @@ The same syntax applies to all subgroups of `show` which themselves contain subc
     description  Show interface status, protocol and...
     naming_mode  Show interface naming_mode status
     neighbor     Show neighbor related information
+    pktdrops     Show interface packet drops
     portchannel  Show PortChannel information
     status       Show Interface status information
     transceiver  Show SFP Transceiver information
@@ -673,7 +677,7 @@ This command displays information for all the interfaces for the transceiver req
 
 - Usage:  
   show interfaces transceiver [eeprom | lpmode | presence]
-  show interfaces transceiver [eeprom [-d | --dom] | lpmode | presence] [<interface-name>]
+  show interfaces transceiver [eeprom [-d | --dom] | lpmode | presence] [<interface_name>]
 
 - Example (Decode and display information stored on the SFP EEPROM): 
   ```
@@ -2128,6 +2132,89 @@ This command is used to configure routing configuration mode. This command requi
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
 
 
+# COPP Configuration And Show Commands
+
+## COPP Show Commands
+
+**show copp config**  
+This command displays the COPP configuration.
+
+  - Usage:  
+    show copp config
+
+- Example:
+   ```
+   admin@sonic:~$ show copp config
+   {
+     "COPP_TABLE:default": {
+       "value": {
+         "cbs": "600", 
+         "cir": "600", 
+         "meter_type": "packets", 
+         "mode": "sr_tcm", 
+         "queue": "0", 
+         "red_action": "drop"
+       }
+     }, 
+     "COPP_TABLE:trap.group.arp": {
+       "value": {
+         "cbs": "6000", 
+         "cir": "6000", 
+         "meter_type": "packets", 
+         "mode": "sr_tcm", 
+         "queue": "3", 
+         "red_action": "drop", 
+         "trap_action": "copy", 
+         "trap_ids": "arp_req,arp_resp,neigh_discovery", 
+         "trap_priority": "3"
+       }
+     }
+   }
+   ```
+**show copp rate-limit**
+
+This command displays the global max rate limit to CPU and the current rate of packets to CPU.
+
+  - Usage:  
+    show copp rate-limit
+
+- Example:
+   ```
+   admin@sonic:~$ show copp rate-limit
+   Rx0 max rate     30000
+   Rx0 max burst     3000
+   Rx0 rate             0
+   Rx0 tokens        3000
+   ```
+
+## COPP Config Commands
+
+**config copp rx-rate**
+
+This command configures the global max rate limit to CPU in packets/second.
+
+  - Usage:  
+    config copp rx-rate <100-100000>
+
+- Example:
+   ```
+   root@sonic:/home/admin# config copp rx-rate 20000
+   ```
+
+**config copp rx-burst**
+
+This command configures the global max burst limit to CPU in number of packets.
+
+  - Usage:  
+    config copp rx-burst <10-10000>
+
+- Example:
+   ```
+   root@sonic:/home/admin# config copp rx-burst 2000
+   ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#COPP-Configuration-And-Show-Commands)
+
 
 # Core Dump Configuration And Show Commands
 
@@ -2847,6 +2934,7 @@ Subsequent pages explain each of these commands in detail.
   description  Show interface status, protocol and...
   naming_mode  Show interface naming_mode status
   neighbor     Show neighbor related information
+  pktdrops     Show interface packet drops
   portchannel  Show PortChannel information
   status       Show Interface status information
   transceiver  Show SFP Transceiver information
@@ -2994,6 +3082,155 @@ This command is used to display the list of expected neighbors for all interface
 	Ethernet120  ARISTA03T1  Ethernet1       None                10.16.205.102   LeafRouter
 	Ethernet124  ARISTA04T1  Ethernet1       None                10.16.205.103   LeafRouter
 
+  ```
+
+**show interfaces pktdrops**  
+
+This command displays detailed packet drop counters for all interfaces. The optional "nonzero" argument displays only nonzero counters.
+
+  - Usage:  
+    show interfaces pktdrops [nonzero]
+
+- Example:
+  ``` 
+  admin@sonic:~$ show interfaces pktdrops
+
+    IFACE      COUNTER                    COUNT    CHANGE
+    ---------  -----------------------  -------  --------
+    Ethernet0  RIPD4                          0        +0
+    Ethernet0  RIPHE4                         0        +0
+    Ethernet0  RIPD6                          0        +0
+    Ethernet0  RIPHE6                         0        +0
+    Ethernet0  RPORTD                         0        +0
+    Ethernet0  RPARITYD                       0        +0
+    Ethernet0  ING_NIV_RX_FRAMES_ER           0        +0
+    Ethernet0  ING_NIV_RX_FRAMES_FO           0        +0
+    Ethernet0  ING_ECN_COUNTER_64             0        +0
+    Ethernet0  EGR_ECN_COUNTER_64             0        +0
+    Ethernet0  TPCE_64                        0        +0
+    Ethernet0  RFCS                           0        +0
+    Ethernet0  RXUO                           0        +0
+    Ethernet0  RXUDA                          0        +0
+    Ethernet0  RXWSA                          0        +0
+    Ethernet0  RALN                           0        +0
+    Ethernet0  RFLR                           0        +0
+    Ethernet0  RERPKT                         0        +0
+    Ethernet0  RFCR                           0        +0
+    Ethernet0  ROVR                           0        +0
+    Ethernet0  RJBR                           0        +0
+    Ethernet0  RMTUE                          0        +0
+    Ethernet0  RTRFU                          0        +0
+    Ethernet0  CLMIB_RSCHCRC                  0        +0
+    Ethernet0  RUND                           0        +0
+    Ethernet0  RFRG                           0        +0
+    Ethernet0  RRPKT                          0        +0
+    Ethernet0  TJBR                           0        +0
+    Ethernet0  TFCS                           0        +0
+    Ethernet0  TEDF                           0        +0
+    Ethernet0  TSCL                           0        +0
+    Ethernet0  TMCL                           0        +0
+    Ethernet0  TLCL                           0        +0
+    Ethernet0  TXCL                           0        +0
+    Ethernet0  TFRG                           0        +0
+    Ethernet0  TERR                           0        +0
+    Ethernet0  TRPKT                          0        +0
+    Ethernet0  TUFL                           0        +0
+    Ethernet0  CLMIB_XTHOL                    0        +0
+    Ethernet0  PERQ_DROP_PKT(0)               0        +0
+    Ethernet0  PERQ_DROP_PKT(1)               0        +0
+    Ethernet0  PERQ_DROP_PKT(2)               0        +0
+    Ethernet0  PERQ_DROP_PKT(3)               0        +0
+    Ethernet0  PERQ_DROP_PKT(4)               0        +0
+    Ethernet0  PERQ_DROP_PKT(5)               0        +0
+    Ethernet0  PERQ_DROP_PKT(6)               0        +0
+    Ethernet0  PERQ_DROP_PKT(7)               0        +0
+    Ethernet0  PERQ_DROP_PKT(8)               0        +0
+    Ethernet0  PERQ_DROP_PKT(9)               0        +0
+    Ethernet0  DROP_PKT_ING                   0        +0
+    Ethernet0  DROP_PKT_YEL                   0        +0
+    Ethernet0  DROP_PKT_RED                   0        +0
+    Ethernet0  OBM_LOSSY_LO_DRP_PKT(0)        0        +0
+    Ethernet0  OBM_LOSSY_HI_DRP_PKT(0)        0        +0
+    Ethernet0  OBM_LOSSLESS0_DRP_PK(0)        0        +0
+    Ethernet0  OBM_LOSSLESS1_DRP_PK(0)        0        +0
+  ```
+
+The command also displays a brief description of each drop counter before displaying the packet drop counters.
+
+- Example:
+  ``` 
+  admin@sonic:~$ show interfaces pktdrops
+
+    COUNTER                  DESCRIPTION
+    -----------------------  --------------------------------------
+    RIPD4                    Rx IPv4 L3 discards
+    RIPHE4                   Rx IPv4 L3 IP Header Errors
+    RIPD6                    Rx IPv6 L3 discards
+    RIPHE6                   Rx IPv6 L3 IP Header Errors
+    RDISC                    Rx discards
+    RPORTD                   Rx PortInDiscards
+    RPARITYD                 Rx Parity errors
+    IUNHGI_64                Rx unknown HGI pkts
+    ING_NIV_RX_FRAMES_ER     VNTAG/ETAG format errors
+    ING_NIV_RX_FRAMES_FO     NIV/PE forwarding errors
+    ING_ECN_COUNTER_64       Ingress ECN packets
+    EGR_ECN_COUNTER_64       ECN errors
+    TPCE_64                  Egress purge and cell Error drops
+    RFCS                     Rx FCS error frames
+    RXUO                     Rx unsupported Opcode frames
+    RXUDA                    Rx unsupported DA for PAUSE/PFC
+    RXWSA                    Rx wrong SA frames
+    RALN                     Rx Alignment Errors
+    RFLR                     Rx length out of range
+    RERPKT                   Rx code errors
+    RFCR                     Rx False carrier
+    ROVR                     Rx oversized
+    RJBR                     Rx Jabber frames
+    RMTUE                    Rx MTU check error frames
+    RTRFU                    Rx trauncated frames
+    CLMIB_RSCHCRC            Rx SCH CRC Error
+    RUND                     Rx undersize
+    RFRG                     Rx framents
+    RRPKT                    Rx RUNT frames
+    TJBR                     Tx Jabbers
+    TFCS                     Tx FCS errors
+    TEDF                     Tx Multiple Deferral frames
+    TSCL                     Tx single collision frames
+    TMCL                     Tx Multiple collision frames
+    TLCL                     Tx Late collision frames
+    TXCL                     Tx Excessive collision frames
+    TFRG                     Tx Fragments
+    TERR                     Tx Errors
+    TRPKT                    Tx RUNT frames
+    TUFL                     Tx FIFO underrun
+    CLMIB_XTHOL              Tx End-to-End HOL packets
+    PERQ_DROP_PKT(0)         Packet drops on queue #0
+    PERQ_DROP_PKT(1)         Packet drops on queue #1
+    PERQ_DROP_PKT(2)         Packet drops on queue #2
+    PERQ_DROP_PKT(3)         Packet drops on queue #3
+    PERQ_DROP_PKT(4)         Packet drops on queue #4
+    PERQ_DROP_PKT(5)         Packet drops on queue #5
+    PERQ_DROP_PKT(6)         Packet drops on queue #6
+    PERQ_DROP_PKT(7)         Packet drops on queue #7
+    PERQ_DROP_PKT(8)         Packet drops on queue #8
+    PERQ_DROP_PKT(9)         Packet drops on queue #9
+    PERQ_WRED_DROP_PKT_U(0)  WRED Drops on queue #0
+    PERQ_WRED_DROP_PKT_U(1)  WRED Drops on queue #1
+    PERQ_WRED_DROP_PKT_U(2)  WRED Drops on queue #2
+    PERQ_WRED_DROP_PKT_U(3)  WRED Drops on queue #3
+    PERQ_WRED_DROP_PKT_U(4)  WRED Drops on queue #4
+    PERQ_WRED_DROP_PKT_U(5)  WRED Drops on queue #5
+    PERQ_WRED_DROP_PKT_U(6)  WRED Drops on queue #6
+    PERQ_WRED_DROP_PKT_U(7)  WRED Drops on queue #7
+    PERQ_WRED_DROP_PKT_U(8)  WRED Drops on queue #8
+    PERQ_WRED_DROP_PKT_U(9)  WRED Drops on queue #9
+    DROP_PKT_ING             MMU drops due to THDI(input threshold)
+    DROP_PKT_YEL             MMU YELLOW drops
+    DROP_PKT_RED             MMU RED drops
+    OBM_LOSSY_LO_DRP_PKT(0)  OBM Lossy Low drops
+    OBM_LOSSY_HI_DRP_PKT(0)  OBM Lossy high drops
+    OBM_LOSSLESS0_DRP_PK(0)  OBM lossless0 drops
+    OBM_LOSSLESS1_DRP_PK(0)  OBM lossless1 drops
   ```
 
 **show interfaces portchannel**  
@@ -4540,10 +4777,11 @@ This sub-section explains the following queue parameters that can be displayed u
 **show queue counters**  
 
 This command displays packet and byte counters for all queues of all ports or one specific-port given as arguement.
-This command can be used to clear the counters for all queues of all ports. Note that port specific clear is not supported.
+The command also displays counters for CPU queues.
+This command can be used to clear the counters for all queues of all ports or one specific-port given as an argument.
 
   - Usage:  
-    show queue counters [-c or --clear] [<interface-name>] 
+    show queue counters [-c or --clear] [<interface_name>]
 
 - Example:
   ```
@@ -4598,12 +4836,46 @@ This command can be used to clear the counters for all queues of all ports. Note
   ```
   - Optionally, you can specify an interface name in order to display only that particular interface
 
-- Example:
+- Examples:
   ```
-  admin@sonic:~$ show queue counters Ethernet72
+  admin@sonic:~$ show queue counters Ethernet4
+         Port    TxQ    Counter/pkts    Counter/bytes    Drop/pkts    Drop/bytes
+    ---------  -----  --------------  ---------------  -----------  ------------
+    Ethernet4    UC0               0                0            0             0
+    Ethernet4    UC1               0                0            0             0
+    Ethernet4    UC2               0                0            0             0
+    Ethernet4    UC3               0                0            0             0
+    Ethernet4    UC4               0                0            0             0
+    Ethernet4    UC5               0                0            0             0
+    Ethernet4    UC6               0                0            0             0
+    Ethernet4    UC7               0                0            0             0
+    Ethernet4    UC8               0                0            0             0
+    Ethernet4    UC9               0                0            0             0
+    Ethernet4    MC0               0                0            0             0
+    Ethernet4    MC1               0                0            0             0
+    Ethernet4    MC2               0                0            0             0
+    Ethernet4    MC3               0                0            0             0
+    Ethernet4    MC4               0                0            0             0
+    Ethernet4    MC5               0                0            0             0
+    Ethernet4    MC6               0                0            0             0
+    Ethernet4    MC7               0                0            0             0
+    Ethernet4    MC8               0                0            0             0
+    Ethernet4    MC9               0                0            0             0
+
+  admin@sonic:~$ show queue counters CPU
+     Port    TxQ    Counter/pkts    Counter/bytes    Drop/pkts    Drop/bytes
+   ------  -----  --------------  ---------------  -----------  ------------
+      CPU    MC0               0                0            0             0
+      CPU    MC1               0                0            0             0
+      CPU    MC2               0                0            0             0
+      CPU    MC3               0                0            0             0
+      CPU    MC4               0                0            0             0
+      CPU    MC5               0                0            0             0
+      CPU    MC6               0                0            0             0
+      CPU    MC7               0                0            0             0
+      ...
   ```
   
-
 **show queue watermark**  
 
 This command displays the user watermark for the queues (Egress shared pool occupancy per queue) for either the unicast queues or multicast queues for all ports

@@ -23,6 +23,7 @@ Table of Contents
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [Device Metadata](#device-metadata)   
          * [Device neighbor metada](#device-neighbor-metada)  
+         * [DOT1P_TO_TC_MAP](#dot1p_to_tc_map)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -36,6 +37,7 @@ Table of Contents
          * [Portchannel member](#portchannel-member)  
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
+         * [Scheduler](#scheduler)  
          * [Spanning Tree (PVST)](#stp-pvst)  
          * [Tacplus Server](#tacplus-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
@@ -517,56 +519,117 @@ BFD_PEER table can be used to configure BFD sessions for a peer IP address as be
 ### COPP_TABLE
 
 ```
-{
-"COPP_TABLE": {
-     "default": {
-         "cbs": "600",
-         "cir": "600",
-	 "meter_type": "packets",
-	 "mode": "sr_tcm",
-	 "queue": "0",
-	 "red_action": "drop"
-     },
-   
-     "trap.group.arp": {
-         "cbs": "600",
-         "cir": "600",
-	 "meter_type": "packets",
-	 "mode": "sr_tcm",
-	 "queue": "4",
-	 "red_action": "drop",
-	 "trap_action": "trap",
-	 "trap_ids": "arp_req,arp_resp,neigh_discovery",
-	 "trap_priority": "4"
-      },
-    
-     "trap.group.lldp.dhcp.udld": {
-         "queue": "4",
-         "trap_action": "trap",
-	 "trap_ids": "lldp,dhcp,udld",
-	 "trap_priority": "4"
-      },
-    
-     "trap.group.bgp.lacp": {
-         "queue": "4",
-         "trap_action": "trap",
-	 "trap_ids": "bgp,bgpv6,lacp",
-	 "trap_priority": "4"
-      },
-   
-     "trap.group.ip2me": {
-         "cbs": "600",
-         "cir": "600",
-	 "meter_type": "packets",
-	 "mode": "sr_tcm",
-	 "queue": "1",
-	 "red_action": "drop",
-	 "trap_action": "trap",
-	 "trap_ids": "ip2me",
-	 "trap_priority": "1"
-      }
+[
+    {
+        "COPP_TABLE:trap.group.bfd.lacp.udld.lldp": {
+            "trap_ids": "bfd,bfdv6,lacp,udld,lldp",
+            "trap_action":"trap",
+            "trap_priority":"7",
+            "queue": "7",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"6000",
+            "cbs":"6000",
+            "red_action":"drop"
+        },
+        "OP": "SET"
+    },
+    {
+        "COPP_TABLE:trap.group.stp.pvrst": {
+            "trap_ids": "stp,pvrst",
+            "trap_action":"trap",
+            "trap_priority":"6",
+            "queue": "6",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"16000",
+            "cbs":"16000",
+            "red_action":"drop"
+        },
+        "OP": "SET"
+    },
+    {
+        "COPP_TABLE:trap.group.vrrp": {
+            "trap_ids": "vrrp",
+            "trap_action":"trap",
+            "trap_priority":"5",
+            "queue": "5",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"6000",
+            "cbs":"6000",
+            "red_action":"drop"
+        },
+        "OP": "SET"
+    },
+    {
+        "COPP_TABLE:trap.group.bgp": {
+            "trap_ids": "bgp,bgpv6",
+            "trap_action":"trap",
+            "trap_priority":"4",
+            "queue": "4",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"10000",
+            "cbs":"10000",
+            "red_action":"drop"
+        },
+        "OP": "SET"
+    },
+    {
+        "COPP_TABLE:trap.group.arp": {
+            "trap_ids": "arp_req,arp_resp,neigh_discovery",
+            "trap_action":"copy",
+            "trap_priority":"3",
+            "queue": "3",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"6000",
+            "cbs":"6000",
+            "red_action":"drop"
+        },
+        "OP": "SET"
+    },
+    {
+        "COPP_TABLE:trap.group.ip2me.dhcp": {
+            "trap_ids": "ip2me,dhcp,dhcpv6",
+            "trap_action":"trap",
+            "trap_priority":"2",
+            "queue": "2",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"6000",
+            "cbs":"6000",
+            "red_action":"drop"
+        },
+        "OP": "SET"
+    },
+    {
+        "COPP_TABLE:trap.group.nat.l3mtu": {
+            "trap_ids": "src_nat_miss,dest_nat_miss,l3_mtu_error",
+            "trap_action":"trap",
+            "trap_priority":"1",
+            "queue": "1",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"600",
+            "cbs":"600",
+            "red_action":"drop"
+         },
+         "OP": "SET"
+    },
+    {
+        "COPP_TABLE:default": {
+            "queue": "0",
+            "meter_type":"packets",
+            "mode":"sr_tcm",
+            "cir":"600",
+            "cbs":"600",
+            "red_action":"drop"
+        },
+        "OP": "SET"
     }
-}
+]
 ```
 
 
@@ -736,6 +799,24 @@ instance is supported in SONiC.
 
 ```
 
+### DOT1P_TO_TC_MAP
+```
+{ 
+"DOT1P_TO_TC_MAP": { 
+    "AZURE": { 
+        "0":"1", 
+        "1":"0", 
+        "2":"0", 
+        "3":"3", 
+        "4":"4", 
+        "5":"0", 
+        "6":"0", 
+        "7":"0" 
+    } 
+  }
+}
+
+```
 
 ### DSCP_TO_TC_MAP
 ```
@@ -1030,7 +1111,8 @@ name as object key and member list as attribute.
         "tc_to_queue_map": "[TC_TO_QUEUE_MAP|AZURE]", 
         "pfc_enable": "3,4", 
         "pfc_to_queue_map": "[MAP_PFC_PRIORITY_TO_QUEUE|AZURE]", 
-        "dscp_to_tc_map": "[DSCP_TO_TC_MAP|AZURE]"
+        "dscp_to_tc_map": "[DSCP_TO_TC_MAP|AZURE]",
+        "dot1p_to_tc_map": "[DOT1P_TO_TC_MAP|AZURE]"
     }
   }
 }  
@@ -1049,6 +1131,28 @@ name as object key and member list as attribute.
     }, 
     "Ethernet56|6": {
         "scheduler": "[SCHEDULER|scheduler.0]"
+    }
+  }
+}
+```
+
+### Scheduler
+
+A default scheduler profile with the following behavior is applied to all physical port queues.
+- Queue 7 is set to strict priority.
+- Queues 0-6 are round robin (WRR with weight of 1)
+
+CPU Tx is configured to send to internal UC queue 9 with strict priority scheduling above all data queues 0-7 for devices that support 10 physical port UC queues. Otherwise, CPU Tx is sent to queue 7. CPU Tx queue is not user configurable.
+
+```
+{
+"SCHEDULER": {
+    "scheduler.0": {
+        "type": "STRICT"
+    }, 
+    "scheduler.1": {
+        "type": "WRR"
+        "weight": "1"
     }
   }
 }
