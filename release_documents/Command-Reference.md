@@ -867,7 +867,7 @@ Some of the parameters like authtype, passkey and timeout can be either configur
 **config tacacs add**  
 
 This command is used to add a TACACS+ server to the tacacs server list.
-Note that more than one tacacs+ (maximum of seven) can be added in the device. 
+Note that more than one tacacs+ (maximum of eight) can be added in the device. 
 When user tries to login, tacacs client shall contact the servers one by one. 
 When any server times out, device will try the next server one by one based on the priority value configured for that server.
 When this command is executed, the configured tacacs+ server addresses are updated in /etc/pam.d/common-auth-sonic configuration file which is being used by tacacs service.
