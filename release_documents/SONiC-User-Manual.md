@@ -9,7 +9,6 @@ Table of Contents
       * [1.1 Download Image](#11-download-image)
          * [1.1.1 Installation Over The Network](#111-installation-over-the-network)
             * [1.1.1.1 Install SONiC ONIE Image](#1111-install-sonic-onie-image)
-            * [1.1.1.2 Install SONiC EOS Image](#1112-install-sonic-eos-image)
          * [1.1.2 Installation using a USB Thumb Drive](#112-installation-using-a-usb-thumb-drive)
    * [2 Login Username &amp; Password](#2-login-username--password)
       * [2.1 Default Login](#21-default-login)
@@ -46,26 +45,25 @@ Table of Contents
 
 
 # Introduction
-SONiC is an open source network operating system based on Linux that runs on switches from multiple vendors and ASICs. SONiC offers a full-suite of network functionality, like BGP and RDMA, that has been production-hardened in the data centers of some of the largest cloud-service providers. It offers teams the flexibility to create the network solutions they need while leveraging the collective strength of a large ecosystem and community.
+Broadcom SONiC network operating system is based on Linux that runs on switches from multiple vendors and ASICs. Broadcom SONiC offers a full-suite of network functionalities, like BGP, VRRP, PVST, VRF, BFD and more. 
 
 SONiC software shall be loaded in supported devices and this user guide explains the basic steps for using the SONiC in those platforms.
 
-Connect the console port of the device and use the 9600 baud rate to access the device. Follow the [Quick Start Guide](https://github.com/Azure/SONiC/wiki/Quick-Start) to boot the device in ONIE mode and install the SONiC software using the steps specified in the document and reboot the device. In some devices that are pre-loaded with SONiC software, this step can be skipped. 
+Connect the console port of the device and use the 115200 baud rate to access the device. Follow the instructions in this document to boot the device in ONIE mode and install the SONiC software using the steps specified in the document and reboot the device. In some devices that are pre-loaded with SONiC software, this step can be skipped. 
 Users shall use the default username/password "admin/YourPaSsWoRd" to login to the device through the console port.
 
 After logging into the device, SONiC software can be configured in following three methods.
- 1) [Command Line Interface](https://github.com/Azure/SONiC/wiki/Command-Reference)
- 2) [config_db.json](https://github.com/Azure/SONiC/wiki/Configuration) 
- 3) [minigraph.xml](https://github.com/Azure/SONiC/wiki/Configuration-with-Minigraph-(~Sep-2017))
+ 1) Command Line Interface
+ 2) config_db.json 
+ 3) minigraph.xml
 
 Users can use all of the above methods or choose either one method to configure and to view the status of the device.
 This user manual explains the common commands & related configuration/show examples on how to use the SONiC device. Refer the above documents for more detailed information.
 
 
 **Scope Of The Document**  
-Information in this manual is based on the SONiC software version 201811 (build#32).
 
-This manual provides some insights on the following.
+This manual provides some insights on the following:
 1) First section explains how to load the SONiC image on the supported platforms
 2) Next section explains how to login using default username & password, how to change password, how to configure management interface & loopback address configuration.
 3) Next section how to check the software version running on the device, how to check the list of features available in this software version, how to upgrade to new software version, etc.,
@@ -83,9 +81,7 @@ This guide details the steps to install a SONiC image on your supported switch.
 
 ## 1.1 Download Image
 
-We have one SONiC Image per ASIC vendor. You can download SONiC Image [here](https://github.com/Azure/SONiC/wiki/Supported-Devices-and-Platforms)
-
-You can also build SONiC from source and the instructions can be found [here](https://github.com/Azure/sonic-buildimage).
+You can download SONiC Image from Broadcom docSAFE portal. 
 
 Once the image is available in your local machine, the image can be installed via ONIE either by installing over the network or using a USB thumb drive as given in following sub-sections.
 In case if the device is already preloaded with SONiC image, the device can be booted without the installation process.
@@ -98,7 +94,7 @@ This sub-section explains how to transfer the image from remote server into the 
 
 1. Connect to switch via serial console.
 
-  **Note**: By default, the SONiC console baud rate is 9600. You may need to change the baud rate in case you cannot see anything from the console after reboot.
+  **Note**: The default console baud rate for supported platforms are 115200. You may need to change the baud rate in case you cannot see anything from the console after reboot.
 
 1. (Optional) Some switches may come with a NOS which will require you to uninstall the existing NOS first before you install SONiC. To do so, simply boot into ONIE and select `Uninstall OS`:
 
@@ -156,37 +152,11 @@ When NOS installation finishes, the box will reboot into SONiC by default.
 +----------------------------------------------------------------------------+
 ```
 
-
-#### 1.1.1.2 Install SONiC EOS Image
-
-- **This section is only applicable if you plan to install a SONiC image on Arista switches.**
-
-Installing SONiC EOS uses the same steps you would use to upgrade a normal EOS image. You simply download a SONiC EOS image to an Arista box, select to boot from the image and reload the box. 
-
-```
-localhost#copy http://192.168.2.10/sonic-aboot-broadcom.swi flash: 
-Copy completed successfully.                                                    
-localhost(config)#boot system flash:sonic-aboot-broadcom.swi  
-localhost(config)#reload 
-System configuration has been modified. Save? [yes/no/cancel/diff]:no 
-Proceed with reload? [confirm] [type enter] 
- 
-Broadcast message from root@localhost 
-        (unknown) at 8:22 ... 
-
-..... (boot messages)
-
- 
-Debian GNU/Linux 8 sonic ttyS0 
- 
-sonic login:
-```
-
 ### 1.1.2 Installation using a USB Thumb Drive
 
 This sub-section explains how to transfer the SONiC image to an USB thumb drive and install it using ONIE on the device
 
-To install via USB simply copy the installer image (For eg., sonic-broadcom.bin) to the root directory of the USB thumb drive, using the file name onie-installer.
+To install via USB simply copy the installer image (For eg., sonic-broadcom-cloud-base.bin) to the root directory of the USB thumb drive, using the file name onie-installer.
 
 For the purposes of this guide, assume the NOS installer image is named sonic-broadcom.bin. Let us assume the USB drive shows up at /dev/sdd1 under Linux (it might be different on your system and OS).
 
@@ -195,7 +165,7 @@ Copy the installer file to the root of the USB thumb drive like this:
 ```
 linux:~$ sudo mkdir /mnt/usb
 linux:~$ sudo mount /dev/sdd1 /mnt/usb
-linux:~$ sudo cp sonic-broadcom.bin /mnt/usb/onie-installer
+linux:~$ sudo cp sonic-broadcom-cloud-base.bin /mnt/usb/onie-installer
 linux:~$ sudo umount /mnt/usb
 ```
 Now remove the USB drive from your computer and insert it into the USB port on the front (or rear) panel of your ONIE enabled device. Power on the device. 
@@ -262,19 +232,19 @@ This TSG gives the instruction of how to reset a SONiC switch password.
 1. Edit Grub boot menu options
 1.1 First you need to get into grub menu options. This menu is displayed right at the beginning of the boot.  You should get something similar to this, but not the exactly the same. 
 Choose the choice Start with SONiC-:
-    ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-1.png)
+    ![](https://github.com/Azure/SONiC/blob/master/images/PW-1.png)
 
 1.2 Now we attempt to edit grub's boot option. Press "e" to edit the first grub menu option and navigate to kernel line:
- ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-2.png)
+ ![](https://github.com/Azure/SONiC/blob/master/images/PW-2.png)
 
 1.3 Remove quiet and add  init=/bin/bash
- ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-3.png)
+ ![](https://github.com/Azure/SONiC/blob/master/images/PW-3.png)
 
 1.4 Press Ctrl-x to boot
 
 2. Remount / and /proc
 2.1 After successfully boot you will be presented with bash command prompt:
- ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-4.png)
+ ![](https://github.com/Azure/SONiC/blob/master/images/PW-4.png)
 
 ```
 mount -o remount,rw / 
@@ -285,7 +255,7 @@ mount -o remount,rw /proc
 3.1 To reset an actual password is now simple as typing :
 `passwd admin`
 
-  ![image.png](https://github.com/Azure/SONiC/blob/master/images/PW-5.png)
+  ![](https://github.com/Azure/SONiC/blob/master/images/PW-5.png)
 
 ```
 sync
@@ -300,13 +270,11 @@ sudo reboot -f
 
 SONiC is managing configuration in a single source of truth - a redisDB instance that we refer as ConfigDB. Applications subscribe to ConfigDB and generate their running configuration correspondingly.
 
-Details about ConfigDB and schema design, please find it [here](https://github.com/Azure/SONiC/wiki/Configuration) 
-
-Before Sep 2017, we were using an XML file named minigraph.xml to configure SONiC devices. For historical documentation, please refer to [Configuration with Minigraph](https://github.com/Azure/SONiC/wiki/Configuration-with-Minigraph-(~Sep-2017))
+Please refer to the ConfigDB Manual for details about ConfigDB and schema design.
 
 SONiC includes commands that allow user to show platform, transceivers, L2, IP, BGP status, etc.
 
-- [Command Reference](Command-Reference.md)
+Please refer to the Command Reference Manual for details.
 
 Note that all the configuration commands need root privileges to execute them and the commands are case-sensitive.
 Show commands can be executed by all users without the root privileges.
