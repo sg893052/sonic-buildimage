@@ -139,15 +139,7 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
-| 9 | Sep-19-2019 | v8 | Added/modified interface commands |
-| 8 | Sep-16-2019 | v8 | Added Debug Framework commands |
-| 7 | Sep-14-2019 | v7 | Added core dump commands |
-| 6 | Sep-12-2019 | v6 | Added ZTP config and display commands |
-| 5 | Sep-8-2019 | v5 | Added VRF config and display commands |
-| 4 | Sep-7-2019 | v4 | Added VRRP config and show commands |
-| 3 |  Jun-26-2019 |v3 | Update based on 201904 (build#19) release, "config interface" command changes related to interfacename order, FRR/Quagga show command changes, platform specific changes, ACL show changes and few formatting changes |
-| 2 |  Apr-22-2019 |v2 | CLI Guide for SONiC 201811 version (build#32) with complete "config" command set |
-| 1 |  Mar-23-2019 |v1 | Initial version of CLI Guide with minimal command set |
+| 1 | Sep 20, 2019 | v1 | Initial version |
 
 # Introduction
 SONiC is an open source network operating system based on Linux that runs on switches from multiple vendors and ASICs. SONiC offers a full-suite of network functionality, like BGP and RDMA, that has been production-hardened in the data centers of some of the largest cloud-service providers. It offers teams the flexibility to create the network solutions they need while leveraging the collective strength of a large ecosystem and community.

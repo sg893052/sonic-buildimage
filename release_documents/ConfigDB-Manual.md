@@ -56,8 +56,7 @@ Table of Contents
 
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
-| 2Draft |  6-JUN-2019 | Updated with more examples| ConfigDB for SONiC 201811 version (build#32) with complete "config DB" set |
-| 1 |  NA |v1 | Initial version of Config DB Guide with minimal set |
+| 1 |  Sep 20, 2019 |v1 | Initial version |
 
 # INTRODUCTION																																									
 This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.  																																																																					
