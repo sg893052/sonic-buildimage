@@ -62,9 +62,10 @@ Table of Contents
          * [Versions](#versions)  
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
-         * [WRED_PROFILE](#wred_profile)
-         * [NAT](#nat)
-         * [Threshold](#threshold)
+         * [WRED_PROFILE](#wred_profile)  
+         * [NAT](#nat)  
+         * [Threshold](#threshold)  
+         * [Syslog Server](#syslog-server)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1535,6 +1536,31 @@ Threshold configuration is defined in **THRESHOLD\_TABLE** table. The key for a 
         "queue|unicast|Ethernet12|0": {
             "threshold": "10"
         }
+    }
+}
+```
+
+### SYSLOG SERVER
+
+Added Priority and Filter_rule attributes to syslog server. Either one of them can be used but not both. Use "priority" to filter log based only on one priority level. User "filter_rule" to filter log based on rsyslog selectors rules with multiple criteria.
+
+```
+{
+    "SYSLOG_SERVER": {
+        "20.0.0.20": {
+            "filter_rule": "mail,news.=alert;*.=crit"
+        },
+        "33.33.100.3": {
+            "priority": "*.err"
+        },
+        "50.50.50.1": {},
+        "100.1.100.52": {
+            "priority": "*.=warning"
+        },
+        "221.22.200.21": {
+            "priority": "*.*;*.!notice"
+        },
+        "rmt.syslog.srv": {}
     }
 }
 ```
