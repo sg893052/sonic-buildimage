@@ -1,4 +1,20 @@
-# SONiC USER MANUAL
+![](images/Broadcom.png)
+
+<br>
+<br>
+<br>
+# Broadcom SONiC 2.0 
+### User Manual
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
 Table of Contents
 =================
@@ -42,6 +58,11 @@ Table of Contents
       * [7.1 Debug Framework](#71-debug-framework)
    * [8 Chef](#8-chef)
 
+# Document History
+
+| # | Date    |  Document Version | Details |
+| --- | --- | --- | --- |
+| 1 |  Sep 20, 2019 |v1 | Initial version |
 
 
 # Introduction

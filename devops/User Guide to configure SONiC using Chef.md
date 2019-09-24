@@ -1,8 +1,20 @@
-# Chef
+![](../release_documents/images/Broadcom.png)
 
-# User Guide – To Configure SONiC using Chef
-
-#### Rev 0.4
+<br>
+<br>
+<br>
+# Broadcom SONiC 2.0 
+### Configure SONiC Using Chef
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
 # Table of Contents
 
@@ -18,15 +30,12 @@
 -   [Deliverables](#deliverables)
 -   [Supported SONiC Cookbook Operations](#supported-sonic-cookbook-operations)
 
+# Document History
 
-# Revision
+| # | Date    |  Document Version | Details |
+| --- | --- | --- | --- |
+| 1 |  Sep 20, 2019 |v1 | Initial version |
 
-| Rev |    Date    |       Author      | Change Description |
-|:---:|:----------:|:-----------------:|--------------------|
-| 0.1 | 05/10/2019 | Sravani Maddukuri | Initial version    |
-| 0.2 | 05/14/2019 | Sravani Maddukuri | Addressed review comments from Simon and Rizwan    |
-| 0.3 | 05/20/2019 | Sravani Maddukuri | Addressed review comments from Ben    |
-| 0.4 | 05/30/2019 | Sravani Maddukuri | Addressed review comments from Ben and corrected the operations under LAG    |
 
 # Introduction
 
