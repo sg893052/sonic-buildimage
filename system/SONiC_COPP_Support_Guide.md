@@ -1,3 +1,4 @@
+                                                  
 # COPP Support Document               
 #### Rev 0.1 
 
@@ -7,6 +8,7 @@
   * [About This Manual](#about-this-manual)
   * [Scope](#scope)                        
   * [Definition/Abbreviation](#definitionabbreviation)
+  * [Protocol Traps Supported](#protocol-traps-supported)
   * [COPP Configuration](#copp-configuration)
 	  * [Default COPP Settings](#default-copp-settings)
 	  * [Global CPU Rx Rate Limit](#global-cpu-rx-rate-limit)
@@ -16,9 +18,9 @@
 	  * [CPU Rx](#cpu-rx)
 	  * [CPU Tx](#cpu-tx)
 # List of Tables                                      
-[Table 1: Abbreviations](#table-1-abbreviations)   
-[Table 2: Protocol Traps](#table-2-protocol-traps)
-[Table 3:  Default COPP](#table-3-default-copp)   
+* [Table 1:Abbreviations](#table-1-abbreviations)
+* [Table 2:Protocol Traps](#table-2-protocol-traps)
+* [Table 3:Default COPP](#table-3-default-copp)
 
 # Revision
 | Rev |     Date    |       Author       | Change Description                |
@@ -41,7 +43,7 @@ This document describes COPP settings, implementation, configuration and associa
 | LACP                      | Link Aggregation Control Protocol      |
 | NDP                      | Neighborhood Discovery Protocol |
 
-# 1 Protocol Trap Supported
+# Protocol Traps Supported
 The table below lists all protocol traps supported in Arlo release.
 
 ### Table 2: Protocol Traps
