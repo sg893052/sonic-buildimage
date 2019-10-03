@@ -39,10 +39,12 @@
     - [4.3.10 ARP and ND Suppression](#4310-arp-and-nd-suppression)
     - [4.3.11 Tunnel Statistics](#4311-support-for-tunnel-statistics)
 - [5 CLI](#5-cli)
-    - [5.1 Configuration Commands](51-#configuration-commands)
-    - [5.2 Show Commands](#52-show-commands)
-    - [5.3 Debug Commands](#53-debug-commands)
-    - [5.4 Clear Commands](#54-clear-commands)
+  - [5.1 Click CLI](#51-click-based-cli)
+    - [5.1.1 Configuration Commands](#511-configuration-commands)
+    - [5.1.2 Show Commands](#512-show-commands)
+  - [5.2 SONiC CLI](52-#sonic-cli)
+    - [5.2.1 Configuration Commands](521-#configuration-commands)
+    - [5.2.2 Show Commands](#522-show-commands)
 - [6 Serviceability and Debug](#6-serviceability-and-debug)
 - [7 Warm reboot Support](#7-warm-reboot-support)
 
@@ -59,6 +61,7 @@
 | 0.4  | 06/30/2019 | Tapash Das, Hasan Naqvi | Added L3 VXLAN details |
 | 0.5  | 07/03/2019 | Karthikeyan A | ARP and ND suppression |
 | 0.6  | 07/16/2019 | Kishore Kunal | Added Fdbsycnd details |
+| 0.7  | 10/03/2019 | Rajesh Sankaran | Click and SONiC CLI added |
 
 # Definition/Abbreviation
 
@@ -952,65 +955,189 @@ These will be stored in the counters DB for each tunnel.
 - Include Tunnel counters as part of FlexCounter::collectCounters call. 
 
 
-
-
 ## 5 CLI
 
 The CLI commands are incremental to those specified in L3 VXLAN HLD.
 
+### 5.1 Click based CLI
 
-### 5.1 Configuration Commands
-
-```
-config vxlan evpn_nvo <nvo_name> <tnlname>
- - nvo_name - name of NVO instance. 
- - tnlname is the VXLAN_TUNNEL table entry holding the VTEP ipv4 source address.
- 
-config neigh-suppress vlan <vlan-id>  <"on"/"off">
- - vlanid represents the vlan_id and on/off is enabled or disabled. By default ARP/ND suppression is disabled. 
-
-config vrf mapped_l3vni <vrf_name> <vni_id>
- - vrf_name is the vrf name from VRF Table
- - vni_id is the L3 vni to be associated with this VRF
+#### 5.1.1 Configuration Commands
 
 ```
-
-### 5.2 Show Commands
-
-```
-show vxlan
- - lists all the static and EVPN discovered tunnels from the STATE_DB.
- - entry contains the SIP, DIP, creation source, operstatus.
-
-show vxlan evpn
- - lists all the EVPN discovered tunnels from the STATE_DB. 
- - output is same as above. 
-
-show vxlan evpn_remote_vni  <ipaddr>
- - lists all the VLAN extended over a tunnel with the specified destination ip address. 
- - gives the count of VLANs extended. 
-
-show mac
- - dumps the local and remote MACs from the ASIC DB. 
- - The tunnel name is displayed under the port column for EVPN MACs.
-
-show mac evpn
- - dumps the EVPN MACs from the ASIC DB. 
-
-show mac evpn [ipaddr]
- - lists the MAC learnt over the tunnel with the specified DIP
- 
-show mac evpn [ipaddr] [vlanid]
- - lists the MAC learnt over the tunnel with the specified DIP and the specific VLAN
-
-show vxlan counters
- - displays the packet and octet counts for all the vxlan tunnels.
-
-show vxlan counters [ipaddr]
- - displays packet and octet counts for the specified vxlan tunnel. 
+1. VTEP Source IP configuration
+   - config vxlan add <vtepname> <src_ipv4>
+   - config vxlan del <vtepname>
+   - vtepname is a string. 
+   - src_ipv4 is an IPV4 address in dotted notation A.B.C.D
+2. EVPN NVO configuration 
+   - config vxlan evpn_nvo add <nvoname> <vtepname>
+   - config vxlan evpn_nvo del <nvoname>
+3. VLAN VNI Mapping configuration
+   - config vxlan map add <vtepname> <vlanid> <vnid>
+   - config vxlan map_range add <vtepname>  <vlanstart> <vlanend> <vnistart>
+   - config vxlan map del <vtepname> <vlanid> <vnid>
+   - config vxlan map_range del <vtepname>  <vlanstart> <vlanend> <vnistart>
+4. VRF VNI Mapping configuration
+   - config vrf add_vrf_vni_map <vrf-name> <vni>
+   - config vrf del_vrf_vni_map  <vrf-name>
+5. ARP suppression
+   - config neigh-suppress vlan <vlan-id>  <"on"/"off">
+   - vlanid represents the vlan_id and on/off is enabled or disabled. By default ARP/ND suppression is disabled. 
 
 ```
 
+#### 5.1.2 Show Commands
+
+```
+1. show vxlan interface 
+   - Displays the name, SIP, associated NVO name. 
+
+   VTEP Information:
+
+           VTEP Name : VTEP1, SIP  : 4.4.4.4
+           NVO Name  : nvo1,  VTEP : VTEP1
+
+2. show vxlan vlanvnimap 
+   - Displays all the VLAN VNI mappings.
+
+   +---------+-------+
+   | VLAN    |   VNI |
+   +=========+=======+
+   | Vlan100 |   100 |
+   +---------+-------+
+   | Vlan101 |   101 |
+   +---------+-------+
+   Total count : 2
+
+
+3. show vxlan vrfvnimap 
+   - Displays all the VRF VNI mappings.
+
+4. show vxlan tunnel
+   - lists all the discovered tunnels.  
+   - SIP, DIP, Creation Source, OperStatus are the columns.
+
+   +---------+---------+-------------------+--------------+
+   | SIP     | DIP     | Creation Source   | OperStatus   |
+   +=========+=========+===================+==============+
+   | 2.2.2.2 | 4.4.4.4 | EVPN              | oper_up      |
+   +---------+---------+-------------------+--------------+
+   | 2.2.2.2 | 3.3.3.3 | EVPN              | oper_up      |
+   +---------+---------+-------------------+--------------+
+
+5. show vxlan evpn_remote_mac <remoteip/all>  <vlanid/all> 
+   - lists all the MACs learnt from the specified remote ip or all the remotes for the specified/all vlans. (APP DB view) 
+   - VLAN, MAC, RemoteVTEP,  VNI,  Type are the columns.
+
+   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_mac all
+   +---------+-------------------+--------------+-------+--------+
+   | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
+   +=========+===================+==============+=======+========+
+   | Vlan101 | 00:00:00:00:00:01 | 4.4.4.4      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:02 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:03 | 4.4.4.4      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:04 | 4.4.4.4      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:05 | 4.4.4.4      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:99 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   Total count : 6
+   
+   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_mac 3.3.3.3
+   +---------+-------------------+--------------+-------+--------+
+   | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
+   +=========+===================+==============+=======+========+
+   | Vlan101 | 00:00:00:00:00:02 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:99 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   Total count : 2
+
+
+6. show vxlan evpn_remote_vni <remoteip/all> 
+   - lists all the VLANs learnt from the specified remote ip or all the remotes.  (APP DB view) 
+   - VLAN, RemoteVTEP, VNI are the columns
+
+   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_vni all
+   +---------+--------------+-------+
+   | VLAN    | RemoteVTEP   |   VNI |
+   +=========+==============+=======+
+   | Vlan101 | 3.3.3.3      |  1001 |
+   +---------+--------------+-------+
+   | Vlan101 | 4.4.4.4      |  1001 |
+   +---------+--------------+-------+
+   Total count : 2
+   
+   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_vni 3.3.3.3
+   +---------+--------------+-------+
+   | VLAN    | RemoteVTEP   |   VNI |
+   +=========+==============+=======+
+   | Vlan101 | 3.3.3.3      |  1001 |
+   +---------+--------------+-------+
+   Total count : 1
+
+
+```
+
+### 5.2 SONiC CLI
+
+#### 5.2.1 Configuration Commands
+
+```
+1. VTEP Source IP configuration
+   - switch(config) interface vxlan <vtepname>
+   - switch(config-if-vtep1) [no] vxlan source-ip  <src_ipv4>
+   - <vtepname> is a string. 
+   - <src_ipv4> is an IPV4 address in dotted notation A.B.C.D
+2. EVPN NVO configuration 
+   - switch(config) evpn <nvo_name>
+   - switch(config-evpn) nvo <vtepname>
+   - <nvoname> and <vtepname> are strings.
+3. VLAN VNI Mapping configuration
+   - switch(config-if-vtep1) [no] vxlan map vlan <vidstart> vni <vnistart>  count <n>
+   - <n> is the number of mappings being configured. 
+   - <vidstart>, <vnistart> are the starting VID and VNID. 
+   - count is optional and when specified maps contigous sets of VIDs to contigous VNIDs
+4. VRF VNI Mapping configuration
+   - switch(config-if-vtep1) [no] vxlan map vrf VRF-Blue vni 10001
+5. ARP suppression
+   - TBD
+
+```
+
+#### 5.2.2 Show Commands
+
+     The show command outputs shall be from the exec mode of the KLISH shell and has the same
+     content as the show commands in the Click show section. 
+     In addition the following commands will be supported.
+
+```
+1. show vlan id and brief will be enhanced to display DIP. (tunnel members from  APP DB)
+   NOTE: syntax, filters, sample output dependent on Dell implementation.
+
+2. show mac /show mac -v will be enhanced for EVPN MACs.
+   - Port column will display DIP. (ASIC DB view)
+   - Type column will display EVPN_static/EVPN_dynamic
+   NOTE: syntax, filters, sample output dependent on Dell implementation.
+```
+
+#### 5.2.3 Validations 
+
+```
+- VLAN to be configured before map vlan vni command is executed. 
+- VLAN cannot be deleted if there is a vlan vni map. 
+- source to be configured before  map vlan vni command is executed.
+- source cannot be removed if there are mappings already present. 
+- interface vxlan cannot be deleted if evpn nvo is configured. 
+- VRF is already configured    
+- VNI VLAN map should be configured prior to VRF VNI map configuration, since VNI should be both L2 and L3.
+- VNI VLAN map cannot be deleted if there is corresponding VRF VNI map.
+
+```
 
 ## 6 Serviceability and Debug
 
