@@ -22,6 +22,8 @@
   * [2 Functionality](#2-functionality)
     * [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
     * [2.2 Functional Description](#22-functional-description)
+	  * [2.2.1 IPv6 Global Command](#221-ipv6-global-command)
+	  * [2.2.2 IPv6 use-link-local-only](#222-ipv6-use-link-local-only)
   * [3 Design](#3-design)
     * [3.1 Overview](#31-overview)
     * [3.2 DB Changes](#32-db-changes)
@@ -40,7 +42,6 @@
     * [3.6 CLI](#36-cli)
       * [3.6.1 Data Models](#361-data-models)
       * [3.6.2 Configuration Commands](#362-configuration-commands)
-      * [3.6.3 Show Commands](#363-show-commands)
   * [4 Flow Diagrams](#4-flow-diagrams)
   * [5 Error Handling](#5-error-handling)
   * [6 Serviceability and Debug](#6-serviceability-and-debug)
@@ -89,7 +90,9 @@ This document describes the high level design of IPv6 link-local enhancements.
 7. Support to trap control packets destined to IPv6 link-local address to CPU.
 8. Support filtering of packets with IPv6 link-local source or destination addresses. These packets must not be routed to other interfaces.  This implies utilities like trace route are not applicable for IPv6 link-local addresses. Also, ping to link-local address is only applicable for directly connected networks.
 9. Support BGP peering using unnumbered interface configuration. In this configuration, the IPv6 link-local address of the interface is used and the remote peer IPv6 link-local address is dynamically discovered to establish adjacency.
-10. Support for global IPv6 admin mode. In L2 only deployments, it is desirable to turn off auto-generating link-local address so that IPv6 control packets are not transmitted by switch.  When admin mode is disabled, all existing IPv6 addresses are deleted. When admin mode is enabled,  configured IPv6 addresses (if any) are restored and link-local addresses are auto-generated. L3 applications are responsible to handle the interface address add and delete events and cleanup/restore the state. For other applications like ACL, link-local addresses are treated like global IPv6 address. The admin mode applies to all VRF instances in the system.
+10. IPv6 mode is disabled by default on an interface.
+11. Support per interface knob to enable IPv6 auto link-local address generation in the absence of manually configured IPv6 addresses on the interface.
+12. Support for global IPv6 command to disable or enable IPv6 auto link-local address generation (in the absence of manually configured addresses) on all the existing eligible interfaces in the switch. Exceptions are the OOB port (eth0) and Linux loopback (lo) port. In L2 only deployments, it is desirable to turn off auto-generating link-local address so that IPv6 control packets are not transmitted by switch. L3 applications are responsible to handle the interface address add and delete events and cleanup/restore the state. For other applications like ACL, link-local addresses are treated like global IPv6 address. This command applies to all VRF instances in the system.
 
 
 ### 1.1.2 Configuration and Management Requirements
@@ -105,13 +108,19 @@ This document describes the high level design of IPv6 link-local enhancements.
 
    `#neighbor Ethernet0 activate`
 
-3. Provide SONiC CLI configuration commands to enable and disable global IPv6 admin mode . The default admin mode depends on the template used.
+3. Provide SONiC CLI per interface configuration command to enable and disable the IPv6 auto link-local address generation when addresses are not configured manually. By default the IPv6 link-local address generation knob is disabled. Refer to section 2.2 for more details. 
+
+   `#config interface ipv6 enable use-link-local-only Ethernet24`
+
+   `#config interface ipv6 disable use-link-local-only Ethernet24`
+
+4. Provide SONiC CLI global command to enable or disable the IPv6 auto link-local address generation configuration on all eligible interfaces.
 
    `#config ipv6 enable`
 
    `#config ipv6 disable`
 
-4. Standard SNMP IP-MIB should support retrieving of link-local IPv6 addresses/neighbors.
+5. Standard SNMP IP-MIB should support retrieving of link-local IPv6 addresses/neighbors.
 
 
 ### 1.1.3 Scalability Requirements
@@ -164,6 +173,28 @@ A link-local address is an IPv6 unicast address that is automatically configured
 
 These addresses are restricted to a particular interface and are only used for addressing on that interface. They are typically used for automatic address configuration and neighbor discovery protocol. Link-local addresses can be used to reach the neighboring nodes attached to the same interface. These interfaces do not need a globally unique address to communicate. L3 routers do not forward IPv6 packets with link-local source or destination addresses. Every IPv6 enabled interface has at least one link-local unicast address.
 
+### 2.2.1 IPv6 Global Command
+Global IPv6 enable/disable command loops through all eligible interfaces and enables/disables the IPv6 'use-link-local-only' configuration. It is not a configuration knob but an action command. Eligible interface criteria is mentioned in section below.
+
+By default, the IPv6 mode is disabled on an interface excepting the out-of-band interface (eth0) and the linux kernel loopback interface (lo).
+
+### 2.2.1 IPv6 use-link-local-only
+The 'use-link-local-only' configuration is enabled on an interface to enable IPv6 mode on the interface as well as to enable IPv6 auto link-local generation, when there are not any explicitly configured addresses on the interface.
+
+In other words, the IPv6 mode on an interface is enabled either when addresses (global or link-local) are manually configured (or) when IPv6 'use-link-local-only' mode is enabled.
+
+Similarly, the IPv6 mode on an interface is disabled when IPv6 'use-link-local-only' mode is disabled with no manually configured addresses on the interface (or) when all addresses are unconfigured on the interface with IPv6 'use-link-local-only' disabled.
+
+User can configure IPv6 'use-link-local-only' on an interface that satisfies the following criteria.
+
+```
+- L2 interface that is not part of a Port-Channel or a VLAN.
+- L3 interface (Ethernet, VLAN, Port-Channel, Loopback)
+```
+
+An Ethernet interface is not allowed to be a member of a Port-Channel or a VLAN if 'use-link-local-only' configuration is enabled on the interface.
+A Port-Channel is not allowed to be a member of a VLAN if 'use-link-local-only' configuration is enabled on the interface.
+
 # 3 Design
 
 ## 3.1 Overview
@@ -176,16 +207,16 @@ The following components are modified to support IPv6 link local addresses.
 
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
-To support enabling/disable of IPv6 admin mode, a new key-value pair is defined as part of CONFIG_DB under SWITCH table. The default value is "enabled".
+To support enabling/disable of IPv6 auto link-local address generation on an interface, a new key-value pair is defined as part of CONFIG_DB under INTERFACE table. The default value is "disable".
 
-    "SWITCH": {
-        "ipv6": {
-            "mode": "disabled"
+    "INTERFACE": {
+        "Ethernet24": {
+            "ipv6_use_link_local_only": "disable"
         }
 
-    127.0.0.1:6379[4]> hgetall SWITCH|ipv6
-    1) "mode"
-    2) "disabled"
+    127.0.0.1:6379[4]> hgetall INTERFACE|Ethernet24
+    1) "ipv6_use_link_local_only"
+    2) "disable"
 
 ### 3.2.2 APP DB
 To support auto generated IPv6 link-local address, the APP_DB interface tables and neighbor tables are updated to store link-local addresses too.
@@ -260,26 +291,14 @@ S>*  2222::/64 [1/0] via fe80::5054:ff:fe03:6175, Ethernet0, 00:00:04
 Neighsyncd is updated to learn the IPv6 link-local neighbors. All link-local neighbors that are dynamically learned are programmed to ASIC_DB.
 
 ### 3.3.3 IntfMgr
-To support enabling and disabling of IPv6 global admin mode, IntfMgr is modified to handle changes to the CONFIG DB `'ipv6_mode'` setting. The IPv6 mode is enforced using the Linux system control utility to set the `'disable_ipv6'` parameter. The default value is also set so that new interfaces are created with default IPv6 setting.
+In the absence of manually configured addresses on an interface, to enable/disable IPv6 mode, IntfMgr is modified to handle changes to the CONFIG DB `'ipv6_use_link_local_only'` setting. The IPv6 mode is enforced using the Linux system control utility to set the `'disable_ipv6'` parameter. The default value is also set so that new interfaces are created with default disable IPv6 setting.
 
-`sysctl -w net.ipv6.conf.default.disable_ipv6=0`
+`sysctl -w net.ipv6.conf.default.disable_ipv6=1`
 
-To apply and replay the configured  IPv6 mode, the IntfMgr uses the following rules to ensure consistency:
+Since the Linux kernel auto-generates the IPv6 link-local address per interface, netlink events for IPv6 address addition and deletion are handled by the IntfMgr. All netlink messages other than RTM_NEWADDR, RTM_DELADDR are ignored. It also ignores all addresses other than IPv6 link-local addresses.
 
-- For every interface in the PORT_TABLE, if it is not a member of VLAN or PORT_CHANNEL, the IPv6 mode is applied as configured.
-- For every interface in VLAN_TABLE, the IPv6 mode is applied as configured.
-- For every interface in LAG_TABLE, if the LAG is not member of VLAN, the IPv6 mode is applied as configured.
-- When a physical port is added to a VLAN or LAG, the IPv6 mode on the physical interface is set to be disabled.
-- When a physical port is removed from a VLAN or LAG, the IPv6 mode on the physical interface is set based on the configured global mode.
-- When a LAG interface is added to a VLAN, the IPv6 mode on the LAG interface is set to be disabled.
-- When LAG is removed from VLAN, the IPv6 mode on the LAG interface is set based on the configured global mode
-
-### 3.3.4 IntfSyncd
-
-Since the Linux kernel auto-generates the IPv6 link-local address per interface, a new daemon (intfsyncd) is introduced to handle net link events for IPv6 address addition and deletion. The daemon ignores all netlink messages other than RTM_NEWADDR, RTM_DELADDR. It also ignores all addresses other than IPv6 link-local addresses.
-
-- On receiving IPv6 Link local address add event on an interface, intfsyncd creates entries in both APP DB and STATE DB. Orchagent then creates the L3 RIF based on these entries. This is needed to ensure that the L3 routing can happen even with out any global IPv6 address configured on the interface.
-- On receiving IPv6 Link local address delete event on interface, intfsyncd deletes the corresponding entries from APP DB and STATE DB. Orchagent then deletes the L3 RIF from the ASIC DB.
+- On receiving IPv6 Link local address add event on an interface, entry is created in both APP DB and STATE DB. Orchagent then creates the L3 RIF based on these entries. This is needed to ensure that the L3 routing can happen even with out any global IPv6 address configured on the interface.
+- On receiving IPv6 Link local address delete event on interface, the corresponding entries are deleted from APP DB and STATE DB. Orchagent then deletes the L3 RIF from the ASIC DB.
 
 ## 3.4 SyncD
 
@@ -293,39 +312,17 @@ N/A
 ### 3.6.2 Configuration Commands
 
 ```
-# config ipv6
-Usage: config ipv6 [OPTIONS] COMMAND 
+# config interface ipv6 enable use-link-local-only
+Usage: config interface ipv6 [OPTIONS] COMMAND [ARGS] 
 
-  IPv6 configuration
+  Enable or Disable IPv6 processing on interface
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  disable  Disable IPv6 global admin mode
-  enable   Enable IPv6 global admin mode
-
-```
-
-### 3.6.3 Show Commands
-
-```
-# show ipv6
-Usage: show ipv6 [OPTIONS] COMMAND 
-
-  Show IPv6 commands
-
-Options:
-  -?, -h, --help  Show this message and exit.
-
-Commands:
-  brief       Show IPv6 global information
-  interfaces  Show interfaces IPv6 address
-  protocol    Show IPv6 protocol information
-  route       Show IPv6 routing table
-
-# show ipv6 brief
-IPv6 admin mode : enabled
+  disable  Disable IPv6 processing on interface
+  enable   Enable IPv6 processing on interface
 
 ```
 
@@ -348,8 +345,9 @@ Broadcom silicon supports a maximum of 8K L3 interfaces on Trident2/Tomahawk dev
 
 # 9 Unit Test
 ## 9.1 CLI Test Cases
-1. Verify that the IPv6 global mode disable/enable command is working as expected.
-2. Verify that the IPv6 auto-generated link-local address is properly displayed in the output of the 'show ipv6 interfaces', 'show ndp' and 'show ipv6 routes' commands.
+1. Verify that the IPv6 global disable/enable command is working as expected.
+2. Verify that the IPv6 use-link-local-only command is working as expected.
+3. Verify that the IPv6 auto-generated link-local address is properly displayed in the output of the 'show ipv6 interfaces', 'show ndp' and 'show ipv6 routes' commands.
    
 ## 9.2 Rest API Test Cases
 
@@ -359,25 +357,26 @@ Broadcom silicon supports a maximum of 8K L3 interfaces on Trident2/Tomahawk dev
 3. Verify that BGP is established between two peers over auto-generated IPv6 link-local address.
 4. Verify that IPv6 link-local neighbors are discovered and programmed to switch ASIC.
 5. Verify that IPv6 ECMP routes with multiple IPv6 link-local next hops are handled correctly and programmed to switch ASIC .
-6. Verify that IPv6 link-local address can be manually configured and it replaces the auto-generated address.
-7.  Verify that packets destined to link-local address are trapped to CPU - using ping utility.
+6. Verify that IPv6 link-local address can be manually configured.
+7. Verify that packets destined to link-local address are trapped to CPU - using ping utility.
 8. Verify that save and reload operation restores the configured IPv6 link-local address and static IPv6 routes with link-local next hops.
 9. Verify that the ping over auto generated IPv6 link-local address is working between two routers connected back to back with out any IPv4 or IPv6 address manually configured on the interfaces.
 10. Verify that the interface bind/unbind is working as expected on interfaces with auto generated IPv6 link-local address only.
-11. Verify that disabling IPv6 admin mode removes all link-local address assigned to the L3 interfaces. 
-12. Verify that IPv6 admin mode is saved and restored after system restart.
-13. Verify that current IPv6 admin mode setting is applied for newly created VLAN interfaces and Port channel interfaces.
-14. Verify that the IPv6 admin mode configuration changes are NOT applied to VLAN member ports and Port channel members.
+11. Verify that executing IPv6 global disable command removes all link-local address assigned to the L3 interfaces when there are no manually configured addresses. 
+12. Verify that IPv6 use-link-local-only mode is saved and restored after system restart.
+13. Verify that IPv6 mode is disabled by default and is disabled for newly created VLAN interfaces and Port channel interfaces.
+14. Verify that the IPv6 mode applied globally using IPv6 global command is not applied to VLAN member ports and Port channel members.
+15. Verify that an Ethernet port with use-link-local-only configuration enabled and with no manually configured addresses, is not allowed to be made a member of a Port-Channel or a VLAN.
+16.  Verify that a Port-Channel with use-link-local-only configuration enabled and with no manually configured addresses, is not allowed to be made a member of a VLAN.
 
 ## 9.4 Scaling Test Cases
-1. Verify that L3 RIF is created on all the VLAN interfaces when maximum supported VLANs are created with IPv6 global mode enabled.
+1. Verify that L3 RIF is created on all the VLAN interfaces when maximum supported VLANs are created and when the global IPv6 commmand is executed.
 
 ## 9.5 Warm Boot Test Cases
 1. Verify that there is minimal traffic loss (less than 1sec) to routes with next hop as IPv6 link-local address.
 
 ## 9.6 Negative Test Cases
-1. Verify that the L3 RIF deletion/creation is fine when an interface is added to a VLAN.
-2. Verify that the interface is bound to the proper VRF after binding/unbinding it to a VRF multiple times.
-3. Verify that the L3 RIF is removed/created after doing a shutdown/startup on an interface or global IPv6 disable/enable. 
-4. Verify that the 'config ipv6' and 'show ipv6' commands handle unsupported options.
-5. Verify the graceful handling of error when maximum number of L3 interfaces are exhausted.
+1. Verify that the interface is bound to the proper VRF after binding/unbinding it to a VRF multiple times.
+2. Verify that the L3 RIF is removed/created after doing a shutdown/startup on an interface or when global IPv6 disable/enable command is executed.
+3. Verify that the 'config interface ipv6 use-link-local-only' command handles unsupported options.
+4. Verify the graceful handling of error when maximum number of L3 interfaces are exhausted.
