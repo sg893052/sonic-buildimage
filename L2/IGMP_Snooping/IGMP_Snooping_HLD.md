@@ -19,6 +19,7 @@
           * [1.2.1 Basic Approach](#basic-approach)
           * [1.2.2 L2MC Docker](#l2mc-docker)
           * [1.2.3 SAI Overview](#sai-overview)
+          * [1.2.4 MLAG Support](#mlag-overview)
   * [2 Functionality](#-functionality)
       * [2.1 Target Deployment Use Cases](#target-deployment-use-cases)
       * [2.2 Functional Description](#functional-description)
@@ -38,6 +39,7 @@
           * [3.6.3 Show Commands](#show-commands)
           * [3.6.4 Debug Commands](#debug-commands)
           * [3.6.5 Rest API Support](#rest-api-support)
+      * [3.7 MCLAG For IGMP Snooping](#mclag-for-igmp-snooping)
   * [4 Flow Diagrams](#flow-diagrams)
 	  * [4.1 IGMP Snooping Enable on VLAN](#igmp-snooping-enable-on-vlan)
 	  * [4.2 Static L2MC add flow](#static-l2mc-add-flow)
@@ -66,6 +68,7 @@
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 05/22/2019  |  Ashok Krishnegowda| Initial version                   |
 | 0.2 | 06/25/2091  |  Ashok Krishnegowda| Incorporated review comments      |
+| 0.3 | 20/09/2019  | Benzeer Bava       | MCLAG Support                      |
 
 
 # About this Manual
@@ -82,6 +85,7 @@ This document describes the functionality and high level design of IGMP Snooping
 | PIM    | Protocol Independent Multicast						  |
 | L2MC	 | Layer-2 Multicast									  |
 |Mrouter | Multicast router										  |
+|MCLAG    | Multi-Chassis Link Aggregation Group                   |
 
 # 1 Feature Overview
 The forwarding of multicast control packets and data through a Layer 2 device configured with VLANs is most easily achieved by the Layer 2 forwarding of received multicast packets on all the member ports of the VLAN interfaces. However, this simple approach is not bandwidth efficient, because only a subset of member ports may be connected to devices interested in receiving those multicast packets. In a worst-case scenario, the data would get forwarded to all port members of a VLAN with a large number of member ports, even if only a single VLAN member is interested in receiving the data. Such scenarios can lead to loss of throughput for a device that gets hit by a high rate of multicast data traffic.
@@ -101,7 +105,8 @@ When snooping is enabled on a VLAN, switch examines IGMP packets between hosts c
  7. Support static multicast group configuration. Static l2mc entries will not timed out, they have to be un-configured explicitly.
  8. Support trapping IGMP and PIM Hello control packets to CPU.
  9. Support Link-layer topology changes (due to STP) and generate queries on all non-mrouter ports for faster convergence.
- 10. Ability to enable the logging at different levels of the l2mcast module.
+ 10.Ability to enable the logging at different levels of the l2mcast module.
+ 11.Support IGMP Snooping for MCLAG
  
 
 ### 1.1.2 Configuration and Management Requirements
@@ -142,6 +147,9 @@ The existing L2MC SAI interface APIs shall be used to support this feature and t
 https://github.com/opencomputeproject/SAI/blob/master/inc/sail2mcgroup.h
 
 The detail of the changes will be discussed in the design section below.
+
+### 1.2.4 MCLAG Overview
+In an MCLAG Enabled node, IGMP Source can be at MCLAG member port or Orphan Port. Details of IGMP changes will be discussed at design section below.
 
 # 2 Functionality
 Refer to section 1
@@ -452,7 +460,39 @@ Below show and clear command issues get/clear trigger in l2mcastd DB.
 
 ### 3.6.5 REST API Support
  
- 
+## 3.7 MCLAG For IGMP Snooping
+### 3.7.1 Overview 
+MCLAG peers communicates and synchronizes states using  Inter-Chassis Communication Protocol defined by RFC727 .
+
+Below is the IGMP Snooping Specific settings to interwork with the MLAG Container implementation of ICCP as described in the Sonic MC-LAG HLD Document.
+
+ICCPd protocol is used to synchonize information between the MCLAG Peers. The format of information  is defined in ICC Parameter TLV defnitions section of RFC 7275. Snce no ICCPd TLV is defined for synchronizing IGMP information between  MCLAG peers,aAn extension tye TLV needs to be assigned for IGMP synchronization.
+
+Below picture depicts the overview of component interactions in the functioning of IGMP MCLAG. L2Mcd sends/process the  MCLAG state information to/from remote peer and update the forwarding states of IGMP snooping instance accordingly. Please refer MCLAG HLD for details of the state handling requirements at aplication modules.
+
+![IGMP Snooping](images/mclag_interactions.png "Figure 2: MCLAG IGMP Interactions")
+
+
+
+
+
+### 3.7.2 IGMP Control Packet Processing
+
+| Type   |  Port    | Description                                          |
+|--------|---------|------------------------------------------------------|
+|Report received   | MLAG Port| ICCP Sync of Report to Remote Peer.  MC interface is local LAG port at both peers  |
+|Report received   | Orphan Port| ICCP Sync of Report to Remote Peer.  MC Interface is Orphan Port and ICCP Port respectively at the node and remote peer.|
+|Leave received   | Any| ICCP Sync to Remote Peer and clear  MC interface at both peers  |
+|Query received   | Any| ICCP Sync to Remote Peer |
+
+
+### 3.7.3 State Handling
+| Type   |  Description                                          |
+|--------|------------------------------------------------------|
+|Local MLAG port Down|  MC Interface is changed from MLAG port to ICCP link for all groups|
+|Local MLAG port up|  MC Interface is changed from ICCP link to MLAG link for all groups|
+|Peer Link Down | The split brain scenario triggers ICCP links to be cleared from Groups |
+
  
 # 4 Flow Diagrams
 ## 4.1 IGMP Snooping Enable on VLAN
