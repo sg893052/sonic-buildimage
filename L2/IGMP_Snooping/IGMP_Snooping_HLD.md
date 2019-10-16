@@ -9,56 +9,55 @@
   * [About This Manual](#about-this-manual)
   * [Scope](#scope)
   * [Definition/Abbreviation](#definitionabbreviation)
-  * [1 Feature Overview](#feature-overview)
-     * [1.1 Requirements](#requirements)
-        *  [1.1.1 Functional Requirements](#functional-requirements)
-        *  [1.1.2 Configuration and Management Requirements](#configuration-and-management-requirements)
-        *  [1.1.3 Scalability Requirements](#scalability-requirements)
-        *  [1.1.4 Warm Boot Requirements](#warm-boot-requirements)
-      *  [1.2 Design Overview](#design-overview)
-          * [1.2.1 Basic Approach](#basic-approach)
-          * [1.2.2 L2MC Docker](#l2mc-docker)
-          * [1.2.3 SAI Overview](#sai-overview)
-          * [1.2.4 MLAG Support](#mlag-overview)
-  * [2 Functionality](#-functionality)
-      * [2.1 Target Deployment Use Cases](#target-deployment-use-cases)
-      * [2.2 Functional Description](#functional-description)
-  * [3 Design](#design)
-      * [3.1 Overview](#overview)
-      * [3.2 DB Changes](#db-changes)
-          * [3.2.1 CONFIG DB](#config-db)
-          * [3.2.2 APP DB](#app-db)
-          * [3.2.3 STATE_DB](#state-db)
-      * [3.3 Switch State Service Design](#switch-state-service-design)
-          * [3.3.1 L2mcOrch changes](#l2mcorch-changes)
-      * [3.4 Docker for L2MC](#docker-for-l2mc)
-      * [3.4 SAI](#sai)
-      * [3.6 CLI](#cli)
-          * [3.6.1 Data Models](#data-models)
-          * [3.6.2 Configuration Commands](#configuration-commands)
-          * [3.6.3 Show Commands](#show-commands)
-          * [3.6.4 Debug Commands](#debug-commands)
-          * [3.6.5 Rest API Support](#rest-api-support)
-      * [3.7 MCLAG For IGMP Snooping](#mclag-for-igmp-snooping)
-  * [4 Flow Diagrams](#flow-diagrams)
-	  * [4.1 IGMP Snooping Enable on VLAN](#igmp-snooping-enable-on-vlan)
-	  * [4.2 Static L2MC add flow](#static-l2mc-add-flow)
-	  * [4.3 Dynamic L2mc add flow](#dynamic-l2mc-add-flow)
-	  * [4.4 Port Down flow](#port-down-flow)
-	  * [4.5 Vlan member-port delete flow](#vlan-member-port-delete-flow)
-	  * [4.6 STP State change flow](#stp-state-change-flow)
-  * [5 Error Handling](#error-handling)
-  * [6 Serviceability and Debug](#serviceability-and-debug)
-  * [7 Warm Boot Support](#warm-boot-support)
-  * [8 Scalability](#scalability)
-  * [9 Unit Test](#unit-test) 
-     * [9.1 CLI Test Cases](#cli-test-cases)
-     * [9.2 Rest API Test Cases](#rest-api-test-cases)
-     * [9.3 Functional Test Cases](#functional-test-cases)
-     * [9.4 IGMPv1 V2 and V3 cases](#igmpv1-v2-and-v3-cases)
-     * [9.5 Warm Boot Test Cases](#warm-boot-test-cases)
-     * [9.6 Scalability Test Cases](#scalability-test-cases)
-     * [9.7 Negative Test Cases](#negative-test-cases)
+  * [1 Feature Overview](#1-feature-overview)
+     * [1.1 Requirements](#1-1-requirements)
+        *  [1.1.1 Functional Requirements](#1-1-1-functional-requirements)
+        *  [1.1.2 Configuration and Management Requirements](#1-1-2-configuration-and-management-requirements)
+        *  [1.1.3 Scalability Requirements](#1-1-3-scalability-requirements)
+        *  [1.1.4 Warm Boot Requirements](#1-1-4-warm-boot-requirements)
+      *  [1.2 Design Overview](#1-2-design-overview)
+          * [1.2.1 Basic Approach](#1-2-1-basic-approach)
+          * [1.2.2 L2MC Docker](#1-2-2-l2mc-docker)
+          * [1.2.3 SAI Overview](#1-2-3-sai-overview)
+          * [1.2.4 MCLAG Support](#1-2-4-mclag-overview)
+  * [2 Functionality](#2-functionality)
+      * [2.1 Target Deployment Use Cases](#2-1-target-deployment-use-cases)
+      * [2.2 Functional Description](#2-2-functional-description)
+  * [3 Design](#3-design)
+      * [3.1 Overview](#3-1-overview)
+      * [3.2 DB Changes](#3-2-db-changes)
+          * [3.2.1 CONFIG DB](#3-2-1-config-db)
+          * [3.2.2 APP DB](#3-2-2-app-db)
+          * [3.2.3 STATE_DB](#3-2-3-state-db)
+      * [3.3 Switch State Service Design](#3-3-switch-state-service-design)
+          * [3.3.1 L2mcOrch changes](#3-3-1-l2mcorch-changes)
+      * [3.4 Docker for L2MC](#3-4-docker-for-l2mc)
+      * [3.4 SAI](#3-4-sai)
+      * [3.6 CLI](#3-6-cli)
+          * [3.6.1 Data Models](#3-6-1-data-models)
+          * [3.6.2 Configuration Commands](#3-6-2-configuration-commands)
+          * [3.6.3 Show Commands](#3-6-3-show-commands)
+          * [3.6.4 Rest API Support](#3-6-4-rest-api-support)
+      * [3.7 MCLAG For IGMP Snooping](#3-7-mclag-for-igmp-snooping)
+  * [4 Flow Diagrams](#4-flow-diagrams)
+	  * [4.1 IGMP Snooping Enable on VLAN](#4-1-igmp-snooping-enable-on-vlan)
+	  * [4.2 Static L2MC add flow](#4-2-static-l2mc-add-flow)
+	  * [4.3 Dynamic L2mc add flow](#4-3-dynamic-l2mc-add-flow)
+	  * [4.4 Port Down flow](#4-4-port-down-flow)
+	  * [4.5 Vlan member-port delete flow](#4-5-vlan-member-port-delete-flow)
+	  * [4.6 STP State change flow](#4-6-stp-state-change-flow)
+  * [5 Error Handling](#5-error-handling)
+  * [6 Serviceability and Debug](#6-serviceability-and-debug)
+  * [7 Warm Boot Support](#7-warm-boot-support)
+  * [8 Scalability](#8-scalability)
+  * [9 Unit Test](#9-unit-test) 
+     * [9.1 CLI Test Cases](#9-1-cli-test-cases)
+     * [9.2 Rest API Test Cases](#9-2-rest-api-test-cases)
+     * [9.3 Functional Test Cases](#9-3-functional-test-cases)
+     * [9.4 IGMPv1 V2 and V3 cases](#9-4-igmpv1-v2-and-v3-cases)
+     * [9.5 Warm Boot Test Cases](#9-5-warm-boot-test-cases)
+     * [9.6 Scalability Test Cases](#9-6-scalability-test-cases)
+     * [9.7 Negative Test Cases](#9-7-negative-test-cases)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -96,7 +95,7 @@ When snooping is enabled on a VLAN, switch examines IGMP packets between hosts c
 ## 1.1 Requirements
 
 ### 1.1.1 Functional Requirements
- 1. Support IGMP Snooping for IGMP Version1 (IGMPv1), IGMPv2, IGMPv3.
+ 1. Support IGMP Snooping for IGMP Version1 (IGMPv1), IGMPv2, IGMPv3 (INCL Mode).
  2. Support IPv4 based forwarding.
  3. Support IGMP fast leave.
  4. Support IGMP querier functionality.
@@ -104,9 +103,8 @@ When snooping is enabled on a VLAN, switch examines IGMP packets between hosts c
  6. Aging of dynamic mrouter ports will be supported. Static mrouter ports will not timed out, they have to be un-configured explicitly.
  7. Support static multicast group configuration. Static l2mc entries will not timed out, they have to be un-configured explicitly.
  8. Support trapping IGMP and PIM Hello control packets to CPU.
- 9. Support Link-layer topology changes (due to STP) and generate queries on all non-mrouter ports for faster convergence.
- 10.Ability to enable the logging at different levels of the l2mcast module.
- 11.Support IGMP Snooping for MCLAG
+ 9. Support Link-layer topology changes (due to STP) and generate queries on all non-mrouter ports for faster convergence. 
+10. Support IGMP Snooping for MCLAG
  
 
 ### 1.1.2 Configuration and Management Requirements
@@ -114,8 +112,7 @@ When snooping is enabled on a VLAN, switch examines IGMP packets between hosts c
 This feature will support CLI configurations with the new framework.
  1. Support CLI configurations as described in "Configuration Commands" section below
  2. Support show commands as described in "Show Commands" section below
- 3. Support debug commands as described in "Debug Commands" section below
- 4. Support openconfig REST API and gNMI
+ 3. Support openconfig REST API and gNMI
 
 ### 1.1.3 Scalability Requirements
 
@@ -193,25 +190,28 @@ This section describes the changes made to different DBs for supporting IGMP Sno
 	
     ;Store IGMP Snooping configuration per VLAN
     ;Status: work in progress
-    key                         = CFG_L2MC_TABLE:"Vlan"vlanid
+    key                         = CFG_L2MC_TABLE|"Vlan"vlanid
     ;field                      = value
-    enabled                     = BIT                       ; Is the IGMP Snooping on VLAN enabled (1) or disabled (0)
-    querier                     = BIT                       ; Is the IGMP Snooping querier enabled (1) or disabled (0)
-    fast-leave                  = BIT                       ; Is IGMP fast leave enabled(1) or disabled (0)
+    enabled                     = "true"/"false"                       ; Is the IGMP Snooping on VLAN enabled or disabled 
+    querier                     = "true"/"false"                       ; Is the IGMP Snooping querier enabled  or disabled 
+    fast-leave                  = "true"/"false"                       ; Is IGMP fast leave enabled or disabled 
     version                     = 1*DIGIT                   ; IGMP Snooping Version ( Version 1 or 2 or 3, Default: 2)
     query-interval              = 5*DIGIT                   ; Query Interval Value (1 to 18000sec, Default:125sec)
     last-member-query-interval  = 5*DIGIT                   ; Last Member Query Interval Value (100 to 25500ms; Default: 1000ms)
     query-max-response-time     = 2*DIGIT                   ; Query Response Time (1 to 25sec, Default: 10sec)
-    mrouter                     = [0-max_ports]*port_name   ; Multicast router ports
      
-     
-#### CFG_L2MC_STATIC_TABLE
+#### CFG_L2MC_MROUTER_TABLE
+    ;Store Mrouter configuration
+    ;Status: work in progress
+    key                         = CFG_L2MC_MROUTER_TABLE|"Vlan"vlanid|mrouter_port_name       
+    ;field                      = value               
+
+####  CFG_L2MC_STATIC_MEMBER_TABLE
     ;Store Static L2MC entry configuration per VLAN. 
     ;Status: work in progress 
-    key                 = CFG_L2MC_STATIC_TABLE:"vlan"vlanid:source_address:group_address
+    key                 =  CFG_L2MC_STATIC_MEMBER_TABLE|"vlan"vlanid|group_address|static_port_name
     ;field              = value
-    member_ports        = [0-max_ports]*port_name   ; Multicast Group Member Ports.	
- 
+
 ### 3.2.2 APP DB
 
 #### APP_L2MC_VLAN_TABLE
@@ -220,17 +220,28 @@ This section describes the changes made to different DBs for supporting IGMP Sno
     key         = APP_L2MC_VLAN_TABLE:"Vlan"vlanid
     ;field      = value
 
-#### APP_L2MC_ENTRY_TABLE
-    ;Store L2MC entry per VLAN.
+#### APP_L2MC_MEMBER_TABLE
+    ;Store L2MC member table entry.
     ;Status: work in progress
-    key            = APP_L2MC_ENTRY_TABLE:"Vlan"vlanid:source_address:group_address
+    key            = APP_L2MC_MEMBER_TABLE:"Vlan"vlanid:source_address:group_address:port_name
     ;field         = value
     type           = "static"/"dynamic"           ; Static or Dynamic multicast group entry
-    member_ports   = [0-max_ports]*port_name      ; Multicast group member ports.
+### APP_L2MC_MROUTER_TABLE
+    ;Store L2MC mrouter table entry.
+    ;Status: work in progress
+    key            = APP_L2MC_MROUTER_TABLE:"Vlan"vlanid:port_name
+    ;field         = value
+    type           = "static"/"dynamic"           ; Static or Dynamic multicast group entry
 
 ### 3.2.3 STATE DB
-    
-    No changes
+#### L2MC_STATE_MEMBER_TABLE
+    ;Store L2MC member state table entry for ICCPd communications.
+    ;Status: work in progress
+    key            = L2MC_STATE_MEMBER_TABLE|"Vlan"vlanid|source_address|group_address|port_name
+    ;field         = value
+    type           = "static"/"dynamic"           ; Static or Dynamic multicast group entry
+
+
 
 ### 3.2.4 ASIC DB
 ### 3.2.5 COUNTER DB
@@ -241,8 +252,7 @@ This section describes the changes made to different DBs for supporting IGMP Sno
 ### 3.3.1 L2mcOrch changes 
 L2mcOrch is responsible for the following activities:
    - Handles snooping enable/disable on VLAN being subscriber to APP_DB. 
-   - For l2mc entry table changes, handles creation/deletion of l2mc entry being subscriber to APP_DB.
-   - For already existing l2mc entry, updates l2mc entry with changed member list. 
+   - For l2mc member table changes, handles creation/deletion of l2mc entry being subscriber to APP_DB.
    - Translates these updates to SAI objects and pushes them to ASIC_DB. 
    - Creates l2mc db entry with OID mapping to handle subsequent l2mc entry member addition or deletion.
 
@@ -330,70 +340,126 @@ https://github.com/openconfig/public/blob/master/release/models/multicast/openco
 
 ### 3.6.2 Configuration Commands
 
-#### 3.6.2.1 Enable IGMP Snooping on VLAN
+#### 3.6.2.1 Enable/Disable IGMP Snooping on VLAN
 
 **switch# config terminal**
 
-**switch(config)# vlan vlan-id**
+Enter into Vlan interface configuration mode to enable/disable igmp snooping.   
+**switch(config)# interface Vlan <vlan-id\>**        
 
-This command allows to configure IGMP Snooping on VLAN.
+This command allows to configure IGMP Snooping on VLAN.       
+**switch(config-if-vlan10)# ip igmp snooping**  
 
-**switch(config-vlan)# ip igmp snooping**
+This command disables IGMP snooping on a VLAN.      
+**switch(config-if-vlan10)# no ip igmp snooping**
 
+#### 3.6.2.2 Enable/Disable IGMP Snooping Querier on VLAN
+The IGMP snooping querier sends out IGMP queries to trigger IGMP responses from devices receiving IP multicast traffic. The IGMP snooping querier listens for these responses to map the appropriate forwarding addresses. 
 
-#### 3.6.2.2 Enable IGMP Snooping Querier on VLAN
-The IGMP snooping querier sends out IGMP queries to trigger IGMP responses from devices receiving IP multicast traffic. The IGMP snooping querier listens for these responses to map the appropriate forwarding addresses.
+Below configuration allows to configure IGMP Snooping querier on VLAN.   
 
-Below configuration allows to configure IGMP Snooping querier on VLAN.
+**switch(config-if-vlan10)#ip igmp snooping querier**   
 
-**switch(config-vlan)# ip igmp snooping querier**
+Below configuration allows to disable IGMP Snooping querier on VLAN.    
 
-#### 3.6.2.3 Enable fast-leave 
+**switch(config-if-vlan10)#no ip igmp snooping querier**
 
-**switch(config-vlan)# ip igmp snooping fast-leave**
+By Default, querier is disabled.
+
+#### 3.6.2.3 Enable/Disable fast-leave 
+
+Below configuration allows to enable fast-leave on a VLAN which is enabled for IGMP snooping.  
+**switch(config-if-vlan10)# ip igmp snooping fast-leave**
+
+This command disables fast-leave on a VLAN which is  enabled for IGMP snooping.  
+**switch(config-if-vlan10)# no ip igmp snooping fast-leave**    
+
+By default fast leave is disabled.
 
 #### 3.6.2.4 Configure query-interval 
-This command allows modification of the query interval to specify how often the querier sends general queries. The valid range is from 1 through 18000 seconds. The default is 125 seconds.
+This command allows modification of the query interval to specify how often the querier sends general queries. The valid range is from 1 through 18000 seconds. 
 
-**switch(config-vlan)# ip igmp snooping query-interval <query-interval\>**
+Below configuration allows to set query-interval for a vlan.  
+**switch(config-if-vlan10)# ip igmp snooping query-interval <query-interval\>**
+
+Below configuration command is used to reset query interval to default value,  
+**switch(config-if-vlan10)# no ip igmp snooping query-interval**
+
+The default interval is 125 seconds, which is set when igmp snooping is enabled for vlan.
 
 #### 3.6.2.5 Configure last member query interval
 When the querier receives an IGMP leave message, it verifies the multicast group has no remaining listeners by sending a set of group-specific queries at a configured interval. If the querier does not receive a response to the queries, it removes the group state and stops forwarding multicast traffic. 
 This command configures the transmission interval for sending group-specific or group-source-specific query messages to the active interface. 
-The valid range is from 100 to 25500ms. The default is 1000ms.
+The valid range is from 100ms to 25500ms. 
 
-**switch(config-vlan)# ip igmp snooping last-member-query-interval <last-member-query-interval\>**
+Below configuration allows to set last-member-query-interval for a vlan.  
+**switch(config-if-vlan10)# ip igmp snooping last-member-query-interval <last-member-query-interval\>** 
+
+Below configuration is used to  reset the last memeber query interval to default value.  
+**switch(config-if-vlan10)# no ip igmp snooping last-member-query-interval**
+
+The default value is  1000ms.
 
 #### 3.6.2.5 Configure max response interval
 The Max Response interval field in a membership query messages specifies the longest time a host can wait before responding with a membership report message.
-Use the following commands to set the maximum response time and Value range from 1 to 25 seconds. The default is 10 seconds.
+Use the following commands to set the maximum response time and Value range from 1 to 25 seconds. 
 
-**switch(config-vlan)# ip igmp snooping query-max-response-time <query-max-response-time\>**
+Below configuration allows to set query-max-response-time for a vlan.   
+**switch(config-if-vlan10)# ip igmp snooping query-max-response-time <query-max-response-time\>**  
+
+Below configuration is used to  reset  the maximum respose time to default value.      
+**switch(config-if-vlan10)# no ip igmp snooping query-max-response-time**
+
+The default value is 10 seconds.
 
 #### 3.6.2.6 Configure IGMP version
 
 This command allows to configure  IGMP versions 1 through 3. A VLAN that is configured with IGMP snooping uses default version 2 (unless otherwise configured). 
 
-**switch(config-vlan)# ip igmp snooping version <version\>**
+**switch(config-if-vlan10)# ip igmp snooping version <version\>**
+
+Valid values are 1,2 and 3. The default value is 2.
 
 #### 3.6.2.7 Configure static multicast router(mrouter) port
-This command allows to configure static mrouter ports
 
-**switch(config-vlan)# ip igmp snooping mrouter interface <interface-name\>**
+This command allows to configure an mrouter interface from a vlan. The interface can be an Ethernet or Port channel.   
+**switch(config-if-vlan10)# ip igmp snooping mrouter interface <interface-name\>**     
 
-#### 3.6.2.6 Configure static multicast group
+This command is used  to remove an mrouter interface from a vlan . The interface can be an Ethernet or Port channel.   
+**switch(config-if-vlan10)# no ip igmp snooping mrouter interface <interface-name\>**
+
+    Example:
+    switch(config-if-vlan10)# ip igmp snooping mrouter interface Ethernet4
+    switch(config-if-vlan10)# ip igmp snooping mrouter interface PortChannel1
+    switch(config-if-vlan10)# no ip igmp snooping mrouter interface PortChannel1
+
+
+#### 3.6.2.8 Configure static multicast group
 A snooping-enabled VLAN cannot forward multicast traffic to ports that do not receive IGMP membership reports. If clients cannot send reports, user can configure a static group which applies to specific ports. The static group allows packets to be forwarded to the static group ports even though they have no client membership reports.
-This command allows users to configure a static multicast group on a VLAN with the receiver port. The interface to the port must be the member of the VLAN.
 
-**switch(config-vlan)# ip igmp snooping static-group <group-address> interface <interface-name\>**
+This command configures a static multicast group on a VLAN with the receiver port. The group adress should be a vlaid multicast address and interface should be member of the VLAN. The Interface can be a Ethernet or Portchannel interface.
+
+**switch(config-if-vlan10)# ip igmp snooping static-group < group-address> interface <interface-name\>**
+
+This command configures a static multicast group entry from a VLAN  
+**switch(config-if-vlan10)# no ip igmp snooping static-group < group-address> interface <interface-name\>**
+
+        Example:
+        switch(config-if-vlan10)# ip igmp snooping static-group 225.0.0.1 interface Ethernet4
+        switch(config-if-vlan10)# ip igmp snooping static-group 227.2.0.1 interface PortChannel3
+        switch(config-if-vlan10)# no ip igmp snooping static-group 226.0.0.1 interface Ethernet4
+
 
 ### 3.6.3 Show Commands
 **switch# show ip igmp snooping [[ vlan ] vlan-id ]**
 
 These commands displays IGMP snooping configuration across all the VLANs or the specific VLAN. Configuration details are read from CONFIG_DB entries programmed per VLAN.
-	
+
+If vlan id is not specified, all the vlans configured with vlan are displayed.
+
+    switch#show ip igmp snooping    
 	Vlan ID: 10
-	Multicast Router ports: Ethernet8 
+	Multicast Router ports: Ethernet8, Ethernet1, PortChannel10 
 	Querier - Disabled 
 	IGMP Operation mode: IGMPv2
 	Is Fast-Leave Enabled : Disabled
@@ -404,67 +470,44 @@ These commands displays IGMP snooping configuration across all the VLANs or the 
 
 **switch# show ip igmp snooping groups [[vlan] vlan-id]**
 
-These commands will be used to display L2MC entries from APP_DB.
+These commands will be used to display L2MC entries from APP_DB for the specific or all vlans.
 
+Example
+
+     switch# show ip igmp snooping groups
 	 Vlan ID : 10      
 	 -------------
-	1   (*, 225.0.0.1 ) NumOIF: 1
-        Outgoing Ports: Ethernet4
-    2   (*, 226.0.0.1 ) NumOIF: 1
-        Outgoing Ports: Ethernet8
+	1   (*, 225.0.0.1 ) 
+        Outgoing Ports: Ethernet4,PortChannel3
+    2   (100.10.2.3, 226.0.0.1 ) 
+        Outgoing Ports: Ethernet8,Portchannel2
 	Total number of entries: 2      
-  
 
-### 3.6.4 Debug Commands
-Following debug commands will be supported for enabling logging which can be viewed in /var/log/syslog.
+	 Vlan ID : 20      
+	 -------------
+	1   (*, 226.0.0.1 )
+        Outgoing Ports: Ethernet20,Ethernet16
+    2   (120.30.4.3, 226.0.0.1 )
+        Outgoing Ports: Ethernet4,Portchannel4
+	Total number of entries: 2  
 
-	debug igmp-snooping rx/tx
-	debug igmp-snooping vlan <vlan-id>
-	debug igmp-snooping group <group-address>
-	debug igmp-snooping packet 
-	debug igmp-snooping errors
-	debug igmp-snooping all
-
-Below show and clear command issues get/clear trigger in l2mcastd DB.
-
-#### debug  show igmp-stats vlan <vlan-id\>  
-	
-	IGMP packet statistics for vlan10:
-	IGMP Message type      			Received    Sent    	Errors 
-	Membership Query                  0           0            0 
-	V1 Membership Report              0           0            0 
-	V2 Membership Report              4           0            0 
-	Group Leave                       2           0            0 
-	V3 Membership Report              0           0            0 
-	PIM hello                         0           0            0 
-
-	IGMP Error Statistics:
-	Unknown types            0
-	Bad Length               0
-	Bad Checksum             0
- 
- #### debug show igmp-groups <vlan-id\>
- 
-	Total Number of Groups: 2
-	IGMP Connected Group Membership
-	Group Address    Interface            Uptime     Expires    Last Reporter
-	225.0.0.1        vlan10               00:00:42   Never      Static
-	  Member Ports:  Ethernet4,
-	226.0.0.1        vlan10               00:00:42   00:02:10   10.10.10.1
-	  Member Ports:  Ethernet8,
-
-#### debug clear igmp-stats vlan <vlan-id\>
-#### debug clear igmp-groups vlan <vlan-id\>
-#### debug clear igmp-mcache vlan <vlan-id\>
+    switch# show ip igmp snooping groups vlan 10
+	 Vlan ID : 10      
+	 -------------
+	1   (*, 225.0.0.1 ) 
+        Outgoing Ports: Ethernet4,PortChannel3
+    2   (100.10.2.3, 226.0.0.1 ) 
+        Outgoing Ports: Ethernet8,Portchannel2
+	Total number of entries: 2  
 
 
-### 3.6.5 REST API Support
+### 3.6.4 REST API Support
  
 ## 3.7 MCLAG For IGMP Snooping
 ### 3.7.1 Overview 
 MCLAG peers communicates and synchronizes states using  Inter-Chassis Communication Protocol defined by RFC727 .
 
-Below is the IGMP Snooping Specific settings to interwork with the MLAG Container implementation of ICCP as described in the Sonic MC-LAG HLD Document.
+Below is the IGMP Snooping Specific settings to interwork with the MCLAG Container implementation of ICCP as described in the Sonic MC-LAG HLD Document.
 
 ICCPd protocol is used to synchonize information between the MCLAG Peers. The format of information  is defined in ICC Parameter TLV defnitions section of RFC 7275. Snce no ICCPd TLV is defined for synchronizing IGMP information between  MCLAG peers,aAn extension tye TLV needs to be assigned for IGMP synchronization.
 
@@ -480,7 +523,7 @@ Below picture depicts the overview of component interactions in the functioning 
 
 | Type   |  Port    | Description                                          |
 |--------|---------|------------------------------------------------------|
-|Report received   | MLAG Port| ICCP Sync of Report to Remote Peer.  MC interface is local LAG port at both peers  |
+|Report received   | MCLAG Port| ICCP Sync of Report to Remote Peer.  MC interface is local LAG port at both peers  |
 |Report received   | Orphan Port| ICCP Sync of Report to Remote Peer.  MC Interface is Orphan Port and ICCP Port respectively at the node and remote peer.|
 |Leave received   | Any| ICCP Sync to Remote Peer and clear  MC interface at both peers  |
 |Query received   | Any| ICCP Sync to Remote Peer |
@@ -489,8 +532,8 @@ Below picture depicts the overview of component interactions in the functioning 
 ### 3.7.3 State Handling
 | Type   |  Description                                          |
 |--------|------------------------------------------------------|
-|Local MLAG port Down|  MC Interface is changed from MLAG port to ICCP link for all groups|
-|Local MLAG port up|  MC Interface is changed from ICCP link to MLAG link for all groups|
+|Local MCLAG port Down|  MC Interface is changed from MCLAG port to ICCP link for all groups|
+|Local MCLAG port up|  MC Interface is changed from ICCP link to MCLAG link for all groups|
 |Peer Link Down | The split brain scenario triggers ICCP links to be cleared from Groups |
 
  
@@ -544,7 +587,7 @@ __Figure 7: STP state change flow__
 
 # 5 Error Handling
 # 6 Serviceability and Debug
-Debug commands as described in Debug Command section will be supported. Debug command output will be captured as part of tech support.
+Debug logs will be captured as part of tech support.
 - CLI configuration error will be displayed via console and configuration will be rejected
 - Internal processing error within SwSS will be logged in syslog with ERROR level
 - SAI interaction errors will be logged in syslog
@@ -602,99 +645,48 @@ Below L2MC entries scale will be tested to success on an ASIC with 512 L2MC grou
     22. Verify CLI to delete static multicast group.
     23. Verify CLI to display IGMP Snooping configured on vlan.
     24. Verify CLI to display multicast groups learnt on vlan.
-    25. Verify CLI to display protocol statistics.
-    26. Verify CLI to clear protocol statistics.
-    27. Verify CLI to clear multicast groups learnt.
-    28. Verify configuration save and verify after reload.
-    29. Verify unsaved configuration loss after reload.
+    25. Verify configuration save and verify after reload.
+    26. Verify unsaved configuration loss after reload.
 
 
 ## 9.2 Rest API Test Cases
 
 ## 9.3 Functional Test Cases
 
-    1. Verify IGMP Snooping enable configuration from CONFIG_DB are received at L2mcastd via l2mcMgr.
-    2. Verify IGMP Snooping enable is pused to APP_DB by l2mcastd.
-    3. Verify that the Orchagent is receiving IGMP Snoop enable notification from APP_DB.
-    4. Verify that the IGMP Snoop enable is pushed to ASIC_DB by checking contents in the ASIC_DB.
-    5. Verify IGMPv1 reports received and processed at l2mcastd.
-    6. Verify IGMPv2 reports received and processed at l2mcastd.
-    7. Verify IGMPv3 reports received and processed at l2mcastd.
-    8. Verify IGMPv1 leaves received and processed at l2mcastd.
-    9. Verify IGMPv2 leaves received and processed at l2mcastd.
-    10. Verify IGMPv3 leaves received and processed at l2mcastd.
-    11. Verify General Query messages sent from L2mcastd.
-    12. Verify Group Specific queries sent from L2mcastd.
-    13. Verify PIM hello packets are received and processed at l2mcastd.
-    14. Verify protocol trap happening fine when switch comes up after the reboot
-    15. Verify IGMP stats updated for  V1 reports
-    16. Verify IGMP stats updated for  V1 leaves
-    17. Verify IGMP stats updated for  V2 reports
-    18. Verify IGMP stats updated for  V2 leaves
-    19. Verify IGMP stats updated for membership Queries.
-    20. Verify IGMP stats updated for V3 reports
-    21. Verify IGMP stats updated for V3 leaves.
-    22. Verify static IGMP group entries are successfully created in CONFIG_DB.
-    23. Verify static IGMP group configuration from CONFIG_DB are recieved at L2mcastd via l2mcMgr.
-    24. Verify static multicast group entry is pushed to APP_DB by L2mcastd.
-    25. Verify that the Orchagent is receiving static multicast group creation from APP_DB.
-    26. Verify that Orchagent is pushing static L2mc entries to ASIC_DB by checking contents in the ASIC_DB.
-    27. Verify that L2mc entry is programmed in hardware.
-    28. Verify multicast data forwarding happening using l2mc entry programmed in hardware.
-    29. Verify l2mc entry created when dynamic IGMPv1 report is received. 
-    30. Verify l2mc entry created when dynamic IGMPv2 report is received.
-    31. Verify l2mc entry created when dynamic IGMPv3 report is received.
-    32. Verify dynamic learnt l2mc entry pushed to APP_DB by L2mcastd.
-    33. Verify that the Orchagent is receiving L2mc entry creation from APP_DB.
-    34. Verify that Orchagent is pushing dynamic learnt L2mc entry to ASIC_DB by checking contents in the ASIC_DB.
-    35. Verify that dynamic learnt L2mc entry is programmed in hardware.
-    36. Verify multicast data forwarding happening for the dynamic learnt l2mc entry programmed in hardware.
-    37. Verify l2mc deletion from timeout when there is no IGMPv1 report for the configured interval.
-    38. Verify l2mc deletion from timeout when there is no IGMPv2 report for the configured interval
-    39. Verify l2mc deletion from timeout when there is no IGMPv3 report for the configured interval.
-    40. Verify existing l2mc entry updated with new portlist based on the IGMP report from second port.
-    41. Verify l2mc entry added with extra member port is pushed to APP_DB by l2mcastd.
-    42. Verify that the Orchagent is receiving new portlist update for the existing l2mc entry.
-    43. Verify Orchagent is pushing l2mc entry to ASIC_DB for with the new portlist.
-    44. Verify multicast data forwaring is happening for the new member port added.
-    45. Verify member port removed from l2mc entry at l2mcastd based on IGMP leave.
-    46. Verify l2mc entry with removed member port due to IGMP leave is pushed to APP_DB.
-    47. Verify ASIC_DB push from Orchagent for l2mc entry with removed member port due to IGMP leave. 
-    48. Verify l2mc entry in hardware and verify multicast data forwarding not happening on the port where leave has processed.
-    49. Verify dynamic mrouter port added to the l2mc entry member portlist at l2mcastd.
-    50. Verify dynamic mrouter port updated as part of existing memberlist of l2mc entry and pushed to APP_DB from l2mcastd.
-    51. Verify Orchagent pushing ASIC_DB with the newly added dynamic mrouter port in l2mc entry.
-    52. Verify multicast data forwarding happens to the newly added dynamic mrouter port also.
-    53. Add static mrouter port and verify it is updated in CONFIG_DB.
-    54. Verify static mrouter port is updated as part of the existing memberlist of l2mc entry and pushed to APP_DB from l2mcastd.
-    55. Verify Orchagent pushing ASIC_DB with the newly added static mrouter portlist. 
-    56. Verify multicast data forwarding happens to the newly added static mrouter port also.
-    57. Verify l2mc entry member port list update at l2mcastd when one of the member port goes down.
-    58. Verify updated l2mc entry from port down is pushed to APP_DB.
-    59. Verify l2mc entry deletion at l2mcastd when last member port goes down.
-    60. Verify l2mc entry deletion pushed to APP_DB when last member port goes down.
-    61. Verify l2mc entry deletion happens from ASIC_DB and hardware when last member port of l2mc goes down.
-    62. Verify l2mc entry member port update at l2mcastd by removing vlan member port.
-    63. Verify l2mc entry updated from vlan member port removal is pushed to APP_DB.
-    64. Verify l2mc entry updated in ASIC_DB and hardware when vlan member port removal happens.
-    65. Verify multicast data forwarding happens to the newly updated member ports when vlan member port removal happens.
-    66. Verify with the STP state change, verify updated member port list pushed to APP_DB.
-    67. Verify l2mc entry updated in ASIC_DB and hardware when STP state change happens.
-    68. Verify multicast data forwarding happens to the newly updated member ports when STP state change happens.
-    69. Verify mrouter port timeout.
-    70. Verify dynamic learnt member port timeout.
-    71. Verify fast-leave.
-    72. Verify Queries by modifying Query interval.
-    73. Verify Last member query interval.
-    74. Verify max response interval.
-    75. Verify error messages are logged if l2mcastd gets error writing to APP_DB.
-    76. Verify error messages are logged if l2mcOrch gets errors when writing to ASIC_DB.
-    77. Verify error messages are logged if l2mcOrch gets errors when creating l2mc group.
-    78. Verify error messages are logged if l2mcOrch gets error when creating l2mc memberlist.
-    79. Verify error messages are logged if l2mcOrch gets error when creating l2mc entry.
-    80. Verify tracing of l2mcastd at different log levels.
-    81. Verify tracing of L2mcOrch at different log levels.
-    82. Execute debug dump commands for dumping the internal operational data/state of L2mcastd and L2mcOrch.
+1. Verify IGMP Snooping enable/disable configuration on vlan.
+2. Verify IGMP reports/leaves received and processed. 
+3. Verify General Query messages and Group Specific queries. 
+4. Verify PIM hello packets are received and processed.
+5. Verify IGMP/PIM protocol pkts trap happening fine when switch comes up after the reboot
+6. Verify IGMP stats updated for IGMP reports, leaves, and membership queries.
+7. Verify static IGMP group addition/deletion through configuration. 
+8. Verify multicast data forwarding happening using static l2mc entry programmed in hardware.
+9. Verify l2mc entry creation when dynamic IGMP report is received. 
+10. Verify multicast data forwarding happening for the dynamic learnt l2mc entry programmed in hardware.
+11. Verify existing l2mc entry updated with new portlist based on the IGMP report from second port.
+12. Verify multicast data forwaring is happening for the new member port added.
+13. Verify member port removed from l2mc entry based on IGMP leave.
+14. Verify multicast data forwarding not happening on the port where leave has processed.
+15. Verify dynamic mrouter port added to the l2mc entry member portlist.
+16. Verify multicast data forwarding happens to the newly added dynamic mrouter port also.
+17. Add static mrouter port and verify multicast data forwarding happens to the newly added static mrouter port also.
+18. Verify l2mc entry member port list update at l2mcastd when one of the member port goes down.
+19. Verify l2mc entry deletion when last member port goes down.
+20. Verify multicast data forwarding happens to the newly updated member ports when vlan member port removal happens.
+21. Verify mrouter port timeout.
+22. Verify dynamic learnt member port timeout.
+23. Verify fast-leave.
+24. Verify Queries by modifying Query interval.
+25. Verify Last member query interval.
+26. Verify max response interval.
+27. Verify error messages are logged if l2mcastd gets error writing to APP_DB.
+28. Verify error messages are logged if l2mcOrch gets errors when writing to ASIC_DB.
+29. Verify error messages are logged if l2mcOrch gets errors when creating l2mc group.
+30. Verify error messages are logged if l2mcOrch gets error when creating l2mc memberlist.
+31. Verify error messages are logged if l2mcOrch gets error when creating l2mc entry.
+32. Verify tracing of l2mcastd at different log levels.
+33. Verify tracing of L2mcOrch at different log levels.
+
 
 ## 9.4 IGMPv1,V2 and V3 cases.
     
@@ -712,7 +704,8 @@ Below L2MC entries scale will be tested to success on an ASIC with 512 L2MC grou
     2. Verify maximum of 512 L2MC entries.
 
 ## 9.7 Negative Test Cases
-    
+    Internal BRCM information to be removed before sharing with the community
+
     1. Verify l2mc resource failure handled and reported when max limit is reached.
     2. Verify L2mc entry addition failure due to resource full, handle and report the failure.
     3. Verify scaling beyond table limits and ensure Table full condition is handled and reported. 
@@ -737,3 +730,20 @@ NjMxNjU3LDIwMDUyMzk5NjYsLTE3NDE5NTczMDIsMTA2ODc1Mj
 MyOCwtMTA2MTgzMzAxNCwxMDI0Nzg3MjYyLC05MzY5MDQ0NDIs
 NTMwMTM0OTg5XX0=
 -->
+# 10.1 Sanity Checks for config CLI
+
+    -  While adding a mrouter or a static igmp configuration, the CLI framework should accept the configuration only if  the specific port is already a member port of the vlan. 
+    - CLI should reject add/removal of mrouter or static configuration which is present/non-xisting.
+    - CLI should reject re configuring an existing configuration or removing a non-existing IGMP configuration.
+    - CLI should reject invalid ranges for values for parameters like last-member-query-interval, query interval etc
+    - CLI should not accept  a configuration with  adresses specified  in a static configuration, which is not a  multicast adress 
+    -CLI Should not accept Configuration of static and mrouter configuration with  Port or Portchannel which is not existing or invalid
+    - Configuration to modify or reset the igmp parameters like query-interval, last member query interval, fast-leave etc for a VLAN is accepted only if IGMP snooping is enabled for the VLAN.
+    - IGMP version values other than 1,2 and 3 should be rejected
+    - CLI should not accept IGMP enable or disable, when IGMP is already enabled or disabled for that VLAN.
+    -IGMP snooping disable configuration is accepted only if snooping is already enabled for the VLAN.
+    - Removing Vlan configuration when active IGMP configurations are on should not be permited
+    - VLAN member removal should not be permited if active mrouter or static configuration on this member is present
+    - Sonnoping removal should not be permited till all static and mrouter configs under the vlan are removed
+
+    
