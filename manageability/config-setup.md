@@ -1,7 +1,7 @@
 # SONiC Configuration Setup Service
 
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -17,6 +17,7 @@
     * [2.2 Functional Description](#22-functional-description)
     * [2.3 CLI](#23-cli)
   * [3. Unit Tests](#3-unit-tests)
+  * [4. Appendix](#4-appendix)
 
 
 # List of Tables
@@ -27,6 +28,7 @@
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 07/16/2019  |   Rajendra Dendukuri      | Initial version                   |
 | 0.2 | 07/22/2019 | Rajendra Dendukuri | Update Test plan, fixed review comments |
+| 0.3 | 10/16/2019 | Rajendra Dendukuri | Added an example usecase of password migration |
 
 # About this Manual
 This document provides details about how the switch configuration is handled on a SONiC device.
@@ -289,3 +291,29 @@ This command is executed as part of system bootup by the config-setup service. U
 13. Verify that when a config-setup hook scripts issue a switch reboot, all the hook scripts previously executed are not executed again up subsequent  switch boot.
 13. Verify that config-migration hook scripts are executed even when switch boots in warm boot mode. This will allow scripts to perform any actions required for some applications which are not covered by the warm boot functionality.
 14. Verify that config-setup hook scripts are not executed when switch boots in warm boot mode.
+
+# 4 Appendix
+
+This section provides example extensions of the Configuration Setup service to perform configuration migration in a SONiC switch.
+
+## Linux Users, Groups and Passwords Migration
+
+When a new SONIC image is installed, a new Linux root filesystem is created. As a result of which any changes made in the Linux root filesystem are not carried forward to the newly installed image. Only specific contents in the /etc/sonic directory (e.g config_db.json, frr config) are migrated to the new image as part of config migration. Simple changes in Linux like change of admin user password, unix user group membership are not transferred over as part of config migration.
+
+The config-setup migration hooks infrastructure can be used to migrate following information from existing image to newly installed image:
+1. Newly created non-system users (GID >= 1000)
+2. Password for the newly created users and the admin user
+3. Newly created user groups
+4. /home directory which has all user home directories
+5. User email 
+
+When a new SONiC switch image is installed using the "sonic_installer install", the /etc/config-setup/config-migration-pre-hooks.d/01-local-users-pre script is executed and it takes a backup copy of all of the files listed below and copy them to /host/backup/users_info directory.
+
+/etc/passwd
+/etc/group
+/etc/shadow
+/etc/gshadow
+/home/*
+/var/spool/mail
+
+After the SONiC switch is rebooted to boot into the newly installed image, the /etc/config-setup/config-migration-pre-hooks.d/01-local-users-post script is executed which reads the files in /host/backup/users_info directory and migrates contents of the backed up data to the Linux root filesystem of newly installed user. After migrating the user data, the directory /host/backup/userse_info is removed.
