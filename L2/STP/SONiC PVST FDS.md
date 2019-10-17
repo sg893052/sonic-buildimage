@@ -1,7 +1,7 @@
 # Feature Name
 PVST
 # High Level Design Document
-#### Rev 0.4
+#### Rev 1.1
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -34,19 +34,21 @@ PVST
   * [Serviceability and Debug](#serviceability-and-debug)
   * [Warm Boot Support](#warm-boot-support)
   * [Scalability](#scalability)
+  * [Industry standard CLI](#industry-standard-cli)
   * [Unit Test](#unit-test)
-  
+
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
 
 # Revision
 | Rev |     Date    |       Author              | Change Description                |
 |:---:|:-----------:|:-------------------------:|-----------------------------------|
-| 0.1 | 05/02/2019  |     Sandeep, Praveen       | Initial version  |                
-| 0.2 | 05/02/2019  |     Sandeep, Praveen       | Incorporated Review comments  |                
-| 0.3 | 06/25/2019  |     Sandeep, Praveen       | Incorporated Review comments  |                
-| 0.4 | 10/15/2019  |     Sandeep, Praveen       | Minor changes post implementation |                
-                                              
+| 0.1 | 05/02/2019  |     Sandeep, Praveen       | Initial version  |
+| 0.2 | 05/02/2019  |     Sandeep, Praveen       | Incorporated Review comments  |
+| 0.3 | 06/25/2019  |     Sandeep, Praveen       | Incorporated Review comments  |
+| 1.0 | 10/15/2019  |     Sandeep, Praveen       | Minor changes post implementation |
+| 1.1 | 10/17/2019  |     Sandeep                | Adding industry standard CLIs for 2020xx release and BPDU filter support |
+
 
 # About this Manual
 This document provides general information about the PVST (Per VLAN spanning tree) feature implementation in SONiC.
@@ -76,7 +78,8 @@ This document describes the high level design of PVST feature.
  8. DA MAC in case of PVST should be cisco pvst mac - 01:00:0C:CC:CC:CD
  9. Support protocol operation on static breakout ports
  10. Support protocol operation on Port-channel interfaces
- 
+ 11. Support BPDU filter functionality
+
 
 ## 1.2 Configuration and Management Requirements
 This feature will support CLI and REST based configurations.
@@ -85,6 +88,7 @@ This feature will support CLI and REST based configurations.
  3. Support debug commands as mentioned in section 3.6.4
  4. Support Openconfig yang model - with extensions for supporting PVST 
  5. Support REST APIs for config and operational data
+ 6. Support industry standard CLIs as mentioned in section 8
 
 ## 1.3 Scalability Requirements
 16k port-vlan instances with max 255 STP instances.
@@ -111,7 +115,7 @@ For each LAN, the switches that attach to the LAN select a designated switch tha
 PVST+ allows for running multiple instances of spanning tree on per VLAN basis. 
 
 One of the advantage with PVST is it allows for load-balancing of the traffic. When a single instance of spanning tree is run and a link is put into blocking state for avoiding the loop, it will result in inefficient bandwidth usage. With per VLAN spanning tree multiple instances can be run such that for some of the instances traffic is blocked over the link and for other instances traffic is forwared allowing for load balancing of traffic.
- 
+
 PVST+ support allows the device to interoperate with IEEE STP and also tunnel the PVST+ BPDUs transparently across IEEE STP region to potentially connect other PVST+ switches across the IEEE STP region. For interop with IEEE STP, PVST+ will send untagged IEEE BPDUs (MAC - 01:80:C2:00:00:00) with information corresponding to VLAN 1. The STP port must be a member of VLAN 1 for interoperating with IEEE STP.
 
 # 3 Design
@@ -144,70 +148,72 @@ Following config DB schemas are defined for supporting this feature.
 ### STP_GLOBAL_TABLE
     ;Stores STP Global configuration
     ;Status: work in progress
-    key                    = STP|GLOBAL				; Global STP table key
-    mode                   = "pvst"			                ; spanning-tree mode pvst
+    key                    = STP|GLOBAL			; Global STP table key
+    mode                   = "pvst"			    ; spanning-tree mode pvst
     rootguard_timeout      = 3*DIGIT				; root-guard timeout value (5 to 600 sec, DEF:30 sec)
-    forward_delay          = 2*DIGIT			        ; forward delay in secs (4 to 30 sec, DEF:15 sec)
+    forward_delay          = 2*DIGIT			  ; forward delay in secs (4 to 30 sec, DEF:15 sec)
     hello_time             = 2*DIGIT				; hello time in secs (1 to 10 sec, DEF:2sec)
     max_age                = 2*DIGIT				; maximum age time in secs (6 to 40 sec, DEF:20sec)
     priority               = 5*DIGIT				; bridge priority (0 to 61440, DEF:32768)
+    bpdu_filter            = BIT    				; Global BPDU filter (default disabled)
 
 ### STP_VLAN_TABLE
     ;Stores STP configuration per VLAN
     ;Status: work in progress
-    key             = STP_VLAN|"Vlan"vlanid		                ; VLAN with prefix "STP_VLAN"
-    forward_delay   = 2*DIGIT					; forward delay in secs (4 to 30 sec, DEF:15 sec)
-    hello_time      = 2*DIGIT					; hello time in secs (1 to 10 sec, DEF:2sec)
-    max_age         = 2*DIGIT					; maximum age time in secs (6 to 40 sec, DEF:20sec)
-    priority        = 5*DIGIT					; bridge priority (0 to 61440, DEF:32768)
-    enabled         = "true"/"false"            ; spanning-tree is enabled or not
+    key             = STP_VLAN|"Vlan"vlanid		 ; VLAN with prefix "STP_VLAN"
+    forward_delay   = 2*DIGIT					         ; forward delay in secs (4 to 30 sec, DEF:15 sec)
+    hello_time      = 2*DIGIT					         ; hello time in secs (1 to 10 sec, DEF:2sec)
+    max_age         = 2*DIGIT					         ; max age time in secs (6 to 40 sec, DEF:20sec)
+    priority        = 5*DIGIT					         ; bridge priority (0 to 61440, DEF:32768)
+    enabled         = "true"/"false"           ; spanning-tree is enabled or not
 
-### STP_VLAN_INTF_TABLE
-    ;Stores STP interface details per VLAN
+### STP_VLAN_PORT_TABLE
+    ;Stores STP port details per VLAN
     ;Status: work in progress
-    key             = STP_VLAN_INTF|"Vlan"vlanid|ifname         ; VLAN+Intf with prefix "STP_VLAN_INTF" ifname can be physical or port-channel name
+    key             = STP_VLAN_PORT|"Vlan"vlanid|ifname         ; VLAN+Port with prefix "STP_VLAN_PORT" ifname can be physical or port-channel name
     path_cost       = 9*DIGIT                                   ; port path cost (1 to 200000000) 
     priority        = 3*DIGIT                                   ; port priority (0 to 240, DEF:128)
 
-### STP_INTF_TABLE
-    ;Stores STP interface details
+### STP_PORT_TABLE
+    ;Stores STP port details
     ;Status: work in progress
-    key                    = STP_INTF|ifname			; ifname with prefix STP_INTF, ifname can be physical or port-channel name
-    enabled                = BIT			                ; is the STP on port enabled (1) or disabled (0)
-    root_guard             = BIT		        	        ; is the root guard on port enabled (1) or disabled (0)
-    bpdu_guard             = BIT				        ; is the bpdu guard on port enabled (1) or disabled (0)
-    bpdu_guard_do_disable  = BIT		         	        ; port to be disabled when it receives a BPDU; enabled (1) or disabled (0)
-    path_cost              = 9*DIGIT			        ; port path cost (2 to 200000000)
-    priority               = 3*DIGIT				; port priority (0 to 240, DEF:128)
+    key                    = STP_PORT|ifname			  ; ifname with prefix STP_PORT, ifname can be physical or port-channel name
+    enabled                = BIT			              ; is the STP on port enabled (1) or disabled (0)
+    root_guard             = BIT		        	      ; is the root guard on port enabled (1) or disabled (0)
+    bpdu_guard             = BIT				            ; is the bpdu guard on port enabled (1) or disabled (0)
+    bpdu_guard_do_disable  = BIT		         	      ; port to be disabled when it receives a BPDU; enabled (1) or disabled (0)
+    path_cost              = 9*DIGIT			          ; port path cost (2 to 200000000)
+    priority               = 3*DIGIT				        ; port priority (0 to 240, DEF:128)
     portfast               = BIT                    ; Portfast is enabled or not
     uplink_fast            = BIT                    ; Uplink fast is enabled or not
+    bpdu_filter            = "enable/disable/global"  ; BPDU Filter is enabled or disabled on the interface, else take global level configuration
 
 ### 3.2.2 APP DB
-  
+
 ### STP_VLAN_TABLE
     ;Stores the STP per VLAN operational details
     ;Status: work in progress
     key                   = STP_VLAN:"Vlan"vlanid
-    bridge_id             = 16HEXDIG                            ; bridge id
-    max_age               = 2*DIGIT			            ; maximum age time in secs (6 to 40 sec, DEF:20sec)
-    hello_time            = 2*DIGIT			            ; hello time in secs (1 to 10 sec, DEF:2sec)
-    forward_delay         = 2*DIGIT			            ; forward delay in secs (4 to 30 sec, DEF:15 sec)
-    hold_time             = 1*DIGIT			            ; hold time in secs (1 sec) 
+    bridge_id             = 16HEXDIG              ; bridge id
+    max_age               = 2*DIGIT			          ; maximum age time in secs (6 to 40 sec, DEF:20sec)
+    hello_time            = 2*DIGIT			          ; hello time in secs (1 to 10 sec, DEF:2sec)
+    forward_delay         = 2*DIGIT			          ; forward delay in secs (4 to 30 sec, DEF:15 sec)
+    hold_time             = 1*DIGIT			          ; hold time in secs (1 sec) 
     last_topology_change  = 1*10DIGIT			        ; time in secs since last topology change occured 
     topology_change_count = 1*10DIGIT			        ; Number of times topology change occured
     root_bridge_id        = 16HEXDIG			        ; root bridge id
     root_path_cost        = 1*9DIGIT			        ; port path cost 
     desig_bridge_id       = 16HEXDIG			        ; designated bridge id
-    root_port             = ifName			                ; Root port name
+    root_port             = ifName			          ; Root port name
     root_max_age          = 1*2DIGIT			        ; Max age as per root bridge
     root_hello_time       = 1*2DIGIT			        ; hello time as per root bridge
     root_forward_delay    = 1*2DIGIT			        ; forward delay as per root bridge
     stp_instance          = 1*4DIGIT			        ; STP instance for this VLAN
 
-### STP_VLAN_INTF_TABLE
-    ;Stores STP VLAN interface details 
+### STP_VLAN_PORT_TABLE
+    ;Stores STP VLAN port details 
     ;Status: work in progress
-    key                 = STP_VLAN_INTF:"Vlan"vlanid:ifname     ; VLAN+Intf with prefix "STP_VLAN_INTF"
+    key                 = STP_VLAN_PORT:"Vlan"vlanid:ifname     ; VLAN+Port with prefix "STP_VLAN_PORT"
     port_num            = 1*3DIGIT                              ; port number of bridge port
     path_cost           = 1*9DIGIT                              ; port path cost (1 to 200000000)
     priority            = 3*DIGIT                               ; port priority (0 to 240, DEF:128)
@@ -223,12 +229,13 @@ Following config DB schemas are defined for supporting this feature.
     tcn_received        = 1*10DIGIT                             ; tcn received
     root_guard_timer    = 1*3DIGIT                              ; root guard current timer value
 
-### STP_INTF_TABLE
-    ;Stores STP interface details
+### STP_PORT_TABLE
+    ;Stores STP port details
     ;Status: work in progress
-    key                    = STP_INTF:ifname			           ; ifname with prefix STP_INTF, ifname can be physical or port-channel name
-    bpdu_guard_shutdown    = "yes" / "no"                          ; port disabled due to bpdu-guard
-    port_fast              = "yes" / "no"                          ; port fast is enabled or not
+    key                    = STP_PORT:ifname			 ; ifname with prefix STP_PORT, ifname can be physical or port-channel name
+    bpdu_guard_shutdown    = "yes" / "no"          ; port disabled due to bpdu-guard
+    port_fast              = "yes" / "no"          ; port fast is enabled or not
+    bpdu_filter            = "yes" / "no"          ; BPDU Filter is operationally enabled or not
 
 
 ### STP_PORT_STATE_TABLE
@@ -249,10 +256,12 @@ Following config DB schemas are defined for supporting this feature.
     ;Defines vlans for which fastageing is enabled
     ;Status: work in progress
     key                 = STP_FASTAGEING_FLUSH_TABLE:"Vlan"vlanid       ; vlan id for which flush needs to be done
-    state               = "true"                                          ; true perform flush  
- 
+    state               = "true"                                        ; true perform flush  
+
+### 3.2.2 STATE DB
 
 ## 3.3 Switch State Service Design
+
 ### 3.3.1 Orchestration Agent
 
 All STP operations for programming the HW will be handled as part of OrchAgent. OrchAgent will listen to below updates from APP DB for updating the ASIC DB via SAI REDIS APIs.
@@ -344,11 +353,11 @@ https://github.com/opencomputeproject/SAI/blob/master/inc/saihostif.h
 Openconfig STP yang model will be extended to support PVST.
 
 ### 3.6.2 Configuration Commands
- 
+
 ### 3.6.2.1 Global level 
 
 ### 3.6.2.1.1 Enabling or Disabling of PVST feature - Global spanning-tree mode
-This command allows enabling the spanning tree mode for the device. 
+This command allows enabling the spanning tree mode for the device.
 
 **config spanning_tree {enable|disable} {pvst}**
 
@@ -356,19 +365,21 @@ Note:
 1) When global pvst mode is enabled, by default spanning tree will be enabled on the first 255 VLANs, for rest of the VLAN spanning tree will be disabled.
 2) When multiple spanning-tree modes are supported, only one mode can be enabled at any given point of time.
 
+
+
 ### 3.6.2.1.2 Per VLAN spanning-tree 
 This command allows enabling or disabling spanning-tree on a VLAN.
 
 **config spanning_tree vlan {enable|disable} <vlan\>**
- 
+
  ### 3.6.2.1.3 Root-guard timeout
- 
+
 This command allows configuring a root guard timeout value. Once superior BPDUs stop coming on the port, device will wait for a period until root guard timeout before moving the port to forwarding state(default = 30 secs), range 5-600.
 
 **config spanning_tree root_guard_timeout <value\>**
 
  ### 3.6.2.1.4 Forward-delay 
- 
+
 This command allows configuring the forward delay time in seconds (default = 15), range 4-30.
 
 **config spanning_tree forward_delay <value\>**
@@ -387,6 +398,17 @@ This command allows configuring the maximum time to listen for root bridge in se
 This command allows configuring the bridge priority in increments of 4096 (default = 32768), range 0-61440.
 
 **config spanning_tree priority <value\>**
+
+### 3.6.2.1.8 Global BPDU filter
+Note: This command is not supported in CLICK CLI format, it follows the IS-CLI syntax and will be supported in KLISH CLI framework. This command will be supported from 2020xx release onwards.
+
+This command allows configuring the BPDU filter at global level, this will be applied only if the port is in operational portfast(or edge port) mode. When global BPDU filter is enabled, around 10 BPDUs will be sent at link up after which the port will stop transmitting the BPDUs, in case BPDUs are received the port will transition from portfast (or edge port) to normal STP port.
+
+**spanning-tree edge-port bpdufilter default**
+
+**no spanning-tree edge-port bpdufilter default**
+
+By default, global BPDU filter is disabled.
 
  ### 3.6.2.2 VLAN level 
 Below commands are similar to the global level commands but allow configuring on per VLAN basis.
@@ -476,6 +498,26 @@ This command allows to configure the port level cost value, range 1 - 200000000
 
 **configure spanning_tree interface cost <ifname\> <value\>**
 
+### 3.6.2.4.7 BPDU Filter
+
+Note: This command is not supported in CLICK CLI format, it follows the IS-CLI syntax and will be supported in KLISH CLI framework. This command will be supported from 2020xx release onwards.
+
+This command allows disabling sending or receiving of BPDUs on an interface. By default, BPDU filtering is disabled on an interface. Enabling BPDU filtering on the non-edge ports can result in loops in the network, as the BPDUs will not be processed resulting in the port always in forwarding state.
+
+The below command enables BPDU filter on the interface -
+
+**spanning-tree bpdufilter enable** 
+
+The below command disables BPDU filter on the interface, irrespective of the global level BPDU filter configuration status
+
+**spanning-tree bpdufilter disable**
+
+The below command removes the interface specific BPDU filter configuration and applies the global BPDU filter configuration.
+
+**no spanning-tree bpdufilter**
+
+BPDU filter configuration on the interface takes precedence over the global BPDU filter configuration.
+
 
 
 ### 3.6.3 Show Commands
@@ -501,16 +543,16 @@ hex                        hex                    sec sec sec
 
 STP Port Parameters:
 
-Port        Prio Path Port Uplink   State      Designated  Designated       Designated
-Num         rity Cost Fast Fast                Cost        Root             Bridge
-Ethernet13  128  4    Y    N        FORWARDING 0           8000002438eefbc3 8000002438eefbc3 
+Port        Prio Path Port Uplink BPDU   State      Designated  Designated       Designated
+Num         rity Cost Fast Fast   Filter            Cost        Root             Bridge
+Ethernet13  128  4    Y    N      N      FORWARDING 0      8000002438eefbc3 8000002438eefbc3 
 ```
 
 - show spanning_tree bpdu_guard
 This command displays the interfaces which are BPDU guard enabled and also the state if the interface is disabled due to BPDU guard.
-```
+``` 
 show spanning_tree bpdu_guard
-PortNum            Shutdown      Port shut
+PortNum            Shutdown      Port shut	
                    Configured    due to BPDU guard
 -------------------------------------------------
 Ethernet1            Yes          Yes
@@ -520,13 +562,13 @@ Port-Channel2        No           NA
 
 -show spanning_tree root_guard
 This command displays the interfaces where root guard is active and the pending time for root guard timer expiry
+
 ```
 Root guard timeout: 120 secs
 
-Port         VLAN    Current State
+Port         VLAN    Inconsistency State
 -------------------------------------------------
-Ethernet1    1       Inconsistent state (102 seconds left on timer)
-Ethernet8    100     Consistent state
+Ethernet1    1       Root Inconsistent (102 seconds left on timer)
 ```
 
 - show spanning_tree statistics 
@@ -571,6 +613,8 @@ Following clear commands will be supported
 
 ### 3.6.6 REST API Support
 REST APIs is not supported in this release
+
+
 
 # 4 Flow Diagrams
 
@@ -627,7 +671,57 @@ Warm boot is not supported
 16k port-vlan instances with max 255 STP instances.
 The scaling limit might differ depending on the platform and the CPU used, which needs to be determined based on testing.
 
-# 8 Unit Test
+# 8 Industry standard CLI
+
+This section provides the industry standard CLIs that will be supported in the 2020xx release
+
+| Command                                   | CLICK based CLI Syntax                                       | Industry standard CLI Syntax                                 |
+| ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 3.6.2.1.1 Global spanning-tree            | config spanning_tree {enable\|disable} {pvst}                | Config Mode:Global<br/>(config)#[no] spanning-tree mode {pvst \| rapid-pvst}<br/> |
+| 3.6.2.1.2 Per VLAN spanning-tree          | config spanning_tree vlan {enable\|disable} <vlan\>          | Config Mode:Global<br/>(config)#[no] spanning-tree vlan <vlan-id/vlan-range><br/> |
+| 3.6.2.1.3 Root-guard timeout              | config spanning_tree root_guard_timeout <value\>             | Config Mode:Global<br/>(config)#[no] spanning-tree guard root timeout <value><br/> |
+| 3.6.2.1.4 Forward-delay                   | config spanning_tree forward_delay <value\>                  | Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds><br/> |
+| 3.6.2.1.5 Hello interval                  | config spanning_tree hello <value\>                          | Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] hello-time <seconds><br/> |
+| 3.6.2.1.6 Max-age                         | config spanning_tree max_age <value\>                        | Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] max-age <seconds><br/> |
+| 3.6.2.1.7 Bridge priority                 | config spanning_tree priority <value\>                       | Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] priority <value><br/> |
+| 3.6.2.1.8 Global BPDU filter              | Not available                                                | Config Mode:Global<br/>(config)#[no] spanning-tree edge-port bpdufilter default<br/> |
+| 3.6.2.2 VLAN level                        | config spanning_tree vlan forward_delay <vlan\> <fwd-delay-value\> | Same as 3.6.2.1.4<br/>Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds><br/> |
+|                                           | config spanning_tree vlan hello <vlan\> <hello-value\>       | Same as 3.6.2.1.5<br/>Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] hello-time <seconds><br/> |
+|                                           | config spanning_tree vlan max_age <vlan\> <max-age-value\>   | Same as 3.6.2.1.6<br/>Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] max-age <seconds><br/> |
+|                                           | config spanning_tree vlan priority <vlan\> <priority-value\> | Same as 3.6.2.1.7<br/>Config Mode:Global<br/>(config)#[no] spanning-tree [vlan <vlan-id/vlan-range>] priority <value><br/> |
+| 3.6.2.3 VLAN, interface level             |                                                              |                                                              |
+| 3.6.2.3.1 Port Cost                       | config spanning_tree vlan interface cost <vlan\> <ifname\> <value\> | Config Mode:Interface<br/>(config-if)#[no] spanning-tree [vlan <vlan-id/vlan-range>] cost <value><br/> |
+| 3.6.2.3.2 Port priority                   | config spanning_tree vlan interface priority <vlan\> <ifname\> <value\> | Config Mode:Interface<br/>(config-if)#[no] spanning-tree [vlan <vlan-id/vlan-range>] port-priority <value><br/> |
+| 3.6.2.4 Interface level                   |                                                              |                                                              |
+| 3.6.2.4.1 STP enable/disable on interface | config spanning_tree interface {enable\|disable} <ifname\>   | Config Mode:Interface<br/>(config-if)#[no] spanning-tree enable<br/> |
+| 3.6.2.4.2 Root Guard                      | config spanning_tree interface root_guard {enable\|disable} <ifname\> | Config Mode:Interface<br/>(config-if)#[no] spanning-tree guard root<br/> |
+| 3.6.2.4.3 BPDU Guard                      | config spanning_tree interface bpdu_guard {enabledisable} <ifname\> [--shutdown] | Config Mode:Interface<br/>(config-if)#[no] spanning-tree bpduguard [port-shutdown]<br/> |
+| 3.6.2.4.4 Port fast                       | config spanning_tree interface portfast {enable\|disable} <ifname\> | Config Mode:Interface<br/>(config-if)#[no] spanning-tree portfast<br/> |
+| 3.6.2.4.4 Uplink fast                     | config spanning_tree interface uplink_fast {enable\|disable} <ifname\> | Config Mode:Interface<br/>(config-if)#[no] spanning-tree uplinkfast<br/> |
+| 3.6.2.4.5 Port level priority             | config spanning_tree interface priority <ifname\> <value\>   | Config Mode:Interface<br/>(config-if)#[no] spanning-tree port-priority <value><br/> |
+| 3.6.2.4.6 Port level path cost            | configure spanning_tree interface cost <ifname\> <value\>    | Config Mode:Interface<br/>(config-if)#[no] spanning-tree cost <value><br/> |
+| 3.6.2.4.7 BPDU Filter                     | Not Available                                                | Config Mode:Interface<br/>(config-if)#[no] spanning-tree bpdufilter [enable\|disable]<br/> |
+| 3.6.3 Show Commands                       | show spanning_tree                                           | show spanning-tree                                           |
+|                                           | show spanning_tree vlan <vlanid>                             | show spanning-tree [vlan <vlanid>]                           |
+|                                           | show spanning_tree vlan interface <vlanid> <ifname>          | show spanning-tree [vlan <vlanid> [interface <ifname>]]      |
+|                                           | show spanning_tree  bpdu_guard                               | show spanning-tree bpdu-guard                                |
+|                                           | show spanning_tree  root_guard                               | show spanning-tree inconsistentports  [vlan <id>]            |
+|                                           | show spanning_tree  statistics [vlan <id>]                   | show spanning-tree counters [vlan <id>]                      |
+|                                           | show runningconfiguration spanning_tree                      | show running-config spanning-tree                            |
+| 3.6.4 Debug Commands                      | debug spanning_tree                                          | [no] debug spanning-tree                                     |
+|                                           | debug spanning_tree vlan <id>                                | [no] debug spanning-tree vlan <id>                           |
+|                                           | debug spanning_tree interface <ifname>                       | [no] debug spanning-tree interface <ifname>                  |
+|                                           | debug spanning_tree event                                    | [no] debug spanning-tree event                               |
+|                                           | debug spanning_tree verbose                                  | [no] debug spanning-tree verbose                             |
+|                                           | debug spanning_tree bpdu {tx\|rx}                            | [no] debug spanning-tree bpdu {tx\|rx}                       |
+|                                           | debug spanning_tree all                                      | [no] debug spanning-tree all                                 |
+|                                           | debug spanning_tree show                                     | show debug spanning-tree                                     |
+|                                           | debug spanning_tree dump global                              | show spanning-tree internal global                           |
+|                                           | debug spanning_tree dump vlan <id>                           | show spanning-tree internal vlan <id>                        |
+|                                           | debug spanning_tree dump vlan interface <id> <ifname>        | show spanning-tree internal vlan <id> interface <ifname>     |
+| 3.6.5 Clear Commands                      | sonic-clear spanning_tree statistics [interface <ifname>] \| [vlan <vlanid> interface <ifname>] | clear spanning-tree counters [ interface <ifname>] \| [vlan <vlanid> interface <ifname>] |
+
+# 9 Unit Test
 
 CLI:
 1) Verify CLI to enable spanning-tree globally
@@ -665,6 +759,8 @@ CLI:
 33) Verify CLI to display spanning-tree statistics
 34) Verify CLI to display bpdu-guard port information
 35) Verify CLI for clear spanning tree statistics
+36) Verify CLI for set/clear global BPDU filter configurations
+37) Verify CLI for set/clear interface level BPDU filter configurations
 
 Functionality
 1) Verify Config DB is populated with configured STP values
@@ -700,9 +796,14 @@ Functionality
 31) Verify spanning tree config save and reload, verify topology converges is same as before reboot
 32) Verify PVST convergence over untagged ports
 33) Verify PVST interop with IEEE STP
-35) Verify bridge id encoding includes the VLAN id of the respective PVST instance
-36) Verify PVST operational data is sync to APP DB
-37) Verify PVST over static breakout ports
+34) Verify bridge id encoding includes the VLAN id of the respective PVST instance
+35) Verify PVST operational data is sync to APP DB
+36) Verify PVST over static breakout ports
+37) Verify when global BPDU filter is enabled, its applied on ports which are in portfast mode operationally and transmitting of BPDUs is stopped  
+38)  Verify when global BPDU filter is enabled, if BPDU is received on the port which is in portfast mode operationally, port becomes normal STP port and BPDU filter is disabled on the port 
+39)  Verify when interface BPDU filter is enabled, both BPDU sending and receiving is stopped on the port
+40)  Verify when interface BPDU filter is disabled, global BPDU filter configuration has no effect  and interface level BPDU filter is disabled
+41)  Verify when the no option of interface BPDU filter is configured, interface level configuration is removed and global BPDU filter configuration takes effect
 
 Scaling
 1) Verify running 255 PVST instances 
