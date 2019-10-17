@@ -1,7 +1,7 @@
 # Feature Name
 PVST
 # High Level Design Document
-#### Rev 0.3
+#### Rev 0.4
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -45,6 +45,7 @@ PVST
 | 0.1 | 05/02/2019  |     Sandeep, Praveen       | Initial version  |                
 | 0.2 | 05/02/2019  |     Sandeep, Praveen       | Incorporated Review comments  |                
 | 0.3 | 06/25/2019  |     Sandeep, Praveen       | Incorporated Review comments  |                
+| 0.4 | 10/15/2019  |     Sandeep, Praveen       | Minor changes post implementation |                
                                               
 
 # About this Manual
@@ -93,7 +94,7 @@ The scaling limit might differ depending on the platform and the CPU used, which
 
 Warm boot is not supported in this release. User is expected to do cold reboot when PVST is running so that topology will reconverge and traffic will be redirected via alternate paths.
 
-If PVST is enabled and user tries to perform warm reboot a warning will be displayed indicating PVST doesnt support warm reboot.
+If PVST is enabled and user tries to perform warm reboot an error will be displayed indicating PVST doesnt support warm reboot.
 
 
 # 2 Functionality
@@ -541,16 +542,16 @@ PortChannel15     20	      6           4          1
 
 
 ### 3.6.4 Debug Commands
-Following debug commands will be supported for enabling additional logging which can be viewed in /var/log/syslog and packet logs can be viewed in /var/log/stp_dbg.log(in STP container)
-- debug spanning_tree config_bpdu
-- debug spanning_tree tcn_bpdu
+Following debug commands will be supported for enabling additional logging which can be viewed in /var/log/stpd.log, orchangent related logs can be viewed in /var/log/syslog.
+- debug spanning_tree - This command must be enabled for logs to be written to log file, after enabling any of the below commands.
+- debug spanning_tree bpdu [tx|rx]
 - debug spanning_tree event
 - debug spanning_tree interface <ifname\>
 - debug spanning_tree verbose
 - debug spanning_tree vlan <id\>
 
-To disable the debugging controls enabled '-d' or '--disable' option can be used, an example of disabling config_bpdu debugging is shown below -
-- debug spanning_tree config_bpdu -d
+To disable the debugging controls enabled '-d' or '--disable' option can be used, an example of disabling bpdu debugging is shown below -
+- debug spanning_tree bpdu -d
 
 Follow commands can be used to reset and display the debugging controls enabled respectively
 - debug spanning_tree reset
