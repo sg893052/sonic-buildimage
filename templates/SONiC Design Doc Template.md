@@ -77,6 +77,7 @@ Where is the code coming from? Existing Open-source project? Internal Broadcom c
 
 ### 1.2.2 Container
 Which container(s) will the code go into? Will there be new container(s)?
+Identify the dependencies on other containers in terms of starting order, restart dependencies, etc.
 
 ### 1.2.3 SAI Overview
 Do we expect to need a new SAI API specification? If so, provide rough semantics (information flow across the API)? 
@@ -139,6 +140,12 @@ The following table maps SONIC CLI commands to corresponding IS-CLI commands. Th
 **Deviations from IS-CLI:** If there is a deviation from IS-CLI, Please state the reason(s).
 
 ### 3.6.3 REST API Support
+
+### 3.6.4 Service and Docker Management
+
+If a new service and/or a new docker is introduced, please follow the guidelines below:
+- Identify the dependencies on other services. This includes the starting order, restart dependencies on other services, etc. Please take the multiple images into consideration where this feature can be included/excluded.
+- If a new docker is introduced, identify all the processes in this docker and their starting order, and specify restartability needs and dependencies.
 
 # 4 Flow Diagrams
 Provide flow diagrams for inter-container and intra-container interactions.
