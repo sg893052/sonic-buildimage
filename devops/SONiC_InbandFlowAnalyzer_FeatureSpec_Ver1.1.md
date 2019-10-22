@@ -2,7 +2,7 @@
 Inband flow analyzer feature.
 
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -11,45 +11,45 @@ Inband flow analyzer feature.
   * [Scope](#scope)
   * [Definition/Abbreviation](#definition-abbreviation)
   * [1 Feature Overview](#1-feature-overview)
-      * [1.1 Requirements](#1-1-requirements)
-          * [1.1.1 Functional Requirements](#1-1-1-functional-requirements)
-          * [1.1.2 Configuration and Management Requirements](#1-1-2-configuration-and-management-requirements)
-          * [1.1.3 Scalability Requirements](#1-1-3-scalability-requirements)
-      * [1.2 Design Overview](#1-2-design-overview)
-          * [1.2.1 Basic Approach](#1-2-1-basic-approach)
-          * [1.2.2 Container](#1-2-2-container)
-          * [1.2.3 SAI Overview](#1-2-3-sai-overview)
+      * [1.1 Requirements](#11-requirements)
+          * [1.1.1 Functional Requirements](#111-functional-requirements)
+          * [1.1.2 Configuration and Management Requirements](#112-configuration-and-management-requirements)
+          * [1.1.3 Scalability Requirements](#113-scalability-requirements)
+      * [1.2 Design Overview](#12-design-overview)
+          * [1.2.1 Basic Approach](#121-basic-approach)
+          * [1.2.2 Container](#122-container)
+          * [1.2.3 SAI Overview](#123-sai-overview)
   * [2 Functionality](#2-functionality)
-      * [2.1 Target Deployment Use Cases](#2-1-target-deployment-use-cases)
-      * [2.2 Functional Description](#2-2-functional-description)
+      * [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
+      * [2.2 Functional Description](#22-functional-description)
   * [3 Design](#3-design)
-      * [3.1 Overview](#3-1-overview)
-      * [3.2 DB Changes](#3-2-db-changes)
-          * [3.2.1 CONFIG DB](#3-2-1-config-db)
-          * [3.2.2 APP DB](#3-2-2-app-db)
-          * [3.2.3 STATE DB](#3-2-3-state-db)
-          * [3.2.4 ASIC DB](#3-2-4-asic-db)
-          * [3.2.5 COUNTER DB](#3-2-5-counter-db)
-      * [3.3 Switch State Service Design](#3-3-switch-state-service-design)
-          * [3.3.1 Orchestration Agent](#3-3-1-orchestration-agent)
-          * [3.3.2 Other Process](#3-3-2-other-process)
-      * [3.4 Syncd](#3-4-syncd)
-      * [3.5 SAI](#3-5-sai)
-      * [3.6 CLI](#3-6-cli)
-          * [3.6.1 Data Models](#3-6-1-data-models)
-          * [3.6.2 Configuration Commands](#3-6-2-configuration-commands)
-          * [3.6.3 Show Commands](#3-6-3-show-commands)
-          * [3.6.4 Clear Commands](#3-6-4-clear-commands)
-          * [3.6.5 Debug Commands](#3-6-5-debug-commands)
-          * [3.6.6 REST API Support](#3-6-6-rest-api-support)
+      * [3.1 Overview](#31-overview)
+      * [3.2 DB Changes](#32-db-changes)
+          * [3.2.1 CONFIG DB](#321-config-db)
+          * [3.2.2 APP DB](#322-app-db)
+          * [3.2.3 STATE DB](#323-state-db)
+          * [3.2.4 ASIC DB](#324-asic-db)
+          * [3.2.5 COUNTER DB](#325-counter-db)
+      * [3.3 IFA Manager Daemon](#33-ifa-manager-daemon)
+      * [3.4 Switch State Service Design](#34-switch-state-service-design)
+          * [3.4.1 Orchestration Agent](#341-orchestration-agent)
+          * [3.4.2 Other Process](#342-other-process)
+      * [3.5 Syncd](#35-syncd)
+      * [3.6 SAI](#36-sai)
+      * [3.7 CLI](#37-cli)
+          * [3.7.1 Data Models](#371-data-models)
+          * [3.7.2 Configuration Commands](#372-configuration-commands)
+          * [3.7.3 Show Commands](#373-show-commands)
+          * [3.7.4 Clear Commands](#374-clear-commands)
+          * [3.7.5 Debug Commands](#375-debug-commands)
+          * [3.7.6 REST API Support](#376-rest-api-support)
   * [4 Flow Diagrams](#4-flow-diagrams)
-      * [4.1 IFA Config Call Flow](#4-1-ifa-call-flow)
+      * [4.1 IFA Config Call Flow](#41-config-call-flow)
   * [5 Error Handling](#5-error-handling)
   * [6 Serviceability And Debug](#6-serviceability-and-debug)
   * [7 Warm Boot Support](#7-warm-boot-support)
   * [8 Scalability](#8-scalability)
   * [9 Unit Test](#9-unit-test)
-  * [10 Internal Design Information](#10-internal-design-information)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -58,8 +58,9 @@ Inband flow analyzer feature.
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 06/14/2019  | Naveen Kumar Aketi | Initial version                   |
+| 0.2 | 10/16/2019  | Naveen Kumar Aketi | Version 0.2 as per new design     |
 
-# About this Manual
+# About This Manual
 This document provides general information about the Inband Flow Analyzer (IFA) feature implementation in SONiC.
 
 # Scope
@@ -91,17 +92,17 @@ The Inband Flow Analyzer (IFA) feature allows configuration of an IFA session th
 
 2.0.0 IFA session needs configuration as mentioned below.
 
-2.0.0.1 Device type to specify whether INT header should be inserted or deleted.
+2.0.0.1 TAM device identifier to uniquely identify a device in network and insert the same in INT header.
 
 2.0.0.2 ACL configuration to identify a flow and sample packets from that flow to insert IFA headers.
 
-2.0.0.3 Collector configuration on egress device to forward telemetry data.
+2.0.0.3 TAM collector configuration that can be attached to IFA flow on egress device to forward telemetry data.
 
 2.0.1 The IFA feature will be a part of the TAM container along with other TAM features.
 
-3.0 UI commands available to configure IFA configuration.
+3.0 UI commands available to configure TAM device identifier, TAM collector and IFA configuration.
 
-3.1 UI commands available to show IFA configuration, status and statistics.
+3.1 UI commands available to show TAM device identifier, TAM collector, IFA configuration, IFA status and IFA statistics.
 
 3.2 UI commands available to clear IFA configuration.
 
@@ -115,6 +116,8 @@ The Inband Flow Analyzer (IFA) feature allows configuration of an IFA session th
 
 4.4 The IFA feature does not support dynamic port breakout feature, however it can be manually configured on broken-out ports. The IFA feature does not automatically adjust configuration in response to dynamic port breakout events.
 
+4.5 Some platforms may require provisioning to enable IFA. 'ifa -config -enable' command to be issued to provision such platforms for IFA functionality. 'ifa -config -disable' command can be issued to disable provisioning of IFA on such platforms.
+
 ### 1.1.2 Configuration and Management Requirements
 
 The Inband flow analyzer feature will use the Python click framework for CLI. Once the management framework for CLI is available, CLI will be changed to align to the same.
@@ -126,14 +129,14 @@ IFA is scaled based on availability of resources in hardware such as ACLs, TAM o
 ## 1.2 Design Overview
 ### 1.2.1 Basic Approach
 
-The Inband flow analyzer feature is newly developed. It is a static configuration feature, adapting the CONFIG_DB directly on top of the associated OrchAgent. There is no manager component involved.
+The Inband flow analyzer feature is newly developed.
 
 ### 1.2.2 Container
 No new containers are added for Inband Flow Analyzer (IFA) feature.
 
 ### 1.2.3 SAI Overview
 
-The SAI TAM spec specifies the TAM APIs to be used to configure the IFA functionality. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/pull/959/files](https://github.com/opencomputeproject/SAI/pull/959/files) for more details.
+The SAI TAM spec specifies the TAM APIs to be used to configure the IFA functionality. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
 
 # 2 Functionality
 ## 2.1 Target Deployment Use Cases
@@ -142,7 +145,9 @@ IFA is used to proactively monitor the network for faults and performance bottle
 
 ## 2.2 Functional Description
 
-The IFA feature allows user to configure a device as ingress, intermediate and egress nodes through PACKET\_ACTION field in ACL rule. PACKET\_ACTION field values INT\_INSERT, INT\_UPDATE and INT\_DELETE specifies ingress, intermediate and egress devices respectively. Each device type performs its own unique operations as mentioned below.
+The IFA feature allows user to configure a device as ingress and egress nodes through PACKET\_ACTION field in ACL rule. PACKET\_ACTION field values INT\_INSERT and INT\_DELETE specifies ingress and egress devices respectively. Each device type performs its own unique operations as mentioned below.
+
+By default, when IFA feature is enabled; a node will behave as intermediate device and perform IFA intermediate device actions on all flows, except for IFA ingress flows and IFA egress flows.
 
 Ingress node matches an incoming flow based on the ACL configuration specified in an IFA flow and makes a copy of a sampled packet from the flow based upon the configured sampling rate. The copied packet has the IFA meta-data instructions and IFA header and IFA meta-header data added, and is then forwarded along the same path as the sampled packet. 
 
@@ -161,15 +166,16 @@ At all other non-IFA nodes, IFA sampled packet is forwarded as a normal packet i
     ***Ingress node***
 
         IFA configuration
-            config ifa device-id 2345
-            config ifa flow-name flow1 acl_ifa 1000
+            config tam device-id 2345
+            config tam-int-ifa feature enable
+            config tam-int-ifa flow flow1 IFA Flow1 sampling-rate 1000
 
         ACL configuration
             "ACL_TABLE": {
                 "IFA": {
                     "policy_desc" : "IFA Ingress Device Policy",
                     "stage" : "INGRESS",
-                    "type" : "L3" ,
+                    "type" : "TAM" ,
                     "ports" : "Ethernet20"
                     }
             }
@@ -178,6 +184,7 @@ At all other non-IFA nodes, IFA sampled packet is forwarded as a normal packet i
                 "IFA|Flow1": {
                     "PRIORITY" : "55",
                     "IP_TYPE" : "ipv4any",
+                    "IP_PROTOCOL": "17",
                     "SRC_IP" : "10.10.0.26/32",
                     "DST_IP" : "10.10.1.26/32",
                     "PACKET_ACTION" : "int_insert"
@@ -187,21 +194,23 @@ At all other non-IFA nodes, IFA sampled packet is forwarded as a normal packet i
     ***Intermediate node***
 
         IFA configuration
-            config ifa device-id 2346
-            config ifa device-type intermediate
+            config tam device-id 2346
+            config tam-int-ifa feature enable
 
     ***Egress node***
 
         IFA configuration
-            config ifa device-id 2347
-            config ifa collector-name collector1 ipv4 11.12.13.14 9070
+            config tam device-id 2347
+            config tam-int-ifa feature enable
+            config tam collector collector1 ipv4 11.12.13.14 9070
+            config tam-int-ifa flow flow1 IFA Flow1 collector collector1 
 
         ACL configuration
             "ACL_TABLE": {
                 "IFA": {
                     "policy_desc" : "IFA Egress Device Policy",
                     "stage" : "INGRESS",
-                    "type" : "L3" ,
+                    "type" : "TAM" ,
                     "ports" : "Ethernet20"
                     }
             }
@@ -210,11 +219,47 @@ At all other non-IFA nodes, IFA sampled packet is forwarded as a normal packet i
                 "IFA|Flow1": {
                     "PRIORITY" : "55",
                     "IP_TYPE" : "ipv4any",
+                    "IP_PROTOCOL": "17",
                     "SRC_IP" : "10.10.0.26/32",
                     "DST_IP" : "10.10.1.26/32",
                     "PACKET_ACTION" : "int_delete"
                 }
             }
+
+
+***Example JSON configuration***
+
+    {
+        "TAM_DEVICE_TABLE": {
+            "device": {
+                "deviceid": "54325"
+            }
+        },
+        "TAM_COLLECTOR_TABLE": {
+            "c1": {
+                "ipaddress": "10.20.30.40",
+                "ipaddress-type": "ipv4",
+                "port": "9070"
+            }
+        },
+        "TAM_INT_IFA_FEATURE_TABLE": {
+            "feature": {
+                "enable": "true"
+            }
+        },
+        "TAM_INT_IFA_FLOW_TABLE": {
+            "f1": {
+                "acl-rule-name": "rule1",
+                "acl-table-name": "table1",
+                "collector": "collector1"
+            },
+            "f2": {
+                "acl-rule-name": "rule2",
+                "acl-table-name": "table2",
+                "sampling-rate": "1000"
+            }
+        }
+    }
 
 # 3 Design
 ## 3.1 Overview
@@ -225,30 +270,52 @@ At all other non-IFA nodes, IFA sampled packet is forwarded as a normal packet i
 
 The above diagram illustrates the architecture of the IFA feature within SONiC.
 
+Below is the call flow sequence specified in above architecture diagram
+
+1 IFA and ACL configuration from CLI is saved to CONFIG DB.
+
+2 IFA Manager reads IFA configuration from CONFIG DB, processes and validates the same.
+
+3 IFA Manager updates valid IFA configuration to APPL DB.
+
+4 ACL ORCH reads ACL configuration from CONFIG DB.
+
+5 IFA ORCH reads IFA configuration from APPL DB and creates/deletes TAM INT IFA objects.
+
+6 IFA ORCH checks for ACL table and ACL rule specified in IFA configuration.
+
+7 ACL ORCH will make SAI API calls to update ASIC DB.
+
+8 ACL ORCH notifies IFA ORCH about ACL rule creation/deletion.
+
+9 IFA ORCH attaches/detaches the TAM INT IFA object to/from ACL ENTRY.
+
+10, 11, 12 SYNCD reads IFA and ACL information from ASIC DB and configures ASIC accordingly.
+
+A CLI reads IFA ACL counters from COUNTER DB and displays it as output of show commands.
+
+
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
 
-IFA\_DEVICE\_TABLE
+TAM\_DEVICE\_TABLE
 
-    ;Defines IFA device configuration
+    ;Defines TAM device configuration
 
     key                = device         ; Only one instance and has a fixed key "device".
     deviceid           = 1 * 5DIGIT     ; Uniquely identifies a device on the network to be analyzed
-    devicetype         = "intermediate" ; Optional parameter to specify device type as intermediate, value can be "intermediate" only.
 
     Example:
-    127.0.0.1:6379[4]> keys *IFA_DEVICE*
-    1) "IFA_DEVICE_TABLE|device"
+    127.0.0.1:6379[4]> keys *TAM_DEVICE*
+    1) "TAM_DEVICE_TABLE|device"
 
-    127.0.0.1:6379[4]> HGETALL "IFA_DEVICE_TABLE|device"
+    127.0.0.1:6379[4]> HGETALL "TAM_DEVICE_TABLE|device"
     1) "deviceid"
     2) 54325
-    3) "devicetype"
-    4) "intermediate"
 
-IFA\_COLLECTOR TABLE
+TAM\_COLLECTOR\_TABLE
 
-    ;Defines IFA collector configuration
+    ;Defines TAM collector configuration
 
     key                 = name                      ; name is collector name and should be unique.
     ipaddress-type      = "ipv4" / "ipv6"           ; Collector IP address type.
@@ -256,10 +323,10 @@ IFA\_COLLECTOR TABLE
     port                = 1 * 4DIGIT                ; Collector UDP port number
 
     Example:
-    127.0.0.1:6379[4]> keys *IFA_COLLECTOR*
-    1) "IFA_COLLECTOR_TABLE|collector1"
+    127.0.0.1:6379[4]> keys *TAM_COLLECTOR*
+    1) "TAM_COLLECTOR_TABLE|collector1"
 
-    127.0.0.1:6379[4]> HGETALL "IFA_COLLECTOR_TABLE|collector1"
+    127.0.0.1:6379[4]> HGETALL "TAM_COLLECTOR_TABLE|collector1"
     1) "ipaddress-type"
     2) "ipv4"
     3) "ipaddress"
@@ -267,32 +334,155 @@ IFA\_COLLECTOR TABLE
     5) "port"
     6) 9070
 
-IFA\_FLOW TABLE
+TAM\_INT\_IFA\_FEATURE\_TABLE
 
-    ;Defines an IFA flow
+    ;Defines TAM INT IFA feature configuration
 
-    key                 = name                ; name is flow name and should be unique
-    acl                 = acl-name            ; Parameter to map to device information to be used for the flow.
-    sampling-rate       = 1 * 5DIGIT          ; Optional parameter that indicates the sampling rate for the packets
-                                              ; belonging to the flow that need to be tagged with IFA meta-data.
-                                              ; One packet in every ‘sampling-rate’ packets will be tagged with IFA metadata.
-                                              ; Note: This parameter is applicable for switches configured as the type ingress-node, and will be ignored for the other types. If this field is
-                                              ; not specified, it indicates a 1:1 sampling.
-                                              ; Range is 1 to 10000. A value of 1 indicates that all packets belonging to this flow will be sampled.
+    key                = feature          ; Only one instance and has a fixed key "feature".
+    enable             = "true" / "false" ; Specifies whether TAM INT IFA feature is enabled or not.
+
+    Example:
+    127.0.0.1:6379[4]> keys *TAM_INT_IFA_FEATURE*
+    1) "TAM_INT_IFA_FEATURE_TABLE|feature"
+
+    127.0.0.1:6379[4]> HGETALL "TAM_INT_IFA_FEATURE_TABLE|feature"
+    1) "enable"
+    2) "true"
+
+TAM\_INT\_IFA\_FLOW TABLE
+
+    ;Defines a TAM INT IFA flow configuration
+
+    key                 = name           ; name is flow name and should be unique
+    acl-table-name      = table-name     ; Parameter to map to acl table to the
+                                           flow.
+    acl-rule-name       = rule-name      ; Parameter to map to acl rule to the
+                                           flow.
+    collector-name      = collector-name ; Optional parameter to map to collector
+                                           to the flow.
+    sampling-rate       = 1 * 5DIGIT     ; Optional parameter that indicates the
+                                           sampling rate for the packets belonging
+                                           to the flow that need to be tagged with
+                                           IFA meta-data.
+                                           One packet in every ‘sampling-rate’ 
+                                           packets will be tagged with IFA
+                                           Metadata.
+                                           Note: This parameter is applicable for 
+                                           switches configured as the type 
+                                           ingress-node, and will be ignored for
+                                           the other types. If this field is
+                                           not specified, it indicates a 1:1 
+                                           Sampling.
+                                           Range is 1 to 10000. A value of 1
+                                           indicates that all packets belonging to
+                                           this flow will be sampled.
 
 
     Example:
-    127.0.0.1:6379[4]> keys *IFA_FLOW*
-    1) "IFA_FLOW_TABLE|flow1"
+    127.0.0.1:6379[4]> keys *TAM_INT_IFA_FLOW*
+    1) "TAM_INT_IFA_FLOW_TABLE|f1"
+    2) "TAM_INT_IFA_FLOW_TABLE|f2"
 
-    127.0.0.1:6379[4]> HGETALL "IFA_FLOW_TABLE|flow1"
-    1) "acl-name"
-    2) "acl1"
-    3) "sampling-rate"
-    4) 1000
+    127.0.0.1:6379[4]> HGETALL "TAM_INT_IFA_FLOW_TABLE|f1"
+    1) "acl-table-name"
+    2) "table1"
+    3) "acl-rule-name"
+    4) "rule1"
+    5) "collector-name"
+    6) "collector1"
+
+    127.0.0.1:6379[4]> HGETALL "TAM_INT_IFA_FLOW_TABLE|f2"
+    1) "acl-table-name"
+    2) "table2"
+    3) "acl-rule-name"
+    4) "rule2"
+    5) "sampling-rate"
+    6) 1000
 
 ### 3.2.2 APP DB
-N/A
+
+TAM\_INT\_IFA\_FEATURE\_TABLE
+
+    ;Defines TAM INT IFA feature configuration
+
+    key                = feature        ; Only one instance and has a fixed key "feature".
+    deviceid           = 1 * 5DIGIT     ; Uniquely identifies a device on the network to be analyzed
+
+    Example:
+    127.0.0.1:6379> keys *TAM_INT_IFA_FEATURE*
+    1) "TAM_INT_IFA_FEATURE_TABLE:feature"
+
+    127.0.0.1:6379> HGETALL "TAM_INT_IFA_FEATURE_TABLE:feature"
+    1) "deviceid"
+    2) 54325
+
+TAM\_INT\_IFA\_FLOW\_TABLE
+
+    ;Defines a TAM INT IFA flow configuration
+
+    key                = name                      ; name is flow name and should be 
+                                                     unique
+    acl-table-name     = table-name                ; Parameter to map to acl table to 
+                                                     the flow.
+    acl-rule-name      = rule-name                 ; Parameter to map to acl rule to 
+                                                     the flow.
+    dst-ipaddress-type = "ipv4" / "ipv6"           ; Optional parameter that indicates
+                                                     collector IP address type.
+    dst-ipaddress      = ipv4_prefix / ipv6_prefix ; Optional parameter that indicates
+                                                     collector IP address.
+    dst-port           = 1 * 4DIGIT                ; Optional parameter that indicates
+                                                     collector UDP port number
+    src-ipaddress      = ipv4_prefix / ipv6_prefix ; Optional parameter that indicates
+                                                     source IP address.
+    src-port           = 1 * 4DIGIT                ; Optional parameter that indicates
+                                                     source port number
+    sampling-rate      = 1 * 5DIGIT                ; Optional parameter that indicates 
+                                                     the sampling rate for the packets 
+                                                     belonging to the flow that need 
+                                                     to be tagged with IFA meta-data.
+                                                     One packet in every 
+                                                     ‘sampling-rate’ packets will be  
+                                                     tagged with IFA Metadata.
+                                                     Note: This parameter is 
+                                                     applicable for switches 
+                                                     configured as the type 
+                                                     ingress-node, and will be ignored
+                                                     for the other types. If this  
+                                                     field is not specified, it 
+                                                     indicates a 1:1 sampling.
+                                                     Range is 1 to 10000. A value of 1
+                                                     indicates that all packets 
+                                                     belonging to this flow will be 
+                                                     sampled.
+
+    Example:
+    127.0.0.1:6379> KEYS *TAM_INT_IFA_FLOW*                                  
+    1) "TAM_INT_IFA_FLOW_TABLE:F1"
+    2) "TAM_INT_IFA_FLOW_TABLE:F2"
+
+    127.0.0.1:6379> HGETALL TAM_INT_IFA_FLOW_TABLE:F1
+    1)  "acl-table-name"
+    2)  "T1"
+    3)  "acl-rule-name"
+    4)  "R1"
+    5)  "dst-ipaddress-type"
+    6)  "ipv4"
+    7)  "dst-ipaddress"
+    8)  "10.20.30.40"
+    9)  "dst-port"
+    10) "2233"
+    11) "src-port"
+    12) "9070"
+    13) "src-ipaddress"
+    14) "10.52.141.231"
+
+    127.0.0.1:6379> HGETALL TAM_INT_IFA_FLOW_TABLE:F2
+    1) "acl-table-name"
+    2) "T2"
+    3) "acl-rule-name"
+    4) "R2"
+    5) "sampling-rate"
+    6) "1000"
 
 ### 3.2.3 STATE DB
 N/A
@@ -303,100 +493,230 @@ The ASIC DB is updated by SAI REDIS upon invocation of SAI REDIS APIs by IFAOrch
 ### 3.2.5 COUNTER DB
 N/A
 
-## 3.3 Switch State Service Design
-### 3.3.1 Orchestration Agent
+## 3.3 IFA Manager Daemon
 
-A new orchestration agent class, IFAOrch is added to convert the incoming IFA config to ASIC configuration. IFAOrch subscribes to the IFA tables of CONFIG DB and converts the configuration to the SAI TAM API call sequence described in section 3.5.
+IFA manager daemon runs as part of TAM docker. IFA manager processes IFA configuration from CONFIG DB, validates for consistency and fullness of IFA configuration and updates valid IFA configuration to APPL DB. 
+
+## 3.4 Switch State Service Design
+### 3.4.1 Orchestration Agent
+
+A new orchestration agent class, IFAOrch is added to convert the incoming IFA config to ASIC configuration. IFAOrch subscribes to the IFA tables of APPL DB and converts the configuration to the SAI TAM API call sequence described in section 3.6.
 
 IFAOrch maintains data pertaining to all the currently configured IFA entities and the associated TAM object bindings. TAM object bindings are re-used wherever possible.
 
-### 3.3.2 Other Process
+### 3.4.2 Other Process
 N/A
 
-## 3.4 SyncD
+## 3.5 SyncD
 N/A
 
-## 3.5 SAI
+## 3.6 SAI
 
-The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/pull/959/files](https://github.com/opencomputeproject/SAI/pull/959/files) for more details.
+The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
 
 ***Below diagram provides details about various TAM objects needed to support IFA and their correlation***
 
 ![IFA TAM objects correlation](images/IFA_TAM_correlation.JPG)
 
-## 3.6 CLI
-### 3.6.1 Data Models
+## 3.7 CLI
+### 3.7.1 Data Models
 NA
 
-### 3.6.2 Configuration Commands
+### 3.7.2 Configuration Commands
 
-1) config ifa device-id {value}
+1) config tam device-id {value}
 
-This command is used to configure an IFA device identifier.
+This command is used to configure an TAM device identifier.
 
-2) config ifa flow {flow_name} {{{acl_name} {sampling-rate}} \| {acl_name}}
+2) config tam collector {collector-name} {ipv4 \| ipv6} {collector-ip} {collector-port}
 
-This command is used to specify flow criteria to match against incoming flow and tag with IFA data accordingly. One packet will be sampled out of the number of packets specified in sampling-rate.
+This command is used to configure TAM collector and IFA report will be forwarded to the collector accordingly. TAM collector configuration is valid only on IFA egress type node.
 
-3) config ifa collector {collector-name} {ipv4 \| ipv6} {collector-ip} {collector-port}
+3) config tam-int-ifa feature {enable \| disable}
 
-This command is used to configure IFA collector and IFA report will be forwarded to the collector accordingly. IFA collector configuration is valid only on IFA egress type node.
+This command is used to enable or disable IFA feature.
 
-4) config ifa device-type intermediate
+4) config tam-int-ifa flow {flow_name} {acl_table_name} {acl_rule_name} {{sampling-rate {value}} \| {collector {collector_name}}}
 
-This command is used to configure IFA device type as intermediate.
+This command is used to specify flow criteria to match against incoming flow and tag with IFA data accordingly. When sampling rate is specified, one packet will be sampled out of the number of packets specified in sampling-rate. When collector is specified, IFA report will be forwarded to the collector.
 
-### 3.6.3 Show Commands
-1) show ifa status
+### 3.7.3 Show Commands
+1) show tam device
+
+This command is used to show TAM device information.
+
+![show tam device](images/IFA_CLI_Show_Tam_Device.JPG)
+
+2) show tam collector {{collector-name} \| all }
+
+This command is used to show TAM collector information.
+
+![show tam collector](images/IFA_CLI_Show_Tam_Collector.JPG)
+
+3) show tam-int-ifa status
 
 This show command shows the current status of IFA, like deviceid, number of flows etc.,
 
-2) show ifa statistics {{flow-name} \| all }
+![show tam-int-ifa status](images/IFA_CLI_Show_Tam_Int_Ifa_Status.JPG)
 
-This show command shows the IFA statistics per flow or all flows.
-
-3) show ifa device
-
-This command is used to show IFA device information.
-
-4) show ifa flow {{flow-name} \| all }
+4) show tam-int-ifa flow {{flow-name} \| all }
 
 This command is used to show IFA flow information.
 
-5) show ifa collector {{collector-name} \| all }
+![show tam-int-ifa flow](images/IFA_CLI_Show_Tam_Int_Ifa_Flow.JPG)
 
-This command is used to show IFA collector information.
+5) show tam-int-ifa statistics {{flow-name} \| all }
 
-### 3.6.4 Clear commands
+This show command shows the IFA statistics per flow or all flows.
 
-1) clear ifa device-id
+![show tam-int-ifa statistics](images/IFA_CLI_Show_Tam_Int_Ifa_Statistics.JPG)
 
-This command can be used to clear IFA device information and IFA configuration from hardware will be cleared.
+6) show tam-int-ifa supported
 
-2) clear ifa collector {collector-name}
+This show command shows whether IFA is supported or not.
 
-This command can be used to clear IFA collector configuration.
+![show tam-int-ifa supported](images/IFA_CLI_Show_Tam_Int_Ifa_Supported.JPG)
 
-3) clear ifa flow {flow-name}
+### 3.7.4 Clear commands
+
+1) sonic-clear tam device-id
+
+This command can be used to clear user configured TAM device identifier information. Default device identifier will be used for any further configurations.
+
+2) sonic-clear tam collector {collector-name}
+
+This command can be used to clear TAM collector configuration.
+
+3) sonic-clear tam-int-ifa flow {flow-name}
 
 This command can be used to clear IFA flow configuration.
 
-4) clear ifa device-type intermediate
-
-This command can be used to clear IFA device type intermediate configuration.
-
-### 3.6.5 Debug Commands
+### 3.7.5 Debug Commands
 Debug commands will be available once the debug framework is available. The debug commands are needed to dump:
 
 - IFA related entries and TAM object bindings maintained by IFAOrch.
 
-### 3.6.6 REST API Support
+### 3.7.6 REST API Support
 N/A
 
-# 4 Flow Diagrams
+
+ 
+ ## 3.8 Klish Configuration Commands
+
+The configuration commands are split across TAM and INT-IFA modes in CLI. TAM mode hosts common TAM configuration like collector configuration.
+
+### 3.8.1  [no] collector <name> type <ipv4/ipv6> ip <collector_ip> port <collector_port>
+
+This command is used to configure the external collector IP address and port. Drop reports are sent by the configured external collector in protobuf format by the silicon.
+
+    sonic(config)# tam 
+    sonic(config-tam)# collector cr1 type ipv4 ip 10.10.10.10 port 9070
+
+    sonic(config-tam)# no collector cr1
+
+### 3.8.2  [no] device-id <device_id>
+
+This command is used to configure the deviceId of the switch. Last three bytes of mac-address are used as default deviceId
+
+    sonic(config)# tam 
+    sonic(config-tam)# device-id 12345
+
+    sonic(config-tam)# no device-id
+
+
+### 3.8.3 INT-IFA mode
+
+A new mode has been introduced within TAM mode for all IFA feature configuration:
+ 
+     sonic(config-tam)# int-ifa
+     sonic(config-tam-int-ifa)#
+
+#### 3.8.3.1 feature <enable/disable>
+
+This command is used to enable/disable the IFA feature functionality.
+  
+     sonic(config-tam-int-ifa)# feature enable
+
+     sonic(config-tam-int-ifa)# feature disable
+           
+#### 3.8.3.2 [no] flow <flow-name> acl-table <acl-table-name> acl-rule <acl-rule-name> [collector <collector-name>] [sampling-rate <sample-rate>]
+
+This command is used to configure a IFA flow. The CLI command associates a flow configuration (specified by the ACL table and ACL rule) with a collector and sampling configuration. 
+
+      sonic(config-tam-int-ifa)#flow f1 acl-table a1 acl-rule r1 sampling-rate 100
+      
+      sonic(config-tam-int-ifa)#flow f1 acl-table a1 acl-rule r1 collector cr1
+      
+      sonic(config-tam-int-ifa)# no flow f1
+
+
+  
+### 3.8.4 Show Commands
+
+#### 3.8.4.1 show tam collector [collector-name]
+
+This command is used to show all the currently configured TAM collectors.
+
+
+    sonic# show tam collector all
+    ------------------------------------------------------------------------------------------------
+    NAME           IP TYPE        IP ADDRESS     PORT           
+    ------------------------------------------------------------------------------------------------
+    cr1            ipv4           10.10.10.2     9070           
+
+#### 3.8.4.2  show tam device
+
+    ---------------------------------------------------------
+    TAM Device Information
+    ---------------------------------------------------------
+    device-id: 1234
+
+
+#### 3.8.4.3  show tam int-ifa supported
+
+This command is used to determine if IFA feature functionality is supported.
+
+    sonic# show tam int-ifa supported
+    ---------------------------------------------------------
+    TAM IFA Feature Information
+    ---------------------------------------------------------
+    Feature Supported      : True
+
+
+#### 3.8.4.4  show tam drop-monitor flow [flow-name>]
+
+This command is used to show information about all the configured flows or a specific flow identified by flow-name.
+
+    sonic# show tam int-ifa flow
+    ----------------------------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE         SAMPLING RATE       COLLECTOR   
+    -----------------------------------------------------------------------------
+    f1             a1             r1               100                 cr1              
+
+#### 3.8.4.5  show tam drop-monitor statistics [flow-name>]
+
+This command is used to show per flow statistics for IFA. These statistics indicate the number of packets matching the flow.
+
+    sonic# show tam int-ifa statistics
+    ------------------------------------------------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE       PACKET COUNT   BYTE COUNT
+    ------------------------------------------------------------------------------------------------
+    f1             t1             t1             0              0
+
+          
+
+
+ 
+ # 4 Flow Diagrams
 ## 4.1 Config call flow
 
-![IFA config call flow](images/IFA_Call_Flow.JPG)
+***ACL configuration is created first followed by IFA configuration***
+
+![IFA config call flow 1](images/IFA_Call_Flow_IFA_ACL.JPG)
+
+***IFA configuration is created first followed by ACL configuration***
+
+![IFA config call flow 2](images/IFA_Call_Flow_ACL_IFA.JPG)
 
 # 5 Error Handling
 
@@ -406,10 +726,10 @@ N/A
 ## IFAOrch
 - Any error occurring in the orchestration agent is logged appropriately via SWSS logging.
 - Errors or failures of SAI APIs will be logged by IFAOrch.
-- On failure of a SAI TAM API in the config sequence of section 3.5, the previously configured steps will be rolled back i.e previously created intermediate TAM objects for IFA etc will be destroyed.
+- On failure of a SAI TAM API in the config sequence of section 3.6, the previously configured steps will be rolled back i.e previously created intermediate TAM objects for IFA etc will be destroyed.
 
 # 6 Serviceability and Debug
-Debug commands specified in section 3.6.5 will be supported once the debug framework is available.
+Debug commands specified in section 3.7.5 will be supported once the debug framework is available.
 
 # 7 Warm Boot Support
 No special handling is done for the warm boot case. The IFA configuration is restored from the Config DB and IFA functionality will continue to work as it is through a warm boot. 
@@ -420,30 +740,34 @@ N/A
 # 9 Unit Test
 ## CLI
 
-1.  Verify CLI command to configure IFA device for device id.
-2.  Verify CLI command to configure IFA device type intermediate.
-3.  Verify CLI command to configure IFA collector config with IPv4 type.
-4.  Verify CLI command to configure IFA collector config with IPv6 type.
-5.  Verify ACL configuration with packet action type as int_insert for IPv4 type ACL.
-6.  Verify ACL configuration with packet action type as int_delete for IPv4 type ACL.
-7.  Verify ACL configuration with packet action type as int_insert for IPv6 type ACL.
-8.  Verify ACL configuration with packet action type as int_delete for IPv6 type ACL.
-9.  Verify ACL configuration with packet action type as int_update is created when IFA device type is configured.
-10. Verify ACL configuration with packet action type as int_update is cleared when IFA device type is cleared. 
-11. Verify CLI command to configure IFA flow with acl and sampling rate.
-12. Verify CLI clear command to clear IFA device.
-13. Verify CLI clear command to clear IFA device type.
-14. Verify CLI clear command to clear IFA flow.
-15. Verify CLI clear command to clear IFA collector.
-16. Verify CLI show command to show IFA status.
-17. Verify CLI show command to show IFA statistics for all flows.
-18. Verify CLI show command to show IFA statistics for a specific flows.
-19. Verify CLI show command to show IFA device.
-20. Verify CLI show command to show IFA flow.
-21. Verify CLI show command to show IFA collector.
+1.  Verify CLI command to configure TAM device for device id.
+2.  Verify CLI command to configure TAM collector config with IPv4 type.
+3.  Verify CLI command to configure TAM collector config with IPv6 type.
+4.  Verify CLI command to configure TAM INT IFA feature enable.
+5.  Verify CLI command to configure TAM INT IFA feature disable.
+6.  Verify ACL configuration with packet action type as int_insert for IPv4 type ACL.
+7.  Verify ACL configuration with packet action type as int_delete for IPv4 type ACL.
+8.  Verify ACL configuration with packet action type as int_insert for IPv6 type ACL.
+9.  Verify ACL configuration with packet action type as int_delete for IPv6 type ACL.
+10. Verify CLI command to configure IFA flow with acl table name, acl rule name and sampling rate.
+11. Verify CLI command to configure IFA flow with acl table name, acl rule name and collector.
+12. Verify CLI clear command to clear TAM device.
+13. Verify CLI clear command to clear TAM collector.
+14. Verify CLI clear command to clear TAM INT IFA flow.
+15. Verify CLI show command to show TAM device.
+16. Verify CLI show command to show TAM collector.
+17. Verify CLI show command to show TAM INT IFA status.
+18. Verify CLI show command to show TAM INT IFA statistics for all flows.
+19. Verify CLI show command to show TAM INT IFA statistics for a specific flows.
+20. Verify CLI show command to show TAM INT IFA flow.
+
+## IFA Manager
+1. Verify if IFA configuration from CONFIG DB is received by IFA manager.
+2. Verify if IFAOrch is able to create IFA table entries in APPL DB successfully.
+3. Verify if IFAOrch is able to delete IFA table entries in APPL DB successfully.
 
 ## IFAOrch
-1. Verify if IFA configuration from CONFIG DB is received by IFAOrch.
+1. Verify if IFA configuration from APPL DB is received by IFAOrch.
 2. Verify if IFAOrch is able to create TAM objects for IFA configuration via SAI TAM APIs successfully.
 3. Verify if IFAOrch is able to delete existing IFA configuration via SAI TAM APIs successfully.
 4. Verify if IFAOrch is able to use existing TAM objects for IFA config that uses a previously configured IFA collector or IFA flow.
@@ -469,14 +793,12 @@ N/A
 4. Verify if CLI returns error when a IPv4 address is configured for collector type IPv6.
 5. Verify if CLI returns error when a IPv6 address is configured for collector type IPv4.
 6. Verify if CLI returns entry not found when a clear command is issued on non-existent flow.
-7. Verify if IFAOrch logs an error on receipt of an incorrect IFA table entries from CONFIG DB.
-8. Verify if IFAOrch logs an error if it is unable to read IFA table data from CONFIG DB.
-9. Verify if IFAOrch logs all errors encountered during processing of the incoming IFA config request.
-10. Verify if IFAOrch logs any errors arising out of SAI API failure.
-11. Verify if IFAOrch logs an error when no further IFA configuration can be configured to hardware.
-12. Verify if error is logged when IFA collector is not reachable or collector is not running on UDP port.
-13. Verify that crash is not seen when IFA is configured on a platform that does not support IFA.
-14. Verify that IFA telemetry packet is dropped when packet length exceeds the limit defined by platform. 
-
-# 10 Internal Design Information
-Internal BRCM information to be removed before sharing with the community.
+7. Verify if IFA manager logs an error on receipt of an incorrect IFA table entries from CONFIG DB.
+8. Verify if IFAOrch logs an error on receipt of an incorrect IFA table entries from APPL DB.
+9. Verify if IFAOrch logs an error if it is unable to read IFA table data from APPL DB.
+10. Verify if IFAOrch logs all errors encountered during processing of the incoming IFA config request.
+11. Verify if IFAOrch logs any errors arising out of SAI API failure.
+12. Verify if IFAOrch logs an error when no further IFA configuration can be configured to hardware.
+13. Verify if error is logged when IFA collector is not reachable or collector is not running on UDP port.
+14. Verify that crash is not seen when IFA is configured on a platform that does not support IFA.
+15. Verify that IFA telemetry packet is dropped when packet length exceeds the limit defined by platform. 
