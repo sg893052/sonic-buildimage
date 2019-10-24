@@ -205,6 +205,26 @@ The default credential (if not modified at image build time) for login is admin/
 In case of SSH login, users can login to the management interface (eth0) IP address after configuring the same using serial console. 
 Refer the next section for configuring the IP address for management interface.
 
+The default user is forced to change the default login password when attempting to login for the first time. The user will have to provide
+the default login password followed by a new password and also confirm the new password. The user is prompted for password change until the password has been successfully modified.
+This is applicable for both console based login and the SSH based login. When a password change prompt is processed on SSH based login,
+the user is disconnected after a successful password change. The user can then SSH login again using the new password.
+
+  - Example First time login password change prompt:
+  ```
+Debian GNU/Linux 9 sonic ttyS2
+
+sonic login: admin
+Password:
+You are required to change your password immediately (root enforced)
+Changing password for admin.
+(current) UNIX password:YourPaSsWoRd
+Enter new UNIX password:newpassword
+Retype new UNIX password:newpassword
+  ```
+
+For subsequent logins to the SONiC switch, the login event takes the user to default prompt.
+
   - Example:
   ```
   At Console:
@@ -378,7 +398,7 @@ This command displays relevant information as the SONiC and Linux kernel version
 - Example:
   ```
   admin@sonic:~$ show version
-  SONiC Software Version: SONiC.HEAD.32-21ea29a
+  SONiC Software Version: SONiC-OS-HEAD.32-21ea29a
   Distribution: Debian 9.8
   Kernel: 4.9.0-8-amd64
   Build commit: 21ea29a
@@ -431,6 +451,16 @@ This tool has facility to install an alternate image, list the available images 
 **sonic_installer install**  
 
 This command is used to install a new image on the alternate image partition.  This command takes a path to an installable SONiC image or URL and installs the image.
+After a successful installation, the new image is marked as the image that shall be used in next reboot. SONiC configuration files are also copied to a backup directory and
+restored when the switch reboots to the newly installed image version.
+  - Following configuration files are migrated as part of the install command:
+    - Saved ConfigDB (/etc/sonic/config_db.json)
+    - FRR configuration (/etc/sonic/frr/*)
+    - Minigraph schema (/etc/sonic/minigraph.xml)
+    - SNMP Configuration (/etc/sonic/snmp.yml)
+    - ACL configuration (/etc/sonic/acl.json)
+    - Linux users added and corresponding passwords
+    - Linux user groups added
 
   - Usage:    
     sonic_installer install <path>  
@@ -466,6 +496,9 @@ This command is used to install a new image on the alternate image partition.  T
   Command: cp /etc/sonic/minigraph.xml /host/
 
   Command: grub-set-default --boot-directory=/host 0
+
+  Command: config-setup backup
+  Taking backup of curent configuration
 
   Done
   ```
