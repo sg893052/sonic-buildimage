@@ -66,6 +66,7 @@ Table of Contents
          * [NAT](#nat)  
          * [Threshold](#threshold)  
          * [Syslog Server](#syslog-server)  
+         * [IPv6 Link-local](#ipv6-link-local)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1564,7 +1565,32 @@ Added Priority and Filter_rule attributes to syslog server. Either one of them c
     }
 }
 ```
+### IPv6 Link-local
 
+The IPv6 Link-local only configuration is part of **INTERFACE** table.
+
+```
+{
+    "INTERFACE": {
+        "Ethernet0": {
+            "ipv6_use_link_local_only": "enable"
+        },
+        "Ethernet2": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+    "VLAN_INTERFACE": {
+        "Vlan10": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel10": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    }
+}
+```
 
 For Developers
 ==============

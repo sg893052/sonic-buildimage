@@ -160,6 +160,8 @@ Table of Contents
    * [Syslog Server Config And Show Commands](#syslog-server-config-and-show-commands)
       * [Syslog Server Config Commands](#syslog-server-config-commands)
       * [Syslog Server Show Commands](#syslog-server-show-commands)
+   * [IPv6 Link-local Configuration Commands](#ipv6-link-local-configuration-commands)
+   * [BGP Unnumbered Configuration Command](#bgp-unnumbered-configuration-command)
 
 # Document History
 
@@ -3408,6 +3410,7 @@ This sub-section explains the following list of configuration on the interfaces.
 8) mtu - to set the MTU to a value in the range 1548-9216. 
 9) vrf - to bind or unbind interface to a VRF.
 10) vrrp - to apply VRRP configurations on interface.
+11) ipv6 - to enable or disable using link-local address only on the interface.
 
 From 201904 release onwards, the ?config interface? command syntax is changed and the format is as follows    
 
@@ -7810,5 +7813,78 @@ mail,news.=alert;*.=crit @20.0.0.20:514;SONiCFileFormat
 *.*;*.!notice @221.22.200.21:514;SONiCFileFormat
 *.* @rmt.syslog.srv:514;SONiCFileFormat
 ```
+
+# IPv6 Link-local Configuration Commands
+
+This section explains all the commands that are supported in SONiC to configure IPv6 Link-local.
+
+**config interface ipv6 enable use-link-local-only <interface_name>**
+
+This command enables user to enable an interface to forward L3 traffic with out configuring an address. This command creates the routing interface based on the auto generated IPv6 link-local address. This command can be used even if an address is configured on the interface.
+
+  - Usage:
+    sudo config interface ipv6 enable use-link-local-only <interface_name>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface ipv6 enable use-link-local-only Vlan206
+  admin@sonic:~$ sudo config interface ipv6 enable use-link-local-only PortChannel007
+  admin@sonic:~$ sudo config interface ipv6 enable use-link-local-only Ethernet52
+  ```
+
+**config interface ipv6 disable use-link-local-only <interface_name>**
+
+This command enables user to disable use-link-local-only configuration on an interface.
+
+  - Usage:
+    sudo config interface ipv6 disable use-link-local-only <interface_name>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Vlan206
+  admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only PortChannel007
+  admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Ethernet52
+  ``
+
+**config ipv6 enable**
+
+This command enables user to enable use-link-local-only command on all the interfaces globally.
+
+  - Usage:
+    sudo config ipv6 enable
+
+- Example:
+  ```
+  admin@sonic:~$ sudo config ipv6 enable
+  ```
+**config ipv6 disable**
+
+This command enables user to disable use-link-local-only command on all the interfaces globally.
+
+  - Usage:
+    sudo config ipv6 disable
+
+- Example:
+  ```
+  admin@sonic:~$ sudo config ipv6 disable
+  ```
+
+# BGP Unnumbered Configuration Command
+
+Existing FRR CLI supports the configuration of BGP unnumbered.
+
+This command uses link-local address to form BGP adjacency and adds the learned BGP routes with link-local address as nexthop. This command can be used in combination with the ipv6 use-link-local-only option on the interface to form BGP peering with link-local address.
+
+neighbor <interface_name> interface remote-as <as>
+
+Example:
+```
+neighbor Ethernet52 interface remote-as external
+address-family ipv6 unicast
+  neighbor Ethernet52 activate
+exit
+```
+Note: This command is available in FRR BGP container vtysh shell.
+
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
