@@ -17,7 +17,8 @@
 |:--:|:--------:|:-----------------:|:------------------------------------------------------------:|
 | 0.1  | 09/05/2019 |   Dilip Kumar   | Initial version                                              |
 | 0.2 | 09/11/2019 | Dilip Kumar | Addressed review comments from Ben and others. Minor edits to complete the unifished sections. |
-| 0.3 | 10/10/2019 | Vijay Kumar | Added VRRP version 3 and VARP support |
+| 0.3 | 10/10/2019 | Vijay Kumar | Added VRRP version 3 support |
+| 0.4 | 10/30/2019 | Preetham Singh | Added Static Anycast Gateway support |
 |      |            |             |                    |
 |      |            |             |                    |
 
@@ -40,11 +41,13 @@
 | VRRP     | Virtual Router Redundency Protocol          |
 | VRRPv3   | Virtual Router Redundency Protocol verson 3 |
 | IPv6     | Internet Protocol version 6                 |
-| VARP     | Virtual Address Resolution Protocol         |
+| SAG      | Static Anycast Gateway                      |
+| VM       | Virtual Machine                             |
+| MCLAG-VARP| Active-Active gateway redundancy on MCLAG  |
 
 # About this Manual
 
-This document provides general overview of VRRP feature implementation based on RFC 5798 and VARP feature implementation in SONiC. 
+This document provides general overview of VRRP feature implementation based on RFC 5798 & SAG feature implementation in SONiC. 
 
 
 
@@ -59,8 +62,18 @@ become unavailable. Any of the virtual router&#39;s IP(v6) addresses on a LAN ca
 hop router by end-hosts. The advantage gained from using VRRP is a higher availability default path
 without requiring configuration of dynamic routing or router discovery protocols on every end-host.
 
-Virtual-ARP (VARP) allows multiple switches to simultaneously route packets from a common IP address in an active-active router configuration. Each switch is configured with the same set of virtual IP addresses on corresponding VLAN interfaces and a common virtual MAC address.
+Static Anycast Gateway (SAG) allows multiple switches to simultaneously route packets from a common IP address in an active-active router configuration.
+Each switch is configured with the same set of virtual IP addresses on corresponding VLAN interfaces and a common virtual MAC address.
 
+Static Anycast Gateway feature provides ability to configure same set of gateway IPs on Vlan interfaces across routers without need to run any election protocol.
+Unlike VRRP, SAG does not run any state machine for master router election. All access routers configured with same set of SAG IP provides gateway functionality.
+This allows multiple routers to simultaneously route packets destined to these gateway IPs.
+Each switch is configured with same set of Gateway IPs and common Gateway MAC.
+
+In MCLAG deployments, SAG is preferred over MCLAG-VARP since SAG provides gateway functionality with Active-Active router configuration across MCLAG.
+
+In IP Fabric deployments, SAG is preferred over VRRP and MCLAG-VARP since SAG provides gateway across MCLAG nodes which is necessary
+for seamless VM move across servers connected to different leaf nodes.
 
 # 2 Feature Requirements
 
@@ -68,7 +81,7 @@ Virtual-ARP (VARP) allows multiple switches to simultaneously route packets from
 
 Following requirements are addressed by the design presented in this document:
 
-1. Support VRRPv2 (IPv4), VRRPv3(IPv4, IPv6), VARP(IPv4, IPv6) 
+1. Support VRRPv2 (IPv4), VRRPv3(IPv4, IPv6), SAG(IPv4, IPv6) 
 
 2. Support multiple VRRP instances (groups) per interface
 
@@ -86,11 +99,11 @@ Following requirements are addressed by the design presented in this document:
 
 9. Support REST access to VRRP objects
 
-    
+10. Support Static Anycast Gateway functionality on VLAN interface.
 
 Following requirements are beyond scope of this release. 
 
-2. SNMP and gNMI access support to VRRP objects
+1. SNMP and gNMI access support to VRRP objects
 
 
 
@@ -110,7 +123,9 @@ This feature will support configuration and display CLIs to control and monitor 
 
 6. Support display of various VRRP parameters as well as states using CLIs.
 
-7. Support configuration of VARP on interface
+7. Support configuration of IPv4 & IPv6 SAG on VLAN interfaces.
+
+8. Support configuration of Global SAG gateway MAC.
 
    
 
@@ -121,7 +136,8 @@ This feature will support configuration and display CLIs to control and monitor 
 3. Max number of VRRP instances per interface: 16
 4. Max number of tracked interfaces per VRRP Instance: 8
 5. Max IP addresses per VRRP instance: 4
-6. Max number of VIP for VARP instance on an interface: 4
+7. Max number of SAG IPv4 instance on a interface: 16
+8. Max number of SAG IPv6 instance on a interface: 16
 
 
 
@@ -129,7 +145,7 @@ This feature will support configuration and display CLIs to control and monitor 
 
 VRRP module is warm reboot compliant. That is, VRRP docker will be restarted as part of warm-reboot but will come up afresh and will build the state from scratch. The behavior of VRRP will be like Cold reboot.
 
-VARP module does not store any states. During warm-reboot router will be restarted. After restart VIP will be programmed in forwarding as per configuration.
+SAG does not store any state information. After warm-reboot, SAG IPs will be programmed once corresponding Vlan interface comes up.
 
 
 
@@ -137,11 +153,44 @@ VARP module does not store any states. During warm-reboot router will be restart
 
 ## 3.1 Target Deployment use cases
 
-The following are some of the deployment use cases for VRRP and VARP
+The following are some of the deployment use cases for VRRP and SAG
 
 - The Leaf nodes of the Clos network to provide first hop redundency to connected devices
+- SAG to provide Active-Active gateway redundancy in MCLAG deployment across MCLAG.
+- SAG to provide Active-Active gateway redundancy in IP-Fabric deployment to provide same gateway across multiple leaf nodes.
+ 
+## 3.1.1 VRRP & SAG Use cases:
 
+### **VRRP on MCLAG:**
+- VRRP when configured on MCLAG, Data traffic from Server can take sub-optimal path over MCLAG peer link.
+- In these deployments, MCLAG-VARP OR SAG is preferred over VRRP.
+
+![VRRP_MCLAG_USECASE1](image/VRRP_MCLAG_Usecase1.png "Figure 3.1.1 : VRRP on MCLAG")
+
+### **SAG configured on MCLAG and remote leaf nodes, BGP-EVPN is used for ARP/ND Synchronization:**
+
+- With this VM move from Server-1 to Server-2 will ensure non-disruptive data path from VM1, since same gateway exists on remote leaf node.
+- BGP EVPN is used in these types of topologies, VMs on Server-1 and Server-2 will be configured with same SAG gateway
+- Irrespective of leaf node on which ARP/nd request is originated to VM, ARP response will be consumed by receiving leaf node, learning corresponding VM.
+  These MACIP route(Type-2) will be synchronized to all other leaf nodes using BGP EVPN.
   
+![SAG_IPFABRIC_UC2](image/SAG_IPFabric_Usecase2.png "Figure 3.1.2 : SAG on IP Fabric")
+
+### **SAG configured on MCLAG and remote leaf nodes interconnected with L2 Cloud:**
+
+#### Issue:
+- There is no ARP/ND Sync between MCLAG Pair and Leaf-3.
+- If SAG alone is configured, ARP request from Leaf3 would use SAG IP as source.
+- ARP response will get consumed by Leaf1 or Leaf2 and VM1 will remain unresolved on Leaf3 resulting in traffic loss
+
+![SAG_NOREALIP_UC3](image/SAG_NOREALIP_UC3.png "Figure 3.1.3.1 : SAG Alone on Vlan interface")
+
+#### Solution:
+- SAG & Real interface IP is configured on MCLAG & remote Leaf nodes
+- Since there is no ARP/ND synchronization across remote leaf nodes and across MCLAG, ARP/nd resolution should be triggered using unique real interface IP.
+- ARP/ND request to VMs will be generated using real interface IP rather than SAG IP so that response will be received by the originator leaf node.
+
+![SAG_L2_UC3](image/SAG_REALIP_UC3.png "Figure 3.1.3.2 : SAG + Real IP")
 
 ## 3.2 Functional Description of VRRP
 
@@ -202,6 +251,7 @@ IPv6 case: **00-00-5e-00-02-{vrid}**
 
 where, vrid is user configured 1-byte virtual router identifier. VRID has interface scope; that is, VRID has to be unique among the VRRP instances on an interface. However, same VRID can be used for two  or more virtual router instances across different interfaces.
 
+
 ### 3.2.3    Preemption
 
 Preemption is turned on by default.  Even if preemption is disabled, it does not affect the owner router since owner preempts the active master. Mastership switchover causes unnecessary temporary network disruption.
@@ -214,6 +264,15 @@ VRRP control packets have IP protocol type as 112 (reserved for VRRP). IPv4 and 
 
 Only master responds to the ARP requests for virtual IP address. In ARP replies sent by master, the source MAC in Ethernet header and ARP payload is virtual MAC address.
 
+In case of SAG, all ARP requests destined to SAG Gateway IP address will be responded by any receiving leaf node on which SAG Gateway IP is configured.
+
+In case of ARP request origination from interface where SAG and Interface IP both are configured:
+    - If both Interface IP and SAG IP are in same subnet
+        - ARP request will be generated with Interface IP as source IP.
+    - If Interface IP and SAG IP are in different subnet
+        - If destination is in SAG IP subnet, SAG IP will be used as source IP in ARP request
+        - For all other IP interface IP will be used as source IP in ARP request.
+
 ### 3.2.6   Uplink Interface Tracking
 
 Interfaces other than the VRRP instance interface can be tracked for up/down events. When interface-tracking is enabled in the VRRP instance configuration, the tracked interface's operational status will be monitored. When a interface operational down event is detected on a tracked-interface, the track-priority/weight is subtracted from the current router’s priority value. Similarly, when interface operational up event is detected on the tracked-interface, the track-priority/weight is added to the router’s current priority value.
@@ -222,17 +281,20 @@ The dynamic change of router priority can trigger mastership switchover if the p
 
 Maximum number of interfaces that can be tracked for a virtual router instance is 8.
 
-## 3.3 Functional Description of VARP
+## 3.3 Functional Description of SAG
 
-In most of Leaf-Spine deployments, redundancy in Spine layer is required to achieve high availability and to prevent network service disruption. Modern layer 2 networks adopted loop-free and balanced path networks using Multi Chassis Link Aggregation topologies with LACP port channels, leaving loop control methods (STP) as second protection layer. Spines also supports layer 3 networks, using ECMP in a scalable network topology. For unicast redundancy in layer 3, a common method is use Virtual Router Redundancy Protocol (VRRP) to provide a simple and unique gateway for Leaf level. Although VRRP provides redundancy, it is active-standby protocol and do not provide a balanced data traffic distribution over Multi Chassis Link Aggregated topologies. 
+In most of Leaf-Spine deployments, redundancy in Spine layer is required to achieve high availability and to prevent network service disruption. Modern layer 2 networks adopted loop-free and balanced path networks using Multi Chassis Link Aggregation topologies with LACP port channels, leaving loop control methods (STP) as second protection layer. Spines also supports layer 3 networks, using ECMP in a scalable network topology. For unicast redundancy in layer 3, a common method is to use Virtual Router Redundancy Protocol (VRRP) to provide a simple and unique gateway at Leaf level. Although VRRP provides redundancy, it is active-standby protocol and does not provide a balanced data traffic distribution over Multi Chassis Link Aggregated topologies. Also in IP-Fabric topologies VRRP cannot be used since it does not provide seamless VM move across servers with optimal routing between VMs.
 
-VARP provides better data traffic balancing and faster redundancy convergence, implementing active-active First Hop Router Redundancy to provide active/active unicast IP routing. 
+SAG provides better data traffic balancing and faster redundancy convergence, implementing active-active First Hop Router Redundancy to provide active/active unicast IP routing. 
 
-The primary benefit of using VARP is that all configured routers are active and are able to perform routing. VARP also provides rapid failover in the event of a link or switch failure, while enabling the sharing of IP forwarding load between both switches. VARP requires configuring the same virtual-router IP address on the appropriate VLAN interfaces of both peers, as well as a global unique virtual-router MAC address. VARP functions by having both switches respond to ARP requests and GARP for a configured IP address with the “virtual-router” MAC address. This address is receive-only MAC address and no packet is ever sent with this address as its source. If IP routing is enabled, received packets will be routed as follows: when the DMAC of a packet destined to a remote network matches the configured “virtual-router” MAC address, each MLAG peer locally forwards the traffic to its next hop destination.
+The primary benefit of using SAG is that all configured routers are active and are able to perform routing. SAG also provides rapid failover in the event of a link or switch failure, while enabling the sharing of IP forwarding load between both switches. SAG requires configuring the same gateway IP address on the appropriate VLAN interfaces of both peers, as well as a global unique gateway MAC address. SAG functions by having both switches respond to ARP requests and Gratuitous ARP for a configured IP address with the �gateway” MAC address. If IP routing is enabled, received packets will be routed as follows: when the DMAC of a packet destined to a remote network matches the configured “gateway” MAC address, each router locally forwards the traffic to its next hop destination.
 
 ### 3.3.1 Virtual MAC Address
 
-Administrator assigns virtual MAC address to the switch. The switch maps all virtual router IP addresses to this MAC address. The address is receive-only; the switch never sends packets with this address as the source.
+For SAG, user has to explicitly configure SAG Gateway MAC on the switch for SAG to be active. The switch maps all SAG IP addresses to this MAC address.
+If user configures SAG Gateway MAC, it will be applicable for both IPv4 and IPv6. User can explicitly enable or disable per address-family gateway status.
+
+Upon changing SAG Gateway MAC, SAG gateway IP on all interfaces will be brought down and brought UP again with new gateway MAC.
 
 # 4 Feature Design
 
@@ -244,14 +306,15 @@ Administrator assigns virtual MAC address to the switch. The switch maps all vir
 
 Keepalived (https://www.keepalived.org/) open source code is chosen for VRRP control plane code.
 
-![VRRP Keepalived Design](images/VRRP_Keepalived_design.PNG "Figure : Design")
+![VRRP Keepalived Design](image/VRRP_Keepalived_design.png "Figure : Design")
 
 
 ### 4.1.2 Container
 
 A new container "vrrp" has been added to host VRRP protocol operation. VRRP source code is not maintained in SONIC repos. Instead, VRRP code is downloaded from keeplaived project repo at the compile time, patches are applied to it (for any fixes by us) and then compiled/linked with SONIC binary.
 
-New container "vrrp" handles both VRRP and VARP functionality. For VARP the configuration is programmed in kernel through 'vrrpmgrd' module and 'vrrpsyncd' programs the hardware entry in SAI.
+New container "vrrp" handles only VRRP functionality.
+For SAG the configuration is programmed in kernel through 'vrrpmgrd' module and 'vrrpsyncd' programs the hardware entry in SAI.
 
 ### 4.1.3 SAI Overview
 
@@ -281,7 +344,8 @@ At a high level below are some of the interactions between relevant components a
 
 
 
-![VRRP Arch](images/VRRP_architecture.PNG "Figure : Arch")
+![VRRP Arch](image/VRRP_architecture.png "Figure : Arch")
+
 __Figure 1: VRRP Architecture__
 
 ### 4.2.1 CONFIG_DB changes
@@ -385,45 +449,46 @@ Example:- Entery with multiple virtual IPs
 
 Example:- VRRP for IPv6 address
 
-**VARP_TABLE**
+**SAG_TABLE**
 
 Producer:  config manager 
 
 Consumer: VrrpMgr
 
-Description: New table that stores VARP configuration for per interface. 
+Description: New table that stores SAG configuration for per interface. 
 
 Schema:
 
 ```
 ;New table
-;holds the VARP configuration per interface
+;holds the SAG configuration per interface
 
-key = VARP_TABLE:interface_name:address_family
-                          ; Interface name string like Vlan1 or PortChannel002 or Ethernet4
+key = SAG_TABLE:interface_name:address_family
+                          ; Vlan Interface name string like Vlan1
 address_family = "IPv4"/"IPv6"; Address Family of VRRP instances
-vip      = ip_address     ; Virtual IPv4/IPv6 address. This is a list of IPv4/IPv6 addresses
+gwip      = ip_address     ; Gateway IPv4/IPv6 address. This is a list of IPv4/IPv6 addresses
 ```
 
 
 
 ```
 ;New table
-;holds the VARP_GLOBAL configuration per router
+;holds the SAG_GLOBAL configuration per router
 
-key = VARP_GLOBAL_TABLE:address_family
-                          ; Interface name string like Vlan1 or PortChannel002 or Ethernet4
-vmac      = mac     ; Virtual mac address for all the VARP Virtual IP
+key = SAG_GLOBAL_TABLE:IP
+gwmac      = mac     ; Gateway mac address for all the SAG Virtual IP
+IPv4       = "enable"/"disable"   ; enable or disable IPv4 gateway globally. This is applicable for all IPv4 gateway across all VRFs
+IPv6       = "enable"/"disable"   ; enable or disable IPv6 gateway globally. This is applicable for all IPv6 gateway across all VRFs
 ```
 
 
 
 Example:- 
 
-**Key**: VRRP_TABLE:Vlan15
+**Key**: SAG_TABLE:Vlan15
 
 **Value**: 
-​    'vip': '15.1.1.100,16.1.1.100', 
+​    'gwip': '15.1.1.100,16.1.1.100', 
 
 ### 4.2.2 APP_DB Changes
 
@@ -433,7 +498,7 @@ Producer:  VrrpMgr
 
 Consumer: VrrpOrch
 
-Description: This is a new table that contains VRRP and VARP state information 
+Description: This is a new table that contains VRRP and SAG state information 
 
 Schema:
 
@@ -459,8 +524,81 @@ Example:-
 ## 4.3 Modules Design and Flows
 
 
+### Static Anycast Gateway Event Flow Diagram:
 
-<TODO: Vijay add some details here>
+#### SAG Add Sequence Diagram: 
+
+![SAG_ADD_SEQ_DIAGRAM](image/SAG_ADD_SEQ_DIAGRAM.png "Figure 4.3.1 : SAG ADD Sequence Diagram")
+
+```
+sequenceDiagram
+    participant config_db
+    participant vrrpmgrd
+    participant vrrpsyncd
+    participant app_db
+    participant kernel
+    participant vrrporchagt
+    participant SAI
+    participant FdbOrch
+
+    Note over vrrpmgrd: Global SAG gateway mac configured
+    config_db->>vrrpmgrd: add static anycast gateway IP on Vlan
+    alt is first SAG IP on Vlan?
+        vrrpmgrd->>kernel: Create SAG MACVLAN interface under Vlan(vrid=0, mac=SAG MAC)
+    end
+    vrrpmgrd->>kernel: Add Gateway IP to Anycast gateway MACVLAN interface
+     
+   
+
+    kernel->>vrrpsyncd: add SAG MACVLAN interface NETLINK event
+    vrrpsyncd->>app_db: add app-vrrp-table entry with SAG IP and SAG MAC
+
+   
+   app_db->>vrrporchagt: add app-vrrp-table entry event
+    alt is VRRP RIF for given VMAC not created?
+    vrrporchagt->>SAI: Call sai_create_router_interface type virtual and given vrid & vmac
+    Note over vrrporchagt: sai returns VRRP RIF to use for route table programming.
+    end
+    vrrporchagt->>SAI: Call sai_create_route_entry for SAG Gateway IP with nhop as VRRP RIF
+    vrrporchagt->>FdbOrch: Delete Gateway MAC entry from L2 FDB
+```
+
+
+#### SAG Del Sequence Diagram: 
+
+![SAG_DEL_SEQ_DIAGRAM](image/SAG_DEL_SEQ_DIAGRAM.png "Figure 4.3.2 : SAG DEL Sequence Diagram")
+
+
+```
+sequenceDiagram
+    participant config_db
+    participant vrrpmgrd
+    participant vrrpsyncd
+    participant app_db
+    participant kernel
+    participant vrrporchagt
+    participant SAI
+    participant FdbOrch
+
+        config_db->>vrrpmgrd: del static anycast gateway IP on Vlan
+    vrrpmgrd->>kernel: Del Gateway IP on Anycast gateway MACVLAN interface
+    alt is last Gateway IP on Vlan?
+    vrrpmgrd->>kernel: Del Anycast gateway MACVLAN interface
+    end
+
+    kernel->>vrrpsyncd: del SAG Gateway IP on Anycast gateway MACVLAN interface
+    vrrpsyncd->>app_db: Update app-vrrp-table entry by deleting SAG IP
+
+    app_db->>vrrporchagt: Update app-vrrp-table entry event
+    vrrporchagt->>SAI: Call sai_delete_route_entry for SAG Gateway IP
+
+    kernel->>vrrpsyncd: del SAG MACVLAN interface NETLINK event
+    vrrpsyncd->>app_db: Delete app-vrrp-table entry for SAG IP and SAG MAC
+
+    app_db->>vrrporchagt: del app-vrrp-table entry event
+    vrrporchagt->>SAI: Call sai_delete_route_entry for SAG Gateway IP
+    vrrporchagt->>SAI: Call sai_delete_router_interface type virtual, vrid=0 and vmac=gwmac
+```
 
 
 ## 5 CLI
@@ -517,7 +655,7 @@ configure interface vrrp track_interface remove <interface_name> <vrid> <track_i
 This command removes an already configured track interface from a IPv4 VRRP Instance. 
 ```
 
-#### 5.1.1 Configuration Commands for IPv6 VRRP
+#### 5.1.2 Configuration Commands for IPv6 VRRP
 
 ```
 configure interface vrrp6 add <interface_name> <vrid>
@@ -565,6 +703,31 @@ configure interface vrrp6 track_interface remove <interface_name> <vrid> <track_
 This command removes an already configured track interface from a VRRP Instance. 
 ```
 
+#### 5.1.3 Configuration Commands for SAG
+
+```
+config ip anycast-mac-address add <mac>
+This command configures IPv4 gateway MAC for SAG
+- mac - SAG gateway MAC to be applied on all interface IPv4 & IPv6 SAG IP.
+
+config ip anycast-mac-address remove <mac>
+This command unconfigures IPv4 gateway MAC for SAG
+- mac - SAG gateway MAC to be removed from all interface IPv4 & IPv6 SAG IP.
+        This will de-activate IPv4 & IPv6 SAG IP on all interfaces.
+
+config ipv6 anycast-mac-address <enable/disable>
+This command enables or disables IPv6 gateway MAC for SAG interfaces.
+
+config interface ip anycast-address add <interface_name> <gwip>
+This command configures SAG IPv4/IPv6 on an interface
+- gwip - IPv4/IPv6 Static Anycast Gateway IP with prefix length.
+
+config interface ip anycast-address remove <interface_name> <gwip>
+This command unconfigures SAG IPv4/IPv6 on an interface
+- gwip - IPv4/IPv6 Static Anycast Gateway IP with prefix length.
+```
+
+
 SONIC kLISH based configuration and monitoring CLIs have been introduced in SONIC for VRRP
 
 ```
@@ -598,20 +761,22 @@ This command adds/removes a track interface to a VRRP Instance. A maximum of 8 t
 
 ```
 
-SONIC kLISH based configuration and monitoring CLIs have been introduced in SONIC for VARP
+SONIC kLISH based configuration and monitoring CLIs have been introduced in SONIC for SAG
 
 ```
-[no] ip virtual-router address <vip>
-This command configures/removes virtual IPv4 on an interface.
-- vip - IPv4 virtual address.
+[no] ip anycast-mac-address <vip>
+This command configures/removes SAG IPv4 on an interface.
+- vip - IPv4 Gateway address.
  
-[no] ipv6 virtual-router address <vip>
-This command configures/removes virtual IPv6 on an interface.
-- vip - IPv6 virtual address.
+[no] ipv6 anycast-mac-address <vip>
+This command configures/removes SAG IPv6 on an interface.
+- vip - IPv6 Gateway address.
 
-[no] ip virtual-router mac-address <mac>
-This command configures/removes virtual mac address for all the IPv4/IPv6 virtual addresses. 
+[no] ip anycast-address <mac>
+This command configures/removes anycast mac address for all the IPv4 virtual addresses on all interfaces. 
 
+[no] ipv6 anycast-address <enable/disable>
+This command enables/disables anycast mac address for all the IPv6 virtual addresses on all interfaces. 
 
 ```
 
@@ -654,18 +819,39 @@ Preemption is enabled
 ## 
 
 ```
-show varp
- - lists all the VARP instances including their current state
+show ip static-anycast-gateway
+ - lists all the SAG Gateway IPv4 including their current state
  Sample output:-
-IP virtual router is configured with MAC address: 24cd.5a29.cc31
-Interface  IP Address        Virtual IP Address   Status            Protocol
-Vlan15     10.1.1.3/24       10.1.1.15            up                up
-Vlan15     10.1.1.3/24       10.1.1.16            up                up
-Vlan15     10.1.1.3/24       10.1.1.17            up                up
-Vlan20     10.12.1.6/24      10.12.1.51           up                up
-Vlan20     10.12.1.6/24      10.12.1.53           up                up
-Vlan20     10.12.1.6/24      10.12.1.55           up                up    
+Configured Anycast Gateway MAC address: 00:00:00:01:02:03
+IPv4 Anycast Gateway MAC address: enable
+Total number of gateway: 6
+Total number of gateway admin UP: 6
+Total number of gateway oper UP: 4
+Interfaces    Gateway Address    Master    Admin/Oper
+------------  -----------------  --------  ------------
+Vlan2         2.0.101.100/24               up/up
+Vlan200       200.0.0.10/24                up/up
+              200.1.0.10/24                up/up
+              200.1.0.11/32                up/up
+Vlan300       31.1.1.4/24        Vrf3      up/down
+              31.1.1.5/32                  up/down
 
+show ipv6 static-anycast-gateway
+ - lists all the SAG Gateway IPv6 including their current state
+ Sample output:-
+Configured Anycast Gateway MAC address: 00:00:00:01:02:03
+IPv6 Anycast Gateway MAC address: enable
+Total number of gateway: 6
+Total number of gateway admin UP: 6
+Total number of gateway oper UP: 4
+Interfaces    Gateway Address    Master    Admin/Oper
+------------  -----------------  --------  ------------
+Vlan2         2100::1/64                   up/up
+Vlan200       2002::4/64                   up/up
+              2003::4/64                   up/up
+              2004::4/64                   up/up
+Vlan300       3002::4/64         Vrf3      up/down
+              3003::4/64                   up/down
 
 ```
 
@@ -674,11 +860,46 @@ Vlan20     10.12.1.6/24      10.12.1.55           up                up
 
 The existing logging mechanisms shall be used. Proposed debug framework shall be used for internal state dump.
 
+**Sonic Show commands**
+```
+show ip interface
+    - Displays active VRRP VIP on interface
+```
+
+**Sonic logging commands**
+```
+show logging vrrpsyncd
+    - Displays logs generated by vrrpsyncd for programming VIP and VMAC for VRRP and SAG IP & Gateway MAC for SAG
+show logging keepalive
+    - Displays logs from keepalived docker where vrrpd process is run.
+show logging orchagent
+    - Displays logs from orchagent including vrrporchagt.
+```
+
+**Linux Debug commands**
+```
+ip addr show type macvlan
+    - Lists MACVLAN interface in linux kernel corresponding to VRRP and SAG interfaces
+    - Displays VMAC corresponding to each MACVLAN interface
+    - Displays VIP configured on MACVLAN interface
+    - Displays parent interface name under which VRRP/SAG is configured
+    - Status of MACVLAN interface in kernel
+
+ip -d link show type macvlan
+    - Lists MACVLAN interface including various attributes for these netdevice
+
+ip -s link show type macvlan
+    - Lists MACVLAN interface and count of different types of RX/TX packets on these interfaces.
+
+```
+
+
 ## 7 Warm Reboot Support
 
 Currently, warm-reboot is not supported for VRRP. That is, warm-reboot will simply restart the VRRP docker without VRRP storing any data for warm restart. 
 
-VARP is stateless, during warm-reboot router will go down and restart with new configuration.
+SAG is implemented in vrrpmgrd process which is placed in swss docker.
+In case of swss docker warm reboot, since SAG information is maintained in kernel, when vrrpmgrd starts up it will recover SAG information from kernel.
 
 ## 8 Unit Test cases
 
@@ -696,6 +917,11 @@ VARP is stateless, during warm-reboot router will go down and restart with new c
 |                              | Validate VRRP on more than one interface                     |                                                            |
 |                              | Validate VRRP with more than one VIP per instance            |                                                            |
 |                              | Validate multiple VRRP instance per interface                |                                                            |
+|                              | configure SAG global gateway MAC                             |                                                            |
+|                              | configure SAG with IPv4 and IPv6 address on Ve interface     |                                                            |
+|                              | Ensure SAG is active and programmed properly in kernel       |                                                            |
+|                              | Ensure SAG gateway mac is programmed in FDB and Gateway IP in LPM|                                                            |
+|                              | configure additional SAG with IPv4 and IPv6 address on Ve interface and verify all programming|                                                            |
 | Failover                     |                                                              |                                                            |
 |                              | Validate VRRP master failover with priority change           |                                                            |
 |                              | Validate VRRP master failover by disabling a vrrp group      | Add 'disable' feature if needed and feasible               |
@@ -704,22 +930,26 @@ VARP is stateless, during warm-reboot router will go down and restart with new c
 |                              | Validate VRRP master failover by deleting master VRRP session |                                                            |
 |                              | Validate VRRP master failover by bringing down interface     |                                                            |
 |                              | Validate VRRP master failover by deleting interface          |                                                            |
+|                              | Validate SAG functionality by flapping associated Vlan interface |                                                            |
 | VRRP parameter changes       |                                                              |                                                            |
 |                              | Validate gratutious ARP                                      |                                                            |
 |                              | Validate adv interval                                        |                                                            |
 |                              | Validate version change for IPv4 VRRP instance               |                                                            |
 | ARP/ND resolve to VIP        |                                                              |                                                            |
-|                              | validate ARP resolution from host to VRRP session VIP        | Hosts should get arp response with VMAC as source MAC      |
+|                              | validate ARP resolution from host to VRRP session VIP        | Hosts should get ARP response with VMAC as source MAC      |
 |                              | Perform Master failover and check that ARP resolution to VIP will happen with VMAC |                                                            |
+|                              | validate ARP resolution from host to SAG gateway IP        | Hosts should get ARP response with gateway MAC as source MAC witout any duplicate ARP response      |
 | Ping to VIP                  |                                                              |                                                            |
-|                              | Validate ping to IVRRP from host, backup & non vrrp router works |                                                            |
+|                              | Validate ping to VRRP from host, backup & non vrrp router works |                                                            |
+|                              | Validate ping to host from interface with interface IP and SAG gateway IP works | Ping should work on Vlan interface with SAG + Interface IP     |
 | L3 Forwarding with VIP as GW |                                                              |                                                            |
 |                              | Validate that IPv4/IPv6 traffic forwarding with VIP as gateway works from source to destination host |                                                            |
 |                              | Perform VRRP master failover and check if traffic forwarding continues with new master |                                                            |
+|                              | Validate that IPv4/IPv6 traffic forwarding with SAG as gateway works from source to destination host |                                                            |
 | VRRP Owner                   |                                                              |                                                            |
 |                              | Configure VRRP for IPv4/IPv6 session with VIP same as interface IP and ensure this session becomes master and priority of session becomes max=255 |                                                            |
 |                              | Ensure ping to VIP works in owner case                       |                                                            |
-|                              | Ensure arp/nd resolution with VIP as gateway in owner case   | ARP/ND should get resolved with VMAC and not interface MAC |
+|                              | Ensure ARP/nd resolution with VIP as gateway in owner case   | ARP/ND should get resolved with VMAC and not interface MAC |
 |                              | Ensure ping and traffic forwarding continues after owner failover and comes back |                                                            |
 |                              | Traffic forwarding works with VIP as gateway                 |                                                            |
 | Interface tracking           |                                                              |                                                            |
