@@ -162,6 +162,10 @@ Table of Contents
       * [Syslog Server Show Commands](#syslog-server-show-commands)
    * [IPv6 Link-local Configuration Commands](#ipv6-link-local-configuration-commands)
    * [BGP Unnumbered Configuration Command](#bgp-unnumbered-configuration-command)
+   * [IFA Configuration And Show Commands](#IFA-configuration-and-show-commands)
+      * [IFA configuration commands](#IFA-configuration-commands)
+      * [IFA clear commands](#IFA-clear-commands)
+      * [IFA show commands](#IFA-show-commands)
 
 # Document History
 
@@ -7885,6 +7889,237 @@ address-family ipv6 unicast
 exit
 ```
 Note: This command is available in FRR BGP container vtysh shell.
+
+
+# IFA Configuration And Show Commands
+
+This section explains the Inband Flow Analyzer commands supported in SONiC.
+
+## IFA configuration commands
+
+This sub-section explains the list of the configuration options available for IFA.
+
+
+
+**config tam device-id**
+
+Use this command to configure an TAM device identifier.
+
+- Usage:
+  config tam device-id {value}
+
+- Example:
+
+```
+root@sonic:/home/admin# config tam device-id 2345
+```
+
+
+
+**config tam-int-ifa feature**
+
+Use this command to enable or disable IFA feature.
+
+- Usage:
+  config tam-int-ifa feature {enable|disable}
+
+- Example:
+
+```
+root@sonic:/home/admin# config tam-int-ifa feature enable
+Enabled IFA
+```
+
+**config tam collector-name**
+
+Use this command to configure an IFA collector. Collector configuration is required only for egress node funtionality
+
+- Usage:
+  config tam collector {collector-name} {ipv4 | ipv6} {collector-ip} {collector-port}
+
+- Example:
+
+```
+root@sonic:/home/admin# config tam collector collector1 ipv4 11.12.13.14 9070
+```
+
+
+
+
+**config tam-int-ifa flow**
+
+Use this command to create an IFA flow based on a flow matching the provided ACL. This command is not applicablie for intermediate node functionality. Sampling-rate is mandatory for ingress-node configuration, where as collector is mandatory for egress node.
+
+- Usage:
+  config tam-int-ifa flow {flow_name} {acl_table_name} {acl_rule_name} {{sampling-rate {value}} | {collector {collector_name}}}
+
+- Example:
+
+```
+*** Ingress node flow configuration ***
+root@sonic:/home/admin# config tam-int-ifa flow flow1 acl1 rule1 sampling-rate 1000
+tam_int_ifa -config --flowname flow1 --acl_table_name acl1 --acl_rule_name rule1 --samplingrate 1000
+
+
+*** Egress node flow configuration ***
+root@sonic:/home/admin# config tam-int-ifa flow flow2 acl2 rule2 collector collector1
+tam_int_ifa -config --flowname flow2 --acl_table_name acl2 --acl_rule_name rule2 --collectorname collector1
+```
+
+
+## IFA clear commands
+
+This sub-section explains the list of the cler commands available for IFA.
+
+
+
+**sonic-clear tam device-id**
+
+Use this command to clear TAM device identifier.
+
+- Usage:
+  sonic-clear tam device-id
+
+- Example:
+
+```
+root@sonic:/home/admin# sonic-clear tam device-id
+```
+
+
+**sonic-clear tam collector**
+
+Use this command to delete a TAM collector configuration.
+
+- Usage:
+  sonic-clear tam collector {collector-name}
+
+- Example:
+
+```
+root@sonic:/home/admin# sonic-clear tam collector collector1
+```
+
+
+
+**sonic-clear tam-int-ifa flow**
+
+Use this command to clear an IFA flow configuration.
+
+- Usage:
+  sonic-clear tam-int-ifa flow {flow-name}
+
+- Example:
+
+```
+root@sonic:/home/admin# sonic-clear tam-int-ifa flow flow1
+```
+
+## IFA show commands
+
+
+**show tam-int-ifa supported**
+
+This command displays whether IFA is supported or not.
+
+- Usage:
+  show tam-int-ifa supported
+
+- Example:
+
+```
+root@sonic:/home/admin# show tam-int-ifa supported
+TAM INT IFA Supported -  True
+```
+
+
+
+**show tam device**
+
+This command displays TAM device information.
+
+- Usage:
+  show tam device
+
+- Example:
+
+```
+root@sonic:/home/admin# show tam device
+TAM Device identifier
+-------------------------------
+Device Identifier    -  3344
+```
+
+**show tam collector**
+
+This command displays TAM collector information.
+
+- Usage:
+  show tam collector [{collector-name} | all]
+
+- Example:
+
+```
+root@sonic:/home/admin# show tam collector
+      NAME    IP TYPE           IP    PORT
+----------  ---------  -----------  ------
+collector1       ipv4  11.12.13.14    9070
+```
+
+
+**show tam-int-ifa status**
+
+This command displays the current status of IFA, like deviceid, number of flows etc.,
+
+- Usage:
+  show tam-int-ifa status
+
+- Example:
+
+```
+root@sonic:/home/admin# show tam-int-ifa status
+Device Identifier    -  3344
+Number of flows      -  2
+Number of collectors -  1
+Feature Enabled      -  true
+```
+
+
+**show tam-int-ifa flow**
+
+This command displays IFA flow information.
+
+- Usage:
+  show tam-int-ifa flow [{flow-name} | all ]
+
+- Example:
+
+```
+root@sonic:/home/admin# show tam-int-ifa flow
+  NAME    ACL TABLE NAME    ACL RULE NAME    COLLECTOR NAME    SAMPLING RATE
+------  ----------------  ---------------  ----------------  ---------------
+ flow2              acl2            rule2        collector1
+ flow1              acl1            rule1                               1000
+```
+
+
+**show tam-int-ifa statistics**
+
+This command displays the IFA statistics per flow or all flows.
+
+- Usage:
+  show tam-int-ifa statistics [{flow-name} | all ]
+
+- Example:
+
+```
+root@sonic:/home/admin# show tam-int-ifa statistics
+  FLOW NAME    RULE NAME    TABLE NAME    PACKETS COUNT    BYTES COUNT
+-----------  -----------  ------------  ---------------  -------------
+      flow2        rule2          acl2                8           8000
+      flow1        rule1          acl1                9           9000
+```
+
 
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)

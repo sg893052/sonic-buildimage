@@ -67,6 +67,7 @@ Table of Contents
          * [Threshold](#threshold)  
          * [Syslog Server](#syslog-server)  
          * [IPv6 Link-local](#ipv6-link-local)  
+         * [IFA](#ifa)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1591,6 +1592,88 @@ The IPv6 Link-local only configuration is part of **INTERFACE** table.
     }
 }
 ```
+
+
+### IFA
+
+IFA configuration is spread into **TAM\_INT\_IFA\_FEATURE\_TABLE**, **TAM\_DEVICE\_TABLE**, **TAM\_COLLECTOR\_TABLE**, **TAM\_INT\_IFA\_FLOW\_TABLE** table.
+
+```
+{
+    "TAM_COLLECTOR_TABLE": {
+        "collector1": {
+            "ipaddress": "11.12.13.14",
+            "ipaddress-type": "ipv4",
+            "port": "9070"
+        }
+    },
+    "TAM_DEVICE_TABLE": {
+        "device": {
+            "deviceid": "3344"
+        }
+    },
+    "TAM_INT_IFA_FEATURE_TABLE": {
+        "feature": {
+            "enable": "true"
+        }
+    },
+    "TAM_INT_IFA_FLOW_TABLE": {
+        "flow1": {
+            "acl-rule-name": "rule1",
+            "acl-table-name": "acl1",
+            "sampling-rate": "1000"
+        },
+        "flow2": {
+            "acl-rule-name": "rule2",
+            "acl-table-name": "acl2",
+            "collector": "collector1"
+        }
+    }
+}
+```
+
+IFA ingress node and egress node depend on ACL configuration with TAM specific actions INT_INSERT and INT_DELETE respectively
+
+```
+{
+        "ACL_TABLE": {
+            "acl1": {
+                "policy_desc" : "IFA Ingress Device Policy",
+                "stage" : "INGRESS",
+                "type" : "L3" ,
+                "ports" : "Ethernet20"
+                },
+            "acl2": {
+                "policy_desc" : "IFA Egress Device Policy",
+                "stage" : "INGRESS",
+                "type" : "L3" ,
+                "ports" : "Ethernet21"
+                }
+
+        },
+
+        "ACL_RULE": {
+            "acl1|rule1": {
+                "PRIORITY" : "55",
+                "IP_TYPE" : "ipv4any",
+                "IP_PROTOCOL": "17",
+                "SRC_IP" : "10.10.0.26/32",
+                "DST_IP" : "10.10.1.26/32",
+                "PACKET_ACTION" : "int_insert"
+            },
+            "acl2|rule2": {
+                "PRIORITY" : "55",
+                "IP_TYPE" : "ipv4any",
+                "IP_PROTOCOL": "17",
+                "SRC_IP" : "10.10.2.30/32",
+                "DST_IP" : "10.10.3.30/32",
+                "PACKET_ACTION" : "int_delete"
+            }
+
+        }
+}
+```
+
 
 For Developers
 ==============
