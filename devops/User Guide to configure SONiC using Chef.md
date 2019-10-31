@@ -35,6 +35,7 @@
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 1 |  Sep 20, 2019 |v1 | Initial version |
+| 2 |  Oct 31, 2019 | v1.1 | Updated Cookbook operations |
 
 
 # Introduction
@@ -198,5 +199,32 @@ Go back to [Beginning of the document](#Chef).
 
 - Creation
 - Deletion
+
+**5.	BGP Configuration (with/without VRF)**
+
+- Enable BGP 
+- Disable BGP 
+- Addition of Peer Group
+- Deletion of Peer Group
+- Addition of Neighbor (shutdown, ebgp-multihop, local-as, remote-as, update-source)
+- Deletion of Neighbor (shutdown, ebgp-multihop, local-as, remote-as, update-source)
+- Addition of ipv4 unicast Address Family (neighbors, network, redistribute)
+- Deletion of ipv4 unicast Address Family (neighbors, network, redistribute)
+- Addition of l2vpn evpn Address Family (neighbors, vni, advertise-all-vni, advertise-default-gw, advertise, route-target)
+- Deletion of l2vpn evpn Address Family (neighbors, vni, advertise-all-vni, advertise-default-gw, advertise, route-target)
+
+**6.	VRF**
+
+- Creation
+- Deletion
+- Addition of ports
+- Deletion of ports
+
+**7.	MCLAG**
+
+- Creation
+- Deletion
+- Addition of members
+- Deletion of members
 
 Go back to [Beginning of the document](#Chef).
