@@ -60,6 +60,9 @@ Table of Contents
         * [Configuration Commands](#bgp-error-handling-config-commands) 
         * [Show Commands](#bgp-error-handling-show-commands) 
         * [Clear Commands](#bgp-error-handling-clear-commands) 
+      * [BGP EVPN Control Plane for Spine](#bgp-evpn-control-plane-for-spine)
+        * [Configuration Commands](#bgp-evpn-control-plane-config-commands)
+        * [Show Commands](#bgp-evpn-control-plane-show-commands)
    * [COPP Configuration And Show Commands](#copp-configuration-and-show-commands)
       * [COPP Show Commands](#copp-show-commands)
       * [COPP Config Commands](#copp-config-commands)
@@ -2244,6 +2247,122 @@ To retry installation of failed routes from Zebra, a clear command has been prov
   ```
   root@sonic:~# clear ip route not-installed
   ```
+
+
+## BGP EVPN Control Plane for Spine
+
+BGP EVPN control plane for spine nodes is supported in this SONiC release. EVPN VxLAN route termination and origination functionalities are not available yet. Reflection/propagation of following EVPN route types is supported:
+ 1 (Auto-discovery),
+ 2 (MAC/MACIP),
+ 3 (Inclusive Multicast Ethernet),
+ 4 (Ethernet Segment), and
+ 5 (IP Prefix).
+
+
+
+BGP EVPN configuration and show commands are available only via FRR vtysh shell. FRR split mode configuration (config routing_config_mode split) is required in SONiC. And FRR configuration is required to be saved (write memory) from vtysh in order to retain across reloads.
+
+### Configuration Commands
+
+BGP EVPN configuration example for e-BGP and i-BGP neighbors is provided below.
+
+```
+router bgp 65535
+ neighbor Ethernet48 interface remote-as external
+ neighbor 169.100.0.1 remote-as 65535
+ neighbor 169.200.0.1 remote-as 65535
+ neighbor 1690:100::1 remote-as 65550
+ !
+ address-family ipv4 unicast
+  neighbor 169.100.0.1 route-reflector-client
+  neighbor 169.200.0.1 route-reflector-client
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  neighbor Ethernet48 activate
+  neighbor 169.100.0.1 activate
+  neighbor 169.100.0.1 route-reflector-client
+  neighbor 169.200.0.1 activate
+  neighbor 169.200.0.1 route-reflector-client
+  neighbor 1690:100::1 activate
+ exit-address-family
+!
+```
+
+IPv4, IPv6, and BGP unnumbered can be used as underlay for EVPN. In the above example configuration, BGP unnumbered session is established on Ethernet48. Neighbors 169.100.0.1 and 169.200.0.1 are i-BGP neighbors and are configured as route-reflector-client. Whereas, 1690:100::1 is an e-BGP neighbor.
+
+
+
+### Show Commands
+
+EVPN show commands listed below are available only from FRR vtysh shell.
+
+Below show command displays summary of EVPN neighbors.
+
+```
+sonic-frr# show bgp l2vpn evpn summary
+BGP router identifier 12.1.10.1, local AS number 65535 vrf-id 0
+BGP table version 0
+RIB entries 3000, using 469 KiB of memory
+Peers 4, using 83 KiB of memory
+
+Neighbor        V         AS MsgRcvd MsgSent   TblVer  InQ OutQ  Up/Down State/PfxRcd
+Ethernet48      4      65540    5040    5043        0    0    0 00:29:59         5000
+169.100.0.1     4      65535    5040    5043        0    0    0 00:29:59         5000
+169.200.0.1     4      65535    5040    5043        0    0    0 00:29:59         5000
+1690:100::1     4      65550    5158 1958393        0    0    0 00:34:31         5000
+
+Total number of neighbors 4
+Total number of neighbors established 4
+sonic-frr#
+```
+
+
+
+EVPN routes can be displayed using below show command. Appropriate option can be used to display detailed output or subset of routes.
+
+```
+show bgp l2vpn evpn [route [{rd <rd-value>} [type <type>]] [detail] ]
+```
+
+
+
+In order to see specific route-type, the 'type' filter can be used as shown below.
+
+```
+sonic-frr# show bgp l2vpn evpn route type ?
+  ead        Ethernet Auto-Discovery (type-1) route
+  es         Ethernet Segment (type-4) route
+  macip      MAC-IP (Type-2) route
+  multicast  Multicast (Type-3) route
+  prefix     Prefix (type-5 )route
+sonic-frr# 
+```
+
+
+
+```
+sonic-frr# show bgp l2vpn evpn route rd 32.3.10.3:1001 type multicast
+EVPN type-1 prefix: [1]:[ESI]:[EthTag]
+EVPN type-2 prefix: [2]:[EthTag]:[MAClen]:[MAC]
+EVPN type-3 prefix: [3]:[EthTag]:[IPlen]:[OrigIP]
+EVPN type-4 prefix: [4]:[ESI]:[IPlen]:[OrigIP]
+EVPN type-5 prefix: [5]:[EthTag]:[IPlen]:[IP]
+
+BGP routing table entry for 32.3.10.3:1001:[3]:[0]:[32]:[3.3.100.3]
+Paths: (3 available, best #3)
+  Advertised to non peer-group peers:
+  Ethernet56 21.2.9.9 22.2.10.10
+  Route [3]:[0]:[32]:[3.3.100.3]
+  900 300
+    3.3.100.3 from Ethernet56 (31.3.9.9)
+      Origin IGP, valid, external
+      Extended Community: RT:300:999 ET:8
+      Last update: Mon Oct 28 07:02:22 2019
+      PMSI Tunnel Type: Ingress Replication, label: 999
+...
+```
+
 
 # COPP Configuration And Show Commands
 
