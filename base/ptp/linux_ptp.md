@@ -325,52 +325,57 @@ Example output:
 #### 3.6.3.2 show ptp time-property  
 
 Example output:  
-\-----------------------------------------------------------
- Interface  State
-\-----------------------------------------------------------
- Ethernet0  Master
- Ethernet4  Master"
+
+    ---------------------
+    Interface  State
+    ---------------------
+    Ethernet0  Master 
+    Ethernet4  Master
+
 
 #### 3.6.3.3 show ptp clock
 Example output:
-\-----------------------------------------------------------
-Attribute             Value/State
-\-----------------------------------------------------------
-Domain Number         0
-Priority1             0
-Priority2             0
-Two Step              True
-Slave Only            True
-Number Ports          0
-Clock Quality:
-  Clock Class         248
-  Clock Accuracy      0
-  Ofst Scaled Log Var 0
+
+    ---------------------------------
+    Attribute             Value/State
+    ---------------------------------
+    Domain Number         0
+    Priority1             0
+    Priority2             0
+    Two Step              True
+    Slave Only            True
+    Number Ports          0
+    Clock Quality:
+    Clock Class           248
+    Clock Accuracy        0
+    Ofst Scaled Log Var   0
 
 #### 3.6.3.4 show ptp port  
 
 Example output:
-\-----------------------------------------------------------
-Attribute                     Value/State
-\-----------------------------------------------------------
-Port Number                   1
-Port State                    Master
-Log Min Pdelay Req Intvl      5
-Log Min delay Req Intvl       0
-Peer Mean Path delay          0
+
+    -----------------------------------------------------------
+    Attribute                     Value/State
+    -----------------------------------------------------------
+    Port Number                   1
+    Port State                    Master
+    Log Min Pdelay Req Intvl      5
+    Log Min delay Req Intvl       0
+    Peer Mean Path delay          0
 
 #### 3.6.3.5 show ptp parent
 
 Example output:
-\-----------------------------------------------------------
-Attribute                     Value/State
-\-----------------------------------------------------------
-Grandmaster Identity          0a:0b:0c:0d:0e:0f
-Grandmaster Priority1         128
-Grandmaster Priority2         128
-Stats Valid                   True
-Observed Off Scaled Log Var   1
-Observed Clock Phase Chg Rate 1
+
+    -----------------------------------------------------------
+    Attribute                     Value/State
+    -----------------------------------------------------------
+    Grandmaster Identity          0a:0b:0c:0d:0e:0f
+    Grandmaster Priority1         128
+    Grandmaster Priority2         128
+    Stats Valid                   True
+    Observed Off Scaled Log Var   1
+    Observed Clock Phase Chg Rate 1
 
 ### 3.6.4 Debug Commands
 
@@ -440,5 +445,5 @@ Verify LinuxPTP logs with different log levels
 Verify no HW programming related to PTP during warm reboot
 
 # 9 Internal Design Information
-
 The major component for timestamping support, KNETSync, is implemented in an embedded application. The KNETSync driver changes and clock driver are part of SDK patch for Linux PTP.  
+
