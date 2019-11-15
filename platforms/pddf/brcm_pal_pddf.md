@@ -26,7 +26,7 @@
 		 * [PDDF Device Modules](#pddf-device-modules)
 		 * [Driver Extension Framework](#driver-extension-framework)
 	 * [Generic Device-Object Class Design](#generic-device-object-class-design)
-	 *  [PDDF I2C Component Design](#pddf-i2c-component-design)
+	 * [PDDF I2C Component Design](#pddf-i2c-component-design)
 		 * [List of Supported Components](#list-of-supported-components)
 		 * [I2C Topology Descriptor](#i2c-topology-descriptor)
 		 * [PSU Component](#psu-component)
@@ -37,6 +37,17 @@
 		 * [System Status Registers](#system-status-registers)
 		 * [Optics Component](#optics-component)
 		 * [lm-sensors](#lm-sensors-tools)
+	 * [PDDF BMC Component Design](#pddf-bmc-component-design)
+		 * [PSU JSON](#psu-json)
+		 * [FAN JSON](#fan-json)
+		 * [Temp Sensor JSON](#temp-json)
+		 * [IPMITOOL Outputs](#temp-json)
+	 * [PDDF Object Class Design](#pddf-object-class-design)
+		 * [PSU Class](#psu-class)
+		 * [FAN Class](#fan-class)
+		 * [LED Class](#led-class)
+		 * [System EEPROM Class](#system-eeprom-class)
+		 * [Optics Class](#optics-class)
  * [SAI](#sai)
  * [CLI](#cli)
  * [Serviceability and DEBUG](#serviceability-and-debug)
@@ -54,6 +65,7 @@
 | 0.2 | 06/06/2019  |  Systems Infra Team     | Incorporated feedback             |
 | 0.3 | 10/21/2019  |  Systems Infra Team     | GPIO JSON object support          |
 | 0.4 | 10/22/2019  |  Systems Infra Team     | Platform 2.0 API support          |
+| 0.5 | 10/31/2019  |  Systems Infra Team     | BMC Support                       |
 
 # About this Manual
 Platform Driver Development Framework (PDDF) is part of SONiC Platform Development Kit (PDK) which optimizes the platform development. PDK consists of 
@@ -80,17 +92,19 @@ This document describes the high level design details of PDDF and its components
 | PSU                      | Power Supply Unit |
 | I2C                      | Inter-integrated Circuit communication protocol |
 | SysFS                    | Virtual File System provided by the Linux Kernel |
+| BMC                      | Baseboard Management Controller |
 
 
 ## 1 Requirements Overview
 SONiC OS is portable across different network devices with supported ASIC via Switch Abstraction Interface (SAI). These devices primarily differ in the way various device specific hardware components are accessed, and thus require custom device drivers and python object classes. Each platform vendor implements these custom device drivers and object classes. The feature requirement is to support a SONiC platform driver development framework to enable rapid development of custom device drivers and classes.
 
 ### 1.1	Functional Requirements
-Define Platform driver development framework to enable platform vendors to develop custom device drivers and device-object classes rapidly to accelerate development and validation of platforms in SONiC environment. The following requirements need to be satisfied by the framework.
+Define Platform driver development framework to enable platform vendors to develop custom device drivers and device-object classes rapidly to accelerate development and validation of platforms in SONiC environment. Hardware components can be accessed via I2C, BMC, or both.  PDDF supports both I2C and BMC access methods. The following requirements need to be satisfied by the framework.
  - PDDF to provide a data driven      framework to access platform HW devices.
  - PDDF shall support I2C based HW    designs with I2C controllers on the Host CPU.
+ - PDDF shall support BMC based HW    designs with BMC SoC on the Host motherboard.
  - Provide reusable generic device drivers for the following components
-	 - FAN		 
+	 - FAN
 	 - PSU (Power supply units)
 	 - System EEPROM
 	 - Optic Transceivers (SFP, QSFP)
@@ -100,16 +114,16 @@ Define Platform driver development framework to enable platform vendors to devel
  - Generic drivers would expose device attributes via SysFS interface
  - PDDF shall support reusing custom device driver or standard linux driver to be used along with the generic drivers. This would allow  platform HW devices to be managed by PDDF generic drivers or custom/standard Linux drivers.
  - Custom drivers should expose device attributes via SysFS interface
- - Support platform vendors to extend generic drivers with custom implementations to support initialization, exit, pre and post access for get / set of attributes    
+ - Support platform vendors to extend generic drivers with custom implementations to support initialization, exit, pre and post access for get / set of attributes
  - Provide generic SONiC python object classes to access various attributes for the following devices
-     - FAN 		
-	 - PSU (Power supply units) 		
-	 - System EEPROM 		
-	 - Optic Transceivers (SFP, QSFP) 		
-	 - System Status Registers 		
+     - FAN
+	 - PSU (Power supply units)
+	 - System EEPROM
+	 - Optic Transceivers (SFP, QSFP)
+	 - System Status Registers
 	 - System LED
  - Support data driven framework using the descriptor files to represent the following platform specific information
-   - I2C HW topology representing the various devices and their interconnections
+   - I2C/BMC HW topology representing the various devices and their interconnections
    - Per platform data to enable get / set of various attributes in each device
  - PDDF generic drivers shall not require a reboot after installation
  - PDDF generic drivers shall support initialization and de-initialization
@@ -186,25 +200,32 @@ This makes the development and testing much simpler. Any change in the platform 
 
 #### 3.1.1	JSON Descriptor files
 
- The descriptor files are used to represent the following information for a given platform: 	
+The descriptor files are used to represent the following information for a given platform:
+
+I2C based HW components:
  - I2C Topology descriptor
 	 - Representation of the I2C bus
    - I2C client devices
-   - Inter connection of I2C devices	 	
- - I2C Device Access attributes 		
-	 - Each device exposes a set of data attributes to read/write  		
-		 - Eg., PSU(psu_present), SFP/QSFP(sfp_present, lpmode) - CPLD registers/offsets/ masks, etc., 		
-	 - For each device, platform specific attributes to help access the data attributes 		
- -  Reference to a standard Linux driver, if available and used, for I2C device
-	 - pca954x,   lm75, etc., 	
- - Value Map for each device in a platform 		
+   - Inter connection of I2C devices
+ - I2C Device Access attributes
+	 - Each device exposes a set of data attributes to read/write
+		 - Eg., PSU(psu_present), SFP/QSFP(sfp_present, lpmode) - CPLD registers/offsets/ masks, etc.,
+	 - For each device, platform specific attributes to help access the data attributes
+
+BMC based HW components:
+ - BMC descriptor
+   - BMC client devices
+   - Access attributes of BMC devices
+ - Reference to a standard Linux driver if available and used
+	 - pca954x,   lm75, etc.,
+ - Value Map for each device in a platform
 	 - Each  device or a platform can represent values to be interpreted in a different way.
 		 - For eg., on some platforms “1” can represent “Port Side Intake”, whereas on another platform it could be “0”. This map provides how to interpret the values.
 
 #### 3.1.2 Generic PDDF HW Device Drivers
 
 
-PDDF generic drivers are device drivers for the following devices: FAN/PSU/EEPROM/Optics Transceivers/ System LED/ CPLDs. These drivers in kernel space, rely on the per-platform data in JSON descriptor files to expose data via SysFS interface. They provide a generic interface to get/set of these attributes. There are two types of data, a driver works on:
+For I2C based HW components, PDDF provides generic drivers for the following I2C based devices: FAN/PSU/EEPROM/Optics Transceivers/ System LED/ CPLDs. These drivers in kernel space, rely on the per-platform data in JSON descriptor files to expose data via SysFS interface. They provide a generic interface to get/set of these attributes. There are two types of data, a driver works on:
 
  - Device data – Attributes exposed by the device itself
  - Platform access data – Information on how/ where to access the device attributes
@@ -214,6 +235,9 @@ These generic PDDF drivers provide capabilities to:
  - Extend using vendor implementations
  - Mix and match generic and standard drivers
  - Support any existing driver for a given component
+
+For BMC based HW components such as FAN/PSU/TEMP sensors, PDDF does not need to provide generic drivers to manage these components. The management is done by BMCs which are located on IPMI-compliant hardware. IPMI is an open-standard hardware management interface to monitor and manage HW components. IPMItool utility is provided for users to monitor and manage BMC based components.          
+
 
 #### 3.1.3 PDDF Platform Device Object Classes
 PDDF provides generic user space python object classes which implement the platform APIs defined under:
@@ -284,7 +308,7 @@ There are multiple JSON files which must be provided by a PDDF developer.  The l
 	 -  Details like number of fans, PSUs, ports etc
  - Device Parsing Info
  - I2C Topology Info
- - Device Access info
+ - Device Access info via I2C or BMC
  - Value Maps Info for various device-data Attributes, etc.
 
 
@@ -563,23 +587,6 @@ Description of the fields inside *attr_list*
 },
 ```
 
-
-##### 3.4.3.3 PSU Object Class Design
-PsuBase is the base PSU class, which declares various APIs to get/set information from the PSU devices. PDDF PSU generic object class **Psu** shall extend from PsuBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files
-
-Example,
-```
-def get_voltage(self):
-    """
-    Retrieves current PSU voltage output
-
-    Returns:
-        A float number, the output voltage in volts,
-        e.g. 12.1
-    """
-    # Implementation to get PSU output voltage using the JSON descriptor files
-```
-
 #### 3.4.4 FAN Component
 Fan has a PDDF device module and a PDDF device driver module.
 
@@ -659,30 +666,6 @@ Description of the objects inside *attr_list* which are very specific to Fan com
 ```
 
 
-##### 3.4.4.3 FAN Object Class Design
-FanBase is the base FAN class, which declares various APIs to get/set information from the Fan devices. PDDF Fan generic object class **Fan** shall extend from FanBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files. FanBase is part of the new platform API framework in SONiC.
-
-Example,
-```
-	def get_direction(self):
-		"""
-		Retrieves the direction of fan
-		Returns:
-		A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
-		depending on fan direction
-		"""
-        # Implementation using JSON descriptor files
-
-	def get_speed(self):
-		"""
-		Retrieves the speed of fan in rpms
-		Returns:
-		An integer, denoting the rpm (revolutions per minute) speed
-		"""
-        # Implementation using JSON descriptor files
-
-```
-
 #### 3.4.5 LED Component
 Network switches have a variety of LED lights, system LEDs, Fan Tray LEDs, and port LEDs, used to act as indicators of switch status and network port status.  The system LEDs are used to indicate the status of power and the system. The fan tray LEDs indicate each fan status. The port LEDs are used to indicate the state of the links such as link up, Tx/RX activity and speed. The Port LEDs are in general managed by the LED controller provided by switch vendors. The scope of this LED section  is for system LEDs and fan tray LEDs.     
 
@@ -718,78 +701,6 @@ Samples:
                     }  
 
 
-##### 3.4.5.3 LED Object Class Design
-There is no generic LED object class defined in PDDF. LED APIs related to a component has been made part of thats component's object class. System LED APIs are made part of chassis object class.  
-```
-class Chassis(ChassisBase):
-    def set_system_led(self, device_name, color):
-        """
-        Sets the state of one system status
-        Args:
-            color: A string representing the color with which to set the
-               system status LED
-        Returns:
-            bool: True if status LED state is set successfully, False if not
-        """
-        raise NotImplementedError
-
-    def get_system_led(self, device_name):
-        """
-        Gets the state of the system status LED
-        Returns:
-            A string, one of the predefined STATUS_LED_COLOR_* strings
-        """
-        raise NotImplementedError
-```
-
-PSU class provides get/set method to access PSU system LED
-```
-class Psu(PsuBase):
-    def set_status_led(self, color):
-        """
-        Sets the state of the PSU status LED
-        Args:
-            color: A string representing the color with which to set the
-               PSU status LED
-        Returns:
-            bool: True if status LED state is set successfully, False if not
-        """
-        raise NotImplementedError
-
-    def get_status_led(self):
-        """
-        Gets the state of the PSU status LED
-        Returns:
-            A string, one of the predefined STATUS_LED_COLOR_* strings
-        """
-        raise NotImplementedError
-```
-
-
-FAN class provides get/set method to access Fantray LED
-```    
-class Fan(FanBase):
-    def set_status_led(self, color):
-        """
-        Sets the state of the fan module status LED
-        Args:
-            color: A string representing the color with which to set the
-               fan module status LED
-        Returns:
-            bool: True if status LED state is set successfully, False if not
-        """
-        raise NotImplementedError
-
-    def get_status_led(self):
-        """
-        Gets the state of the fan status LED
-        Returns:
-            A string, one of the predefined STATUS_LED_COLOR_* strings
-        """
-        raise NotImplementedError
-
-```
-
 #### 3.4.6 Sensors
 
 ##### 3.4.6.1 Driver Design  
@@ -808,9 +719,9 @@ They are consisted of key/value sections. Each section has a unique name. The ta
     Samples:
 
     "PLATFORM" :  { "num_temp_sensors":"3"}  
-    "TEMP1" :  { "dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP1", "display_name" : "CPU Temp Sensor" },       
-                 "dev_attr": { "index":"0"},   
-                 "i2c": {  
+    "TEMP1" :  { "dev_info": {"device_type":"TEMP_SENSOR", "device_name":"TEMP1"},
+                 "dev_attr": {"display_name": "TEMP_CPU"},
+                 "i2c": { 
                              "topo_info": { "parent_bus":"0x21", "dev_addr":"0x48", "dev_type":"lm75"},
                              "attr_list":
                        		 [
@@ -879,29 +790,6 @@ For SYS EEPROM, the client creation information is present in I2C Topology JSON 
   }
 },
 ```
-
-##### 3.4.7.3 EEPROM Object Class Design
-A generic user space object class is written for EEPROM. Internally it leverages eeprom_base and eeprom_tlvinfo base classes. The SysFS path for driver supported attribute is retrieved from the user provided JSON file. An example of the API definition form eeprom_base is shown below,
-```
-def check_status(self):
-    if self.u != '':
-        F = open(self.u, "r")
-        d = F.readline().rstrip()
-        F.close()
-        return d
-    else:
-        return 'ok'
-
-def set_cache_name(self, name):
-    # before accessing the eeprom we acquire an exclusive lock on the eeprom file.
-    # this will prevent a race condition where multiple instances of this app
-    # could try to update the cache at the same time
-    self.cache_name = name
-    self.lock_file = open(self.p, 'r')
-    fcntl.flock(self.lock_file, fcntl.LOCK_EX)
-```
-Generic object class may provide further initialization steps and definitions for new APIs.
-
 
 #### 3.4.8 System Status Registers
 
@@ -1037,40 +925,6 @@ Optic JSON is structured to include the access-data for all the supported SysFS 
 
 ```
 
-##### 3.4.9.3 Optics Object Class Design
-
-SfpBase is the base Optic class, which declares various APIs to get/set information from the optic transceivers. PDDF generic object class **Sfp** shall extend from SfpBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files.
-
-Example,
-```
-    def get_transceiver_info(self):
-        """
-        Retrieves transceiver info of this SFP
-
-        Returns:
-            A dict which contains following keys/values :
-        ========================================================================
-        keys                       |Value Format   |Information
-        ---------------------------|---------------|----------------------------
-        type                       |1*255VCHAR     |type of SFP
-        hardwarerev                |1*255VCHAR     |hardware version of SFP
-        serialnum                  |1*255VCHAR     |serial number of the SFP
-        manufacturename            |1*255VCHAR     |SFP vendor name
-        modelname                  |1*255VCHAR     |SFP model name
-        Connector                  |1*255VCHAR     |connector information
-        encoding                   |1*255VCHAR     |encoding information
-        ext_identifier             |1*255VCHAR     |extend identifier
-        ext_rateselect_compliance  |1*255VCHAR     |extended rateSelect compliance
-        cable_length               |INT            |cable length in m
-        mominal_bit_rate           |INT            |nominal bit rate by 100Mbs
-        specification_compliance   |1*255VCHAR     |specification compliance
-        vendor_date                |1*255VCHAR     |vendor date
-        vendor_oui                 |1*255VCHAR     |vendor OUI
-        ========================================================================
-        """
-        # Implementation using the JSON descriptor file
-```
-
 #### 3.4.10 lm-sensors Tools
 lm-sensors package (Linux monitoring sensors) provides tools and drivers for monitoring temperatures, voltages, and fan speeds via command line. It can monitoring hardware such the LM75 and LM78. These tools are described below. These tools would continue to work with PDDF framework too.
 
@@ -1110,6 +964,409 @@ fancontrol is a shell script for use with lm_sensors. It reads its configuration
     MAXPWM=/sys/bus/i2c/devices/2-0066/pwm1=69
 
 The SysFS paths should be given as per the PDDF I2C topology description and the attributes.
+
+### 3.5 PDDF BMC Component Design
+
+This section covers the JSON design for BMC based hardware components. PDDF utilizes ipmitool to monitor components.   
+PDDF supports BMC based HW design consisting of the following components:
+
+ - PSUs
+ - Fan Controller 
+ - Temp Sensors
+
+```
+BMC Component JSON Template:
+<Device Name> : {
+	"bmc" : {
+              "dev_attr" : { "display_name" : "<desired display name>"},
+              "ipmitool" : {
+                 "attr_list":
+                 [
+                    {"attr_name: <pre-defined list>, "bmc_cmd": <ipmitool non raw request>, "field_name":<field name of ipmitool output>, "field_index": <number 1,..>, "mult": <multiplication factor>, "raw"="0" },
+                    {"attr_name: <pre-defined list>, "bmc_cmd": <ipmitool raw request>, "raw"="1", "type":"ascii"},
+                    {"attr_name: <pre-defined list>, "bmc_cmd": <ipmitool raw request>, "raw"="1", "type":"raw"},
+                    {"attr_name: <pre-defined list>, "bmc_cmd": <ipmitool raw request>, "raw"="1", "type":"mask", "mask":"hex_num"}
+                 ]
+              },
+              "ipmiapi" : {
+              }
+                     
+	}
+
+}
+```
+
+> **display_name**:
+If this field exists, the device name is displayed using this field. Otherwise, the device_name content is shown.   
+
+> **ipmitool, ipmiapi**:
+ipmitool and ipmiapi are two methods of getting ipmi data. ipmitool uses ipmitool command to get data from BMC while ipmiapi will use kernel ipmi interfaces to retrieve the data. ipmiapi will be implemented in the future.
+
+> **attr_name**:
+The PDDF BMC JSON design has the pre-defined list of the attribute names which is platform independent. IPMI is an standardized interface specification, but the naming convention of ipmitool output is vendor specific. The pre-defined attribue name list provides the ability to use generic PDDF plugins to retrieve information for all platforms.
+
+> **bmc_cmd**: 
+There are two types of cmds: raw ipmi request and non raw ipmi request. The list of available ipmitool commands can be found by 
+    #ipmitool help
+
+> **raw**: 
+This indicates if bmc_cmd is a RAW IPMI request or not. 1: raw ipmi request and 0: non-raw ipmi request.
+
+> **field_name**: 
+This is the first field of an ipmitool command output. Each vendor has different naming conventions. Please check vendor specific documents. 
+
+> **field_pos**:
+For a non-raw ipmi request, this field is used to select a specific field position.  
+
+> **mult**:
+For a non-raw ipmi request, this field is used to specify multiplication factor for the attribute value. It is an optional field only to be defined for numeric attribute values.
+
+
+> **type**: 
+This field indicates the output presentation. It is a pre-defined list, "ascii", "raw", and "mask". 
+  >- "ascii": the output is converted from hex string to ascii.
+  >- "raw": the output is not required further conversion.
+  >- "mask": the output needs to be masked with the value of "mask" field. 
+
+> **mask**: 
+This is a hex number to mask the output 
+
+
+
+| Name       |non-raw ipmi request    |raw ipmi request     |
+|------------|------------------------|---------------------|
+| attr_name  |   mandatory            |  mandatory          |
+| bmc_cmd    |   mandatory            |  mandatory          |
+| raw        |   mandatory            |  mandatory          |
+| field_name |   mandatory            |  not required       |
+| field_pos  |   mandatory            |  not required       |
+| mult       |   optional             |  not required       |
+| type       |   not required         |  mandatory          |
+| mask       |   not required         |  mandatory: "mask" type; not required: "ascii" and "raw" types |
+
+  Example:
+  non-raw ipmi request:
+
+    { "attr_name":"psu_power_good", "bmc_cmd":"ipmitool sdr", "field_name":"PSU1_POWER_IN", "field_index":"3"},
+    # ipmitool sdr | grep PSU1_POWER_IN
+    PSU1_POWER_IN    | 135 Watts         | ok
+
+    The output of PSU1_POWER_IN is "ok" because the field_index is 3. 
+
+    raw ipmi request:
+    { "attr_name":"psu_model_name", "bmc_cmd":"ipmitool raw 0x36 0xBB 0x4C 0x1C 0x00 0x9a 0x01", "raw":"1"}
+    # ipmitool raw 0x36 0xBB 0x4C 0x1C 0x00 0x9a 0x01
+      37 30 30 2d 30 31 33 36 38 34 2d 30 31 30 30 
+      The field of type is "ascii", so the output is converted from hex to string. The ascii format is 700-013684-0100. 
+    
+    { "attr_name":"psu_present", "bmc_cmd":"ipmitool raw 0x36 0xB9 0x4C 0x1C 0x00 0x02", "raw":"1", "type": "mask", "mask": "0x01"},
+    # ipmitool raw 0x36 0xB9 0x4C 0x1C 0x00 0x02
+       c2
+       The field of type is "mask". For example, bit value of 1:absent and bit value of 0:present. PSU1 is present.    
+
+    { "attr_name":"fan1_direction", "bmc_cmd":"ipmitool raw 0x0a 0x11 0x00 0x19 0x00 0x01",  "raw": "1", "type":"raw"},
+    # ipmitool raw 0x0a 0x11 0x00 0x19 0x00 0x01
+      The field of type is "raw". The output does not need further conversion.
+
+
+#### 3.5.1 PSU JSON 
+
+> **Device Name**: PSU\<index\>
+  index: denote the PSU number starting with 1
+
+> **Predefined attribute names**:
+
+ >- psu_power_good: the powergood status of PSU
+ >- psu_present: the present status of PSU
+ >- psu_model_name: the model name of PSU
+ >- psu_serial_num: the serial number of PSU
+ >- psu_mfr_id: the manufacture id of PSU
+ >- psu_power: present energy supplied by PSU
+ >- psu_voltage: present PSU voltage output
+ >- psu_current: present electric current supplied by PSU
+
+
+    "PSU1":
+    {
+    
+       "bmc": {
+                 "ipmitool" : {
+                    "attr_list":
+                     [
+                         { "attr_name":"psu_power_good", "bmc_cmd":"ipmitool sdr", "raw": "0", "field_name":"PSU1_POWER_IN", "field_pos":"3"},
+                         { "attr_name":"psu_present", "bmc_cmd":"ipmitool raw 0x36 0xB9 0x4C 0x1C 0x00 0x02", "raw": "1", "type":"mask", "mask":"0x01"},
+                         { "attr_name":"psu_model_name", "bmc_cmd":"ipmitool raw 0x36 0xBB 0x4C 0x1C 0x00 0x9a 0x01", "raw":"1", "type":"ascii"},
+                         { "attr_name":"psu_serial_num", "bmc_cmd":"ipmitool raw 0x36 0xBB 0x4C 0x1C 0x00 0x9e 0x01", "raw":"1", "type":"ascii"},
+                         { "attr_name":"psu_mfr_id", "bmc_cmd":"ipmitool raw 0x36 0xBB 0x4C 0x1C 0x00 0x99 0x01", "raw":"1", "type":"ascii"},
+                         { "attr_name":"psu_power", "bmc_cmd":"ipmitool sdr", "raw": "0", "field_name":"PSU1_POWER_IN", "field_pos":"2"},
+                         { "attr_name":"psu_voltage", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name" : "PSU1_VOLTAGE_OUT", "field_pos":"2"},
+                         { "attr_name":"psu_current", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name" : "PSU1_CURRENT_OUT", "field_pos":"2"}
+                     ]
+                }
+	     }
+    }
+
+#### 3.5.2 FAN JSON 
+
+> **Device Name**: FAN-CTRL
+
+> **Predefined attribute names**:
+index: Fan index starting with 1
+ >- fan\<index\>_present: present status of FAN  
+ >- fan\<index\>_input: rpm speed of front FAN 
+ >- fan\<index\>_pwm: puls-width modulation of FAN 
+ >- fan\<index\>_direction: direction of FAN 
+
+
+    "FAN-CTRL":
+    {
+    
+       "bmc": {
+                 "ipmitool" : {
+                      "attr_list":
+                     [
+                         { "attr_name":"fan1_present", "bmc_cmd":"ipmitool raw 0x36 0xB9 0x4C 0x1C 0x00 0x02", "raw": "1", "type":"mask", "mask":"0x01"},
+                         { "attr_name":"fan1_direction", "bmc_cmd":"ipmitool raw 0x0a 0x11 0x00 0x19 0x00 0x01",  "raw": "1", "type":"raw"},
+                         { "attr_name":"fan1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name" : "Fan_SYS_1_1", "field_pos":"2"},
+                         { "attr_name":"fan1_pwm", "bmc_cmd":"ipmitool raw 0x30 0xd6 0x00 0x00", "raw": "1", "type":"raw"}
+                     ]
+                 }
+	     }
+    }
+
+> NOTE: Rear fans and front fans are considered separate fans. In above output, <xxx>1_1: front fan of fan1 and <xxx>1_2: rear fan of fan1
+
+#### 3.5.3 TEMP Sensors JSON 
+
+> **Device Name**: TEMP\<index\>
+  index: denote the TEMP number starting with 1
+
+> **Predefined attribute names**:
+ >- temp1_max: Upper non-critical threshold temperature setting 
+ >- temp1_max_hyst: Upper critical threshold temperature setting 
+ >- temp1_input: current temperature reading from theraml 
+
+"TEMP1":
+{
+    
+       "dev_attr" : {"display_name":"Temp_Ambient_1"},
+       "bmc": {
+                  "ipmitool" : {
+                      "attr_list":
+                     [
+                         { "attr_name":"temp1_max", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"Temp_Ambient_1", "field_pos":"10"},
+                         { "attr_name":"temp1_max_hyst ", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":Temp_Ambient_1", "field_pos":"9"},
+                         { "attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name" : "Temp_Ambient_1", "field_pos":"2"}
+           
+                     ]
+                  }
+              }
+}
+
+#### 3.5.4 IPMITOOL OUTPUTS
+
+This section shows  examples of ipmitool outputs.
+
+    # ipmitool sdr | grep PSU1_POWER_IN
+      PSU1_POWER_IN    | 135 Watts         | ok
+
+    # ipmitool sdr | grep PSU1_VOLTAGE_OUT
+      PSU1_VOLTAGE_OUT | 12.18 Volts       | ok
+
+    # ipmitool sdr | grep PSU1_CURRENT_OUT
+      PSU1_CURRENT_OUT | 9.10 Amps         | ok
+
+    # ipmitool sensor | grep Fan_SYS_1_1
+      Fan_SYS_1_1      | 7840.000   | RPM        | ok    | na        | 480.000   | 960.000   | 30560.000 | 30720.000 | na
+
+    # ipmitool sensor | grep Fan_SYS_1_2
+      Fan_SYS_1_2      | 6720.000   | RPM        | ok    | na        | 480.000   | 960.000   | 30560.000 | 30720.000 | na
+
+    # ipmitool sensor | grep Fan_SYS_2_1
+      Fan_SYS_2_1      | na         | RPM        | na    | na        | 480.000   | 960.000   | 30560.000 | 30720.000 | na
+
+    # ipmitool sensor | grep Fan_SYS_2_2
+      Fan_SYS_2_2      | na         | RPM        | na    | na        | 480.000   | 960.000   | 30560.000 | 30720.000 | na
+   
+    # ipmitool sensor | grep Temp_Ambient_1
+      Temp_Ambient_1   | 37.000     | degrees C  | ok    | na        | na        | na        | 55.000    | 62.000    | 65.000
+  
+
+
+### 3.6 PDDF Object Class Design
+As mentioned in the section 3.3, platform devices/components are provided with a python user object class which interacts with the SysFs interface to get the HW information. Below are the component specific examples for such class.
+
+#### 3.6.1 PSU Class
+PsuBase is the base PSU class, which declares various APIs to get/set information from the PSU devices. PDDF PSU generic object class **Psu** shall extend from PsuBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files
+
+Example,
+```
+def get_voltage(self):
+    """
+    Retrieves current PSU voltage output
+
+    Returns:
+        A float number, the output voltage in volts,
+        e.g. 12.1
+    """
+    # Implementation to get PSU output voltage using the JSON descriptor files
+```
+
+#### 3.6.2 FAN Class
+FanBase is the base FAN class, which declares various APIs to get/set information from the Fan devices. PDDF Fan generic object class **Fan** shall extend from FanBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files. FanBase is part of the new platform API framework in SONiC.
+
+Example,
+```
+	def get_direction(self):
+		"""
+		Retrieves the direction of fan
+		Returns:
+		A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
+		depending on fan direction
+		"""
+        # Implementation using JSON descriptor files
+
+	def get_speed(self):
+		"""
+		Retrieves the speed of fan in rpms
+		Returns:
+		An integer, denoting the rpm (revolutions per minute) speed
+		"""
+        # Implementation using JSON descriptor files
+
+```
+
+
+#### 3.6.3 LED Class
+There is no generic LED object class defined in PDDF. LED APIs related to a component has been made part of thats component's object class. System LED APIs are made part of chassis object class.  
+```
+class Chassis(ChassisBase):
+    def set_system_led(self, device_name, color):
+        """
+        Sets the state of one system status
+        Args:
+            color: A string representing the color with which to set the
+               system status LED
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+        """
+        raise NotImplementedError
+
+    def get_system_led(self, device_name):
+        """
+        Gets the state of the system status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings
+        """
+        raise NotImplementedError
+```
+
+PSU class provides get/set method to access PSU system LED
+```
+class Psu(PsuBase):
+    def set_status_led(self, color):
+        """
+        Sets the state of the PSU status LED
+        Args:
+            color: A string representing the color with which to set the
+               PSU status LED
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+        """
+        raise NotImplementedError
+
+    def get_status_led(self):
+        """
+        Gets the state of the PSU status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings
+        """
+        raise NotImplementedError
+```
+
+
+FAN class provides get/set method to access Fantray LED
+```    
+class Fan(FanBase):
+    def set_status_led(self, color):
+        """
+        Sets the state of the fan module status LED
+        Args:
+            color: A string representing the color with which to set the
+               fan module status LED
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+        """
+        raise NotImplementedError
+
+    def get_status_led(self):
+        """
+        Gets the state of the fan status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings
+        """
+        raise NotImplementedError
+
+```
+
+
+#### 3.6.4 System EEPROM Class
+A generic user space object class is written for EEPROM. Internally it leverages eeprom_base and eeprom_tlvinfo base classes. The SysFS path for driver supported attribute is retrieved from the user provided JSON file. An example of the API definition form eeprom_base is shown below,
+```
+def check_status(self):
+    if self.u != '':
+        F = open(self.u, "r")
+        d = F.readline().rstrip()
+        F.close()
+        return d
+    else:
+        return 'ok'
+
+def set_cache_name(self, name):
+    # before accessing the eeprom we acquire an exclusive lock on the eeprom file.
+    # this will prevent a race condition where multiple instances of this app
+    # could try to update the cache at the same time
+    self.cache_name = name
+    self.lock_file = open(self.p, 'r')
+    fcntl.flock(self.lock_file, fcntl.LOCK_EX)
+```
+Generic object class may provide further initialization steps and definitions for new APIs.
+
+#### 3.5.5 Optics Class
+SfpBase is the base Optic class, which declares various APIs to get/set information from the optic transceivers. PDDF generic object class **Sfp** shall extend from SfpBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files.
+
+Example,
+```
+    def get_transceiver_info(self):
+        """
+        Retrieves transceiver info of this SFP
+
+        Returns:
+            A dict which contains following keys/values :
+        ========================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        type                       |1*255VCHAR     |type of SFP
+        hardwarerev                |1*255VCHAR     |hardware version of SFP
+        serialnum                  |1*255VCHAR     |serial number of the SFP
+        manufacturename            |1*255VCHAR     |SFP vendor name
+        modelname                  |1*255VCHAR     |SFP model name
+        Connector                  |1*255VCHAR     |connector information
+        encoding                   |1*255VCHAR     |encoding information
+        ext_identifier             |1*255VCHAR     |extend identifier
+        ext_rateselect_compliance  |1*255VCHAR     |extended rateSelect compliance
+        cable_length               |INT            |cable length in m
+        mominal_bit_rate           |INT            |nominal bit rate by 100Mbs
+        specification_compliance   |1*255VCHAR     |specification compliance
+        vendor_date                |1*255VCHAR     |vendor date
+        vendor_oui                 |1*255VCHAR     |vendor OUI
+        ========================================================================
+        """
+        # Implementation using the JSON descriptor file
+```
+
+
+
 
 ## 4 SAI
 Not applicable
@@ -1158,6 +1415,7 @@ PSU    Status
 -----  --------
 PSU1   OK
 PSU2   NOT OK
+
 root@sonic:/home/admin# pddf_psuutil mfrinfo
 PSU1 is OK
 Manufacture Id: 3Y POWER
@@ -1306,13 +1564,30 @@ Options:
 # pddf_thermalutil version
 PDDF thermalutil version 2.0
 
+# example of i2c based thermals
 # pddf_thermalutil gettemp
-Temp Sensor    Label    Value
--------------  -------  -----------------------------------------------
-TEMP1                   temp1	 +28.0 C (high = +80.0 C, hyst = +75.0 C)
-TEMP2                   temp1	 +28.0 C (high = +80.0 C, hyst = +75.0 C)
-TEMP3                   temp1	 +28.0 C (high = +80.0 C, hyst = +75.0 C)
-TEMP4                   temp1	 +28.0 C (high = +80.0 C, hyst = +75.0 C)
+
+Temp Sensor Label            Value
+------------- -------------- -----------------------------------------------
+TEMP1       lm75-i2c-17-48   temp1 +30.0 C (high = +80.0 C, hyst = +75.0 C)
+TEMP2       lm75-i2c-17-49   temp1 +26.5 C (high = +80.0 C, hyst = +75.0 C)
+TEMP3       lm75-i2c-17-4a   temp1 +26.5 C (high = +80.0 C, hyst = +75.0 C)
+TEMP4       lm75-i2c-17-4b   temp1 +24.5 C (high = +80.0 C, hyst = +75.0 C)
+
+# 
+#example of bmc based thermals
+# pddf_thermalutil gettemp
+Temp Sensor     Value
+--------------  -----------------------------------------------
+Temp_Ambient_0  temp1	 +38.0 C (high = +68.0 C, hyst = +65.0 C)
+Temp_Ambient_1  temp1	 +34.0 C (high = +65.0 C, hyst = +62.0 C)
+Temp_Ambient_2  temp1	 +28.0 C (high = +59.0 C, hyst = +56.0 C)
+Temp_Ambient_3  temp1	 +27.0 C (high = +63.0 C, hyst = +60.0 C)
+Temp_Ambient_4  temp1	 +33.0 C (high = +67.0 C, hyst = +64.0 C)
+Temp_Ambient_5  temp1	 +33.0 C (high = +69.0 C, hyst = +66.0 C)
+Temp_Ambient_6  temp1	 +29.0 C (high = +66.0 C, hyst = +63.0 C)
+Temp_CPU        temp1	 +34.0 C (hyst = +98.0 C)
+
 
 # pddf_thermalutil numthermals 
 4
@@ -1404,10 +1679,6 @@ root@sonic:/home/admin#
 ## 6 Serviceability and DEBUG
 
 ### Debug Utils
- - pal-parse --create
-	 - Create I2C topology script to verify
- - pal-parse --load
-	 - Create led population information to verify platform data population
  - lsmod  | grep -i pddf
 	 - Check if all pddf modules are loaded correctly
  - systemctl  | grep -i pddf
@@ -1415,7 +1686,7 @@ root@sonic:/home/admin#
  - pddf_fanutil debug dump_sysfs
 	 - Dump all Fan related SysFS path and attributes
  - pddf_psuutil debug dump_sysfs
-	 - 	Dump all PSU related SysFS path and attributes
+     - Dump all PSU related SysFS path and attributes
  - pddf_ledutil debug dump_sysfs
  	 - Dump all LED related SysFS path and attributes
  - pddf_sfputil debug dump_sysfs
