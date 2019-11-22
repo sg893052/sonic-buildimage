@@ -3,7 +3,7 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC 2.0 
+# Broadcom SONiC 2.1.0 
 ### Configure SONiC Using Chef
 <br>
 <br>
@@ -35,7 +35,7 @@
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 1 |  Sep 20, 2019 |v1 | Initial version |
-| 2 |  Oct 31, 2019 | v1.1 | Updated Cookbook operations |
+| 2 |  Nov 22, 2019 | v2 | Broadcom SONiC 2.1.0 Release |
 
 
 # Introduction

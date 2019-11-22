@@ -3,7 +3,7 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC 2.0 
+# Broadcom SONiC 2.1.0 
 ### User Manual
 <br>
 <br>
@@ -63,8 +63,11 @@ Table of Contents
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 1 |  Sep 20, 2019 |v1 | Initial version |
+| 2 |  Nov 22, 2019 |v2 | Broadcom SONiC 2.1.0 Release |
 
 
+<br>
+<br>
 # Introduction
 Broadcom SONiC network operating system is based on Linux that runs on switches from multiple vendors and ASICs. Broadcom SONiC offers a full-suite of network functionalities, like BGP, VRRP, PVST, VRF, BFD and more. 
 

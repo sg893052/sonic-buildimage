@@ -3,7 +3,7 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC 2.0 
+# Broadcom SONiC 2.1.0 
 ### Command Line Interface Guide
 <br>
 <br>
@@ -175,6 +175,7 @@ Table of Contents
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 1 | Sep 20, 2019 | v1 | Initial version |
+| 2 | Nov 22, 2019 | v2 | Broadcom SONiC 2.1.0 Release |
 
 # Introduction
 SONiC is an open source network operating system based on Linux that runs on switches from multiple vendors and ASICs. SONiC offers a full-suite of network functionality, like BGP and RDMA, that has been production-hardened in the data centers of some of the largest cloud-service providers. It offers teams the flexibility to create the network solutions they need while leveraging the collective strength of a large ecosystem and community.

@@ -1,4 +1,22 @@
-## SONiC Package
+![](images/Broadcom.png)
+
+<br>
+<br>
+<br>
+# Broadcom SONiC
+### Package Customization Guide 
+#### Version 1.0
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
 
 A SONiC installer image (e.g sonic-broadcom-cloud-base.bin) is a self extracting firmware file which contains the branding and version information embedded in it. As the SONiC installer image is a single binary file, it not possible to change the branding information without unpacking it, modifying it and repacking it. This results in a different binary file compared to the one released by Broadcom.
 
