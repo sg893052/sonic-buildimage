@@ -401,6 +401,8 @@ Internal BRCM information to be removed before sharing with the community
 
 ## 10.1 Chip support
 Functionality cannot be supported on Tomahawk 3 platform unless FP entry based approach is used. 
+when rate is configured as 0 kbps, traffic doesnot get rate-limited. Instead it gets forwarded at line rate. This behavior is ASIC specific.
+Minimum rate at which traffic gets forwarded is ~64kbps and is ASIC specific. 
 
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbLTE5Mjc1MzY4MzgsLTIwMzM1NDc2OTksMT
