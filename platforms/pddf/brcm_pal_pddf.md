@@ -25,7 +25,7 @@
 		 * [PDDF Device Driver Modules](#pddf-device-driver-modules)
 		 * [PDDF Device Modules](#pddf-device-modules)
 		 * [Driver Extension Framework](#driver-extension-framework)
-	 * [Generic Device-Object Class Design](#generic-device-object-class-design)
+	 * [Generic Device Object-Class Design](#generic-device-object-class-design)
 	 * [PDDF I2C Component Design](#pddf-i2c-component-design)
 		 * [List of Supported Components](#list-of-supported-components)
 		 * [I2C Topology Descriptor](#i2c-topology-descriptor)
@@ -69,10 +69,10 @@
 
 # About this Manual
 Platform Driver Development Framework (PDDF) is part of SONiC Platform Development Kit (PDK) which optimizes the platform development. PDK consists of 
- - PDDF (Platform Driver Development Framework): For optimized data-driven platform driver and SONiC device-object class development
+ - PDDF (Platform Driver Development Framework): For optimized data-driven platform driver and SONiC device object-class development
  - PDE (Platform Development Environment): For optimized build and test of platform and SAI code
 
-PDE details are covered in another document. This document describes Platform Driver Development Framework (PDDF) which can be used as an alternative to the existing manually-written SONiC platform driver framework. It enables platform vendors to rapidly develop the device specific custom drivers and SONiC user space python device-object classes, using a data-driven architecture, to manage platform devices like Fan, PSUs, LEDs, Optics, System EEPROM, etc., and validate a platform on SONiC. 
+PDE details are covered in another document. This document describes Platform Driver Development Framework (PDDF) which can be used as an alternative to the existing manually-written SONiC platform driver framework. It enables platform vendors to rapidly develop the device specific custom drivers and SONiC user space python device object-classes, using a data-driven architecture, to manage platform devices like Fan, PSUs, LEDs, Optics, System EEPROM, etc., and validate a platform on SONiC. 
 
 # Scope
 This document describes the high level design details of PDDF and its components. The PDDF consists of generic device drivers and user space platform object classes which use the per platform specific data in the JSON descriptor files. This document describes the interaction between all the components and the tools used to support these drivers and object classes.  
@@ -99,10 +99,10 @@ This document describes the high level design details of PDDF and its components
 SONiC OS is portable across different network devices with supported ASIC via Switch Abstraction Interface (SAI). These devices primarily differ in the way various device specific hardware components are accessed, and thus require custom device drivers and python object classes. Each platform vendor implements these custom device drivers and object classes. The feature requirement is to support a SONiC platform driver development framework to enable rapid development of custom device drivers and classes.
 
 ### 1.1	Functional Requirements
-Define Platform driver development framework to enable platform vendors to develop custom device drivers and device-object classes rapidly to accelerate development and validation of platforms in SONiC environment. Hardware components can be accessed via I2C, BMC, or both.  PDDF supports both I2C and BMC access methods. The following requirements need to be satisfied by the framework.
- - PDDF to provide a data driven      framework to access platform HW devices.
- - PDDF shall support I2C based HW    designs with I2C controllers on the Host CPU.
- - PDDF shall support BMC based HW    designs with BMC SoC on the Host motherboard.
+Define Platform driver development framework to enable platform vendors to develop custom device drivers and device object-classes rapidly to accelerate development and validation of platforms in SONiC environment. Hardware components can be accessed via I2C, BMC, or both.  PDDF supports both I2C and BMC access methods. The following requirements need to be satisfied by the framework.
+ - PDDF to provide a data driven framework to access platform HW devices.
+ - PDDF shall support I2C based HW designs with I2C controllers on the Host CPU.
+ - PDDF shall support BMC based HW designs with BMC SoC on the Host motherboard.
  - Provide reusable generic device drivers for the following components
 	 - FAN
 	 - PSU (Power supply units)
@@ -153,7 +153,7 @@ NA
 SONiC platform bring up typically involves the following steps:
 
  - Support Switching ASIC
- - Vendor platform specific drivers and device-object classes to manage platform devices
+ - Vendor platform specific drivers and device object-classes to manage platform devices
 
 Generally, the SAI support for a given switching silicon is pre-validated, and the platform vendor mostly focuses on the platform devices during platform bring up. The platform components involve the following:
 
@@ -164,11 +164,11 @@ Generally, the SAI support for a given switching silicon is pre-validated, and t
 
 Most of the platform bring up effort goes in developing the platform device drivers, SONiC object classes and validating them. Typically each platform vendor writes their own drivers and classes which is very tailor made to that platform. This involves writing code, building, installing it on the target platform devices and testing. Many of the details of the platform are hard coded into these drivers, from the HW spec. They go through this cycle repetitively till everything works fine, and is validated before upstreaming the code.
 
-PDDF aims to make this platform driver and device-object class development process much simpler by providing a data driven development framework. This is enabled by:
+PDDF aims to make this platform driver and device object-class development process much simpler by providing a data driven development framework. This is enabled by:
 
  - JSON descriptor files for platform data
  - Generic data-driven drivers for various devices
- - Generic SONiC device-object classes
+ - Generic SONiC device object-classes
  - Vendor specific extensions for customization and extensibility
 
 This makes the development and testing much simpler. Any change in the platform data can be made on the target in the JSON files and validated instantly. This helps improve the productivity of the platform developers significantly.
@@ -240,7 +240,7 @@ For BMC based HW components such as FAN/PSU/TEMP sensors, PDDF does not need to 
 
 
 #### 3.1.3 PDDF Platform Device Object Classes
-PDDF provides generic user space python object classes which implement the platform APIs defined under:
+PDDF provides generic user space python object classes which are derived from 2.0 platform APIs defined under:
  - src/sonic-platform-common/sonic_platform_base/sfp_base.py (Optic transceivers)
  - src/sonic-platform-common/sonic_platform_base/psu_base.py (PSU base class)
  - src/sonic-platform-common/sonic_platform_base/fan_base.py (FAN base class)
@@ -249,26 +249,27 @@ PDDF provides generic user space python object classes which implement the platf
  - src/sonic-platform-common/sonic_platform_base/chassis_base.py (Chassis base class)
  - src/sonic-platform-common/sonic_platform_base/watchdog_base.py (Watchdog base class)
 
-These device-object classes use the per platform JSON descriptor files to use the appropriate SysFS attributes to get and set.
+The PDDF generic device object-classes make use of the per platform JSON descriptor files and use the appropriate attributes to get and set. The final object classes would be derived from these PDDF generic classes and provide users the ability to override/re-define generic get/set implementation under PDDF.
+Final component based object classes are placed under /sonic-buildimage/device/\<ODM\>/\<platform\>sonic_platform.
 
 #### 3.1.4 Source code organization and Packaging
-PDDF source code is mainly organized into platform dependent data files(JSON descriptors), generic PDDF  driver modules, generic  device-object classes, generic utils, and start up scripts.
+PDDF source code is mainly organized into platform dependent data files(JSON descriptors), generic PDDF  driver modules, generic  device object-classes, generic utils, and start up scripts.
 
  - /service/sonic-buildimage/platform/pddf
 	  - modules
 	  - scripts
 
  - /service/sonic-buildimage/device/common/pddf
-	  - sonic_platform (2.0 Platform device-object classes)
+	  - sonic_platform (PDDF generic device object-classes based on 2.0 platform APIs)
 	  - plugins (1.0 platform plugins)
 	  
- - JSON descriptor files should be placed in the "pddf/json" directory under the respective "/sonic-buildimage/platform/" directory path. For example:
-	 - sonic-buildimage/platform/broadcom/sonic-platform-modules-accton/as7712-32x/pddf/json/\<descriptor.json\>)
+ - JSON descriptor files should be placed in the "pddf" directory under the respective "/sonic-buildimage/device/\<ODM\>/\<platform\>" directory path. For example:
+	 - sonic-buildimage/device/accton/x86_64-accton_as7712_32x-r0/pddf/\<descriptor.json\>
 
-From SONiC build, all the PDDF components shall be built and packaged into a common pddf Debian package. Every platform builds and packages per platform specific drivers, utilities, scripts, etc.,  into a platform Debian package. 
+From SONiC build, all the PDDF utils and kernel modules shall be built and packaged into a common pddf Debian package. Every platform builds and packages per platform specific drivers, utilities, scripts, etc.,into a platform Debian package. 
 
 #### 3.1.5 Deployment details
-For the Runtime environment, PDDF shall provide a init script which shall be integrated into the per platform init script. This will load the PDDF modules and device-object classes and will use the per platform JSON descriptor files for initializing the platform service. 
+For the Runtime environment, PDDF shall provide a init script which shall be integrated into the per platform init script. This will load the PDDF modules and device object-classes and will use the per platform JSON descriptor files for initializing the platform service. 
 
 ### 3.2 Generic Driver Design
 Vendors write platform specific component drivers and deploy them as kernel loadable modules. In PDDF, drivers are generic, with platform specific data populated in JSON descriptor files. The JSON descriptor files are provided by the PDDF developer. Usually two different kernel modules are associated with each component. One is *Device Driver Module* and other is *Device Module*.
@@ -312,12 +313,12 @@ There are multiple JSON files which must be provided by a PDDF developer.  The l
  - Value Maps Info for various device-data Attributes, etc.
 
 
-### 3.3 Generic Devcie-Object Class Design
+### 3.3 Generic Devcie Object-Class Design
 
 ![Figure2: PSU Generic Object Class](images/pddf_generic_plugin_psu_2.0.png "PSU Generic Object Class")
 
 
-Generic device-object classes are extended from respective base classes but do not have any platform specific data. All the platform specific data mentioned below, is retrieved from JSON files.
+Generic device object-classes are extended from respective base classes but do not have any platform specific data. All the platform specific data mentioned below, is retrieved from JSON files.
   * Platform inventory
   * SysFS paths of various device attributes
   * Platform dependent interpretations of some of the attribute values 
@@ -467,7 +468,7 @@ If an object is a GPIO (IO expander), then
     }
 }
 ```
-Some platforms require initialization settings to be performed with respect to the GPIOs. The **ports** list in the JSON obkect takes care of these initialization after the I2C device creation takes place. Following are the names of 
+Some platforms require initialization settings to be performed with respect to the GPIOs. The **ports** list in the JSON object takes care of these initialization after the I2C device creation takes place. Following are the names of 
 GPIO's SysFs attributes created by the standard linux driver.
 
 > **port_num**: GPIO Port/Pin number.
@@ -599,7 +600,7 @@ PDDF fan module is used to
 There could be one or multiple client for fan controller. If any other controller is used, such as EMC2305 or EMC2302 etc, then there might be multiple fan controller clients .
 
 PDDF fan driver is used for all the fan clients and SysFS attributes are divided. Fan driver module has the following functionalities,
- * Create the SysFS attributes 
+  * Create the SysFS attributes 
   * Get/Set SysFS attribute's value from/to Fan controller devices
 
 Supported Fan SysFS attributes are:
@@ -670,21 +671,21 @@ Description of the objects inside *attr_list* which are very specific to Fan com
 Network switches have a variety of LED lights, system LEDs, Fan Tray LEDs, and port LEDs, used to act as indicators of switch status and network port status.  The system LEDs are used to indicate the status of power and the system. The fan tray LEDs indicate each fan status. The port LEDs are used to indicate the state of the links such as link up, Tx/RX activity and speed. The Port LEDs are in general managed by the LED controller provided by switch vendors. The scope of this LED section  is for system LEDs and fan tray LEDs.     
 
 ##### 3.4.5.1 LED Driver Design    
-LEDs are controlled via CPLDs. LEDs status can be read and set via I2C interfaces. A platform-independent driver is designed to access CPLDs via I2c interfaces. CPLD/register address data is stored in platform-specific JSON file. User python device-object classes trigger drivers to read/write LED statuses via SysFS. This generic LED driver is implemented to control System LED and Fan Tray LED.  
+LEDs are controlled via CPLDs. LEDs status can be read and set via I2C interfaces. A platform-independent driver is designed to access CPLDs via I2c interfaces. CPLD/register address data is stored in platform-specific JSON file. User python device object-classes trigger drivers to read/write LED statuses via SysFS. This generic LED driver is implemented to control System LED and Fan Tray LED.  
 
 ##### 3.4.5.2 JSON Design    
    This section provides examples of configuring platform, System LED and Fantray LED.  They are consisted of key/value pairs. Each pair has a unique name. The table describes the naming convention for each unique key.       
 
 
-| **Key**                 | **Description**                         |
-|--------------------------|-------------------------------------|
-| PLATFORM                      | Numbers of power supply LED, fan tray LED        |
-| SYS_LED                      | System LED indicates System         |
-| PSU<x>_LED                      |Power Supply Status LED  X is an integer starting with 1 Example: PSU1_LED, PSU2_LED             |
-| LOC_LED                      | Flashing by remote management command.  Assists the technician in finding the right device for service in the rack |
-| FAN_LED                      | Fan Status LED for all fans |
-| DIAG_LED                      | System self-diagnostic test status LED |
-| FANTRAY<x>_LED         | Status LED for individual fan. X is an integer starting with 1 Example: FANTRAY1_LED, FANTRAY2_LED |  
+| **Key**                  | **Description**                         |
+|--------------------------|-----------------------------------------|
+| PLATFORM                 | Numbers of power supply LED, fan tray LED        |
+| SYS_LED                  | System LED indicates System         |
+| PSU\<x\>_LED             |Power Supply Status LED  X is an integer starting with 1 Example: PSU1_LED, PSU2_LED             |
+| LOC_LED                  | Flashing by remote management command.  Assists the technician in finding the right device for service in the rack |
+| FAN_LED                  | Fan Status LED for all fans |
+| DIAG_LED                 | System self-diagnostic test status LED |
+| FANTRAY\<x\>_LED         | Status LED for individual fan. X is an integer starting with 1 Example: FANTRAY1_LED, FANTRAY2_LED |  
 
 Samples:
 
@@ -1003,7 +1004,7 @@ If this field exists, the device name is displayed using this field. Otherwise, 
 ipmitool and ipmiapi are two methods of getting ipmi data. ipmitool uses ipmitool command to get data from BMC while ipmiapi will use kernel ipmi interfaces to retrieve the data. ipmiapi will be implemented in the future.
 
 > **attr_name**:
-The PDDF BMC JSON design has the pre-defined list of the attribute names which is platform independent. IPMI is an standardized interface specification, but the naming convention of ipmitool output is vendor specific. The pre-defined attribue name list provides the ability to use generic PDDF plugins to retrieve information for all platforms.
+The PDDF BMC JSON design has the pre-defined list of the attribute names which is platform independent. IPMI is an standardized interface specification, but the naming convention of ipmitool output is vendor specific. The pre-defined attribue name list provides the ability to use generic PDDF generic device object classes to retrieve information for all platforms.
 
 > **bmc_cmd**: 
 There are two types of cmds: raw ipmi request and non raw ipmi request. The list of available ipmitool commands can be found by 
@@ -1197,7 +1198,7 @@ This section shows  examples of ipmitool outputs.
 As mentioned in the section 3.3, platform devices/components are provided with a python user object class which interacts with the SysFs interface to get the HW information. Below are the component specific examples for such class.
 
 #### 3.6.1 PSU Class
-PsuBase is the base PSU class, which declares various APIs to get/set information from the PSU devices. PDDF PSU generic object class **Psu** shall extend from PsuBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files
+PsuBase is the base PSU class, which declares various APIs to get/set information from the PSU devices. PDDF PSU generic object class **PddfPsu** shall extend from PsuBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files
 
 Example,
 ```
@@ -1213,7 +1214,7 @@ def get_voltage(self):
 ```
 
 #### 3.6.2 FAN Class
-FanBase is the base FAN class, which declares various APIs to get/set information from the Fan devices. PDDF Fan generic object class **Fan** shall extend from FanBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files. FanBase is part of the new platform API framework in SONiC.
+FanBase is the base FAN class, which declares various APIs to get/set information from the Fan devices. PDDF Fan generic object class **PddfFan** shall extend from FanBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files. FanBase is part of the new platform API framework in SONiC.
 
 Example,
 ```
@@ -1227,20 +1228,22 @@ Example,
         # Implementation using JSON descriptor files
 
 	def get_speed(self):
-		"""
-		Retrieves the speed of fan in rpms
-		Returns:
-		An integer, denoting the rpm (revolutions per minute) speed
-		"""
+        """
+        Retrieves the speed of fan as a percentage of full speed
+
+        Returns:
+            An integer, the percentage of full fan speed, in the range 0 (off)
+                 to 100 (full speed)
+        """
         # Implementation using JSON descriptor files
 
 ```
 
 
 #### 3.6.3 LED Class
-There is no generic LED object class defined in PDDF. LED APIs related to a component has been made part of thats component's object class. System LED APIs are made part of chassis object class.  
+There is no generic LED object class defined in PDDF. LED APIs related to a component has been made part of thats component's object class. System LED APIs are made part of PddfChassis object class.  
 ```
-class Chassis(ChassisBase):
+class PddfChassis(ChassisBase):
     def set_system_led(self, device_name, color):
         """
         Sets the state of one system status
@@ -1261,9 +1264,9 @@ class Chassis(ChassisBase):
         raise NotImplementedError
 ```
 
-PSU class provides get/set method to access PSU system LED
+PDDF PSU class provides get/set method to access PSU system LED
 ```
-class Psu(PsuBase):
+class PddfPsu(PsuBase):
     def set_status_led(self, color):
         """
         Sets the state of the PSU status LED
@@ -1285,9 +1288,9 @@ class Psu(PsuBase):
 ```
 
 
-FAN class provides get/set method to access Fantray LED
+PDDF FAN class provides get/set method to access Fantray LED
 ```    
-class Fan(FanBase):
+class PddfFan(FanBase):
     def set_status_led(self, color):
         """
         Sets the state of the fan module status LED
@@ -1311,7 +1314,7 @@ class Fan(FanBase):
 
 
 #### 3.6.4 System EEPROM Class
-A generic user space object class is written for EEPROM. Internally it leverages eeprom_base and eeprom_tlvinfo base classes. The SysFS path for driver supported attribute is retrieved from the user provided JSON file. An example of the API definition form eeprom_base is shown below,
+A generic user space object class **PddfEeprom** is written for EEPROM. Internally it leverages eeprom_base and eeprom_tlvinfo base classes. The SysFS path for driver supported attribute is retrieved from the user provided JSON file. An example of the API definition form eeprom_base is shown below,
 ```
 def check_status(self):
     if self.u != '':
@@ -1333,7 +1336,7 @@ def set_cache_name(self, name):
 Generic object class may provide further initialization steps and definitions for new APIs.
 
 #### 3.5.5 Optics Class
-SfpBase is the base Optic class, which declares various APIs to get/set information from the optic transceivers. PDDF generic object class **Sfp** shall extend from SfpBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files.
+SfpBase is the base Optic class, which declares various APIs to get/set information from the optic transceivers. PDDF generic object class **PddfSfp** shall extend from SfpBase and implement the platform specific APIs, using the platform specific information in the JSON descriptor files.
 
 Example,
 ```
@@ -1392,7 +1395,7 @@ In addition,  the following CLI utils will also be added.
 root@sonic:/home/admin# pddf_psuutil --help
 Usage: pddf_psuutil [OPTIONS] COMMAND [ARGS]...
 
-  psuutil - Command line utility for providing PSU status
+  pddf_psuutil - Command line utility for providing PSU status
 
 Options:
   --help  Show this message and exit.
