@@ -27,7 +27,7 @@
         * [3.2.1 CONFIG DB](#3.2.1-config-db)
         * [3.2.2 APP DB](#3.2.2-app-db)
            * [3.2.2.1 IPMC_ROUTE_TABLE](#3.2.2.1-ipmc_route_table)
-           * [3.2.2.2 IPMC_INTF_TABLE](#3.2.2.2-ipmc_intf_table)
+           * [3.2.2.2 INTF_TABLE](#3.2.2.2-intf_table)
         * [3.2.3 State DB](#3.2.3-state-db)
         * [3.2.4 ASIC DB](#3.2.4-asic-db)
         * [3.2.5 COUNTER DB](#3.2.5-counter-db)
@@ -54,8 +54,7 @@
     * [9.1 CLI Test Cases](#9.1-cli-test-cases)
     * [9.2 Functional Test Cases](#9.2-functional-test-cases)
     * [9.3 Scaling Test Cases](#9.3-scaling-test-cases)
-  * [10 Internal Design Information](#10-internal-design-information)
-  * [11 Future Enhancements](#11-future-enhancements)
+  * [10 Future Enhancements](#11-future-enhancements)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations) <br>
@@ -85,7 +84,7 @@ The scope of this feature includes support for IGMPv3 and PIM-SSM protocols for 
 | IGMPv3    | IGMP version 3                                                    |
 | SPT       | Shortest Path Tree                                                |
 | RPF       | Reverse Path Forwarding                                           |
-| RP        | Rendevous Point                                                   |
+| RP        | Rendezvous Point                                                  |
 | (S,G)     | (Source address, Group address)                                   |
 | VRF       | Virtual Router Forwarding                                         |
 | LHR       | Last Hop Router (Router directly connected to the Host/Receiver   |
@@ -155,7 +154,7 @@ __Figure 1: IP Multicast Deployment with PIM-SSM__
 # 3 Design
 ## 3.1 Overview
 
-![IP Multicast](images/IP_Multicast_Architecture_in_SONiC.png "Figure 2: IP Multicast High level architecture")
+![IP Multicast](images/IP_Multicast_Architecture_in_SONiC.PNG "Figure 2: IP Multicast High level architecture")
 
 __Figure 2: IP Multicast High level architecture__
 
@@ -188,7 +187,7 @@ ipmcFpmSyncd registers with Linux kernel for RT netlink group RTNLGRP_IPV4_NETCO
 
 When the user enables/disables PIM on an interface, Pimd updates the mc_forwarding status in the Linux kernel (/proc/sys/net/ipv4/conf/all/mc_forwarding). Linux kernel notifies ipmcFpmSyncd about the multicast VIF (mr_vif) creation/deletion using RTM_NEWNETCONF and RTM_DELNETCONF events.
 
-ipmcFpmSyncd processes the multicast interface enable message and updates the IPMC_INTF_TABLE in APP_DB.  ipmcOrch receives the PIM enable message from APP_DB and does the following:
+ipmcFpmSyncd processes the multicast interface enable message and updates the mcast_forwarding field to the INTF_TABLE in APP_DB.  ipmcOrch receives the PIM enable message from APP_DB and does the following:
 
 1. Enables IPv4 multicast on the interface by invoking the SAI router interface attribute, SAI_ROUTER_INTERFACE_ATTR_V4_MCAST_ENABLE.
 2. Enables trapping of PIM control packets to CPU by invoking the SAI COPP trap setting, SAI_HOSTIF_TRAP_TYPE_PIM. PIM control packets are trapped to a higher COS queue (COS queue 5 [TBD]).
@@ -219,23 +218,23 @@ IPMC_MROUTE_TABLE Schema
 ; Defines schema for multicast route entry table
 key      = IPMC_MROUTE_TABLE:vrf_id|src_address|grp_address ; Mroute table
 ; field                 = value
-INCOMING_INTERFACE      = ifname     ; ifname must be unique across PORT,INTF,VLAN,LAG TABLES
-OUTGOING_INTERFACE_LIST = intf_names_list    ; list of interfaces delimited by ','
+INCOMING_INTERFACE      = in_interface     ; ifname must be unique across PORT,INTF,VLAN,LAG TABLES
+OUTGOING_INTERFACE_LIST = out_interfaces    ; list of interfaces delimited by ','
 ```
 
-#### 3.2.2.2 IPMC_INTF_TABLE
-A new table IPMC_INTF_TABLE is introduced in APP_DB to specify the IGMP and PIM interface admin mode.
+#### 3.2.2.2 INTF_TABLE
+The existing INTF_TABLE in APP_DB is updated to include the status of multicast forwarding (when PIM is enabled on an interface).
 
 ```
-IPMC_INTF_TABLE:{{ifname}}   ; ifname must be unique across PORT,INTF,VLAN,LAG TABLES
-    "ipmc_admin_mode"       : {{multicast-interface-admin-mode}}
+INTF_TABLE:{{ifname}}   ; ifname must be unique across PORT,INTF,VLAN,LAG TABLES
+    "mcast_forwarding"       : {{multicast-forwarding-state}}
 ```
-IPMC_INTF_TABLE Schema
+INTF_TABLE Schema
 ```
 ; Defines schema for multicast interface table
-key       = IPMC_INTF_TABLE:ifname ; Interface table ... ifname must be unique across PORT,INTF,VLAN,LAG TABLES
+key       = INTF_TABLE:ifname ; Interface table ... ifname must be unique across PORT,INTF,VLAN,LAG TABLES
 ; field             = value
-IPMC_ADMIN_MODE     = "true" / "false"
+mcast_forwarding    = "enable" / "disable"
 ```
 
 ### 3.2.3 STATE DB
@@ -334,7 +333,7 @@ A separate effort will integrate FRR PIM CLI with the SONiC UI and that effort w
 ### 3.6.3 Configuration Commands
 This feature relies on FRR 7.0 (or later) PIM and IGMP CLI configuration.  FRR PIM and IGMP related CLI commands given in the below link are supported:
 http://docs.frrouting.org/en/latest/pim.html
-https://buildmedia.readthedocs.org/media/pdf/frrouting/stable-5.0/frrouting.pdf
+https://buildmedia.readthedocs.org/media/pdf/frrouting/stable-7.0/frrouting.pdf
 
 The below CLI configuration commands are supported. Please refer to the links given above for detailed explanation/outputs.
 
@@ -350,12 +349,6 @@ The below CLI configuration commands are supported. Please refer to the links gi
 
 5. ip pim ssm prefix-list WORD <br>
 
-6. ip multicast rpf-lookup-mode WORD <br>
-
-7. ip mroute A.B.C.D/M A.B.C.D (1-255) <br>
-
-8. ip mroute A.B.C.D/M INTERFACE (1-255) <br>
-
 #### 3.6.3.2 Interface Configuration Commands
 
 1. ip pim bfd
@@ -370,14 +363,12 @@ The below CLI configuration commands are supported. Please refer to the links gi
 
 6. ip mroute INTERFACE A.B.C.D A.B.C.D
 
-7. ip multicast boundary oil WORD
-
-8. ip pim use-source A.B.C.D
+7. ip pim use-source A.B.C.D
 
 ### 3.6.4 Show Commands
 This feature relies on FRR 7.0 (or later) PIM and IGMP CLI show commands.  FRR PIM and IGMP related CLI show commands given in the below link are supported:
 http://docs.frrouting.org/en/latest/pim.html
-https://buildmedia.readthedocs.org/media/pdf/frrouting/stable-5.0/frrouting.pdf
+https://buildmedia.readthedocs.org/media/pdf/frrouting/stable-7.0/frrouting.pdf
 
 The below CLI show commands are supported. Please refer to the links given above for detailed explanation/outputs.
 
@@ -423,6 +414,8 @@ The below CLI show commands are supported. Please refer to the links given above
 
 21. show ip pim vrf all upstream [json]
 
+22. show ip mroute
+
 ### 3.6.5 Debug Commands
 This feature relies on FRR 7.0 (or later) PIM and IGMP CLI 'debug' commands as listed in the below links:
 http://docs.frrouting.org/en/latest/pim.html
@@ -455,7 +448,7 @@ The below CLI debug commands are supported. Please refer to the links given abov
 ### 3.6.6 Clear Commands
 This feature relies on FRR 7.0 (or later) PIM and IGMP CLI 'clear' commands as listed in the below links:
 http://docs.frrouting.org/en/latest/pim.html
-https://buildmedia.readthedocs.org/media/pdf/frrouting/stable-5.0/frrouting.pdf
+https://buildmedia.readthedocs.org/media/pdf/frrouting/stable-7.0/frrouting.pdf
 
 The below CLI clear commands are supported. Please refer to the links given above for detailed explanation/outputs.
 
@@ -472,17 +465,19 @@ REST API is not supported for this feature.
 
 # 4 Flow Diagrams
 ## 4.1 Enabling PIM on an Interface
-![IP Multicast](images/Enabling_PIM_IGMP_on_an_Interface.png "Figure 5: Enabling PIM/IGMP on an Interface")
+![IP Multicast](images/Enabling_PIM_IGMP_on_an_Interface.PNG "Figure 5: Enabling PIM/IGMP on an Interface")
 
 __Figure 5: Enabling PIM/IGMP on an Interface__
 
 ## 4.2 IP Multicast Route Entry Creation/Deletion Flow
-![IP Multicast](images/IP_Multicast_Route_Entry_Flow.png "Figure 6: IP Multicast Route Entry Creation/Deletion Flow")
+![IP Multicast](images/IP_Multicast_Route_Entry_Flow.PNG "Figure 6: IP Multicast Route Entry Creation/Deletion Flow")
 
 __Figure 6: IP Multicast Route Entry Creation/Deletion Flow__
 
 # 5 Error Handling
-This feature doesn't register with the Error Handling framework. Instead a message is logged with ERROR severity in case of SAI API failures.
+This feature registers with the Error Handling framework. Multicast route entry is updated to ERROR_DB in the following conditions:
+> IP multicast route entry add/delete failures <br>
+> IP multicast route entry add failures in the case of table full condition
 
 # 6 Serviceability and Debug
 FRR PIM and IGMP has debug tracing support.  This feature utilizes the same.
@@ -493,7 +488,9 @@ This feature introduces the below mentioned serviceability debug options:
 3. SAI interaction errors are logged in Syslog.
 
 # 7 Warm Boot Support
-Unlike BGP/OSPF, PIM protocol doesn't have a graceful/stateful switch-over mechanism in the PIM protocol and as a result, PIM neighbors are not aware if one of its neighboring PIM router is going down.  So, Warm boot support is not applicable to this feature.
+Administrator can initiate Warmboot when PIM is enabled, but there may be an interruption in IP multicast traffic flow. So, PIM router will effectively start as in cold-boot. PIM clears all the existing the IP multicast route entries from APP_DB. However a fully consistent system state will be reached after the Warmboot is complete as explained below.
+
+Each PIM router auto-generates a Generation ID (GenID) when PIM is enabled on an interface.  This GenID is sent in PIM Hello messages that helps in uniquely identifying a PIM router.  After Warmboot is complete and as PIM comes up afresh, PIM sends a new GenID in its Hello messages.  PIM protocol has an in-built recovery mechanism where in if a downstream PIM neighbor detects a GenID change, it refreshes all its (S, G) state to its RPF neighbor (which restarted with a new GenID).  This helps the PIM router to quickly get back its (S, G) state.
 
 # 8 Scalability
 Below are the IP multicast scaling numbers:
@@ -566,24 +563,27 @@ N/A, as this feature uses FRR PIM and IGMP CLI.
 28. Execute the debug dump commands for dumping the internal operational data/state of ipmcFpmSyncd and ipmcOrch. <br> <br>
 
 ## 9.3 Scaling Test Cases
-29.  Send IP multicast data for maximum multicast route entries and verify the above functional tests. <br> <br>
+29. Send IP multicast data for maximum multicast route entries and verify the above functional tests. <br> <br>
 
-30.  Send IGMP group membership reports for maximum IGMP groups and verify the above functional tests. <br> <br>
+30. Send IGMP group membership reports for maximum IGMP groups and verify the above functional tests. <br> <br>
 
-31.  Establish maximum PIM neighbors and verify the above functional tests. <br> <br>
+31. Establish maximum PIM neighbors and verify the above functional tests. <br> <br>
 
-32.  Send IP multicast data for more than the maximum supported Mroute entries and check if the MRoute Table Full condition is reported. <br> <br>
+32. Send IP multicast data for more than the maximum supported Mroute entries and check if the MRoute Table Full condition is reported. <br> <br>
 
-33.  Send IGMP group membership reports for more than the maximum supported IGMP groups and check if the IGMP Table Full condition is reported. <br> <br>
+33. Send IGMP group membership reports for more than the maximum supported IGMP groups and check if the IGMP Table Full condition is reported. <br> <br>
 
-34.  Attempt to establish more than maximum supported PIM neighbors and check if the PIM neighbor Table Full condition is reported. <br> <br>
+34. Attempt to establish more than maximum supported PIM neighbors and check if the PIM neighbor Table Full condition is reported. <br> <br>
 
-# 10 Internal Design Information
-Internal BRCM information to be removed before sharing with the community.
+# 10 Future Enhancements
+1. Support inter-working of IPv4 PIM/multicast with IGMP Snooping to update L2/L3 bitmaps: <br> <br>
+1.1 Currently, multicast forwarding works only when one of PIM or IGMP snooping are enabled on the same interface <br> <br>
+1.2 IGMP snooping also utilizes the L3 multicast route table in the ASIC to program IGMPv3 snooping entries.  Currently, there is no reservation between L3 PIM and IGMP snooping to share the ASIC's L3 multicast route table.<br> 
 
-# 11 Future Enhancements
-1. Support inter-working of IPv4 PIM/multicast with IGMP Snooping to update L2/L3 bitmaps.
 2. FRR multicast does not have support for MLD and IPv6 multicast routing.
-3. Warm boot Support: There is no graceful/stateful switch-over mechanism in the PIM protocol and as a result, PIM neighbors are not aware if one of its neighbor is going down.
-4. Error Handling Support: Register with the Error Handling framework to handle the SAI errors gracefully.
-5. Aging of multicast route entries: Multicast route entries are deleted when the router doesn't receive multicast traffic for a specified time period (210 seconds).  Aging of multicast route entries can be achieved in two ways. (1) Age-out in the application: Application periodically queries for the HIT status using a SAI API and deletes the route entry after a specified time-out. (2) Age-out in the driver: Add age-out logic in the driver and extend SAI to notify the application after the route entry age-out.  Currently, SAI doesn't support both these APIs.
+
+3. Support for Static Multicast Routes: <br>
+Static Mroutes are similar to unicast static routes but differ in the sense that the Static Mroutes are used to calculate RPF information and not to forward traffic.  Static Mroutes are configured using the "ip mroute" command and are stored in a separate routing table (named MRIB).  The Static Mroutes are used to look-up the RPF information towards the multicast source.  The user can override the regular unicast RIB look-up with MRIB look-up using the command "ip multicast rpf-lookup-mode". <br> <br>
+However, the RPF look-up using Static Mroutes is broken in FRR 7.2 and the FRR community has confirmed it.  So, this release doesn't provide support for Static Multicast Routes.
+
+4. Aging of multicast route entries: Multicast route entries are deleted when the router doesn't receive multicast traffic for a specified time period (210 seconds).  Aging of multicast route entries can be achieved in two ways. (1) Age-out in the application: Application periodically queries for the HIT status using a SAI API and deletes the route entry after a specified time-out. (2) Age-out in the driver: Add age-out logic in the driver and extend SAI to notify the application after the route entry age-out.  Currently, SAI doesn't support both these APIs.
