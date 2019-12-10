@@ -193,7 +193,7 @@ This section describes the changes made to different DBs for supporting QoS sche
 
 
 ### 3.2.1 CONFIG_DB
-The CFG_SCHEDULER_TABLE holds  configuration database for the purpose of storing storm-control configuration parameters. This table is filled by the management framework. 
+The CFG_SCHEDULER_TABLE holds the configuration database for the purpose of storing scheduling and shaping configuration parameters. This table is filled by the management framework. 
 #### CFG_SCHEDULER_TABLE
 
     ; QOS scheduler profile attributes
@@ -205,10 +205,10 @@ The CFG_SCHEDULER_TABLE holds  configuration database for the purpose of storing
     weight     = 1*DIGIT
     priority   = 1*DIGIT
     meter_type = "packets"/"bytes" 
-    min_bw     = 1*10 DIGIT  ; guaranteed rate in Mbps
-    min_burst  = 1*10 DIGIT  ; guaranteed burst size in bytes
-    max_bw     = 1*10 DIGIT  ; max rate in Mbps
-    max_burst  = 1*10 DIGIT  ; max burst size in bytes
+    cir        = 1*10 DIGIT  ; guaranteed rate in pps or bytes/sec
+    cbs        = 1*10 DIGIT  ; guaranteed burst size in packets or bytes
+    pir        = 1*10 DIGIT  ; max rate in pps or bytes/sec
+    pbs        = 1*10 DIGIT  ; max burst size in packets or bytes
          
 #### CFG_QUEUE_TABLE
 
@@ -364,8 +364,8 @@ Port "Ethernet52" egress queues 0 through 5 will be limited to 10Gbps each (1.25
     "SCHEDULER": {
         "scheduler.queue": {
             "meter_type": "bytes",
-            "max_bw": "1250000000",
-            "max_burst": "8192"
+            "pir": "1250000000",
+            "pbs": "8192"
         }
     },
     "QUEUE": {
@@ -382,8 +382,8 @@ Port "Ethernet52"  will be limited to 8Gbps (1 GB/sec)
     "SCHEDULER": {
         "scheduler.port": {
             "meter_type": "bytes",
-            "max_bw": "1000000000",
-            "max_burst": "8192"
+            "pir": "1000000000",
+            "pbs": "8192"
         }
     },
     "PORT_QOS_MAP": {
