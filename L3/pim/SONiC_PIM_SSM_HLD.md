@@ -35,6 +35,7 @@
         * [3.3.1 IPMC Orchestration Agent](#3.3.1-ipmc-orchestration-agent)
      * [3.4 SyncD](#3.4-syncd)
      * [3.5 SAI](#3.5-sai)
+        * [3.5.1 IPMC MTU](#3.5.1-ipmc-mtu)
      * [3.6 CLI](#3.6-cli)
         * [3.6.1 Data Models](#3.6.1-data-models)
         * [3.6.2 IS-CLI Compliance](#3.6.2-is-cli-compliance])
@@ -322,6 +323,9 @@ Below is the sample code to program a IPMC route entry to the ASIC:
        attr[2].value.oid = rpf_group_id;
 
        status = sai_ipmc_entry_api->create_ipmc_entry(&ipmc_entry, 2, attr);
+
+### 3.5.1 IPMC MTU
+L3 unicast packets exceeding MTU of egress interface are sent to CPU and ICMP error message is sent back to the sender.  For IPMC packets, the MTU is determined by the port MTU. The L3 MTU is not applicable to IPMC traffic. On some silicon, IPMC MTU is enforced on per-multicast group as opposed to per L3 interface. Since fragmentation is not desirable at intermediate switches, IPMC packet exceeding MTU value are siliently discarded. It is possible that not all of the L3 interfaces in the IPMC group have identical MTU settings. In which case, the ports that can support IPMC packet size forward the traffic, and other ports discard the packets. There is no ICMP error message generated for IPMC packets exceeding egress port MTU.
 
 ## 3.6 CLI
 ### 3.6.1 Data Models
