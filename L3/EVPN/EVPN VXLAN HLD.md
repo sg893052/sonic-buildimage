@@ -219,11 +219,20 @@ EVPN VXLAN feature supports L2 forwarding and L3 routing over VXLAN, dynamic cre
 
 #### L2 forwarding over VXLAN
 
-Traffic received from the access ports are L2 forwarded over VXLAN tunnels if the DMAC lookup result does not match the switch MAC. The frame format is as described in RFC 7348. The VNI is based on the configured global VLAN-VNI map. BUM traffic is ingress replicated to all the tunnels  which are part of the VLAN. The DIP of the BUM packets is the IP address of the remote VTEP. L2 unicast traffic is forwarded to the tunnel to which the MAC points to. 
-Traffic received from VXLAN tunnels are mapped to a VLAN based on the received VNI and the VNI-VLAN lookup. The received traffic can be L2 unicast or BUM depending on the inner MAC lookup. Traffic received from VXLAN tunnels are never forwarded onto another VXLAN tunnels. 
+Traffic received from the access ports are L2 forwarded over VXLAN tunnels if the DMAC lookup result does not match the switch MAC. The frame format is as described in RFC 7348. The VNI is based on the configured global VLAN-VNI map. BUM traffic is ingress replicated to all the tunnels  which are part of the VLAN. The DIP of the BUM packets is the IP address of the remote VTEP. Traffic received from VXLAN tunnels are never forwarded onto another VXLAN tunnels.
 
-![L2 forwarding over VXLAN ](images/pktflowL2.PNG "Figure 1 : L2 Flow")
-__Figure 1: L2 forwarding Use Case__
+![L2 flooding over VXLAN ](images/pktflowL2floodA.PNG "Figure 1a : L2 flooding")
+__Figure 1a: L2 flooding packet flow__
+
+
+![L2 flooding over VXLAN ](images/pktflowL2floodB.PNG "Figure 1b : L2 flooding")
+__Figure 1b: L2 flooding packet flow__
+
+L2 unicast traffic is forwarded to the tunnel to which the MAC points to. 
+Traffic received from VXLAN tunnels are mapped to a VLAN based on the received VNI and the VNI-VLAN lookup. The received traffic can be L2 unicast or BUM depending on the inner MAC lookup. 
+
+![L2 unicast forwarding over VXLAN ](images/pktflowL2.PNG "Figure 1c : L2 unicast Flow")
+__Figure 1c: L2 forwarding unicast packet flow__
 
 
 #### Symmetric and Asymmetric IRB
@@ -232,8 +241,8 @@ In the asymmetric IRB model, the inter-subnet routing functionality is performed
 
 The egress VTEP removes the VXLAN header and forwards the packet onto the local Layer 2 domain based on the VNI to VLAN mapping. The same thing happens on the return path, with the packet routed by the ingress router and then overlay switched by the egress router. The overlay routing action occurs on a different router on the reverse path vs. the forward path, hence the term asymmetric IRB.
 
-![Asymmetric IRB Use Case](images/pktflowAsymmIRB.PNG "Figure 2 : Asymm IRB Flow")
-__Figure 2: Asymmetric IRB Use Case__
+![Asymmetric IRB packet flow](images/pktflowAsymmIRB.PNG "Figure 2 : Asymm IRB Flow")
+__Figure 2: Asymmetric IRB packet flow__
 
 In the symmetric IRB model the VTEP is only configured with the subnets that are present on the directly attached hosts. Connectivity to non-local subnets on a remote VTEP is achieved through an intermediate IP-VRF.
 
@@ -241,8 +250,8 @@ In the symmetric IRB model the VTEP is only configured with the subnets that are
 
 The ingress VTEP routes the traffic between the local subnet and the IP-VRF, which both VTEPs are a member of, the egress VTEP then routes the frame from the IP-VRF to the destination subnet.  The forwarding model results in both VTEPs performing a routing function.
 
-![Symmetric IRB Use Case](images/pktflowSymmIRB.PNG "Figure 3 : Symm IRB Flow")
-__Figure 3: Symmetric IRB Use Case__
+![Symmetric IRB packet flow](images/pktflowSymmIRB.PNG "Figure 3 : Symm IRB Flow")
+__Figure 3: Symmetric IRB packet flow__
 
 
 Both asymmetric and symmetric IRB models will be supported in SONiC.
@@ -299,13 +308,13 @@ Producer:  config manager
 
 Consumer: VxlanMgr
 
-Description: This is a singleton configuration which holds the VTEP source IP used for BGP-EVPN discovered tunnels. 
+Description: This is a singleton configuration which holds the tunnel name specifying the VTEP source IP used for BGP-EVPN discovered tunnels. 
 
 Schema:
 
 ```
 ;New table
-;holds the VTEP source IP used for BGP-EVPN discovered tunnels
+;holds the tunnel name specifying the VTEP source IP used for BGP-EVPN discovered tunnels
 
 key = EVPN_NVO_TABLE:nvo_name
                           ; nvo or VTEP name as a string
@@ -376,7 +385,7 @@ key = EVPN_NVO_TABLE:nvo_name
 source_vtep = tunnel_name ; refers to the VXLAN_TUNNEL object created with SIP only.
 ```
 
-**EVPN_REMOTE_VNI** 
+**VXLAN_REMOTE_VNI** 
 
 Producer: fdbsyncd
 
@@ -390,7 +399,7 @@ Schema:
 ; New table
 ; specifies the VLAN to be extended over a tunnel
 
-key = EVPN_REMOTE_VNI_TABLE:"Vlan"vlanid:remote_vtep_ip
+key = VXLAN_REMOTE_VNI_TABLE:"Vlan"vlanid:remote_vtep_ip
                   ; Vlan ID and Remote VTEP IP 
 ; field = value
 vni = 1*8DIGIT    ; vni to be used for this VLAN when sending traffic to the remote VTEP
@@ -627,7 +636,13 @@ The dynamic tunnels created always have a SIP as well as a DIP. These dynamic tu
 The dynamic tunnels are created when the first EVPN route is received and will be deleted when the last route withdrawn. To support this, refcounting per source - IMET, MAC, VNET/Prefix routes will be maintained to determine when to create/delete the tunnel. This is maintained in the VTEP VxlanTunnel Object.
 
 The Tunnel Name for dynamic tunnels is auto-generated as EVPN_A.B.C.D where A.B.C.D is the DIP.
-Bridge port is created per tunnel. The sai_bridge call to create the bridge port is created with learning disabled for EVPN tunnels
+
+For every dynamic tunnel discovered the following processing occurs. 
+- SAI objects related to tunnel are created.
+  - Tunnel SAI object is created with the mapper IDs created for the VTEP.
+  - Tunnel terminator SAI object of type P2P created with the tunnel_id attribute as the oid generated in the above step. 
+- BridgePort SAI object with the tunnel oid is created. Learning is disabled for EVPN tunnels.
+- Port object of type Tunnel created in the portsorch. 
 
 To avoid static tunnels from being created with an EVPN prefix, VxlanMgr disallows static tunnels with name starting with "EVPN".
 
@@ -714,6 +729,7 @@ The *vni_id* is remote VNI received in the IMET route, and *remote_vtep* is IPv4
 
 - Create Tunnel if this is the first EVPN route to the remote VTEP. 
 - Retrieve the bridgeport associated with the dynamic tunnel.
+- create VlanMember of type tunnel and associate it to the vlanPort object in portsorch.
 - call sai_vlan_api->create_member with vlanid and tunnel bridgeport. 
 
 
@@ -957,8 +973,6 @@ These will be stored in the counters DB for each tunnel.
 
 ## 5 CLI
 
-The CLI commands are incremental to those specified in L3 VXLAN HLD.
-
 ### 5.1 Click based CLI
 
 #### 5.1.1 Configuration Commands
@@ -972,6 +986,7 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
 2. EVPN NVO configuration 
    - config vxlan evpn_nvo add <nvoname> <vtepname>
    - config vxlan evpn_nvo del <nvoname>
+   - This configuration is specific to EVPN.
 3. VLAN VNI Mapping configuration
    - config vxlan map add <vtepname> <vlanid> <vnid>
    - config vxlan map_range add <vtepname>  <vlanstart> <vlanend> <vnistart>
@@ -991,11 +1006,13 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
 ```
 1. show vxlan interface 
    - Displays the name, SIP, associated NVO name. 
+   - Displays the loopback interface configured with the VTEP SIP. 
 
    VTEP Information:
 
            VTEP Name : VTEP1, SIP  : 4.4.4.4
            NVO Name  : nvo1,  VTEP : VTEP1
+           Source interface  : Loopback33
 
 2. show vxlan vlanvnimap 
    - Displays all the VLAN VNI mappings.
@@ -1024,12 +1041,13 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
    +---------+---------+-------------------+--------------+
    | 2.2.2.2 | 3.3.3.3 | EVPN              | oper_up      |
    +---------+---------+-------------------+--------------+
+   Total count : 2
 
-5. show vxlan evpn_remote_mac <remoteip/all>  <vlanid/all> 
+5. show vxlan remote_mac <remoteip/all>  <vlanid/all> 
    - lists all the MACs learnt from the specified remote ip or all the remotes for the specified/all vlans. (APP DB view) 
    - VLAN, MAC, RemoteVTEP,  VNI,  Type are the columns.
 
-   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_mac all
+   show vxlan remote_mac all
    +---------+-------------------+--------------+-------+--------+
    | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
    +=========+===================+==============+=======+========+
@@ -1047,7 +1065,7 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
    +---------+-------------------+--------------+-------+--------+
    Total count : 6
    
-   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_mac 3.3.3.3
+   show vxlan remote_mac 3.3.3.3
    +---------+-------------------+--------------+-------+--------+
    | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
    +=========+===================+==============+=======+========+
@@ -1058,11 +1076,11 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
    Total count : 2
 
 
-6. show vxlan evpn_remote_vni <remoteip/all> 
+6. show vxlan remote_vni <remoteip/all> 
    - lists all the VLANs learnt from the specified remote ip or all the remotes.  (APP DB view) 
    - VLAN, RemoteVTEP, VNI are the columns
 
-   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_vni all
+   show vxlan remote_vni all
    +---------+--------------+-------+
    | VLAN    | RemoteVTEP   |   VNI |
    +=========+==============+=======+
@@ -1072,7 +1090,7 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
    +---------+--------------+-------+
    Total count : 2
    
-   admin@sonic:/etc/sonic/evpn# show vxlan evpn_remote_vni 3.3.3.3
+   show vxlan remote_vni 3.3.3.3
    +---------+--------------+-------+
    | VLAN    | RemoteVTEP   |   VNI |
    +=========+==============+=======+
@@ -1083,7 +1101,7 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
 
 ```
 
-### 5.2 SONiC CLI
+### 5.2 KLISH CLI
 
 #### 5.2.1 Configuration Commands
 
@@ -1117,12 +1135,10 @@ The CLI commands are incremental to those specified in L3 VXLAN HLD.
 
 ```
 1. show vlan id and brief will be enhanced to display DIP. (tunnel members from  APP DB)
-   NOTE: syntax, filters, sample output dependent on Dell implementation.
 
 2. show mac /show mac -v will be enhanced for EVPN MACs.
    - Port column will display DIP. (ASIC DB view)
    - Type column will display EVPN_static/EVPN_dynamic
-   NOTE: syntax, filters, sample output dependent on Dell implementation.
 ```
 
 #### 5.2.3 Validations 
@@ -1146,5 +1162,4 @@ The existing logging mechanisms shall be used. Proposed debug framework shall be
 ## 7 Warm Reboot Support
 
 To support warm boot, all the sai_objects must be uniquely identifiable based on the corresponding attribute list. New attributes will be added to sai objects if the existing attributes cannot uniquely identify corresponding sai object. SAI_TUNNEL_ATTR_DST_IP is added to sai_tunnel_attr_t to identify multiple evpn discovered tunnels.
-
 
