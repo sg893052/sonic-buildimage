@@ -25,7 +25,7 @@ SONiC Gearbox Manager
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 10/22/2019  | Dan Arsenault      | Initial Draft                     |
-| 0.2 | 11/01/2019  | Dan Arsenault      | Minor internal review edits       |
+| 0.2 | 12/12/2019  | Dan Arsenault      | Minor internal review edits       |
 
 
 # About this Manual
@@ -70,7 +70,7 @@ The Abstraction Interface contains a set of SAI APIs providing new functionality
 5. Coordinates port configuration between system and line side and External PHYs
 6. Abstracts the system side configuration from the SONiC application
 7. Consolidate link status from ASIC and PHY port side if PHY driver doesn't support status propagation
-8. Support removable line cards with any PHY configuration (future)
+8. Support removable line cards with any PHY configuration (*future*)
 9. Warm-boot support
 
 ## 1.2 Configuration and Management Requirements
@@ -114,7 +114,7 @@ In order to isolate gearbox functionality and complexity, the Gearbox Manager im
 ![Gearbox Overview](images/gearbox_overview.png)
 
 ### 3.1.1 ORCHAGENT (modified)
-Upon startup or reboot, the SWSS ORCHAGENT determines if the given platform supports an external gearbox PHY. If detected, the new GEARSYNCD daemon is started which reads and interprets the gearbox related configuration files. The ORCHAGENT also establishes a global gearbox enabled flag that can then be used and shared throughout the SWSS container.
+Upon startup or reboot, portsyncd is started as well as the new gearsyncd deamon. The Orchagent is still responsible for creating the ASIC switch and the associated host interfaces. The internal doPortTask has been modified to support both internal port and Gearbox related events.  
 
 ![Gearbox ORCHAGENT FLOW](images/gearbox_orchagent_flow.png)
 
@@ -129,11 +129,11 @@ The existing PORTSYNCD daemon has been modified to detect the presence of the Ge
 ![Gearbox PORTSYNCD Flow](images/gearbox_portsyncd_flow.png)
 
 ### 3.1.4 PORTSORCH (modified)
-If the Gearbox Manager is present, the PORTSORCH agent has been modified to load and initialize all the external PHYs as well their associated SAI APIs. The PORTSORCH agent also has a new doGearTask that is dedicated to gearbox management. Given the gearbox platform and PHY configurations and by utilizing the new SAI PHY APIs, the actual device topology (how these gearbox devices are physically connected) is configured. The following is a high-level interaction between this agent and the SAI APIs.
+If the Gearbox Manager is enabled, the PORTSORCH agent has been modified to load and initialize all the external PHYs as well their associated SAI APIs. The PORTSORCH doPortTask has been modified to filter on Gearbox events. Given the gearbox platform and PHY configurations and by utilizing the new SAI PHY APIs, the actual device topology (how these gearbox devices are physically connected) is configured. The following is a high-level interaction between this agent and the SAI APIs.
 
 ![Gearbox PORTSORCH & SAI Interaction](images/gearbox_portsorch_sai_interaction.png)
 
-The following sequence diagram shows the PHY initialization process; which also establishes a map structure that is used by the new doGearTask(). The doGearTask() creates the external PHY ports and their connections using the associated external SAI PHY API library.
+The following sequence diagram shows the PHY initialization process; which also establishes a map structure that is used by the enhanced doPortTask(). The doPortTask() creates the external PHY ports and their connections using the associated external SAI PHY API library.
 
 ![Gearbox PORTSORCH & SAI Sequence](images/gearbox_portsorch_sequence.png)
 
@@ -309,7 +309,7 @@ The following diagram shows the overall object model for which the new SAI Exter
 
 ![Gearbox SAI Object Model](images/gearbox_sai_object_model.png)
 
-Each external PHY is represented and packaged within its own SYNCD daemon. Each daemon is uniquely identified by its PHY address and is linked with its own SAI PHY library. The SYNCD Docker has been modified to detect the available PHYs and starts each daemon listening to service its commands. Please see the following flow between the ORCHAGENT and the modified SYNCD DOCKER.
+Each external PHY is represented and packaged within its own docker-syncd-phy daemon. Each daemon is uniquely identified by its PHY address and is linked with its own SAI PHY library. A new PHYSYNCD Docker has been created to detect the available PHYs and starts each new syncd-phy daemon within its container. Note that the DATABASE docker has also been modified to replicate the databases which are dedicated for each syncd-phy. Please see the following flow between the ORCHAGENT and the new/modified DATABASE and PHYSYNCD dockers.
 
 ![Gearbox ORCHAGENT and SYNCD Flow](images/gearbox_portsorch_syncd_flow.png)
 
@@ -323,8 +323,16 @@ The Gearbox Manager has no dependency on the SONiC CLI.
 
 ### 3.7.3 Show Commands
 Optionally, the CLI show command may provide additional information.
-show interfaces gearbox (future)
 
+~~~
+show gearbox interfaces status (future)
+
+   Interface    Lanes  Speed Sytems Lanes  System Speed       Line Lanes  Line Speed           Alias 
+   ---------  -------  ----- ------------  ------------  ---------------  ----------  --------------
+   Ethernet0  101,102  40000      200,201         20000  203,204,205,206       10000  fortyGigE1/1/1  
+   Ethernet1  103,104  40000      207,208         20000  209,210,211,212       10000  fortyGigE1/1/2
+~~~
+  
 ### 3.7.4 Debug Commands
 
 ### 3.7.5 REST API Support
