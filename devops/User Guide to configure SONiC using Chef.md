@@ -35,7 +35,8 @@
 | # | Date    |  Document Version | Details |
 | --- | --- | --- | --- |
 | 1 |  Sep 20, 2019 |v1 | Initial version |
-| 2 |  Nov 22, 2019 | v2 | Broadcom SONiC 2.1.0 Release |
+| 2 |  Nov 22, 2019 |v2 | Broadcom SONiC 2.1.0 Release |
+| 3 |  Dec 16, 2019 |v3 | Updated Cookbook Operations required for BGP-EVPN related configuration|
 
 
 # Introduction
@@ -186,6 +187,10 @@ Go back to [Beginning of the document](#Chef).
 
 - Speed
 - Admin status
+- MTU
+- Storm Control parameters (broadcast, unknown-multicast, unknown-unicast)
+- Addition/Deletion of IPv4/IPv6 address
+- Bind/Unbind interface to VRF
 
 **3.	LAG**
 
@@ -204,14 +209,16 @@ Go back to [Beginning of the document](#Chef).
 
 - Enable BGP 
 - Disable BGP 
-- Addition of Peer Group
-- Deletion of Peer Group
+- Addition of Peer Group, Router-id, Timers (dealy-timer, hold-timer, keepalive-timer)
+- Deletion of Peer Group, Router-id, Timers (dealy-timer, hold-timer, keepalive-timer)
 - Addition of Neighbor (shutdown, ebgp-multihop, local-as, remote-as, update-source)
 - Deletion of Neighbor (shutdown, ebgp-multihop, local-as, remote-as, update-source)
-- Addition of ipv4 unicast Address Family (neighbors, network, redistribute)
-- Deletion of ipv4 unicast Address Family (neighbors, network, redistribute)
+- Addition of ipv4 unicast Address Family (neighbors, network, redistribute, aggregate-address)
+- Deletion of ipv4 unicast Address Family (neighbors, network, redistribute, aggregate-address)
 - Addition of l2vpn evpn Address Family (neighbors, vni, advertise-all-vni, advertise-default-gw, advertise, route-target)
 - Deletion of l2vpn evpn Address Family (neighbors, vni, advertise-all-vni, advertise-default-gw, advertise, route-target)
+- Addition of ipv6 unicast Address Family (neighbors, network, redistribute, aggregate-address, maximum-paths)
+- Deletion of ipv6 unicast Address Family (neighbors, network, redistribute, aggregate-address, maximum-paths)
 
 **6.	VRF**
 
@@ -224,7 +231,23 @@ Go back to [Beginning of the document](#Chef).
 
 - Creation
 - Deletion
-- Addition of members
-- Deletion of members
+- Addition of members, Keepalive interval, Session timeout
+- Deletion of members, Keepalive interval, Session timeout
+- Addition of Unique IP for VLAN interfaces
+- Deletion of Unique IP for VLAN interfaces
+
+**8.	Loopback Interface settings**
+
+- Addition/Deletion of IPv4/IPv6 address
+- Bind/Unbind interface to VRF
+
+**9.	VxLAN**
+- Creation/Deletion of VTEP with Source IP
+- Configure VLAN to VNI mapping
+ 
+
+**10.	EVPN**
+- Create/Delete EVPN NVO
+- Add/Remove Source VTEP
 
 Go back to [Beginning of the document](#Chef).
