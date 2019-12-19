@@ -242,7 +242,7 @@ In the above diagram, the table describes the BUM traffic flooding behavior on L
 
 Loally learned MAC addresses on each LVTEP node are exchanged with remote leaf nodes using BGP EVPN control plane similar to single VTEP case as described in EVPN VXLAN HLD. In addition, they are also exchanged with MCLAG peer node using ICCP control plane as described in MC-LAG HLD. As part of LVTEP support, MAC move between MHD on LVTEP node and SHD/MHD on remote leaf node is also supported.
 
-![EVPN LVTEP MAC Management](images/LVTEPMACManagement.png "EVPN LVTEP MAC Management")
+![EVPN LVTEP MAC Management](images/LVTEPFDBManagement.png "EVPN LVTEP MAC Management")
 
 ### 2.2.3 Uplink Interface Tracking
 
@@ -543,7 +543,15 @@ The following diagram shows how operational status events from Ports Orch is han
 Error returned by SAI for the added SAI calls will be added to syslog with ERROR log level. 
 
 # 6 Serviceability and Debug
-The existing debug mechanism for EVPN VXLAN and MCLAG will be leveraged. In addition, new internal debug counters tracking internal processing errors and SAI interaction errors will be added to OrchAgent. The debug counters will be displayed using the new debug framework "show debug" command.
+The existing debug commands from MCLAG HDL and EVPN VXLAN HLD will be used to debug LVTEP. Below are the links to the MCLAG and EVPN VXLAN HLDs respectively:
+http://gerrit-lvn-07.lvn.broadcom.net:8083/plugins/gitiles/sonic/documents/+/refs/changes/75/12075/12/MCLAG/MCLAG_HLD.md#5-Serviceability-and-Debug
+
+http://gerrit-lvn-07.lvn.broadcom.net:8083/plugins/gitiles/sonic/documents/+/refs/changes/05/9005/10/L3/EVPN/EVPN%20VXLAN%20HLD.md#6-serviceability-and-debug
+
+In addition, two new debug shell commands can be used to display MCLAG ISL bridge port attribute programming status from OrchAgent and SAI for LVTEP:
+
+* show system internal orchagent lvtep global
+* show system internal sai lvtep global
 
 # 7 Warm Boot Support
 LVTEP warmboot depends on the successful warm boot support in EVPN VXLAN and MCLAG. During the following warm boot scenarios, there should be no traffic loss for traffic between SHD/MHD attached to MCLAG leaf nodes and SHD/MHD attached to remote leaf node
