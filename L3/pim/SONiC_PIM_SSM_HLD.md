@@ -505,6 +505,8 @@ Below are the IP multicast scaling numbers:
 | Number of Multicast Route Entries    | 8192          |
 | Number of PIM Neighbours             | 64            |
 
+Linux kernel supports only 32 multicast routing interfaces of which one interface is reserved for PIM register interface.  So, PIM/IGMP can be enabled on only 31 routing interfaces.
+
 # 9 Unit Test
 ## 9.1 CLI Test Cases
 N/A, as this feature uses FRR PIM and IGMP CLI.
@@ -591,3 +593,5 @@ Static Mroutes are similar to unicast static routes but differ in the sense that
 However, the RPF look-up using Static Mroutes is broken in FRR 7.2 and the FRR community has confirmed it.  So, this release doesn't provide support for Static Multicast Routes.
 
 4. Aging of multicast route entries: Multicast route entries are deleted when the router doesn't receive multicast traffic for a specified time period (210 seconds).  Aging of multicast route entries can be achieved in two ways. (1) Age-out in the application: Application periodically queries for the HIT status using a SAI API and deletes the route entry after a specified time-out. (2) Age-out in the driver: Add age-out logic in the driver and extend SAI to notify the application after the route entry age-out.  Currently, SAI doesn't support both these APIs.
+
+5. FRR 7.2 and its prior versions has support for multicast traceroute (MTRACE) only in the default VRF.
