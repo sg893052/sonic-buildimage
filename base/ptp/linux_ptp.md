@@ -1,8 +1,8 @@
 # SONiC LinuxPTP
 
-# High Level Design Document
+## High Level Design Document
 
-## Rev 0.3
+### Rev 0.4
 
 # Table of Contents
 
@@ -28,10 +28,11 @@
 # Revision
 
 | Rev |     Date    |       Author       | Change Description                |
-|:---:|:-----------:|:------------------:|-----------------------------------|
+|:---:|:-----------:|:------------------:|:-----------------------------------|
 | 0.1 | 04/22/2019  |   Prasanth Kunjum Veettil   | Initial version          |
 | 0.2 | 07/30/2019  |   Prasanth Kunjum Veettil   | Addressed review comments|
 | 0.3 | 10/07/2019  |   Lyndon Siao               | Addressed review comments|
+| 0.4 | 01/07/2020  |   Prasanth Kunjum Veettil  / Lyndon Siao               | Updated support matrix and CLI|
 
 # About this Manual
 
@@ -68,6 +69,7 @@ Precision Time Protocol is a distributed protocol that specifies how the real-ti
 
 The protocol executes within a logical scope called a domain. A given physical network and individual devices connected to the network can be associated with multiple domains, the time established within one domain by the protocol is independent of the time in other domains.
 
+
 A network of boundary clocks and transparent clocks enable high precision time distribution by synchronization between clock nodes. Also, it supports redundancy of clock sources by supporting selection between multiple grand-masters available in a clock domain.
 
 **![depl](linux_ptp_depl.jpg)**
@@ -101,9 +103,24 @@ This PTP profile is part of the IEEE1588 standard and it is basically used in a 
 
 1.1.4 T-REC-G.8275.2 (Phase/time synchronization with partial timing support from the network)
 
-1.1.5 The PTP packets can be exchanged via regular port interfaces as well as port channel interfaces
+1.1.5 The PTP packets are exchanged via regular port interface. PTP is not supported on port-channel and VLAN interfaces.
 
 1.1.6 The PTP packets are encapsulated into Ethernet frame, IPv4 packet or IPv6 packets and transported in multicast and unicast modes.
+The network transport modes supported for different profiles are captured in the below table:
+
+| Boundary Clock|
+|:-------------:|
+| Profile| L2 MC | L2 UC | IPv4 MC | IPv4 UC | IPv6 MC | IPv6 UC  |
+| IEEE 1588-2008 | Yes | Yes | Yes | Yes | Yes   | No* |
+| ITUT-G.8275.2  | No | No | No | Yes | No   | No  |
+
+| End-to-End Transparent Clock|
+|:-------------:|
+| Profile| L2 MC | L2 UC | IPv4 MC | IPv4 UC | IPv6 MC | IPv6 UC  |
+| IEEE 1588-2008 | Yes | No | Yes | No | Yes   | No          |
+| ITUT-G.8275.2  | N/A | N/A | N/A | N/A | N/A   | N/A       |
+\* IPv6 unicast transport mode is not supported in LinuxPTP 2.0
+
 
 1.1.7 The hardware time stamping capability depends on hardware capability as well as SAI support for the hardware platform.
 
@@ -113,8 +130,8 @@ This PTP profile is part of the IEEE1588 standard and it is basically used in a 
 
 1.1.10 LinuxPTP supports multiple domains. The number of domains supported in a node is limited by the clock ports in that node.
 
-1.1.11 A clock port can be a physical port or port-channel.
-No special measures are taken when a port channel is used for transport of PTP event packets - the packets are hashed to a member port as usual. This means that the PTP Sync packets and Pdelay packets can go on different member ports, and so take different physical paths. This can result in a loss of precision in PTP. So, when using a port-channel on the PTP event packet path in deployment, care should be taken to keep the port-channel member paths as uniform as possible  (e.g. optics, cable, cable length and routing etc).
+1.1.11 A clock port can only be a physical port.
+
 ## 1.2 Configuration and Management Requirements
 
 1.2.1 The LinuxPTP has to be managed using the  SONiC management infrastructure.  
@@ -258,192 +275,229 @@ IETF Yang Model:
 
 ### 3.6.2 Configuration Commands
 
-The default configurations are inline with the defaults in LinuxPTP. The config commands uses Klish framework.  
+The default configurations are inline with the defaults in LinuxPTP. The config commands uses Klish framework. It requires klish to be in configuration mode (configure terminal).
 
-#### 3.6.2.1 ptp mode <boundary-clock/slave-only/master-only/transparent-clock/disable>
+#### 3.6.2.1 ptp mode <boundary-clock/peer-to-peer-transparent-clock/end-to-end-transparent-clock/disable>
+Configures the device ptp mode as boundary-clock, peer-to-peer-transparent-clock, end-to-end-transparent-clock or disables ptp.
 
     Default:disable
 
-#### 3.6.2.1 ptp delay-mechanism <e2e/p2p>
-
-    Default:p2p
-
-#### 3.6.2.1 ptp network-transport <l2/ip-v4/ip-v6>
+#### 3.6.2.2 ptp network-transport <l2/ipv4/ipv6> <unicast/multicast>
+Configures the network transport used and whether unicast or multicast mode.
 
     Default:l2
 
-#### 3.6.2.1 ptp source-ip <ip-address>
+#### 3.6.2.3 ptp ipv6-scope <0x0..0xf>
+Configures the desired scope for the IPv6 multicast messages. This will be used as the second byte of the primary address and is relevant only in IPv6 multicast transport.
 
-    Default: 0.0.0.0
+    Default: 0xe
 
-#### 3.6.2.2 ptp domain <0-127>
+#### 3.6.2.4 ptp domain <0..127>
+Configures the domain number to use for this clock.
 
     Default: 0
 
-#### 3.6.2.2 ptp domain profile <default/g8275.1/g8275.2>
+#### 3.6.2.5 ptp domain-profile <default/g8275.1/g8275.2>
+Configures the method to be used when comparing data sets during the Best Master Clock Algorithm.
 
     Default: default
 
-#### 3.6.2.4 ptp two-step <enable/disable>
+#### 3.6.2.6 ptp two-step <enable/disable>
+Configures the two-step mode for sync messages. One-step mode can be used only with hardware time stamping.
 
     Default: enable
 
-#### 3.6.2.5 ptp priority1 <1-255>
+#### 3.6.2.7 ptp priority1 <0..255>
+Configures the priority1 attribute of the local clock. It is used int he best master selection algorithm. Lower values take precedence.
 
     Default: 128
 
-#### 3.6.2.6 ptp priority2 <1-255>
+#### 3.6.2.8 ptp priority2 <0..255>
+Configures the priority2 attribute of the local clock. It is used int he best master selection algorithm. Lower values take precedence.
 
     Default: 128
 
-#### 3.6.2.7 ptp announce interval <1-255>
+#### 3.6.2.9 ptp announce-timeout <2..128>
+Configures the number of sync/follow up messages that may go missing before triggering a best master clock election.
+
+    Default: 3
+#### 3.6.2.10 ptp log-announce-interval <-128..128>
+Configures the mean time interval between announce messages.
 
     Default: 1
 
-#### 3.6.2.7 ptp announce timeout <1-255>
-
-    Default: 3
-
-#### 3.6.2.8 ptp sync-interval <1-255>
+#### 3.6.2.11 ptp log-sync-interval <-128..128>
+Configures the mean time interval between sync messages.
 
     Default: 0
 
-#### 3.6.2.9 ptp delay-request-min-interval
+#### 3.6.2.12 ptp log-min-delay-req-interval <-128..128>
+Configures the minimum permitted mean time interval between delay_req messages.
 
     Default: 0
 
-#### 3.6.2.10 ptp port <Port Name> <transparent/boundary/disable>
+#### 3.6.2.13 ptp port add <Interface Name>
+Specifies the interface on which PTP is enabled.
 
-    Default: disable
+    Default: N/A
 
-### 3.6.3 Show Commands
+#### 3.6.2.14 ptp port del <Interface Name>
+Removes the interface on which PTP is enabled.
 
-#### 3.6.3.1 show ptp
+    Default: N/A
+
+#### 3.6.2.15 ptp port master-table <Interface Name> add <master-ip-address>
+Configures the set of master ip addresses that the slave port uses to initiate PTP communication. This is typically the IP address assigned to the interface attached to the device slave port. This command is relevant only in unicast mode and has a maximum of 8 ip addresses allowed per slave port.
+
+    Default: N/A
+
+#### 3.6.2.16 ptp port master-table <Interface Name> del <master-ip-address>
+Removes from the set of master ip addresses that the slave port uses to initiate PTP communication. This is typically the IP address assigned to the interface attached to the device slave port. This command is relevant only in unicast mode.
+
+    Default: N/A
+
+### 3.6.3 Interface IP Address commands
+The following existing click based sonic commands configure the IP address of the interface and are required for network ipv4 and ipv6 network transports.
+
+#### 3.6.3.1 config interface ip add <OPTIONS> <interface_name> <ip_addr> <default gateway IP address>
+#### 3.6.3.2 config interface ip remove <OPTIONS> <interface_name> <ip_addr> <default gateway IP address>
+
+### 3.6.4 Show Commands
+
+#### 3.6.4.1 show ptp
 
 Example output:
 
-#### 3.6.3.2 show ptp time-property  
-
-Example output:  
-
+    sonic# show ptp
     ---------------------
     Interface  State
     ---------------------
-    Ethernet0  Master 
-    Ethernet4  Master
+    Ethernet52  master
+    Ethernet64  slave
 
 
-#### 3.6.3.3 show ptp clock
-Example output:
-
-    ---------------------------------
-    Attribute             Value/State
-    ---------------------------------
-    Domain Number         0
-    Priority1             0
-    Priority2             0
-    Two Step              True
-    Slave Only            True
-    Number Ports          0
-    Clock Quality:
-    Clock Class           248
-    Clock Accuracy        0
-    Ofst Scaled Log Var   0
-
-#### 3.6.3.4 show ptp port  
+#### 3.6.4.2 show ptp time-property  
 
 Example output:
 
-    -----------------------------------------------------------
-    Attribute                     Value/State
-    -----------------------------------------------------------
-    Port Number                   1
-    Port State                    Master
-    Log Min Pdelay Req Intvl      5
-    Log Min delay Req Intvl       0
-    Peer Mean Path delay          0
+	sonic# show ptp time-property
+	Curr UTC Offset Vld  false
+	Curr UTC Offset      37
+	Leap59               false
+	Leap61               false
+	Time Traceable       false
+	Freq Traceable       false
+	PTP Timescale        true
 
-#### 3.6.3.5 show ptp parent
+
+#### 3.6.4.3 show ptp clock
+Example output:
+
+	sonic# show ptp clock
+	Mode                  BC
+	Domain Profile        ieee1588
+	Network Transport     L2 multicast
+	Domain Number         1
+	Clock Identity        b86a97.fffe.2ff1ba
+	Priority1             128
+	Priority2             128
+	Two Step              Enabled
+	Slave Only            False
+	Number Ports          2
+	Clock Quality:
+	  Clock Class         248
+	  Clock Accuracy      254
+	  Ofst Scaled Log Var 65535
+	Mean Path Delay       0
+	Steps Removed         0
+	Ofst From Master      0
+
+#### 3.6.4.4 show ptp port  
 
 Example output:
 
-    -----------------------------------------------------------
-    Attribute                     Value/State
-    -----------------------------------------------------------
-    Grandmaster Identity          0a:0b:0c:0d:0e:0f
-    Grandmaster Priority1         128
-    Grandmaster Priority2         128
-    Stats Valid                   True
-    Observed Off Scaled Log Var   1
-    Observed Clock Phase Chg Rate 1
+	sonic# show ptp port Ethernet 52
+	Port Number                    52
+	Port State                     master
+	Log Min delay Req Intvl        0
+	Peer Mean Path Delay           0
+	Log Announce Interval          1
+	Log Sync Interval              0
+	Delay Mechanism                e2e
+	Log Min PDelay Req Interval    0
+	Version Number                 2
 
-### 3.6.4 Debug Commands
+#### 3.6.4.5 show ptp parent
 
-LinuxPTP support the following debug features:
-3.6.4.1 Debug logs:- The debug log levels can be set according to the need. There are 6 levels and default is LOG_INFO.
-3.6.4.2 Verbose logs:- The debug messages can be directed to standard output.
-The following command can be used to enable the log from LinuxPTP:  
-swssloglevel -c PTP -l [log-level]  
-The accepted values of log levels are LOG_EMERG, LOG_ALERT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO and LOG_DEBUG
-The LinuxPTP logs are saved into a file /var/log/messages. This would be part of showtech bundle.
+Example output:
 
-### 3.6.5 REST API Support
+	sonic# show ptp parent
+	Parent Clock Identity          b86a97.fffe.2ff1ba
+	Port Number                    0
+	Grandmaster Clock Class        248  
 
-This is supported by default with the new management framework.
+  ### 3.6.4 Debug Commands
 
-# 4 Flow Diagrams
+  LinuxPTP support the following debug features:
+  3.6.4.1 Debug logs:- The debug log levels can be set according to the need. There are 6 levels and default is LOG_INFO.
+  3.6.4.2 Verbose logs:- The debug messages can be directed to standard output.
+  The following command can be used to enable the log from LinuxPTP:
+  swssloglevel -c PTP -l [log-level]
+  The accepted values of log levels are LOG_EMERG, LOG_ALERT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO and LOG_DEBUG
 
-![Flow Diagrams](ptp_flow_diagram.jpg)
-*Linux PTP Flow Diagram*
+  ### 3.6.5 REST API Support
 
-# 5 Serviceability and Debug
+  This is supported by default with the new management framework.
 
-PTP RX packet statistics per port will be available.
-Linux PTP provides logging at multiple levels, which can be leveraged while debugging issues.
-PTP Orch-agent logs are part of SWSS logs.
+  # 4 Flow Diagrams
 
-# 6 Warm Boot Support
+  ![Flow Diagrams](ptp_flow_diagram.jpg)
+  *Linux PTP Flow Diagram*
 
-LinuxPTP stack will be down during warm reboot. Hence, no warm reboot support for the PTP protocol handling. End-to-end transparent clock supports warm-reboot as data plane will be up.
+  # 5 Serviceability and Debug
 
-# 7 Scalability
+  PTP RX packet statistics per port will be available.
+  Linux PTP provides logging at multiple levels, which can be leveraged while debugging issues.
+  PTP Orch-agent logs and LinuxPTP logs are part of SWSS logs. This would be part of showtech bundle.
 
-7.1 The PTP packet rates are based on hardware platform capability. For example, not all platforms can handle 128 PTP packets/second without major impact on system performance and other control protocols. The config files can be modified manually or through CLI to adjust the rates.
-7.2 The clock precision depends on the capability of hardware platform and performance of PTP components in SAI.
-7.3 There can be as much as total (ports - 1) master ports for a boundary clock.
+  # 6 Warm Boot Support
 
-The following are some of the factors to be considered:
-- The number of hops from a grand-master will have direct impact on the precision. 
-- The more number of active master ports in a boundary clock will increase the load on BC.
+  Both boundary-clock and transparent clock uses LinuxPTP stack. LinuxPTP stack will be down during warm reboot. Hence, no warm reboot support for the PTP protocol handling.
+
+  # 7 Scalability
+
+  7.1 The PTP packet rates are based on hardware platform capability. For example, not all platforms can handle 128 PTP packets/second without major impact on system performance and other control protocols. The config files can be modified manually or through CLI to adjust the rates.
+  7.2 The clock precision depends on the capability of hardware platform and performance of PTP components in SAI.
+  7.3 There can be as much as total (ports - 1) master ports for a boundary clock.
+
+  The following are some of the factors to be considered:
+  - The number of hops from a grand-master will have direct impact on the precision.
+  - The more number of active master ports in a boundary clock will increase the load on BC.
 
 # 8 Unit Test
 
-The following is the list of unit test cases:
-
-Verify PTP CLI config commands.
-Verify HW timestamping capability with ethtool.
-Verify PTP initialization is successful.
-Verify PTP configurations getting updatd to CONFIG_DB.
-Verify PTP configurations are restored after reload and linuxPTP is running with correct parameters.
-Verify PTP packet trapping works after reload on the configured PTP ports.
-Verify clock port configurations - normal port
-Verify clock port configuration - port channel
-Verify number of clock ports.
-Verify time synchronization on physical ports and port-channels.
-Verify time synchronization with changes in port-channel members.
-Verify grandmaster change and change in PTP time by changing datasets
-Verify grandmaster change and change in PTP time when grandmaster is not reachable.
-Verify clock master selection with default profile
-Verify transparent clock forwarding message pass through
-Verify BMCA with multiple clock ports within a node
-Verify servo states with LinuxPTP logs
-Verify PTP packet counts with LinuxPTP logs
-Verify time synchronization with different transport modes-  L2, IPv4 and IPv6
-Verify ptp_syncd collecting PTP dataset from LinuxPTP
-Verify SAI Error handling with simulated errors
-Verify LinuxPTP logs with different log levels
-Verify no HW programming related to PTP during warm reboot
+The following is the list of unit test cases:  
+* Verify PTP CLI config commands.
+* Verify HW timestamping capability with ethtool.
+* Verify PTP initialization is successful.
+* Verify PTP configurations getting updatd to CONFIG_DB.
+* Verify PTP configurations are restored after reload and linuxPTP is running with correct parameters.
+* Verify PTP packet trapping works after reload on the configured PTP ports.
+* Verify clock port configurations - normal port
+* Verify number of clock ports.
+* Verify time synchronization on physical port.
+* Verify grandmaster change and change in PTP time by changing datasets
+* Verify grandmaster change and change in PTP time when grandmaster is not reachable.
+* Verify clock master selection with default profile
+* Verify transparent clock forwarding message pass through
+* Verify BMCA with multiple clock ports within a node
+* Verify servo states with LinuxPTP logs
+* Verify PTP packet counts with LinuxPTP logs
+* Verify time synchronization with different transport modes-  L2, IPv4 and IPv6
+* Verify PTP dataset collection from LinuxPTP
+* Verify SAI Error handling with simulated errors
+* Verify LinuxPTP logs with different log levels
+* Verify no HW programming related to PTP during warm reboot
 
 # 9 Internal Design Information
 The major component for timestamping support, KNETSync, is implemented in an embedded application. The KNETSync driver changes and clock driver are part of SDK patch for Linux PTP.  
-
