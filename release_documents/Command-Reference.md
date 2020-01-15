@@ -81,6 +81,9 @@ Table of Contents
    * [Interface Configuration And Show-Commands](#interface-configuration-and-show-commands)
       * [Interface Show Commands](#interface-show-commands)
       * [Interface Config Commands](#interface-config-commands)
+   * [Portgroup Configuration And Show-Commands](#portgroup-configuration-and-show-commands)
+      * [Portgroup Show Commands](#portgroup-show-commands)
+      * [Portgroup Config Commands](#portgroup-config-commands)
    * [Interface Naming Mode](#interface-naming-mode)
       * [Interface naming mode show commands](#interface-naming-mode-show-commands)
       * [Interface naming mode config commands](#interface-naming-mode-config-commands)
@@ -308,6 +311,7 @@ This command lists all the possible configuration commands at the top level.
     mirror_session
     platform               Platform-related configuration tasks
     portchannel
+    portgroup              Port-group configuration tasks
     qos
     reload                 Clear current configuration and import a...
     save                   Export current config DB to a file on disk.
@@ -3800,6 +3804,44 @@ This command allows user to disassociate an interface from a particular VRF and 
   admin@sonic:~$ sudo config interface vrf unbind Loopback7 Vrf-Green
   ```
 
+## Portgroup configuration and show commands
+Some platforms have limitation that certain ports have to be setup at same speed together. The ports for which the speed has to be set together are grouped into multiple port groups, for the platforms that have this limitation. The portgroup configuration command can be used to configure speed of ports in same portgroup, and interface configuration command will not able to use.
+
+**portgroup show commands
+This command displays portgroup information of current platform. It displays each portgroup in current platform and ports belong to each portgroup and valid speeds for each portgroup.
+
+- Usage:
+    show portgroup
+
+- Example:
+  For platform does not have portgroup
+  ```
+  admin@sonic:~/logs$ show portgroup
+  Platform does not support portgroup.
+  ```
+
+  For platform does have portgroup
+  ```
+  admin@sonic:~$ show portgroup
+    portgroup          ports      valid speeds
+  -----------  -------------  ----------------
+            1   Ethernet0-11  25000,10000,1000
+            2  Ethernet12-23  25000,10000,1000
+            3  Ethernet24-35  25000,10000,1000
+            4  Ethernet36-47  25000,10000,1000
+  ```
+
+**portgroup config commands
+This command configures portgroup speed.
+- Usage:
+    config portgroup speed <portgroup> <speed>
+
+- Example:
+  ```
+  admin@sonic:~$ sudo config portgroup speed 1 10000
+  Config portgroup 1 speed 10000
+  ```
+
 ## Interface naming mode config commands
 
 **config interface naming mode**  
@@ -3814,7 +3856,7 @@ Users can change the naming_mode using "config interface_naming_mode" command.
 **show interfce naming mode**  
 This command displays the current interface naming mode
 
-  - Usage:  
+- Usage:
     show interfaces naming_mode 
     
 - Example:
