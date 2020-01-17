@@ -1,3 +1,24 @@
+![](../release_documents/images/Broadcom.png)
+
+<br>
+<br>
+<br>
+# Broadcom SONiC 2.1.0
+### Broadview REST API Guide
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+
+
+
 # Feature Name
 BroadView REST APIs in SONiC.
 
@@ -36,9 +57,9 @@ BroadView REST APIs in SONiC.
 [Table 3: BST-Rest-Requests](#table-3-bst-rest-requests)
 
 # Revision
-| Rev |    Date    |       Author       | Change Description |
+| # |    Date    |   Document Version    | Details |
 |:---:|:----------:|:------------------:|--------------------|
-| 0.1 | 18/11/2019 | Prabhu Sreenivasan | Initial version    |
+| 1 | Jan 16, 2020 | v1 | Initial version    |
 
 # About this Manual
 This document provides general information about the BroadView REST-API based communication with REST management interface in SONiC.
