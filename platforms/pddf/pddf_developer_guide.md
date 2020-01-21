@@ -9,7 +9,7 @@ Platform Driver Development Framework (PDDF) Developer Guide
  * [Introduction](#introduction)
 	 * [Abbreviations](#abbreviations)
 	 * [PDDF Components](#pddf-components)
-	 * [PDDF SONiC Platform Bringup Process](#pddf-sonic-platform-bring-up-process)
+	 * [PDDF SONiC Platform Bringup Process](#pddf-sonic-platform-bringup-process)
 * [PDDF SONiC Platform Bring Up Development](#pddf-sonic-platform-bring-up-development)
 * [PDDF Design](#pddf-design)
 	* [JSON Descriptor Files](#json-descriptor-files)
@@ -19,7 +19,7 @@ Platform Driver Development Framework (PDDF) Developer Guide
 * [PDDF Code Organisation](#pddf-code-organisation)
 	* [JSON Descriptor Files and Schema Files](#json-descriptor-files-and-schema-files)
 	* [Generic Platform Drivers](#generic-platform-drivers)
-	* [Generic User Space Python Plugins](#generic-user-space-python-plugins)
+	* [Generic User Space Python Object Classes](#generic-user-space-python-object-classes)
 	* [Custom Vendor Driver Extension Code](#custom-vendor-driver-extension-code)
 	* [Generic PDDF Utilities](#generic-pddf-utilities)
 	* [PDDF Scripts](#pddf-scripts)
@@ -39,9 +39,11 @@ Platform Driver Development Framework (PDDF) Developer Guide
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 08/14/2019  |  Systems Infra Team     | Initial version                   |
+| 0.2 | 10/21/2019  |  Systems Infra Team     | Adding IO expander device support |
+| 0.3 | 10/23/2019  |  Systems Infra Team     | Platform 2.0 APIs support |
 
 # Introduction
-Platform Driver Development Framework (PDDF) is a data driven framework which enables platform vendors to rapidly develop the device specific custom drivers and SONiC user space python plugins, to manage platform devices like Fan, PSUs, LEDs, Optics, System EEPROM, etc., and quickly validate a platform on SONiC. The PDDF consists of generic device drivers and user space platform API plugins which use the per platform specific data in the JSON descriptor files. This document describes how developers can use PDDF generic framework for drivers and plugins and develop custom device drivers rapidly to accelerate development and validation of platforms in SONiC environment.
+Platform Driver Development Framework (PDDF) is a data driven framework which enables platform vendors to rapidly develop the device specific custom drivers and SONiC user space python object classes, to manage platform devices like Fan, PSUs, LEDs, Optics, System EEPROM, etc., and quickly validate a platform on SONiC. The PDDF consists of generic device drivers and user space platform API object classes which use the per platform specific data in the JSON descriptor files. This document describes how developers can use PDDF generic framework for drivers and object classes and develop custom device drivers rapidly to accelerate development and validation of platforms in SONiC environment.
 
 ## Abbreviations
 | **Term**                 		| **Meaning**                         |
@@ -51,40 +53,41 @@ Platform Driver Development Framework (PDDF) is a data driven framework which en
 | PDDF                     		| Platform Driver Development Framework |
 | SAI                      		| Switch Abstraction Interface |
 | PSU                      		| Power Supply Unit |
+| GPIO                      	| General Purpose Input Output |
 | I2C Topology             		| Representation of the I2C bus and the inter connection of I2C devicesTo enable I2C client instantiation and access using kernel I2C interface |
 | Platform Access Data Attributes   | Attributes which are platform specific, and helps access device attributes CPLD registers/ offsets/ masks, etc., |
 | Device Data Attributes   			| Attributes which are used to monitor and manage devices. For eg., Fan attributes – Presence, Fan speed, fan direction, etc., Temp sensor attributes - temp value, etc., PSU attributes - PSU status, presence etc., |
 | Standard Linux Driver Data  		| List of standard linux drivers to be loaded before PDDF drivers are loaded Platform specific options for each driver |
-| Component Plugin Data				| Per component attribute SysFS Path Per component attribute manipulation data |
+| Component Object Class Data		| Per component attribute SysFS Path Per component attribute manipulation data |
 
 
 
 ## PDDF Components
 ![Figure1: SONiC PDK with PDDF](images/pdk_pddf.png "SONiC PDK with PDDF")
 
-Typically, each platform vendor needs to write their own drivers and plugins to bring up SONiC platform. For each new platform bringing up, a vendor writes new drivers and plugins again and goes through building, installing and validating cycles. The process usually takes weeks to finish. PDDF is designed to avoid repetitively writing similar drivers and plugins by providing a data driven, generic drivers and plugins development framework. Vendors only need to fill JSON descriptor files from the HW spec with minimum coding without writing drivers and plugins. If there are any vendor specific driver requirements, PDDF also allows vendor-specific drivers to be loaded. This makes the development and testing much simpler. Any change in the platform data can be made on the target in the JSON files and validated instantly. This helps improve the productivity of the platform developers significantly down to hours. In Arlo release, only I2C based HWs are supported by PDDF.
+Typically, each platform vendor needs to write their own drivers and device object class (Platform 2.0 APIs) to bring up SONiC platform. For each new platform bringing up, a vendor writes new drivers and object classes again and goes through building, installing and validating cycles. The process usually takes weeks to finish. PDDF is designed to avoid repetitively writing similar drivers and object classes by providing a data driven, generic drivers and device-object classes development framework. Vendors only need to fill JSON descriptor files from the HW spec with minimum coding. If there are any vendor specific driver requirements, PDDF also allows vendor-specific drivers to be loaded. This makes the development and testing much simpler. Any change in the platform data can be made on the target in the JSON files and validated instantly. This helps improve the productivity of the platform developers significantly down to hours. In Arlo release, only I2C based HWs are supported by PDDF.
 
 PDDF consists of the following components:
 -   JSON descriptor files
 ODM vendors need to provide JSON descriptor files. The list of information provided by the files is below
 	- Platform Inventory Info, number of fans and psus etc.
-	-   Device Parsing Information
-	-   I2C Topology Information
-	-   Device Access Information
-	-   Value Mapping Information for various device-data Attributes etc.
+	- Device Parsing Information
+	- I2C Topology Information
+	- Device Access Information
+	- Value Mapping Information for various device-data Attributes etc.
 
 -   Generic platform drivers for managing the following components
-	-   FAN
-	-   PSU (Power supply units)
-	-   System EEPROM
-	-   Optic Transceivers (SFP, QSFP)
+	- FAN
+	- PSU (Power supply units)
+	- System EEPROM
+	- Optic Transceivers (SFP, QSFP)
 	- Temp Sensors
 	- CPLD
 	- System Status Registers
 	- System LED
 
- -   Generic user space python plugins to get/set various attributes for the following devices
-	 -   FAN
+ -   Generic user space python object classes to get/set various attributes for the following devices
+	 - FAN
 	 - PSU (Power supply units)
 	 - System EEPROM
 	 - Optic Transceivers (SFP, QSFP)
@@ -110,7 +113,7 @@ This section provides details about new platform bring up development using PDDF
 SONiC PDDF supports the following HW devices on a given platform: Fan/PSU/System EEPROM/ CPLD/ Optic Transceivers/ System LED control via CPLD, System Status Registers in CPLD/ Temp Sensors. High level architecture of the PDDF consists of the following:
 -   JSON Descriptor files
 -   Generic Platform Drivers and Scripts
--   Generic Platform Python Plugins for various devices implementing the Platform APIs
+-   Generic Platform Python Object Classes for various devices implementing the Platform APIs
 -   Custom Vendor Driver Extensions
 -   SONiC PDDF Utilities to set/get devices
 
@@ -141,11 +144,11 @@ The pddf-device,json file is configured with three types of data to represent th
 
 Naming Convention in pddf-device.json file is as follows,
 -   **device_type**: PDDF predefines the list of dev_type.
-CPU, MUX, CPLD, SMBUS, FAN, SYSSTAT, SFP, SFP28, QSFP, QSFP28, EEPROM, TEMP_SENSOR, PSU, PSU-PMBUS, PSU-EEPROM, LED
+CPU, MUX, GPIO, CPLD, SMBUS, FAN, SYSSTAT, SFP, SFP28, QSFP, QSFP28, EEPROM, TEMP_SENSOR, PSU, PSU-PMBUS, PSU-EEPROM, LED
 -   **device_name**: PDDF predefines the list of system LED
 LOC_LED, DIAG_LED, PSU_LED, FAN_LED, SYS_LED,
 
-Other than LED names, usually **device_name** is same as the name of the JSON object representing the device, e.g. CPLD1, CPLD2, MUX1, PSU2, TEMPCPU, etc.
+Other than LED names, usually **device_name** is same as the name of the JSON object representing the device, e.g. CPLD1, CPLD2, MUX1, GPIO1, PSU2, TEMPCPU, etc.
 
 Mentioned below are the configuration examples for various device_types based on the topology diagram,
 ![Figure4: I2C Topology Diagram](images/topology.png "I2C Topology Diagram")
@@ -219,6 +222,113 @@ Description of some keys in the JSON object is given below,
 **channel**: This array gives info about the child devices for a mux. It mentions **chn** denoting the channel number, and **dev** denoting the device_name connected to this channel.
 
 The names of the sub-objects/keys in any JSON object are fixed. For example, **dev_info**, **i2c**, **topo_info**, **DEVICES**, **channel** and **controllers** etc.
+
+#### GPIO Configuration Example
+Some platforms use IO expandrs to expand the I2C bus. There is a support for PCA9554/9555 and PCA9698 types of IO expanders in PDDF. They are mentioend as **GPIO** devices in the JOSN descriptor file.
+A typical IO expander JSON object is shown below,
+```
+"SYSTEM":
+{
+	"dev_info": {"device_type":"CPU", "device_name":"ROOT_COMPLEX", "device_parent":null},
+	"i2c":
+	{
+		"CONTROLLER":
+		[
+			{ "dev_name":"i2c-1", "dev":"SMBUS1" },
+			{ "dev_name":"i2c-0", "dev":"SMBUS0" }
+		]
+	}
+},
+"SMBUS0":
+{
+    "dev_info": {"device_type": "SMBUS", "device_name": "SMBUS0", "device_parent": "SYSTEM"},
+    "i2c":
+    {
+        "topo_info": {"dev_addr": "0x0"},
+        "DEVICES":
+        [
+            {"dev": "MUX1"},
+            {"dev": "MUX2"},
+            {"dev": "MUX3-CPU"}
+        ]
+    }
+},
+"MUX1":
+{
+    "dev_info": { "device_type":"MUX", "device_name":"MUX1", "device_parent":"SMBUS0"},
+    "i2c":
+    {
+        "topo_info": { "parent_bus":"0x0", "dev_addr":"0x72", "dev_type":"pca9546"},
+        "dev_attr": { "virt_bus":"0x10"},
+        "channel":
+        [
+            { "chn":"0", "dev":"CPLD1" },
+            { "chn":"0", "dev":"CPLD4" },
+            { "chn":"0", "dev":"CPLD6" },
+            { "chn":"1", "dev":"CPLD2" },
+            { "chn":"2", "dev":"CPLD3" },
+            { "chn":"2", "dev":"EEPROM1" },
+            { "chn":"3", "dev":"GPIO1" },
+            { "chn":"3", "dev":"GPIO2" }
+        ]
+    }
+},
+"GPIO2":
+{
+    "dev_info": { "device_type":"GPIO", "device_name":"GPIO2", "device_parent":"MUX1"},
+    "i2c":
+    {
+        "topo_info": { "parent_bus":"0x13", "dev_addr":"0x21", "dev_type":"pca9698"},
+        "dev_attr": { "gpio_base":"0x20"},
+        "ports":
+        [
+            {"port_num":"2", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"6", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"10", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"14", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"18", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"22", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"26", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"30", "direction":"in", "value":"", "edge":"", "active_low":""},
+            {"port_num":"0", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"4", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"8", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"12", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"16", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"20", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"24", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"28", "direction":"out", "value":"1", "edge":"", "active_low":""},
+            {"port_num":"3", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"7", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"11", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"15", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"19", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"23", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"27", "direction":"out", "value":"0", "edge":"", "active_low":""},
+            {"port_num":"31", "direction":"out", "value":"0", "edge":"", "active_low":""}
+        ]
+    }
+},
+```
+Description of new keys in the JSON object is given below,
+
+**gpio_base**: This mentions the base number for GPIO pin. Ports/Pins would be assigned the number (gpio_base+i) where i port number within the IO expander. This is a mandatory field.
+
+**ports**: This represents the list of the ports IO expander. Only those ports are mentioned in this list for which some initialization setting is required. It gives the values for various SysFs attributes for initialization. 
+This is a mandatory field.
+
+**port_num**: GPIO Port/Pin number. It is also a mandatory field.
+
+**direction**: Either "in" or "out". Generally this value is to be written. Writing as "out" defaults to initializing the value as low. It is optional field, i.e. if GPIO pin requires initialization by setting the direction, a value is
+ provided here.
+
+**value**: Either "0" or "1". This value must be written if the GPIO is configured as output. It is an optional field.
+
+**edge**: Either "none", "rising", "falling" or "both". Mentions the signal edge where the **value** is polled. It is an optional field.
+
+**active_low**: Either "0" or "1" and it is too an optional field.
+
+Some platform requires some initialization settings to be performed with respect to the GPIOs. The **ports** list in the JSON obkect takes care of these initialization after the I2C device creation takes place.
 
 #### PSU Device Configuration Example
 ```
@@ -311,7 +421,7 @@ PDDF generic driver for PSU can have chip name (mentioned as dev_type in JSON ob
 * psu_p_out
 * psu_fan1_speed_rpm
 
-Based on the JSON configuration file, the parser, pddfparse.py, can generate sysfs path automatically instead of hard coded in the plugin code.
+Based on the JSON configuration file, the parser, pddfparse.py, can generate sysfs path automatically instead of hard coded in the device class code.
 
 I2C Topology Data:
 >SMBus1->MUX(0x71)->Ch0->PSU2(0x5b) SMBUS Device
@@ -371,8 +481,7 @@ FAN controller for the above platform is a CPLD. It is connected to PCA9548 (MUX
 	}
 },
 ```
-SMBUS0 is shown as the **device_parent** for MUX1. FAN controller (FAN-CTRL) is connected to channel 0 of the mux.
-Currently, the PDDF generic plugins and JSON descriptor file support only one fan controller which would be named (FAN-CTRL). In future versions of PDDF, there is a plan to add support for multiple controllers viz. FAN-CTRL1, FAN-CTRL2 etc.
+SMBUS0 is shown as the **device_parent** for MUX1. FAN controller (FAN-CTRL) is connected to channel 0 of the mux. If there exist multiple FAN controllers in the system, there is a provision to add support for  them as FAN-CTRL1, FAN-CTRL2 etc.
 
 FAN-CTRL JSON object is mentioned below,
 ```
@@ -391,30 +500,48 @@ FAN-CTRL JSON object is mentioned below,
 			{ "attr_name":"fan4_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x8", "attr_cmpval":"0x0", "attr_len":"1"},
 			{ "attr_name":"fan5_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x10", "attr_cmpval":"0x0", "attr_len":"1"},
 			{ "attr_name":"fan6_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x20", "attr_cmpval":"0x0", "attr_len":"1"},
+			{ "attr_name":"fan7_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x1", "attr_cmpval":"0x0", "attr_len":"1"},
+			{ "attr_name":"fan8_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x2", "attr_cmpval":"0x0", "attr_len":"1"},
+			{ "attr_name":"fan9_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x4", "attr_cmpval":"0x0", "attr_len":"1"},
+			{ "attr_name":"fan10_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x8", "attr_cmpval":"0x0", "attr_len":"1"},
+			{ "attr_name":"fan11_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x10", "attr_cmpval":"0x0", "attr_len":"1"},
+			{ "attr_name":"fan12_present", "attr_devtype":"FAN-CTRL", "attr_offset":"0x0F", "attr_mask":"0x20", "attr_cmpval":"0x0", "attr_len":"1"},
 			{ "attr_name":"fan1_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x1", "attr_cmpval":"0x1", "attr_len":"1"},
 			{ "attr_name":"fan2_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x2", "attr_cmpval":"0x2", "attr_len":"1"},
 			{ "attr_name":"fan3_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x4", "attr_cmpval":"0x4", "attr_len":"1"},
 			{ "attr_name":"fan4_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x8", "attr_cmpval":"0x8", "attr_len":"1"},
 			{ "attr_name":"fan5_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x10", "attr_cmpval":"0x10", "attr_len":"1"},
 			{ "attr_name":"fan6_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x20", "attr_cmpval":"0x20", "attr_len":"1"},
-			{ "attr_name":"fan1_front_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x12", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
-			{ "attr_name":"fan2_front_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x13", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
-			{ "attr_name":"fan3_front_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x14", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
-			{ "attr_name":"fan4_front_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x15", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
-			{ "attr_name":"fan5_front_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x16", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
-			{ "attr_name":"fan6_front_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x17", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
-			{ "attr_name":"fan1_rear_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x22", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
-			{ "attr_name":"fan2_rear_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x23", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
-			{ "attr_name":"fan3_rear_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x24", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
-			{ "attr_name":"fan4_rear_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x25", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
-			{ "attr_name":"fan5_rear_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x26", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
-			{ "attr_name":"fan6_rear_rpm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x27", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
+			{ "attr_name":"fan7_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x1", "attr_cmpval":"0x1", "attr_len":"1"},
+			{ "attr_name":"fan8_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x2", "attr_cmpval":"0x2", "attr_len":"1"},
+			{ "attr_name":"fan9_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x4", "attr_cmpval":"0x4", "attr_len":"1"},
+			{ "attr_name":"fan10_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x8", "attr_cmpval":"0x8", "attr_len":"1"},
+			{ "attr_name":"fan11_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x10", "attr_cmpval":"0x10", "attr_len":"1"},
+			{ "attr_name":"fan12_direction", "attr_devtype":"FAN-CTRL", "attr_offset":"0x10", "attr_mask":"0x20", "attr_cmpval":"0x20", "attr_len":"1"},
+			{ "attr_name":"fan1_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x12", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
+			{ "attr_name":"fan2_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x22", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
+			{ "attr_name":"fan3_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x13", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
+			{ "attr_name":"fan4_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x23", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
+			{ "attr_name":"fan5_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x14", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
+			{ "attr_name":"fan6_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x24", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
+			{ "attr_name":"fan7_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x15", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
+			{ "attr_name":"fan8_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x25", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
+			{ "attr_name":"fan9_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x16", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
+			{ "attr_name":"fan10_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x26", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
+			{ "attr_name":"fan11_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x17", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100", "attr_is_divisor":0},
+			{ "attr_name":"fan12_input", "attr_devtype":"FAN-CTRL", "attr_offset":"0x27", "attr_mask":"0xFF", "attr_len":"1", "attr_mult":"100" , "attr_is_divisor":0},
 			{ "attr_name":"fan1_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 			{ "attr_name":"fan2_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 			{ "attr_name":"fan3_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 			{ "attr_name":"fan4_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 			{ "attr_name":"fan5_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 			{ "attr_name":"fan6_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" }
+			{ "attr_name":"fan7_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
+			{ "attr_name":"fan8_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
+			{ "attr_name":"fan9_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
+			{ "attr_name":"fan10_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
+			{ "attr_name":"fan11_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
+			{ "attr_name":"fan12_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" }
 		]
 	}
 },
@@ -429,13 +556,13 @@ Only one **dev_attr** is defined for FAN and it is **num_fan**. Description of s
 PDDF generic fan controller driver supports chip name <fan_ctrl>. The supported device data attributes are,
 * fan\<idx\>\_present
 * fan\<idx\>\_direction
-* fan\<idx\>\_front_rpm
-* fan\<idx\>\_rear_rpm
+* fan\<idx\>\_input
 * fan\<idx\>\_pwm
 * fan\<idx\>\_fault
 
 where idx represents the Fan index [1..6]
 
+When Platform 2.0 APIs are supported in PDDF, rear fan inside a tray is considered as a separate fan. FAN JSON object is to be written considering that.
 #### System LED Configuration Example
 ```
 "SMBUS0":
@@ -632,7 +759,7 @@ The pd-plugin.json provides the following information:
 	}
 }
 ```
--   This file can also represent any platform-dependent information which might be used by pddf generic plugins. E.g. In a FAN controller, duty_cycle to pwm conversion is platform and fan-controller dependent. The mathematical formula can be represented in the JSON file as shown above.
+-   This file can also represent any platform-dependent information which might be used by pddf generic device-object class. E.g. In a FAN controller, duty_cycle to pwm conversion is platform and fan-controller dependent. The mathematical formula can be represented in the JSON file as shown above.
 
 ## Custom Vendor Driver Extensions
 PDDF drivers are generic but it is literally impossible to have a generic implementation for any device driver which can cover all the HW platform vendors. Keeping this in mind, PDDF also provides a mechanism for HW vendors to define custom implementation for some of the key functions and hook them with PDDF. Currently the custom vendor extension driver extension is available for FAN, PSU and Optics components.
@@ -781,9 +908,9 @@ For example, consider a custom driver ‘xyz’ is used for a temperature sensor
 ```
 
 ## Supporting Files
-There are a couple of supporting files which is required for bringing up the platform with PDDF drivers and plugins.
+There are a couple of supporting files which are required for bringing up the platform with PDDF drivers and generic device-object classes.
 * pddf_swtich_svc.py
-	* This script is was created to provide a switching mechanism between PDDF mode (devices up with generic drivers and plugins) and non-PDDF mode (devices are up with platform specific drivers and plugins). However, if the platform is being developed using PDDF only, then there is no switching required.
+	* This script is created to provide a switching mechanism between PDDF mode (devices up with generic drivers and device-object classes) and non-PDDF mode (devices are up with platform specific drivers and object classes). However, if the platform is being developed using PDDF only, then there is no switching required.
 	* This script is required only because there is a hard dependency of pddf_util.py script on the presence of this switch service script. On the switch, this file should be present in the same folder as pddf_util.py script, i.e. /usr/local/bin/.
 	* Vendor needs to provide pddf_swtich_svc.py as an empty python module. e.g.
 		```
@@ -907,9 +1034,9 @@ Code Paths:
 >
 >TEMP-SENSOR.schema
 
-## Generic User Space Python Plugins
+## Generic User Space Python Object Classes
 Code Paths:
->sonic-buildimage/device/common/pddf/plugins/
+>sonic-buildimage/device/common/pddf/sonic_platform/
 >
 >eeprom.py fanutil.py ledutil.py psuutil.py sfputil.py sysstatutil.py thermalutil.py
 
@@ -1000,7 +1127,7 @@ sonic-buildimage/platform/pddf/
 	- \# make target/debs/stretch/sonic-platform-pal_1.1_amd64.deb
 -   Build Log File
 target/debs/stretch/sonic-platform-pal_1.1_amd64.deb.log
--   Other package which contains PDDF generic plugins and JSON descriptor file is sonic-buildimage/target/debs/stretch/sonic-device-data_1.0-1_all.deb
+-   Other package which contains PDDF generic device-object classes and JSON descriptor file is sonic-buildimage/target/debs/stretch/sonic-device-data_1.0-1_all.deb
 -   Make changes in
 sonic-buildimage/device/\<vendor-name\>/\<platform-name\>/pddf/
 -   Build Steps:
