@@ -996,8 +996,9 @@ These will be stored in the counters DB for each tunnel.
    - config vrf add_vrf_vni_map <vrf-name> <vni>
    - config vrf del_vrf_vni_map  <vrf-name>
 5. ARP suppression
-   - config neigh-suppress vlan <vlan-id>  <"on"/"off">
-   - vlanid represents the vlan_id and on/off is enabled or disabled. By default ARP/ND suppression is disabled. 
+   - config neigh_suppress enable <vid>
+   - config neigh_suppress disable <vid>
+   - vid represents the vlan_id. By default ARP/ND suppression is disabled.
 
 ```
 
@@ -1123,7 +1124,9 @@ These will be stored in the counters DB for each tunnel.
 4. VRF VNI Mapping configuration
    - switch(config-if-vtep1) [no] vxlan map vrf VRF-Blue vni 10001
 5. ARP suppression
-   - TBD
+   - switch(config) interface vlan <vlan-id-xxx>
+   - switch(conf-if-vlanxxx)# [no] neigh-suppress
+   - This command will suppress both ARP & ND flooding over the tunnel when Vlan is extended.
 
 ```
 
