@@ -1,7 +1,7 @@
 
 # SONiC IGMP Snooping
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.4
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -9,55 +9,56 @@
   * [About This Manual](#about-this-manual)
   * [Scope](#scope)
   * [Definition/Abbreviation](#definitionabbreviation)
-  * [1 Feature Overview](#1-feature-overview)
-     * [1.1 Requirements](#1-1-requirements)
-        *  [1.1.1 Functional Requirements](#1-1-1-functional-requirements)
-        *  [1.1.2 Configuration and Management Requirements](#1-1-2-configuration-and-management-requirements)
-        *  [1.1.3 Scalability Requirements](#1-1-3-scalability-requirements)
-        *  [1.1.4 Warm Boot Requirements](#1-1-4-warm-boot-requirements)
-      *  [1.2 Design Overview](#1-2-design-overview)
-          * [1.2.1 Basic Approach](#1-2-1-basic-approach)
-          * [1.2.2 L2MC Docker](#1-2-2-l2mc-docker)
-          * [1.2.3 SAI Overview](#1-2-3-sai-overview)
-          * [1.2.4 MCLAG Support](#1-2-4-mclag-overview)
-  * [2 Functionality](#2-functionality)
-      * [2.1 Target Deployment Use Cases](#2-1-target-deployment-use-cases)
-      * [2.2 Functional Description](#2-2-functional-description)
-  * [3 Design](#3-design)
-      * [3.1 Overview](#3-1-overview)
-      * [3.2 DB Changes](#3-2-db-changes)
-          * [3.2.1 CONFIG DB](#3-2-1-config-db)
-          * [3.2.2 APP DB](#3-2-2-app-db)
-          * [3.2.3 STATE_DB](#3-2-3-state-db)
-      * [3.3 Switch State Service Design](#3-3-switch-state-service-design)
-          * [3.3.1 L2mcOrch changes](#3-3-1-l2mcorch-changes)
-      * [3.4 Docker for L2MC](#3-4-docker-for-l2mc)
-      * [3.4 SAI](#3-4-sai)
-      * [3.6 CLI](#3-6-cli)
-          * [3.6.1 Data Models](#3-6-1-data-models)
-          * [3.6.2 Configuration Commands](#3-6-2-configuration-commands)
-          * [3.6.3 Show Commands](#3-6-3-show-commands)
-          * [3.6.4 Rest API Support](#3-6-4-rest-api-support)
-      * [3.7 MCLAG For IGMP Snooping](#3-7-mclag-for-igmp-snooping)
-  * [4 Flow Diagrams](#4-flow-diagrams)
-	  * [4.1 IGMP Snooping Enable on VLAN](#4-1-igmp-snooping-enable-on-vlan)
-	  * [4.2 Static L2MC add flow](#4-2-static-l2mc-add-flow)
-	  * [4.3 Dynamic L2mc add flow](#4-3-dynamic-l2mc-add-flow)
-	  * [4.4 Port Down flow](#4-4-port-down-flow)
-	  * [4.5 Vlan member-port delete flow](#4-5-vlan-member-port-delete-flow)
-	  * [4.6 STP State change flow](#4-6-stp-state-change-flow)
-  * [5 Error Handling](#5-error-handling)
-  * [6 Serviceability and Debug](#6-serviceability-and-debug)
-  * [7 Warm Boot Support](#7-warm-boot-support)
-  * [8 Scalability](#8-scalability)
-  * [9 Unit Test](#9-unit-test) 
-     * [9.1 CLI Test Cases](#9-1-cli-test-cases)
-     * [9.2 Rest API Test Cases](#9-2-rest-api-test-cases)
-     * [9.3 Functional Test Cases](#9-3-functional-test-cases)
-     * [9.4 IGMPv1 V2 and V3 cases](#9-4-igmpv1-v2-and-v3-cases)
-     * [9.5 Warm Boot Test Cases](#9-5-warm-boot-test-cases)
-     * [9.6 Scalability Test Cases](#9-6-scalability-test-cases)
-     * [9.7 Negative Test Cases](#9-7-negative-test-cases)
+  * [1 Feature Overview](#feature-overview)
+     * [1.1 Requirements](#requirements)
+        *  [1.1.1 Functional Requirements](#functional-requirements)
+        *  [1.1.2 Configuration and Management Requirements](#configuration-and-management-requirements)
+        *  [1.1.3 Scalability Requirements](#scalability-requirements)
+        *  [1.1.4 Warm Boot Requirements](#warm-boot-requirements)
+      *  [1.2 Design Overview](#design-overview)
+          * [1.2.1 Basic Approach](#basic-approach)
+          * [1.2.2 L2MC Docker](#l2mc-docker)
+          * [1.2.3 IGMP control packets flooding](#igmp-control-packets-flooding)
+          * [1.2.4 SAI Overview](#sai-overview)
+          * [1.2.5 MCLAG Support](#mclag-overview)
+  * [2 Functionality](#functionality)
+      * [2.1 Target Deployment Use Cases](#target-deployment-use-cases)
+      * [2.2 Functional Description](#functional-description)
+  * [3 Design](#design)
+      * [3.1 Overview](#overview)
+      * [3.2 DB Changes](#db-changes)
+          * [3.2.1 CONFIG DB](#config-db)
+          * [3.2.2 APP DB](#app-db)
+          * [3.2.3 STATE_DB](#state-db)
+      * [3.3 Switch State Service Design](#switch-state-service-design)
+          * [3.3.1 L2mcOrch changes](#l2mcorch-changes)
+      * [3.4 Docker for L2MC](#docker-for-l2mc)
+      * [3.4 SAI](#sai)
+      * [3.6 CLI](#cli)
+          * [3.6.1 Data Models](#data-models)
+          * [3.6.2 Configuration Commands](#configuration-commands)
+          * [3.6.3 Show Commands](#show-commands)
+          * [3.6.4 Rest API Support](#rest-api-support)
+      * [3.7 MCLAG For IGMP Snooping](#mclag-for-igmp-snooping)
+  * [4 Flow Diagrams](#flow-diagrams)
+	  * [4.1 IGMP Snooping Enable on VLAN](#igmp-snooping-enable-on-vlan)
+	  * [4.2 Static L2MC add flow](#static-l2mc-add-flow)
+	  * [4.3 Dynamic L2mc add flow](#dynamic-l2mc-add-flow)
+	  * [4.4 Port Down flow](#port-down-flow)
+	  * [4.5 Vlan member-port delete flow](#vlan-member-port-delete-flow)
+	  * [4.6 STP State change flow](#stp-state-change-flow)
+  * [5 Error Handling](#error-handling)
+  * [6 Serviceability and Debug](#serviceability-and-debug)
+  * [7 Warm Boot Support](#warm-boot-support)
+  * [8 Scalability](#scalability)
+  * [9 Unit Test](#unit-test) 
+     * [9.1 CLI Test Cases](#cli-test-cases)
+     * [9.2 Rest API Test Cases](#rest-api-test-cases)
+     * [9.3 Functional Test Cases](#functional-test-cases)
+     * [9.4 IGMPv1 V2 and V3 cases](#igmpv1-v2-and-v3-cases)
+     * [9.5 Warm Boot Test Cases](#warm-boot-test-cases)
+     * [9.6 Scalability Test Cases](#scalability-test-cases)
+     * [9.7 Negative Test Cases](#negative-test-cases)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -66,8 +67,10 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 05/22/2019  |  Ashok Krishnegowda| Initial version                   |
-| 0.2 | 06/25/2091  |  Ashok Krishnegowda| Incorporated review comments      |
+| 0.2 | 06/25/2019  |  Ashok Krishnegowda| Incorporated review comments      |
 | 0.3 | 20/09/2019  | Benzeer Bava       | MCLAG Support                      |
+| 0.4 | 01/24/2020  | Ashok Krishnegowda | Incorporated review comments	  |
+
 
 
 # About this Manual
@@ -104,12 +107,13 @@ When snooping is enabled on a VLAN, switch examines IGMP packets between hosts c
  7. Support static multicast group configuration. Static l2mc entries will not timed out, they have to be un-configured explicitly.
  8. Support trapping IGMP and PIM Hello control packets to CPU.
  9. Support Link-layer topology changes (due to STP) and generate queries on all non-mrouter ports for faster convergence. 
-10. Support IGMP Snooping for MCLAG
+ 10. Support IS-CLI Configuration and show commands
+ 11. Support IGMP Snooping for MCLAG
  
 
 ### 1.1.2 Configuration and Management Requirements
 
-This feature will support CLI configurations with the new framework.
+To support IS-CLI configuration and show commands.
  1. Support CLI configurations as described in "Configuration Commands" section below
  2. Support show commands as described in "Show Commands" section below
  3. Support openconfig REST API and gNMI
@@ -126,26 +130,27 @@ The following L2MC entries scale will be tested to success on an ASIC with 512 L
 
 Dynamic and Static L2MC entries should persist across warm reboot with no traffic disruption to the active flows.
 Learning of new snooping entries and aging of existing L2MC entries will stop while the control plane is away.
-
 - To support planned system warm boot.
-- To support SWSS docker warm boot.
-- To support l2mc docker warm boot.
 
 ## 1.2 Design Overview
 
 ### 1.2.1 Basic Approach
 ### 1.2.2  L2MC Docker
-A new L2mc docker will be created to support IGMP snooping.
-L2mc will host l2mcastMgr and l2mcastd,  and l2mcastSync will be part of l2mcastd, the details of the changes will be discussed in the design section below.  
+A new L2MC docker will be created to support IGMP snooping.
+L2MC will host l2mcastMgr and l2mcastd,  and l2mcastSync will be part of l2mcastd, the details of the changes will be discussed in the design section below.  
 
-### 1.2.3 SAI Overview
+### 1.2.3 IGMP control packets flooding 
+IGMP control packets flooding happens in kernel, kernel  flooding behaviour is per bridge, there is no per VLAN flooding control in Kernel.  Until the dynamic multicast-router(mrouter) port learns in the VLAN, IGMP reports will be flooded to all members of the VLAN.  
+In presence of multicast-router, IGMP reports received on a host interface are forwarded to multicast-router interfaces alone, but not to the other host interfaces in the VLAN.
+
+### 1.2.4 SAI Overview
 The existing L2MC SAI interface APIs shall be used to support this feature and they are available at below location,  
 [https://github.com/opencomputeproject/SAI/blob/master/inc/sail2mc.h](https://github.com/opencomputeproject/SAI/blob/master/inc/sail2mc.h)  
 https://github.com/opencomputeproject/SAI/blob/master/inc/sail2mcgroup.h
 
 The detail of the changes will be discussed in the design section below.
 
-### 1.2.4 MCLAG Overview
+### 1.2.5 MCLAG Overview
 In an MCLAG Enabled node, IGMP Source can be at MCLAG member port or Orphan Port. Details of IGMP changes will be discussed at design section below.
 
 # 2 Functionality
@@ -177,7 +182,7 @@ L2mcastd process will handle following interactions,
 -   L2mcastd uses libevent for processing below incoming events from l2mcastMgr,  
     - CLI configurations  
     - STP state change  
-    - VLAN configuration changes.
+    - VLAN configuration changes
 -   Timer events are generated every 100ms for handling IGMP protocol timers.
 -   L2mcastSync is part of L2mcastd which handles L2MC entries update to APP_DB to be consumed by L2mcOrch.
 
@@ -225,7 +230,7 @@ This section describes the changes made to different DBs for supporting IGMP Sno
     ;Status: work in progress
     key            = APP_L2MC_MEMBER_TABLE:"Vlan"vlanid:source_address:group_address:port_name
     ;field         = value
-    type           = "static"/"dynamic"           ; Static or Dynamic multicast group entry
+    type           = "static"/"dynamic"/"remote"           ; Static or Dynamic multicast group entry or remote entry learnt from MCLAG peer
 ### APP_L2MC_MROUTER_TABLE
     ;Store L2MC mrouter table entry.
     ;Status: work in progress
@@ -240,9 +245,14 @@ This section describes the changes made to different DBs for supporting IGMP Sno
     key            = L2MC_STATE_MEMBER_TABLE|"Vlan"vlanid|source_address|group_address|port_name
     ;field         = value
     type           = "static"/"dynamic"           ; Static or Dynamic multicast group entry
-
-
-
+    
+   #### L2MC_STATE_MROUTER_TABLE
+    ;Store L2MC mrouter state table entry for ICCPd communications.
+    ;Status: work in progress
+    key            = L2MC_STATE_MROUTER_TABLE|"Vlan"vlanid|port_name
+    ;field         = value
+    type           = "static"/"dynamic"           ; Static or Dynamic mrouter entry
+    
 ### 3.2.4 ASIC DB
 ### 3.2.5 COUNTER DB
 
@@ -315,8 +325,8 @@ IGMP and PIM protocol trap support will be added to enable trapping of IGMP quer
 	            "queue": "4",
 	            "meter_type":"packets",
 	            "mode":"sr_tcm",
-	            "cir":"600",
-	            "cbs":"600",
+	            "cir":"6000",
+	            "cbs":"6000",
 	            "red_action":"drop"
 	        }
 
@@ -327,8 +337,8 @@ IGMP and PIM protocol trap support will be added to enable trapping of IGMP quer
 		            "queue": "4",
 		            "meter_type":"packets",
 		            "mode":"sr_tcm",
-		            "cir":"600",
-		            "cbs":"600",
+		            "cir":"10000",
+		            "cbs":"10000",
 		            "red_action":"drop"
 		        }
 
@@ -433,6 +443,7 @@ This command is used  to remove an mrouter interface from a vlan . The interface
     switch(config-if-vlan10)# ip igmp snooping mrouter interface PortChannel1
     switch(config-if-vlan10)# no ip igmp snooping mrouter interface PortChannel1
 
+Dynamic mrouter ports expires in 300 sec when there are no IGMP query/PIM hello in this period. Static mrouter ports will not be timed out, they have to be un-configured explicitly.
 
 #### 3.6.2.8 Configure static multicast group
 A snooping-enabled VLAN cannot forward multicast traffic to ports that do not receive IGMP membership reports. If clients cannot send reports, user can configure a static group which applies to specific ports. The static group allows packets to be forwarded to the static group ports even though they have no client membership reports.
@@ -588,7 +599,7 @@ __Figure 7: STP state change flow__
 # 5 Error Handling
 # 6 Serviceability and Debug
 Debug logs will be captured as part of tech support.
-- CLI configuration error will be displayed via console and configuration will be rejected
+- A CLI configuration error will be displayed via console and configuration will be rejected
 - Internal processing error within SwSS will be logged in syslog with ERROR level
 - SAI interaction errors will be logged in syslog
 
@@ -700,8 +711,8 @@ Below L2MC entries scale will be tested to success on an ASIC with 512 L2MC grou
 
 ## 9.6 Scaling Test Cases
  
-    1. Verify with Snooping configured on 512 VLANs.
-    2. Verify maximum of 512 L2MC entries.
+    1. Verify with Snooping configured on the maximum number of VLANs as specified in section 8.
+    2. Verify maximum number of L2MC entries as specified in section 8.
 
 ## 9.7 Negative Test Cases
     Internal BRCM information to be removed before sharing with the community
@@ -747,3 +758,11 @@ NTMwMTM0OTg5XX0=
     - Sonnoping removal should not be permited till all static and mrouter configs under the vlan are removed
 
     
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbLTkxMzkwMzA1MCwtMTEyNTExODI4LDUwMD
+k5ODQwMywxMzU1NTU4NjY5LDEwODczNTU4ODQsLTg3Nzc4OTU2
+MiwxNjYzMTY3NjgxLDEwMzgxNDI3MDgsLTE3NjIyOTgyNjYsLT
+EzMDIwOTQwMzIsMTc5ODc4NTc5NiwxMjI4NDc3MTA3LDY0NzUy
+MDM3LDE3MzgzNzI5MzIsNDEzNzc2MzYxLC0xMTQzODU0ODk1LD
+EyNDQ0OTYxOV19
+-->
