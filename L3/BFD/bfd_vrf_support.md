@@ -1,5 +1,6 @@
 
 
+
 # Feature Name                                                  
 Support VRF in BFD                             
 # High Level Design Document                                   
@@ -79,7 +80,7 @@ Config commands as  in FRR BGP container is described at below link.
 [Config commands](http://docs.frrouting.org/en/latest/bfd.html)
 ```
     sonic(config)# bfd
-    sonic(config-bfd)# peer 1.1.1.1 vrf Vrf-1 
+    sonic(config-bfd)# peer 1.1.1.1 vrf Vrf-1 interface Ethernet24
     sonic(config-bfd-peer)# detect-multiplier 5 
 ```   
 ### 3.2.3 Show Commands
@@ -109,9 +110,9 @@ BFD Peers:
                         Transmission interval: 300ms
                         Echo transmission interval: 50ms  
 
-sonic# show bfd vrf Vrf-1 peer 24.1.1.2      
+sonic# show bfd vrf Vrf-1 peer 24.1.1.2 interface Ethernet24    
 BFD Peer:
-        peer 24.1.1.2 vrf Vrf-1
+        peer 24.1.1.2 vrf Vrf-1 interface Ethernet24
                 ID: 4134032180
                 Remote ID: 0
                 Status: down
@@ -173,7 +174,7 @@ Different timer values can be configured to achieve the desired failure detectio
 
 ```
     sonic(config)# bfd
-    sonic(config-bfd)# peer 1.1.1.1 vrf Vrf-1 
+    sonic(config-bfd)# peer 1.1.1.1 vrf Vrf-1 interface Ethernet24
     sonic(config-bfd-peer)# detect-multiplier 5 
     sonic(config-bfd-peer)# receive-interval 200 
     sonic(config-bfd-peer)# transmit-interval 200
@@ -216,16 +217,15 @@ BFD Peers:
                 Session up events: 1
                 Session down events: 0
                 Zebra notifications: 2
-sonic# show bfd vrf Vrf-1 peer 24.1.1.2 counters 
-        peer 24.1.1.2 vrf Vrf-1
+sonic#show bfd vrf Vrf1 peer 20.1.1.2 interface Ethernet24 counters 
+        peer 20.1.1.2 vrf Vrf1 interface Ethernet24
                 Control packet input: 0 packets
-                Control packet output: 1379 packets
+                Control packet output: 0 packets
                 Echo packet input: 0 packets
                 Echo packet output: 0 packets
                 Session up events: 0
                 Session down events: 0
                 Zebra notifications: 0
-
 ```
 There is no option for clearing BFD counters for mutiple neighbors, but we can clear the BFD counters for a particular neighbor.
 ```
