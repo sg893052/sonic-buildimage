@@ -34,6 +34,7 @@ UDLD - Uni-directional Link Detection Protocol
   * [Warm Boot Support](#warm-boot-support)
   * [Scalability](#scalability)
   * [Unit Test](#unit-test)
+  * [Internal Design Information](#internal-design-information)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -42,7 +43,7 @@ UDLD - Uni-directional Link Detection Protocol
 | Rev |     Date    |       Author              | Change Description                |
 |:---:|:-----------:|:-------------------------:|-----------------------------------|
 | 0.1 | 11/11/2019 |     Sandeep Kulambi,                                                       Dhanasekar Rathinavel     | Initial version  |
-|      |            |         |                    |
+| 0.2 | 02/13/2020 | Sandeep Kulambi,                                                       Dhanasekar Rathinavel | Addressed review comments, Added Appendix A for Errdisable recovery feature details |
 
 
 
@@ -72,8 +73,8 @@ UDLD is a layer 2 protocol that allows detection of uni-directional link failure
 
 
   1. Support UDLD protocol based on RFC 5171
-  2. Support protocol operation on physical port and static breakout ports
-    3. Support protocol operation on member ports of port-channel interfaces
+  2. Support protocol operation on physical ports and static breakout ports
+  3. Support protocol operation on member ports of port-channel interfaces
 
 
 ### 1.1.2 Configuration and Management Requirements
@@ -93,9 +94,8 @@ UDLD scalability number will be same as the maximum number of physical ports sup
 Warm boot should be supported.
 
 ## 1.2 Design Overview
-
 ### 1.2.1 Basic Approach
-Broadcom UDLD codebase will be used to support this feature.
+This is a new feature development.
 
 ### 1.2.2 Container
 A new container will be added to support UDLD.
@@ -103,6 +103,8 @@ A new container will be added to support UDLD.
 ### 1.2.3 SAI Overview
 No SAI changes
 
+
+# 2 Functionality
 
 # 2 Functionality
 
@@ -154,10 +156,10 @@ __Figure 2: UDLD PDU exchange__
 
 UDLD supports 2 operational modes which are user configurable
 
-- Normal mode - In case of normal mode, the failure detection is always "event based". The event in this case is the reception of PDU. All actions are taken based on the information learnt from the received PDU. In case UDLD stops receiving the PDU, then there is no action taken (like shutting down the interface), this is a conservative approach taken to minimize the false positives during failure detection process. In case the received information from the PDU indicates failure then action is taken to shutdown the interface.
+- Normal mode - In case of normal mode, the failure detection is always "event based". The event in this case is the reception of PDU. All actions are taken based on the information learnt from the received PDU. In case UDLD stops receiving the PDU, then there is no action taken (like shutting down the interface, however a log message will be generated in this case), this is a conservative approach taken to minimize the false positives during failure detection process. In case the received information from the PDU indicates failure then action is taken to shutdown the interface.
 - Aggressive mode - Aggressive mode behavior is similar to Normal mode, except the case when the link is in bi-directional state and then stops receiving the PDUs, this is treated as a meaningful network event and UDLD takes the action of shutting down the interface.
 
-By default when port is UDLD enabled, it operates in aggressive mode.
+By default when port is UDLD enabled, it operates in normal mode.
 
 
 
@@ -182,10 +184,9 @@ By default when port is UDLD enabled, it operates in aggressive mode.
 
 #### UDLD - detection of uni-directional state
 
-- Once the protocol has determined the link to be bi-directional if one of the peer stops receiving the PDUs it will wait for 3 times the peer message time interval for expiring the neighbor entry
-- After this there will be rapid transmission of probe messages every 1 sec for a duration of 8 seconds to see if neighbor responds, in case there is no response from the neighbor the link is declared uni-directional
-- So the total time taken for uni-directional link detection is 3 times peer message interval + 8 seconds, even with a minimum message interval of 1 sec the total detection time will be 11 seconds. This is fine in the case of STP where the timeout is in the order of 50 secs (twice forward delay (15 secs) + max age (20 secs)), whereas not much of use in case of RSTP where the timeout happens in 6 seconds (with default hello time of 2 seconds). 
-- To address the above issue specifically with respect to RSTP, the UDLD implementation will be modified to detect the failures within the timeout interval which will be multiplier times the message interval. So with a message interval of 1 sec and multiplier of 3, the failure detection will be done in 3 seconds.
+- Once the protocol has determined the link to be bi-directional if one of the peer stops receiving the PDUs it will wait for a duration of peer timeout interval for expiring the neighbor entry
+- Once the neighbor entry expires UDLD will declare the link as uni-directional.
+- With a message interval configuration of 1 sec and multipler of 3, the failure detection can be done in 3 seconds. 
 
 
 
@@ -300,7 +301,7 @@ No SAI changes required
 
 ## 3.6 User Interface
 ### 3.6.1 Data Models
-Openconfig yang model is not available for UDLD, so custom SONIC yang will be supported. Yang file is available here [UDLD-YANG](sonic-udld.yang)
+Openconfig YANG model is not available for UDLD, so custom SONIC YANG will be supported. YANG file is available here [UDLD-YANG](sonic-udld.yang)
 
 ### 3.6.2 CLI
 
@@ -477,23 +478,23 @@ Frames received:            9
 Frames with error:          0
 ```
 
-- show running-config udld 
-  This command displays the UDLD running configuration
+
 
 ### 3.6.2.3 Debug Commands
 
 Following debug commands will be supported for enabling additional logging, all the logs in the context of UDLDd and UDLDMgr will be stored in /var/log/udldd.log. Any logs in orchagent context will be available in /var/log/syslog.
 
-- [no] debug udld packet <ifname\> [tx|rx|both]
-- [no] debug udld event
+- debug udld packet [tx|rx|both] <ifname\>
+- debug udld [set|reset] trace_lvl <module\>
+- debug udld set log_lvl <level\>
 
 Following debug commands will be supported to display internal information.
 
+- debug udld dump all
 - debug udld dump global
-
 - debug udld dump interface <ifname\>
 
-  
+Note: All debug commands are available as part of CLICK CLI only
 
 ### 3.6.2.4 Exec Commands
 
@@ -501,7 +502,9 @@ Following debug commands will be supported to display internal information.
 
 The below command allows to clear the UDLD statistics
 
-- clear udld statistics [ interface <ifname\>] 
+- sonic-clear udld statistics [ interface <ifname\>] 
+
+Note: This command is available as part of CLICK CLI only
 
 ### 3.6.2.4.2 UDLD reset command 
 
@@ -511,26 +514,7 @@ The below command allows to reset the interfaces which are shutdown by UDLD.
 
 An alternate way to bring up an interface disabled by UDLD is to perform "shut" followed by "no shut" operation on the specific interface.
 
-###3.6.2.4 IS-CLI Compliance
-
-|    CLI Command    | Compliance  |          IS-CLI Command (if applicable)           | Link to the web site identifying the IS-CLI command (if applicable) |
-| :---------------: | :---------: | :-----------------------------------------------: | ------------------------------------------------------------ |
-|    udld enable    | IS-CLI-like |                        N/A                        |                                                              |
-|  udld aggressive  | IS-CLI-like | N/A |                                                              |
-| udld message-time | IS-CLI-like | N/A |                                                              |
-|  udld multiplier  | IS-CLI-like | N/A |                                                              |
-|    udld enable    | IS-CLI drop-in replace | udld enable |                                                              |
-|  udld aggressive  | IS-CLI drop-in replace | udld aggressive |                                                              |
-|  show udld global  | IS-CLI-like | show udld |                                                              |
-|  show udld neighbors  | IS-CLI-like | N/A |                                                              |
-| show udld interface <ifname\> | IS-CLI-like | show interface port *<port alias or number\>* udld |                                                              |
-| show udld statistics [interface <ifname\>] | IS-CLI-like | N/A |                                                              |
-| debug udld packet <ifname\> [tx\|rx\|both] | IS-CLI-like | N/A |                                                              |
-| debug udld event | IS-CLI-like | N/A |                                                              |
-| debug udld dump global | IS-CLI-like | N/A |                                                              |
-| debug udld dump interface <ifname\> | IS-CLI-like | N/A |                                                              |
-| clear udld statistics [ interface <ifname\>]  | IS-CLI-like | N/A |                                                              |
-| udld reset  | IS-CLI-like | N/A |                                                              |
+Note: This command is available as part of CLICK CLI only
 
 ### 3.6.3 REST API Support
 
@@ -607,7 +591,18 @@ Functionality
 1) Verify UDLD normal mode operation on an interface
 2) Verify UDLD aggressive mode operation on an interface
 3) Verify with different message-timer intervals PDUs are exchanged as per the configuration
-4) Verify with different multiplier values the timeout happens as per the configuration
+11) Verify show udld interface command
+12) Verify show udld counters command
+13) Verify udld reset command
+14) Verify clear udld counters command
+15) Verify show running-config udld command
+16) Verify save and reload with UDLD configuration
+
+Functionality
+1) Verify UDLD normal mode operation on an interface
+2) Verify UDLD aggressive mode operation on an interface
+3) Verify with different message-timer intervals PDUs are exchanged as per the configuration
+4) Verify with different multipler values the timeout happens as per the configuration
 5) Verify UDLD operation on the member port of LAG
 6) Verify shut/no-shut of an interface when UDLD is in bi-directional state
 7) Verify after uni-directional failure is detected UDLD shuts down the port
@@ -634,3 +629,65 @@ REST
 1) Verify all REST commands
 
 
+
+# 10 Internal Design Information
+
+### 10.1 IS-CLI Compliance
+
+|                        CLI Command                        |       Compliance       |           IS-CLI Command (if applicable)           | Link to the web site identifying the IS-CLI command (if applicable) |
+| :-------------------------------------------------------: | :--------------------: | :------------------------------------------------: | ------------------------------------------------------------ |
+|                        udld enable                        |      IS-CLI-like       |                        N/A                         |                                                              |
+|                      udld aggressive                      |      IS-CLI-like       |                        N/A                         |                                                              |
+|                     udld message-time                     |      IS-CLI-like       |                        N/A                         |                                                              |
+|                      udld multiplier                      |      IS-CLI-like       |                        N/A                         |                                                              |
+|                        udld enable                        | IS-CLI drop-in replace |                    udld enable                     |                                                              |
+|                      udld aggressive                      | IS-CLI drop-in replace |                  udld aggressive                   |                                                              |
+|                     show udld global                      |      IS-CLI-like       |                     show udld                      |                                                              |
+|                    show udld neighbors                    |      IS-CLI-like       |                        N/A                         |                                                              |
+|               show udld interface <ifname\>               |      IS-CLI-like       | show interface port *<port alias or number\>* udld |                                                              |
+|        show udld statistics [interface <ifname\>]         |      IS-CLI-like       |                        N/A                         |                                                              |
+|        debug udld packet [tx\|rx\|both] <ifname\>         |      IS-CLI-like       |                        N/A                         |                                                              |
+|        debug udld [set\|reset] trace_lvl <module\>        |      IS-CLI-like       |                        N/A                         |                                                              |
+|              debug udld set log_lvl <level\>              |      IS-CLI-like       |                        N/A                         |                                                              |
+|               debug udld dump [global\|all]               |      IS-CLI-like       |                        N/A                         |                                                              |
+|            debug udld dump interface <ifname\>            |      IS-CLI-like       |                        N/A                         |                                                              |
+|       clear udld statistics [ interface <ifname\>]        |      IS-CLI-like       |                        N/A                         |                                                              |
+|                        udld reset                         |      IS-CLI-like       |                        N/A                         |                                                              |
+|       config errdisable recovery interval <value\>        |      IS-CLI-like       |       errdisable recovery interval <value\>        |                                                              |
+| config errdisable recovery cause {enable\|disable} {udld} |      IS-CLI-like       |        errdisable recovery cause {feature}         |                                                              |
+|                 show errdisable recovery                  |      IS-CLI-like       |              show errdisable recovery              |                                                              |
+
+### 
+
+# Appendix A
+
+This appendix has information related to Errdisable recovery functionality for UDLD feature. This was a late addition in the release, hence captured under this Appendix section.
+
+Errdisable recovery functionality allows automatic recovery of ports that are shutdown due to specific conditions detected by a feature (Ex - uni-directional failures in case of UDLD). There can be multiple features which can take this action of bringing down the interface, UDLD being one of them. When errdisable recovery is enabled, post shutdown of a port a recovery timer is started as per the configured recovery interval, on expiry of this timer the port is enabled back. This helps in automatic recovery of the port without user intervention.
+
+Following CLICK CLIs are supported for this functionality -
+
+The below command allows configuring the recovery interval.
+
+Default - 300sec, Range - 30-65535
+
+##### config errdisable recovery interval <value\>
+
+
+
+The below command allows enabling/disabling of errdisable recovery functionality for UDLD. By default it is disabled.
+
+##### config errdisable recovery cause {enable|disable} {udld}
+
+
+
+The below command can be used to display the errdisable recovery status of UDLD and the recovery interval configured
+
+##### show errdisable recovery 
+```
+Errdisable Cause    Status
+------------------  --------
+udld                disabled
+
+Timeout for Auto-recovery: 300 seconds
+```
