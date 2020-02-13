@@ -59,6 +59,7 @@ Table of Contents
          * [Tacplus Server](#tacplus-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)  
+         * [UDLD](#udld)  
          * [Versions](#versions)  
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
@@ -674,6 +675,18 @@ BFD_PEER table can be used to configure BFD sessions for a peer IP address as be
 }
 ```
 
+### Errdisable recovery
+
+```json
+
+"ERRDISABLE": {
+    "RECOVERY": {
+        "interval": "40", 
+            "udld": "enable"
+    }
+} 
+
+```
 
 ### Export Service
 
@@ -1200,7 +1213,8 @@ Spanning Tree can be configured Globally, per VLAN, per interface and per VLAN-i
         "max_age": "20", 
         "mode": "pvst", 
         "priority": "32768", 
-        "rootguard_timeout": "30"
+        "rootguard_timeout": "30",
+        "bpdu_filter": "true"
     }
 }
 
@@ -1220,7 +1234,8 @@ Spanning Tree can be configured Globally, per VLAN, per interface and per VLAN-i
         "enabled": "true", 
         "portfast": "true", 
         "root_guard": "false", 
-        "uplink_fast": "false"
+        "uplink_fast": "false",
+        "bpdu_filter": "enable"
     }
 }
 
@@ -1311,6 +1326,30 @@ Spanning Tree can be configured Globally, per VLAN, per interface and per VLAN-i
 }  
 ```
 
+### UDLD
+
+UDLD has tables for global and per port level configurations
+```
+{
+    "UDLD":{
+        "GLOBAL": {
+                "admin_enable": "true", 
+                "aggressive": "false", 
+                "msg_time": "1", 
+                "multiplier": "3"
+        }
+    }
+}
+
+{
+    "UDLD_PORT": {
+        "Ethernet48": {
+            "admin_enable": "true", 
+            "aggressive": "false"
+        }
+    }
+}
+```
 ### Versions
 
 This table is where the curret version of the software is recorded.
