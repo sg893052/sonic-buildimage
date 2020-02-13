@@ -387,30 +387,36 @@ To enable BFD for a BGP neighbor, it can be configured in BGP_NEIGHBOR table as 
 	}
 }
 ```
-BFD_PEER table can be used to configure BFD sessions for a peer IP address as below:
+BFD_PEER_MULTI_HOP and BFD_PEER_SINGLE_HOP table can be used to configure BFD multihop and single hop sessions respectively as below:
 
 ```
 {
-"BFD_PEER": {
-	"2.2.2.2|null|null": {
-		"transmit_interval":"400", 
-		"receive_interval":"300", 
-		"echo_mode":"true", 
-		"echo_interval":"44", 
-		"multiplier":"5",
-		"label":"mylabel"
-	}, 
-	"3.3.3.3|1.1.1.1|null": {
-		"admin_status":"down"
-	},
-	"4.4.4.4|null|Ethernet0": {
-	},
-	"5.5.5.5|1.1.1.1|Ethernet0": {
-		"admin_status":"up"
-	},
-	"6.6.6.6|1.1.1.1|null|multihop": {
-		"admin_status":"up"
-	}
+    "BFD_PEER_MULTI_HOP": {
+        "10.1.1.1|null|default|10.1.1.2": {
+                "desired-minimum-tx-interval": "200",
+                "enabled": "true",
+                "required-minimum-receive": "250"
+        },
+        "11.1.1.1|Ethernet0|default|11.1.1.2": {
+        },
+        "12.1.1.1|Ethernet0|Vrf1|12.1.1.2": {
+        }                
+    },
+    "BFD_PEER_SINGLE_HOP": {
+        "2.2.2.2|Ethernet0|default|null": {
+            "desired-minimum-tx-interval":"400",
+            "required-minimum-receive":"300",
+            "echo-active":"true",
+            "desired-minimum-echo-receive":"44",
+            "detection-multiplier":"5"
+        },
+        "5.5.5.5|Ethernet0|default|1.1.1.1": {
+        },
+        "6.6.6.6|Ethernet0|Vrf1|2.2.2.2": {
+        },
+        "7.7.7.7|Ethernet0|Vrf1|null": {
+        }
+    }
 }
 ```
 
