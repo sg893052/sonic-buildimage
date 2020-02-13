@@ -120,15 +120,12 @@ To support IS-CLI configuration and show commands.
 
 ### 1.1.3 Scalability Requirements
 
-SONiC IGMP Snoooping feature does not have scale limit, scale number varies based on ASIC supported number.
-
-The following L2MC entries scale will be tested to success on an ASIC with 512 L2MC group support,
- 1. Snooping on maximum of 512 VLANs.
- 2. Maximum of 512 L2MC entries.
+SONiC IGMP Snooping feature does not have scale limit, scale number varies based on ASIC supported number, refer to scalability section below for the tested scale numbers.
  
 ### 1.1.4 Warm Boot Requirements
 
-Dynamic and Static L2MC entries should persist across warm reboot with no traffic disruption to the active flows.
+Dynamic and static L2MC entries should persist across warm reboot with no traffic disruption to the active flows.
+And, remote learnt L2MC entries in MCLAG should persist across warm reboot.
 Learning of new snooping entries and aging of existing L2MC entries will stop while the control plane is away.
 - To support planned system warm boot.
 
@@ -606,18 +603,12 @@ Debug logs will be captured as part of tech support.
 # 7 Warm Boot Support
 The traffic corresponding to the active L2MC flows should not be disturbed during the warm reboot process. 
  
-- Planned l2mcastd docker warm boot
-	- l2mcastd is responsible for restoring static and dynamic learnt flows from APP_DB and handles l2mc entry change from port state  and vlan member port state change events, and pushes updated entry to APP_DB.
-    - Snooping new entries and aging of existing l2mc entries will stop when l2mcastd is away.
-    - If switch is an active querier, l2mcastd sends out query immediatly to check available active memebers.
-- Planned Swss docker warm boot
-	- l2mcOrch is responsible for restoring static and dynamic learnt l2mc entries  from APP_DB and cache those entries with OID.
+- L2MCd is responsible for restoring static, dynamic and remote learnt flows from APP_DB and handles l2mc entry change from port state  and vlan member port state change events, and pushes updated entry to APP_DB.
+ - Learning new entries and aging of existing l2mc entries will stop when control plane is away.
+ - If switch is an active querier, l2mcastd sends out query immediatly to check available active memebers.
+ - l2mcOrch is responsible for restoring static , dynamic and remote learnt L2MC entries  from APP_DB and cache those entries with OID.
 
-- Planned system warm boot 
-    - Snooping new entries and aging of existing l2mc entries will stop when control plane is away.
-    - l2mcastd restores static and dynamic learnt flows from APP_DB.
-    - If switch is an active querier, l2mcastd sends out query immediatly to check available active members.
-    - l2mcOrch restores static and dynamic learnt l2mc entries from APP_DB.
+
 
 # 8 Scalability
 
@@ -705,9 +696,7 @@ Below L2MC entries scale will be tested to success on an ASIC with 512 L2MC grou
 
 ## 9.5 Warm boot Test Cases
     
-    1. Verify l2mc docker warm boot. Verify active l2mc traffic flows are not affected during warm boot.
-    2. Verify Swss docker warm boot. Verify active l2mc traffic flows are not affected during warm boot.
-    3. Verify system warm boot.
+    Verify system warm boot. Verify active l2mc traffic flows are not affected during warm boot.
 
 ## 9.6 Scaling Test Cases
  
@@ -759,10 +748,11 @@ NTMwMTM0OTg5XX0=
 
     
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTkxMzkwMzA1MCwtMTEyNTExODI4LDUwMD
-k5ODQwMywxMzU1NTU4NjY5LDEwODczNTU4ODQsLTg3Nzc4OTU2
-MiwxNjYzMTY3NjgxLDEwMzgxNDI3MDgsLTE3NjIyOTgyNjYsLT
-EzMDIwOTQwMzIsMTc5ODc4NTc5NiwxMjI4NDc3MTA3LDY0NzUy
-MDM3LDE3MzgzNzI5MzIsNDEzNzc2MzYxLC0xMTQzODU0ODk1LD
-EyNDQ0OTYxOV19
+eyJoaXN0b3J5IjpbMTk4NTUxOTg4NCw4NzU0NjI1NDAsLTE1OT
+UyNDU0MTksLTkxMzkwMzA1MCwtMTEyNTExODI4LDUwMDk5ODQw
+MywxMzU1NTU4NjY5LDEwODczNTU4ODQsLTg3Nzc4OTU2MiwxNj
+YzMTY3NjgxLDEwMzgxNDI3MDgsLTE3NjIyOTgyNjYsLTEzMDIw
+OTQwMzIsMTc5ODc4NTc5NiwxMjI4NDc3MTA3LDY0NzUyMDM3LD
+E3MzgzNzI5MzIsNDEzNzc2MzYxLC0xMTQzODU0ODk1LDEyNDQ0
+OTYxOV19
 -->
