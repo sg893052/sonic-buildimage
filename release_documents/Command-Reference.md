@@ -90,6 +90,10 @@ Table of Contents
    * [IP](#ip)
       * [IP show commands](#ip-show-commands)
       * [IPv6 show commands](#ipv6-show-commands)
+   * [IP-Helper Commands](#ip-helper-commands)
+      * [IP-Helper show commands](#ip-helper-show-commands)
+      * [IP-Helper configuration commands](#ip-helper-configuration-commands)
+      * [IP-Helper clear commands](#ip-helper-clear-commands) 
    * [LLDP](#lldp)
       * [LLDP show commands](#lldp-show-commands)
    * [Loading, Reloading And Saving Configuration](#loading-reloading-and-saving-configuration)
@@ -101,6 +105,10 @@ Table of Contents
    * [Mirroring Configuration And Show](#mirroring-configuration-and-show)
       * [Mirroring Show command](#mirroring-show-command)
       * [Mirroring Config command](#mirroring-config-command)
+   * [NAT Commands](#nat-commands)
+      * [NAT show commands](#nat-show-commands)
+      * [NAT configuration commands](#nat-configuration-commands)
+      * [NAT clear commands](#nat-clear-commands) 
    * [NTP](#ntp)
       * [NTP show command](#network-time-protocol-show-command)
    * [Platform Specific Commands](#platform-specific-commands)
@@ -146,10 +154,6 @@ Table of Contents
    * [Troubleshooting Commands](#troubleshooting-commands)
    * [Routing Stack Configuration And Show](#routing-stack-configuration-and-show)
    * [Quagga BGP Show Commands](#Quagga-BGP-Show-Commands)
-   * [NAT Configuration and Show Commands](#nat-configuration-and-show-commands)
-      * [NAT show commands](#nat-show-commands)
-      * [NAT configuration commands](#nat-configuration-commands)
-      * [NAT clear commands](#nat-clear-commands) 
    * [Error Handling Framework Configuration and Show Commands](#error-handling-framework-configuration-and-show-commands) 
       * [Error Handling Framework show commands](#error-handling-framework-show-commands) 
       * [Error Handling Framework clear commands](#error-handling-framework-clear-commands) 	  
@@ -4183,6 +4187,215 @@ Refer the routing stack [Quagga Command Reference](https://www.quagga.net/docs/q
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#IP)
 
 
+# IP-Helper Commands
+
+This section explains all the IP-Helper show, configuration and clear commands that are supported in SONiC.
+
+## IP-Helper show commands 
+  
+**show ip forward_protocol config** 
+
+This command displays the IP Helper Global configuration.
+
+- Usage:  
+show ip forward_protocol config
+
+- Example:
+```
+root@sonic:/home/admin# show ip forward_protocol config
+
+    UDP forwarding: Enabled
+
+    UDP rate limit: 600 pps
+
+    UDP forwarding enabled on the ports: TFTP , NTP , TACACS , 330 , 234, 1000
+
+    UDP forwarding disabled on the ports: DNS , NetBios-Name-server , NetBios-datagram-server
+```
+
+**show ip helper-address config** 
+
+This command displays the IP Helper address configuration on all the interfaces.
+
+- Usage:  
+show ip helper-address config
+
+- Example:
+```
+root@sonic:/home/admin# show ip helper-address config
+
+    Interface   Vrf         Relay address
+    -------------------------------------
+    Ethernet24              31.1.0.2
+                            2.2.2.3
+                vrf20       11.19.0.144
+    Ethernet28              31.1.0.2
+```
+
+**show ip helper-address config {interface}**
+
+This command displays the IP Helper address configuration on the interface.
+
+- Usage:  
+show ip helper-address config Ethernet24
+
+- Example:
+```
+root@sonic:/home/admin# show ip helper-address config Ethernet24
+
+    Interface   Vrf         Relay address
+    -------------------------------------
+    Ethernet24              31.1.0.2
+                            2.2.2.3
+                vrf20       11.19.0.144 
+```
+
+**show ip helper-address statistics** 
+
+This command displays the IP Helper statistics on all the interfaces.
+
+- Usage:  
+show ip helper-address statistics
+
+- Example:
+```
+root@sonic:/home/admin# show ip helper-address statistics
+
+Ethernet24
+-----------
+  Packets received                              : 1098
+  Packets relayed                               :  980
+  Packets dropped                               :  118
+  Invalid TTL packets                           :   22
+  All ones broadcast packets received           :  602
+  Net directed broadcast packets received       :  496
+
+
+Ethernet28
+-----------
+  Packets received                              : 100
+  Packets relayed                               : 90
+  Packets dropped                               : 10
+  Invalid TTL packets                           : 5
+  All ones broadcast packets received           : 50
+  Net directed broadcast packets received       : 50
+```
+
+**show ip helper-address statistics {interface}**
+
+This command displays the IP Helper statistics on the interface.
+
+- Usage:  
+show ip helper-address statistics Ethernet24
+
+- Example:
+```
+root@sonic:/home/admin# show ip helper-address statistics Ethernet24
+
+    Packets received                              : 1098
+    Packets relayed                               :  980  
+    Packets dropped                               :  118
+    Invalid TTL packets                           :   22
+    All ones broadcast packets received           :  602
+    Net directed broadcast packets received       :  496
+```
+
+## IP-Helper configuration commands 
+This sub-section explains the list of configuration options available for IP-Helper module.
+
+**config interface ip helper-address add {interface-name} {ip-address} [-vrf <vrf-name]**
+
+Use this command to add IP helper address on an interface.
+
+- Example:
+```
+root@sonic:/home/admin# config interface ip helper_address add Ethernet28 22.22.22.22
+root@sonic:/home/admin# config interface ip helper_address add Ethernet24 22.22.22.22 -vrf VrfBlue
+```
+
+**config interface ip helper-address remove {interface-name} {ip-address} [-vrf <vrf-name]**
+
+Use this command to remove IP helper address on an interface.
+
+- Example:
+```
+root@sonic:/home/admin# config interface ip helper_address remove Ethernet28 22.22.22.22
+root@sonic:/home/admin# config interface ip helper_address remove Ethernet24 22.22.22.22 -vrf VrfBlue
+```
+
+**config ip forward_protocol udp enable**
+
+Use this command to enable UDP Broadcast forwarding.
+
+- Example:
+```
+root@sonic:/home/admin# config ip forward_protocol udp disable
+```
+
+**config ip forward_protocol udp disable**
+
+Use this command to disable UDP Broadcast forwarding.
+
+- Example:
+```
+root@sonic:/home/admin# config ip forward_protocol udp disable
+```
+
+**config ip forward_protocol udp add {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | {port}}**
+
+Use this command to add UDP port to the list of forwarding ports.
+
+- Example:
+```
+root@sonic:/home/admin# config ip forward_protocol udp add 330
+root@sonic:/home/admin# config ip forward_protocol udp add ntp
+```
+
+**config ip forward_protocol udp remove {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | {port}}**
+
+Use this command to remove UDP port from the list of forwarding ports.
+
+- Example:
+```
+root@sonic:/home/admin# config ip forward_protocol udp remove 330
+root@sonic:/home/admin# config ip forward_protocol udp remove dns
+```
+
+**config ip forward_protocol udp rate_limit {value-in-pps}**
+
+Use this command to configure the UDP broadcast packet rate limiting value in the range 600 - 10000 pps. The default value is 600 pps.
+
+- Example:
+```
+root@sonic:/home/admin# config ip forward_protocol udp rate_limit 5000
+```
+
+## IP-Helper clear commands 
+
+**sonic-clear ip helper-address statistics**	
+
+Use this command to clear the relay statistics on all the interfaces.
+- Example:
+```
+root@sonic:/home/admin# sonic-clear ip helper-address statistics  
+
+IpHelper Address Statistics are cleared.
+
+```
+
+**sonic-clear ip helper-address statistics {interface}**	
+
+Use this command to clear the relay statistics on an interface.
+- Example:
+```
+root@sonic:/home/admin# sonic-clear ip helper-address statistics Ethernet28
+
+IpHelper Address Statistics are cleared on Ethernet28
+
+```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ip-helper-commands)
+
 # LLDP
 
 ## LLDP show commands
@@ -4534,6 +4747,279 @@ While adding a new session, users need to configure the following fields that ar
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Mirroring-Configuration-And-Show)
+
+# NAT Commands
+
+This section explains all the NAT show, configuation and clear commands that are supported in SONiC.
+
+## NAT show commands 
+
+**show nat config [static | pool | bindings | zones]**  
+
+This command displays the configuration of the NAT module. 
+
+- Usage:  
+show nat config
+
+- Example:
+```
+root@sonic:/home/admin# show nat config
+
+Global Values
+
+Admin Mode     : enabled
+Global Timeout : 600 secs
+TCP Timeout    : 86400 secs
+UDP Timeout    : 300 secs  
+
+Static Entries
+
+Nat Type    IP Protocol    Global IP    Global Port    Local IP    Local Port  Twice-NAT Id
+----------  -------------  -----------  -------------  ----------  ----------  ------------
+snat        all            112.0.0.2    ---            111.0.0.3   ---               1
+
+Pool Entries
+
+Pool Name    Global IP Range    Global Port Range
+-----------  -----------------  -------------------
+nat1         2.0.0.5            10-200
+
+NAT Bindings
+
+Binding Name    Pool Name    Access-List    Nat Type    Twice-NAT Id
+--------------  -----------  -------------  ----------  --------------
+bind1           nat1                        snat        ---
+
+NAT Zones
+
+Port         Zone
+---------  ------
+Ethernet0       1
+Ethernet2       2
+```
+
+**show nat statistics**  
+
+This command displays the statistics per NAT entry.
+
+- Usage:  
+show nat statistics
+
+- Example:
+```
+root@sonic:/home/admin#show nat statistics
+
+Protocol Source           Destination          Packets          Bytes
+-------- ---------        --------------       -----------    ----------
+all      10.0.0.1         ---                          802      1009280     
+all      10.0.0.2         ---                           23         5590            
+tcp      20.0.0.1:4500    ---                          110        12460         
+udp      20.0.0.1:4000    ---                         1156       789028            
+tcp      20.0.0.1:6000    ---                           30        34800         
+tcp      20.0.0.1:5000    65.55.42.1:2000              128       110204     
+tcp      20.0.0.1:5500    65.55.42.1:2000                8         3806
+```
+
+**show nat translations [count]**  
+
+This command displays all the NAT translations entries.
+
+- Usage:  
+show nat translations
+
+- Example:
+```
+#show nat translations
+
+Static NAT Entries        ................. 4
+Static NAPT Entries       ................. 2
+Dynamic NAT Entries       ................. 0
+Dynamic NAPT Entries      ................. 4
+Static Twice NAT Entries  ................. 0
+Static Twice NAPT Entries ................. 2
+Total Entries             ................. 12
+
+Protocol Source           Destination       Translated Source  Translated Destination
+-------- ---------        --------------    -----------------  ----------------------
+all      10.0.0.1         ---               65.55.42.2         ---
+all      ---              65.55.42.2        ---                10.0.0.1
+all      10.0.0.2         ---               65.55.42.3         ---
+all      ---              65.55.42.3        ---                10.0.0.2
+tcp      20.0.0.1:4500    ---               65.55.42.1:2000    ---
+tcp      ---              65.55.42.1:2000   ---                20.0.0.1:4500
+udp      20.0.0.1:4000    ---               65.55.42.1:1030    ---
+udp      ---              65.55.42.1:1030   ---                20.0.0.1:4000
+tcp      20.0.0.1:6000    ---               65.55.42.1:1024    ---
+tcp      ---              65.55.42.1:1024   ---                20.0.0.1:6000
+tcp      20.0.0.1:5000    65.55.42.1:2000   65.55.42.1:1025    20.0.0.1:4500
+tcp      20.0.0.1:4500    65.55.42.1:1025   65.55.42.1:2000    20.0.0.1:5000
+tcp      20.0.0.1:5500    65.55.42.1:2000   65.55.42.1:1026    20.0.0.1:4500
+tcp      20.0.0.1:4500    65.55.42.1:1026   65.55.42.1:2000    20.0.0.1:5500
+
+Router#show nat translations count
+
+Static NAT Entries        ................. 4
+Static NAPT Entries       ................. 2
+Dynamic NAT Entries       ................. 0
+Dynamic NAPT Entries      ................. 4
+Static Twice NAT Entries  ................. 0
+Static Twice NAPT Entries ................. 2
+Total Entries             ................. 12
+```
+
+## NAT configuration commands 
+This sub-section explains the list of configuration options available for NAT module.
+
+**config nat add static basic {global-ip} {local-ip} -nat_type {snat/dnat} -twice_nat_id {value}**
+
+Use this command to add basic static NAT entry
+
+- Example:
+```
+root@sonic:/home/admin# config nat add static basic 65.54.0.1 10.0.0.1
+root@sonic:/home/admin# config nat add static basic 112.0.0.1 111.0.0.2 -nat_type dnat -twice_nat_id 1
+root@sonic:/home/admin# config nat add static basic 112.0.0.2 111.0.0.3 -nat_type snat -twice_nat_id 1
+```
+
+**config nat remove static basic {global-ip} {local-ip}**
+
+Use this command to remove basic static NAT entry
+
+- Example:
+```
+root@sonic:/home/admin# config nat remove static basic 65.54.0.1 10.0.0.1
+```
+
+**config nat add static {tcp | udp} {global-ip} {global-port} {local-ip} {local-port} -nat_type {snat/dnat} -twice_nat_id {value}**	
+
+Use this command to add a static NAPT entry
+
+- Example:
+```
+root@sonic:/home/admin# config nat add static udp 112.0.0.1 250 10.0.0.1 111 
+```
+
+**config nat remove static {tcp | udp} {global-ip} {global-port} {local-ip} {local-port}**	
+
+Use this command to remove a static NAPT entry
+
+- Example:
+```
+root@sonic:/home/admin# config nat remove static udp 112.0.0.1 250 10.0.0.1 111
+```
+
+**config nat remove static all**	
+
+Use this command to remove all the static NAT/NAPT configuration
+
+**config nat add pool {pool-name} {global-ip-range} {global-port-range}**
+
+Use this command to create a NAT pool
+
+- Example:
+```
+root@sonic:/home/admin# config nat add pool nat1 2.0.0.5 10-200
+```
+
+**config nat remove pool {pool-name}**	
+
+Use this command to remove a NAT pool
+
+- Example:
+```
+root@sonic:/home/admin# config nat remove pool nat1 
+```
+
+**config nat remove pools**	
+
+Use this command to remove all the NAT pool configuration
+
+**config nat add binding {binding-name} {pool-name} {acl-name} -nat_type {snat/dnat} -twice_nat_id {value}**
+
+Create a binding between an ACL and a NAT pool
+
+- Example:
+```
+root@sonic:/home/admin# config nat add binding bind1 nat1              
+```
+
+**config nat remove binding {binding-name}**	
+
+Remove a binding between an ACL and a NAT pool
+
+**config nat remove bindings**	
+
+Use this command to remove all the NAT binding configuration
+
+**config nat add interface {interface-name} {-nat_zone {zone-value}}**
+
+Use this command to configure the NAT zone value on an interface
+
+- Example:
+```
+root@sonic:/home/admin# config nat add interface Ethernet1 -nat_zone 2
+root@sonic:/home/admin# config nat add interface Ethernet3 -nat_zone 1
+```
+
+**config nat remove interface {interface-name}**	
+
+Use this command to remove the NAT configuration on the interface
+
+**config nat remove interfaces**	
+
+Use this command to remove the NAT configuration on all the L3 interfaces
+
+**config nat set timeout {secs}**	
+
+Use this command to configure the Basic NAT entry aging timeout in seconds.
+
+**config nat reset timeout**	
+
+Use this command to reset the Basic NAT entry aging timeout to default value.
+
+**config nat feature {enable/disable}**
+
+Use this command to enable or disable the NAT feature.
+
+**config nat set udp-timeout {secs}**	
+
+Use this command to configure the UDP NAT entry aging timeout in seconds.
+
+**config nat reset udp-timeout**	
+
+Use this command to reset the UDP NAT entry aging timeout to default value.
+
+**config nat set tcp-timeout {secs}**	
+
+Use this command to configure the TCP NAT entry aging timeout in seconds.
+
+**config nat reset tcp-timeout**	
+
+Use this command to reset the TCP NAT entry aging timeout to default value.
+
+## NAT clear commands 
+
+**sonic-clear nat statistics**	
+
+Use this command to clear all NAT statistics.
+- Example:
+```
+root@sonic:/home/admin# sonic-clear nat statistics  
+
+NAT statistics are cleared.
+```
+
+**sonic-clear nat translations**	
+
+Use this command to clear all dynamic NAT translations.
+- Example:
+```
+root@sonic:/home/admin# sonic-clear nat translations        
+
+Dynamic NAT entries are cleared.
+```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#nat-commands)
 
 
 # NTP
@@ -6990,278 +7476,6 @@ This command displays the routing policy that takes precedence over the other ro
 		Exit routemap
   ```
 
-Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Quagga-BGP-Show-Commands)
-
-# NAT Configuration And Show Commands
-
-This section explains all the NAT show commands and NAT configuation commands that are supported in SONiC.
-
-## NAT show commands 
-
-**show nat config [static | pool | bindings | zones]**  
-
-This command displays the configuration of the NAT module. 
-
-- Usage:  
-show nat config
-
-- Example:
-```
-root@sonic:/home/admin# show nat config
-
-Global Values
-
-Admin Mode     : enabled
-Global Timeout : 600 secs
-TCP Timeout    : 86400 secs
-UDP Timeout    : 300 secs  
-
-Static Entries
-
-Nat Type    IP Protocol    Global IP    Global Port    Local IP    Local Port  Twice-NAT Id
-----------  -------------  -----------  -------------  ----------  ----------  ------------
-snat        all            112.0.0.2    ---            111.0.0.3   ---               1
-
-Pool Entries
-
-Pool Name    Global IP Range    Global Port Range
------------  -----------------  -------------------
-nat1         2.0.0.5            10-200
-
-NAT Bindings
-
-Binding Name    Pool Name    Access-List    Nat Type    Twice-NAT Id
---------------  -----------  -------------  ----------  --------------
-bind1           nat1                        snat        ---
-
-NAT Zones
-
-Port         Zone
----------  ------
-Ethernet0       1
-Ethernet2       2
-```
-
-**show nat statistics**  
-
-This command displays the statistics per NAT entry.
-
-- Usage:  
-show nat statistics
-
-- Example:
-```
-root@sonic:/home/admin#show nat statistics
-
-Protocol Source           Destination          Packets          Bytes
--------- ---------        --------------       -----------    ----------
-all      10.0.0.1         ---                          802      1009280     
-all      10.0.0.2         ---                           23         5590            
-tcp      20.0.0.1:4500    ---                          110        12460         
-udp      20.0.0.1:4000    ---                         1156       789028            
-tcp      20.0.0.1:6000    ---                           30        34800         
-tcp      20.0.0.1:5000    65.55.42.1:2000              128       110204     
-tcp      20.0.0.1:5500    65.55.42.1:2000                8         3806
-```
-
-**show nat translations [count]**  
-
-This command displays all the NAT translations entries.
-
-- Usage:  
-show nat translations
-
-- Example:
-```
-#show nat translations
-
-Static NAT Entries        ................. 4
-Static NAPT Entries       ................. 2
-Dynamic NAT Entries       ................. 0
-Dynamic NAPT Entries      ................. 4
-Static Twice NAT Entries  ................. 0
-Static Twice NAPT Entries ................. 2
-Total Entries             ................. 12
-
-Protocol Source           Destination       Translated Source  Translated Destination
--------- ---------        --------------    -----------------  ----------------------
-all      10.0.0.1         ---               65.55.42.2         ---
-all      ---              65.55.42.2        ---                10.0.0.1
-all      10.0.0.2         ---               65.55.42.3         ---
-all      ---              65.55.42.3        ---                10.0.0.2
-tcp      20.0.0.1:4500    ---               65.55.42.1:2000    ---
-tcp      ---              65.55.42.1:2000   ---                20.0.0.1:4500
-udp      20.0.0.1:4000    ---               65.55.42.1:1030    ---
-udp      ---              65.55.42.1:1030   ---                20.0.0.1:4000
-tcp      20.0.0.1:6000    ---               65.55.42.1:1024    ---
-tcp      ---              65.55.42.1:1024   ---                20.0.0.1:6000
-tcp      20.0.0.1:5000    65.55.42.1:2000   65.55.42.1:1025    20.0.0.1:4500
-tcp      20.0.0.1:4500    65.55.42.1:1025   65.55.42.1:2000    20.0.0.1:5000
-tcp      20.0.0.1:5500    65.55.42.1:2000   65.55.42.1:1026    20.0.0.1:4500
-tcp      20.0.0.1:4500    65.55.42.1:1026   65.55.42.1:2000    20.0.0.1:5500
-
-Router#show nat translations count
-
-Static NAT Entries        ................. 4
-Static NAPT Entries       ................. 2
-Dynamic NAT Entries       ................. 0
-Dynamic NAPT Entries      ................. 4
-Static Twice NAT Entries  ................. 0
-Static Twice NAPT Entries ................. 2
-Total Entries             ................. 12
-```
-
-## NAT configuration commands 
-This sub-section explains the list of configuration options available for NAT module.
-
-**config nat add static basic {global-ip} {local-ip} -nat_type {snat/dnat} -twice_nat_id {value}**
-
-Use this command to add basic static NAT entry
-
-- Example:
-```
-root@sonic:/home/admin# config nat add static basic 65.54.0.1 10.0.0.1
-root@sonic:/home/admin# config nat add static basic 112.0.0.1 111.0.0.2 -nat_type dnat -twice_nat_id 1
-root@sonic:/home/admin# config nat add static basic 112.0.0.2 111.0.0.3 -nat_type snat -twice_nat_id 1
-```
-
-**config nat remove static basic {global-ip} {local-ip}**
-
-Use this command to remove basic static NAT entry
-
-- Example:
-```
-root@sonic:/home/admin# config nat remove static basic 65.54.0.1 10.0.0.1
-```
-
-**config nat add static {tcp | udp} {global-ip} {global-port} {local-ip} {local-port} -nat_type {snat/dnat} -twice_nat_id {value}**	
-
-Use this command to add a static NAPT entry
-
-- Example:
-```
-root@sonic:/home/admin# config nat add static udp 112.0.0.1 250 10.0.0.1 111 
-```
-
-**config nat remove static {tcp | udp} {global-ip} {global-port} {local-ip} {local-port}**	
-
-Use this command to remove a static NAPT entry
-
-- Example:
-```
-root@sonic:/home/admin# config nat remove static udp 112.0.0.1 250 10.0.0.1 111
-```
-
-**config nat remove static all**	
-
-Use this command to remove all the static NAT/NAPT configuration
-
-**config nat add pool {pool-name} {global-ip-range} {global-port-range}**
-
-Use this command to create a NAT pool
-
-- Example:
-```
-root@sonic:/home/admin# config nat add pool nat1 2.0.0.5 10-200
-```
-
-**config nat remove pool {pool-name}**	
-
-Use this command to remove a NAT pool
-
-- Example:
-```
-root@sonic:/home/admin# config nat remove pool nat1 
-```
-
-**config nat remove pools**	
-
-Use this command to remove all the NAT pool configuration
-
-**config nat add binding {binding-name} {pool-name} {acl-name} -nat_type {snat/dnat} -twice_nat_id {value}**
-
-Create a binding between an ACL and a NAT pool
-
-- Example:
-```
-root@sonic:/home/admin# config nat add binding bind1 nat1              
-```
-
-**config nat remove binding {binding-name}**	
-
-Remove a binding between an ACL and a NAT pool
-
-**config nat remove bindings**	
-
-Use this command to remove all the NAT binding configuration
-
-**config nat add interface {interface-name} {-nat_zone {zone-value}}**
-
-Use this command to configure the NAT zone value on an interface
-
-- Example:
-```
-root@sonic:/home/admin# config nat add interface Ethernet1 -nat_zone 2
-root@sonic:/home/admin# config nat add interface Ethernet3 -nat_zone 1
-```
-
-**config nat remove interface {interface-name}**	
-
-Use this command to remove the NAT configuration on the interface
-
-**config nat remove interfaces**	
-
-Use this command to remove the NAT configuration on all the L3 interfaces
-
-**config nat set timeout {secs}**	
-
-Use this command to configure the Basic NAT entry aging timeout in seconds.
-
-**config nat reset timeout**	
-
-Use this command to reset the Basic NAT entry aging timeout to default value.
-
-**config nat feature {enable/disable}**
-
-Use this command to enable or disable the NAT feature.
-
-**config nat set udp-timeout {secs}**	
-
-Use this command to configure the UDP NAT entry aging timeout in seconds.
-
-**config nat reset udp-timeout**	
-
-Use this command to reset the UDP NAT entry aging timeout to default value.
-
-**config nat set tcp-timeout {secs}**	
-
-Use this command to configure the TCP NAT entry aging timeout in seconds.
-
-**config nat reset tcp-timeout**	
-
-Use this command to reset the TCP NAT entry aging timeout to default value.
-
-## NAT clear commands 
-
-**sonic-clear nat statistics**	
-
-Use this command to clear all NAT statistics.
-- Example:
-```
-root@sonic:/home/admin# sonic-clear nat statistics  
-
-NAT statistics are cleared.
-```
-
-**sonic-clear nat translations**	
-
-Use this command to clear all dynamic NAT translations.
-- Example:
-```
-root@sonic:/home/admin# sonic-clear nat translations        
-
-Dynamic NAT entries are cleared.
-```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
 

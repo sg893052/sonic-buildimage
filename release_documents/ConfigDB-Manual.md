@@ -43,11 +43,13 @@ Table of Contents
          * [DOT1P_TO_TC_MAP](#dot1p_to_tc_map)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
+         * [IP Helper](#ip-helper)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [Management Interface](#management-interface)  
          * [Management port](#management-port)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
+         * [NAT](#nat)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
          * [Port](#port)  
          * [Port Channel](#port-channel)  
@@ -62,8 +64,7 @@ Table of Contents
          * [Versions](#versions)  
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
-         * [WRED_PROFILE](#wred_profile)  
-         * [NAT](#nat)  
+         * [WRED_PROFILE](#wred_profile)    
          * [Threshold](#threshold)  
          * [Syslog Server](#syslog-server)  
          * [IPv6 Link-local](#ipv6-link-local)  
@@ -888,6 +889,26 @@ instance is supported in SONiC.
 
 ```
 
+### IP Helper
+
+IP Helper global configuration is defined in **UDP_BROADCAST_FORWARDING** table. The IP Helper addresses configuration is part of **INTERFACE** table, the INTERFACE table is modified to add a new key-value pair where the value is a comma separated list of "vrf-name|ipv4-relay-address.
+
+```
+{
+    "UDP_BROADCAST_FORWARDING": {
+        Ports: {
+            "admin_mode" : "enable"
+            "exclude_default_ports" : ["69"]
+            "include_ports" : ["334", "2095"]
+            "rate_limit_pps" : "600"
+        }
+    },
+    "INTERFACE": {
+        "Ethernet24": {
+            "helper_addresses": ["31.1.0.2" , "2.2.2.3" , "vrf20|11.19.0.144"]
+    },
+}
+```
 
 ### L2 Neighbors
 
@@ -1015,6 +1036,62 @@ instead of data network.
 }
 ```
 
+### NAT
+
+NAT configuration is defined in **NAT_GLOBAL**, **NAT_POOL**, **NAT_BINDINGS**, **STATIC_NAT**, **STATIC_NAPT** tables. The NAT zone configuration is part of **INTERFACE** table.
+
+```
+{
+    "NAT_GLOBAL": {
+        "Values": {
+            "admin_mode": "enabled",
+            "nat_tcp_timeout": "6000",
+            "nat_udp_timeout": "300"
+        }
+    },
+    "NAT_POOL": {
+        "nat1": {
+            "nat_ip": "2.0.0.5",
+            "nat_port": "10-200"
+        }
+    },
+    "NAT_BINDINGS": {
+        "bind1": {
+            "access_list": "",
+            "nat_pool": "nat1"
+        }
+    },
+    "STATIC_NAT": {
+        "65.54.0.1": {
+            "local_ip": "10.0.0.1"
+        },
+        "112.0.0.1": {
+            "local_ip": "111.0.0.2",
+            "nat_type": "dnat",
+            "twice_nat_id": "1"
+        },
+        "112.0.0.2": {
+            "local_ip": "111.0.0.3",
+            "nat_type": "snat",
+            "twice_nat_id": "1"
+        }
+    },
+    "STATIC_NAPT": {
+        "112.0.0.1|UDP|250": {
+            "local_ip": "10.0.0.1",
+            "local_port": "111"
+        }
+    },
+    "INTERFACE": {
+        "Ethernet0": {
+            "nat_zone": "1"
+        },
+        "Ethernet2": {
+            "nat_zone": "2"
+        },
+    },
+}
+```
 
 ### NTP and SYSLOG servers
 
@@ -1461,62 +1538,6 @@ table allow to change properties of a VRRP instance. Attributes:
         "red_drop_probability": "5"
     }
   }
-}
-```
-### NAT
-
-NAT configuration is defined in **NAT_GLOBAL**, **NAT_POOL**, **NAT_BINDINGS**, **STATIC_NAT**, **STATIC_NAPT** tables. The NAT zone configuration is part of **INTERFACE** table.
-
-```
-{
-    "NAT_GLOBAL": {
-        "Values": {
-            "admin_mode": "enabled",
-            "nat_tcp_timeout": "6000",
-            "nat_udp_timeout": "300"
-        }
-    },
-    "NAT_POOL": {
-        "nat1": {
-            "nat_ip": "2.0.0.5",
-            "nat_port": "10-200"
-        }
-    },
-    "NAT_BINDINGS": {
-        "bind1": {
-            "access_list": "",
-            "nat_pool": "nat1"
-        }
-    },
-    "STATIC_NAT": {
-        "65.54.0.1": {
-            "local_ip": "10.0.0.1"
-        },
-        "112.0.0.1": {
-            "local_ip": "111.0.0.2",
-            "nat_type": "dnat",
-            "twice_nat_id": "1"
-        },
-        "112.0.0.2": {
-            "local_ip": "111.0.0.3",
-            "nat_type": "snat",
-            "twice_nat_id": "1"
-        }
-    },
-    "STATIC_NAPT": {
-        "112.0.0.1|UDP|250": {
-            "local_ip": "10.0.0.1",
-            "local_port": "111"
-        }
-    },
-    "INTERFACE": {
-        "Ethernet0": {
-            "nat_zone": "1"
-        },
-        "Ethernet2": {
-            "nat_zone": "2"
-        },
-    },
 }
 ```
 
