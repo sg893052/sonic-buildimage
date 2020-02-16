@@ -22,7 +22,7 @@ North bound interface and KLISH CLI support for BFD
 This document provides information about the northbound interface details for BFD.
 
 # Scope
-This document covers the "configuration" and "show" commands supported for BFD based on OpenConfig yang. 
+This document covers the "configuration" and "show" commands supported for BFD based on OpenConfig YANG. 
 
 # Definition/Abbreviation
 
@@ -69,7 +69,7 @@ Provide CLI, gNMI and REST support for BFD related commands handling
 
 # 3 Design
 ## 3.1 Overview
-1.  Transformer common app owns the Open config data models related to BFD (which means no separate app module required for handling BFD yang objects).
+1.  Transformer common app owns the Open config data models related to BFD (which means no separate app module required for handling BFD YANG objects).
 
 -   openconfig-bfd-ext.yang
 
@@ -87,103 +87,212 @@ Provide CLI, gNMI and REST support for BFD related commands handling
 
 ## 3.2 User Interface
 ### 3.2.1 Data Models
-List of yang models required for BFD management.
+List of YANG models required for BFD management.
 
 [openconfig-bfd.yang](https://github.com/openconfig/public/blob/master/release/models/bfd/openconfig-bfd.yang)
 
 openconfig-bfd.yang cannot meet all the requirements to support configuration in FRR BFD.
-A new yang openconfig-bfd-ext.yang is defined as an extension of openconfig-bfd.yang
+A new YANG openconfig-bfd-ext.yang is defined as an extension of openconfig-bfd.yang
 
-Supported yang objects and attributes are as per below tree:
+Supported YANG objects and attributes are as per below tree:
+## openconfig-bfd
 ```diff
-module: openconfig-interfaces
+  +--rw bfd
++    +--rw oc-bfd-ext:sessions
++    |  +--rw oc-bfd-ext:single-hop* [remote-address interface vrf local-address]
++    |  |  +--rw oc-bfd-ext:remote-address                  oc-inet:ip-address
++    |  |  +--rw oc-bfd-ext:vrf                             -> /oc-ni:network-instances/network-instance/config/name
++    |  |  +--rw oc-bfd-ext:interface                       -> /oc-if:interfaces/interface/config/name
++    |  |  +--rw oc-bfd-ext:local-address                   string
++    |  |  +--rw oc-bfd-ext:enabled?                        boolean
++    |  |  +--rw oc-bfd-ext:desired-minimum-tx-interval?    uint32
++    |  |  +--rw oc-bfd-ext:required-minimum-receive?       uint32
++    |  |  +--rw oc-bfd-ext:detection-multiplier?           uint8
++    |  |  +--rw oc-bfd-ext:desired-minimum-echo-receive?   uint32
++    |  |  +--rw oc-bfd-ext:echo-active?                    boolean
++    |  +--rw oc-bfd-ext:multi-hop* [remote-address interface vrf local-address]
++    |     +--rw oc-bfd-ext:remote-address                 oc-inet:ip-address
++    |     +--rw oc-bfd-ext:vrf                            -> /oc-ni:network-instances/network-instance/config/name
++    |     +--rw oc-bfd-ext:interface                      -> /oc-if:interfaces/interface/config/name
++    |     +--rw oc-bfd-ext:local-address                  string
++    |     +--rw oc-bfd-ext:enabled?                       boolean
++    |     +--rw oc-bfd-ext:desired-minimum-tx-interval?   uint32
++    |     +--rw oc-bfd-ext:required-minimum-receive?      uint32
++    |     +--rw oc-bfd-ext:detection-multiplier?          uint8
++    +--rw oc-bfd-ext:bfd-state
++    |  +--ro oc-bfd-ext:single-hop-state* [remote-address interface vrf local-address]
++    |  |  +--ro oc-bfd-ext:remote-address                          oc-inet:ip-address
++    |  |  +--ro oc-bfd-ext:vrf                                     -> /oc-ni:network-instances/network-instance/config/name
++    |  |  +--ro oc-bfd-ext:interface                               -> /oc-if:interfaces/interface/config/name
++    |  |  +--ro oc-bfd-ext:local-address                           string
++    |  |  +--ro oc-bfd-ext:session-state?                          bfd-session-state
++    |  |  +--ro oc-bfd-ext:last-failure-time?                      oc-types:timeticks64
++    |  |  +--ro oc-bfd-ext:failure-transitions?                    uint64
++    |  |  +--ro oc-bfd-ext:local-discriminator?                    string
++    |  |  +--ro oc-bfd-ext:remote-discriminator?                   string
++    |  |  +--ro oc-bfd-ext:local-diagnostic-code?                  bfd-diagnostic-code
++    |  |  +--ro oc-bfd-ext:remote-diagnostic-code?                 bfd-diagnostic-code
++    |  |  +--ro oc-bfd-ext:remote-minimum-receive-interval?        uint32
++    |  |  +--ro oc-bfd-ext:demand-mode-requested?                  boolean
++    |  |  +--ro oc-bfd-ext:remote-authentication-enabled?          boolean
++    |  |  +--ro oc-bfd-ext:remote-control-plane-independent?       boolean
++    |  |  +--ro oc-bfd-ext:session-type?                           bfd-session-type
++    |  |  +--ro oc-bfd-ext:remote-multiplier?                      uint32
++    |  |  +--ro oc-bfd-ext:local-multiplier?                       uint32
++    |  |  +--ro oc-bfd-ext:negotiated-transmission-interval?       uint32
++    |  |  +--ro oc-bfd-ext:negotiated-receive-interval?            uint32
++    |  |  +--ro oc-bfd-ext:remote-desired-transmission-interval?   uint32
++    |  |  +--ro oc-bfd-ext:remote-echo-receive-interval?           uint32
++    |  |  +--ro oc-bfd-ext:last-up-time?                           oc-types:timeticks64
++    |  |  +--ro oc-bfd-ext:minimum-echo-interval?                  uint32
++    |  |  +--ro oc-bfd-ext:echo
++    |  |  |  +--ro oc-bfd-ext:active?                    boolean
++    |  |  |  +--ro oc-bfd-ext:transmitted-packets?       uint64
++    |  |  |  +--ro oc-bfd-ext:received-packets?          uint64
++    |  |  |  +--ro oc-bfd-ext:up-transitions?            uint64
+-    |  |  |  +--ro oc-bfd-ext:last-packet-transmitted?   uint64
+-    |  |  |  +--ro oc-bfd-ext:last-packet-received?      uint64
++    |  |  +--ro oc-bfd-ext:async
++    |  |  |  +--ro oc-bfd-ext:transmitted-packets?       uint64
++    |  |  |  +--ro oc-bfd-ext:received-packets?          uint64
++    |  |  |  +--ro oc-bfd-ext:up-transitions?            uint64
+-    |  |  |  +--ro oc-bfd-ext:last-packet-transmitted?   uint64
+-    |  |  |  +--ro oc-bfd-ext:last-packet-received?      uint64
+-    |  |  +--ro oc-bfd-ext:remote-session-state?                   bfd-session-state
++    |  +--ro oc-bfd-ext:multi-hop-state* [remote-address interface vrf local-address]
++    |     +--ro oc-bfd-ext:remote-address                          oc-inet:ip-address
++    |     +--ro oc-bfd-ext:vrf                                     -> /oc-ni:network-instances/network-instance/config/name
++    |     +--ro oc-bfd-ext:interface                               -> /oc-if:interfaces/interface/config/name
++    |     +--ro oc-bfd-ext:local-address                           string
++    |     +--ro oc-bfd-ext:session-state?                          bfd-session-state
++    |     +--ro oc-bfd-ext:last-failure-time?                      oc-types:timeticks64
++    |     +--ro oc-bfd-ext:failure-transitions?                    uint64
++    |     +--ro oc-bfd-ext:local-discriminator?                    string
++    |     +--ro oc-bfd-ext:remote-discriminator?                   string
++    |     +--ro oc-bfd-ext:local-diagnostic-code?                  bfd-diagnostic-code
++    |     +--ro oc-bfd-ext:remote-diagnostic-code?                 bfd-diagnostic-code
++    |     +--ro oc-bfd-ext:remote-minimum-receive-interval?        uint32
++    |     +--ro oc-bfd-ext:demand-mode-requested?                  boolean
++    |     +--ro oc-bfd-ext:remote-authentication-enabled?          boolean
++    |     +--ro oc-bfd-ext:remote-control-plane-independent?       boolean
++    |     +--ro oc-bfd-ext:session-type?                           bfd-session-type
++    |     +--ro oc-bfd-ext:remote-multiplier?                      uint32
++    |     +--ro oc-bfd-ext:local-multiplier?                       uint32
++    |     +--ro oc-bfd-ext:negotiated-transmission-interval?       uint32
++    |     +--ro oc-bfd-ext:negotiated-receive-interval?            uint32
++    |     +--ro oc-bfd-ext:remote-desired-transmission-interval?   uint32
++    |     +--ro oc-bfd-ext:remote-echo-receive-interval?           uint32
++    |     +--ro oc-bfd-ext:last-up-time?                           oc-types:timeticks64
++    |     +--ro oc-bfd-ext:async
++    |     |  +--ro oc-bfd-ext:transmitted-packets?       uint64
++    |     |  +--ro oc-bfd-ext:received-packets?          uint64
++    |     |  +--ro oc-bfd-ext:up-transitions?            uint64
+-    |     |  +--ro oc-bfd-ext:last-packet-transmitted?   uint64
+-    |     |  +--ro oc-bfd-ext:last-packet-received?      uint64
+-    |     +--ro oc-bfd-ext:echo
+-    |     |  +--ro oc-bfd-ext:active?                    boolean
+-    |     |  +--ro oc-bfd-ext:last-packet-transmitted?   uint64
+-    |     |  +--ro oc-bfd-ext:last-packet-received?      uint64
+-    |     |  +--ro oc-bfd-ext:transmitted-packets?       uint64
+-    |     |  +--ro oc-bfd-ext:received-packets?          uint64
+-    |     |  +--ro oc-bfd-ext:up-transitions?            uint64
+-    |     +--ro oc-bfd-ext:remote-session-state?                   bfd-session-state
+-    |     +--ro oc-bfd-ext:minimum-echo-interval?                  uint32
+-    +--rw interfaces
+-       +--rw interface* [id]
+-          +--rw id                    -> ../config/id
+-          +--rw config
+-          |  +--rw id?                            string
+-          |  +--rw enabled?                       boolean
+-          |  +--rw local-address?                 oc-inet:ip-address
+-          |  +--rw desired-minimum-tx-interval?   uint32
+-          |  +--rw required-minimum-receive?      uint32
+-          |  +--rw detection-multiplier?          uint8
+-          |  +--rw enable-per-member-link?        boolean
+-          +--ro state
+-          |  +--ro id?                            string
+-          |  +--ro enabled?                       boolean
+-          |  +--ro local-address?                 oc-inet:ip-address
+-          |  +--ro desired-minimum-tx-interval?   uint32
+-          |  +--ro required-minimum-receive?      uint32
+-          |  +--ro detection-multiplier?          uint8
+-          |  +--ro enable-per-member-link?        boolean
+-          +--rw interface-ref
+-          |  +--rw config
+-          |  |  +--rw interface?      -> /oc-if:interfaces/interface/name
+-          |  |  +--rw subinterface?   -> /oc-if:interfaces/interface[oc-if:name=current()/../interface]/subinterfaces/subinterface/index
+-          |  +--ro state
+-          |     +--ro interface?      -> /oc-if:interfaces/interface/name
+-          |     +--ro subinterface?   -> /oc-if:interfaces/interface[oc-if:name=current()/../interface]/subinterfaces/subinterface/index
+-          +--rw micro-bfd-sessions
+-          |  +--rw micro-bfd-session* [member-interface]
+-          |     +--rw member-interface    -> ../config/member-interface
+-          |     +--rw config
+-          |     |  +--rw local-address?      oc-inet:ip-address
+-          |     |  +--rw remote-address?     oc-inet:ip-address
+-          |     |  +--rw member-interface?   -> /oc-if:interfaces/interface/config/name
+-          |     +--ro state
+-          |        +--ro local-address?                      oc-inet:ip-address
+-          |        +--ro remote-address?                     oc-inet:ip-address
+-          |        +--ro member-interface?                   -> /oc-if:interfaces/interface/config/name
+-          |        +--ro session-state?                      bfd-session-state
+-          |        +--ro remote-session-state?               bfd-session-state
+-          |        +--ro last-failure-time?                  oc-types:timeticks64
+-          |        +--ro failure-transitions?                uint64
+-          |        +--ro local-discriminator?                string
+-          |        +--ro remote-discriminator?               string
+-          |        +--ro local-diagnostic-code?              bfd-diagnostic-code
+-          |        +--ro remote-diagnostic-code?             bfd-diagnostic-code
+-          |        +--ro remote-minimum-receive-interval?    uint32
+-          |        +--ro demand-mode-requested?              boolean
+-          |        +--ro remote-authentication-enabled?      boolean
+-          |        +--ro remote-control-plane-independent?   boolean
+-          |        +--ro async
+-          |           +--ro last-packet-transmitted?   uint64
+-          |           +--ro last-packet-received?      uint64
+-          |           +--ro transmitted-packets?       uint64
+-          |           +--ro received-packets?          uint64
+-          |           +--ro up-transitions?            uint64
+-          +--rw peers
+-             +--ro peer* [local-discriminator]
+-                +--ro local-discriminator    -> ../state/local-discriminator
+-                +--ro state
+-                   +--ro local-address?                      oc-inet:ip-address
+-                   +--ro remote-address?                     oc-inet:ip-address
+-                   +--ro subscribed-protocols*               identityref
+-                   +--ro session-state?                      bfd-session-state
+-                   +--ro remote-session-state?               bfd-session-state
+-                   +--ro last-failure-time?                  oc-types:timeticks64
+-                   +--ro failure-transitions?                uint64
+-                   +--ro local-discriminator?                string
+-                   +--ro remote-discriminator?               string
+-                   +--ro local-diagnostic-code?              bfd-diagnostic-code
+-                   +--ro remote-diagnostic-code?             bfd-diagnostic-code
+-                   +--ro remote-minimum-receive-interval?    uint32
+-                   +--ro demand-mode-requested?              boolean
+-                   +--ro remote-authentication-enabled?      boolean
+-                   +--ro remote-control-plane-independent?   boolean
+-                   +--ro echo
+-                   |  +--ro active?                    boolean
+-                   |  +--ro last-packet-transmitted?   uint64
+-                   |  +--ro last-packet-received?      uint64
+-                   |  +--ro transmitted-packets?       uint64
+-                   |  +--ro received-packets?          uint64
+-                   |  +--ro up-transitions?            uint64
+-                   +--ro async
+-                      +--ro last-packet-transmitted?   uint64
+-                      +--ro last-packet-received?      uint64
+-                      +--ro transmitted-packets?       uint64
+-                      +--ro received-packets?          uint64
+-                      +--ro up-transitions?            uint64
 
-+    +--bfd
-+       +--sessions
-+          +--single-hop[remote-address interface vrf]
-+             +--config		
-                 +--rw remote-address	oc-inet:ip-address
-                 +--rw interface [name]
-                 +--rw vrf [name]
-                 +--rw local-address oc-inet:ip-address
-                 +--rw desired-minimum-tx-interval uint32
-                 +--rw required-minimum-receive uint32
-                 +--rw desired-minimum-echo-receive uint32
-                 +--rw detection-multiplier uint8
-                 +--rw echo-active boolean
-+            +--stats
-                +--r session-state bfd-session-state
-                +--r remote-session-state bfd-session-state
-                +--r last-failure-time oc-types:timeticks64
-                +--r failure-transitions uint64
-                +--r local-discriminator string
-                +--r remote-discriminator string
-                +--r local-diagnostic-code bfd-diagnostic-code
-                +--r remote-diagnostic-code bfd-diagnostic-code
-                +--r remote-minimum-receive-interval uint32
-                +--r demand-mode-requested boolean
-                +--r remote-authentication-enabled boolean
-                +--r remote-control-plane-independent boolean
-                +--r session-type bfd-session-type
-                +--r remote-multiplier uint32
-                +--r local-multiplier uint32
-                +--r negotiated-transmission-interval uint32
-                +--r negotiated-receive-interval uint32
-                +--r last-up-time oc-types:timeticks64
-+               +--echo
-                   +--r active boolean
-                   +--r transmitted-packets uint64
-                   +--r received-packets uint64
-                   +--r up-transitions uint64
-+               +--async
-                   +--r transmitted-packets uint64
-                   +--r received-packets uint64
-                   +--r up-transitions uint64
-+            +--multi-hop[local-address remote-address interface vrf]
-+    		    +--config		
-                   +--rw remote-address oc-inet:ip-address
-                   +--rw interface [NAME]
-                   +--rw vrf [NAME]
-                   +--rw local-address oc-inet:ip-address
-                   +--rw desired-minimum-tx-interval
-                   +--rw required-minimum-receive uint32
-                   +--rw desired-minimum-echo-receive uint32
-                   +--rw detection-multiplier uint8
-                   +--rw echo-active boolean
-+               +--stats
-                   +--r session-state bfd-session-state
-                   +--r remote-session-state bfd-session-state
-                   +--r last-failure-time uint64
-                   +--r failure-transitions uint64
-                   +--r local-discriminator string
-                   +--r remote-discriminator string
-                   +--r local-diagnostic-code bfd-diagnostic-code
-                   +--r remote-diagnostic-code bfd-diagnostic-code
-                   +--r remote-minimum-receive-interval uint32
-                   +--r demand-mode-requested boolean uint32
-                   +--r remote-authentication-enabled boolean
-                   +--r remote-control-plane-independent boolean
-                   +--r session-type bfd-session-type
-                   +--r remote-multiplier uint32 
-                   +--r local-multiplier uint32
-                   +--r negotiated-transmission-interval uint32
-                   +--r negotiated-receive-interval uint32
-                   +--r last-up-time oc-types:timeticks64
-+                  +--echo
-                      +--r active boolean
-                      +--r transmitted-packets uint64
-                      +--r received-packets uint64
-                      +--r up-transitions uint64
-+                  +--async
-                      +--r transmitted-packets uint64
-                      +--r received-packets uint64
-                      +--r up-transitions uint64
 ```
+
 ### 3.2.2 CLI
 #### 3.2.2.1 Configuration Commands
 
 #### BFD mode
-sonic(config)#bfd
+sonic-cli(config)#bfd
 
 Enters the BFD configuration mode
 
@@ -192,12 +301,12 @@ Enters the BFD configuration mode
 `peer <A.B.C.D|X:X::X:X> {multihop|local-address <A.B.C.D|X:X::X:X>|interface IFNAME|vrf NAME}`
 
 ```
-sonic(config-bfd)# peer 192.168.0.1 interface Ethernet0
+sonic-cli(config-bfd)# peer 192.168.0.1 interface Ethernet0
 ```
 #### Peer Deletion
 `no peer <A.B.C.D|X:X::X:X> {multihop|local-address <A.B.C.D|X:X::X:X>|interface IFNAME|vrf NAME}`
 ```
-sonic(config-bfd)# no peer 192.168.0.1 interface Ethernet0
+sonic-cli(config-bfd)# no peer 192.168.0.1 interface Ethernet0
 ```
 #### Detection Multiplier
 `Default value is 3.`
@@ -205,7 +314,7 @@ sonic(config-bfd)# no peer 192.168.0.1 interface Ethernet0
 `detect-multiplier (2-255)`
 
 ```
-sonic(conf-bfd-peer)# detect-multiplier 3
+sonic-cli(conf-bfd-peer)# detect-multiplier 3
 ```
 
 #### Receive Interval
@@ -215,48 +324,48 @@ sonic(conf-bfd-peer)# detect-multiplier 3
 `receive-interval (10-60000)`
 
 ```
-sonic(conf-bfd-peer)# receive-interval 300
+sonic-cli(conf-bfd-peer)# receive-interval 300
 ```
 #### Transmit Interval
 `transmit-interval in milliseconds, default value is 300msec`
 
 `transmit-interval (10-60000)`
 ```
-sonic(conf-bfd-peer)# transmit-interval 300
+sonic-cli(conf-bfd-peer)# transmit-interval 300
 ```
 #### Echo Interval
 `echo-interval in milliseconds, default value is 50msec`
 
 `echo-interval (10-60000)`
 ```
-sonic(conf-bfd-peer)# echo-interval 50
+sonic-cli(conf-bfd-peer)# echo-interval 50
 ```
 #### Enable Echo mode
 `echo-mode`
 ```
-sonic(conf-bfd-peer)# echo-mode
+sonic-cli(conf-bfd-peer)# echo-mode
 ```
 #### Disable Echo mode
 `no echo-mode`
 ```
-sonic(conf-bfd-peer)# no echo-mode
+sonic-cli(conf-bfd-peer)# no echo-mode
 ```
 #### Admin shutdown
 `shutdown`
 ```
-sonic(conf-bfd-peer)# shutdown
+sonic-cli(conf-bfd-peer)# shutdown
 ```
 #### Admin UP
 `no shutdown`
 ```
-sonic(conf-bfd-peer)# no shutdown
+sonic-cli(conf-bfd-peer)# no shutdown
 ```
 
 #### 3.2.2.2 Show Commands
 #### Display all BFD Peers
 `show bfd peers [vrf NAME]`
 ```
-sonic# show bfd peers
+sonic-cli# show bfd peers
 BFD Peers:
         peer 192.168.0.1
                 ID: 1
@@ -297,10 +406,10 @@ BFD Peers:
                         Transmission interval: 300ms
                         Echo transmission interval: 50ms
 ```
-#### Display BFD peer briefly
+#### Display BFD peer brief
 `show bfd peers [vrf NAME] brief`
 ```
-sonic# show bfd peers brief 
+sonic-cli# show bfd peers brief 
 Session count: 1
 SessionId  LocalAddress         PeerAddress      Status    Vrf
 =========  ============         ===========      ======    =======
@@ -309,7 +418,7 @@ SessionId  LocalAddress         PeerAddress      Status    Vrf
 #### Display specific BFD peer
 `show bfd peer <<A.B.C.D|X:X::X:X> [{multihop|local-address <A.B.C.D|X:X::X:X>|interface IFNAME|[vrf NAME]}]`
 ```
-sonic# show bfd peer 192.168.1.1
+sonic-cli# show bfd peer 192.168.1.1
 BFD Peer:
             peer 192.168.1.1
                 label: router3-peer
@@ -336,7 +445,7 @@ BFD Peer:
 #### Display BFD peer counters
 `show bfd peer counters <A.B.C.D|X:X::X:X> [{multihop|local-address <A.B.C.D|X:X::X:X>|interface IFNAME|[vrf NAME]}]`
 ```
-sonic# show bfd peers counters
+sonic-cli# show bfd peers counters
 BFD Peers:
      peer 192.168.2.1 interface Ethernet0
              Control packet input: 28 packets
@@ -345,7 +454,7 @@ BFD Peers:
              Echo packet output: 0 packets
              Session up events: 1
              Session down events: 0
-             Zebra notifications: 2
+             Zebra notifications: 0
 
      peer 192.168.0.1
              Control packet input: 54 packets
@@ -354,9 +463,9 @@ BFD Peers:
              Echo packet output: 966 packets
              Session up events: 1
              Session down events: 0
-             Zebra notifications: 4
+             Zebra notifications: 0
 
-sonic# show bfd peer 192.168.0.1 counters
+sonic-cli# show bfd peer 192.168.0.1 counters
      peer 192.168.0.1
              Control packet input: 126 packets
              Control packet output: 247 packets
@@ -364,7 +473,7 @@ sonic# show bfd peer 192.168.0.1 counters
              Echo packet output: 2410 packets
              Session up events: 1
              Session down events: 0
-             Zebra notifications: 4
+             Zebra notifications: 0
 ```
 
 
@@ -374,22 +483,22 @@ sonic# show bfd peer 192.168.0.1 counters
 
 `debug bfd packets`
 ```
-sonic# debug bfd packets
+sonic-cli# debug bfd packets
 ```
 
 Yang files do not have support for debug command, debug command will be traslated to vtysh cli in the CLI actioner python script.
 
 #### 3.2.2.4 Exec Commands
 #### Clear BFD peer counters
-`clear bfd peers comamnd will only clear packet counters`
+`clear bfd peers command will only clear packet counters`
 
 `clear bfd peer counters <A.B.C.D|X:X::X:X> [{multihop|local-address <A.B.C.D|X:X::X:X>|interface IFNAME}|[vrf NAME]]>`
 
 ```
-sonic# clear bfd peer counters 192.168.0.1 
+sonic-cli# clear bfd peer counters 192.168.0.1 interface Ethernet0
 ```
 
-Yang files do not have support for Exec command, Exec command will be traslated to vtysh cli in the CLI actioner python script.
+Yang files do not have support for Exec command, Exec command will be translated to vtysh cli in the CLI actioner python script.
 
 ### 3.2.3 REST API Support
 
@@ -403,7 +512,7 @@ Two new table as below are defined to maintain BFD configuration.
   
   **BFD_PEER_SINGLE_HOP**
 ```
-key remote-address interface vrf 
+key remote-address interface vrf local-address 
 local-address 
 desired-minimum-tx-interval 
 required-minimum-receive 
