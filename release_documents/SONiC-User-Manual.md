@@ -808,6 +808,8 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 13 | CRM |[CRM CLI](Command-Reference.md#crm-configuration-and-show-commands) | N/A | To view the details about the CRM |
 | 14 | PFC |[PFC CLI](Command-Reference.md#pfc-configuration-and-show-commands) | N/A | To view the details about the PFC |
 | 15 | IGMP Snooping |[IGMP Snooping CLI](Command-Reference.md#pfc-configuration-and-show-commands) | [IGMP Snooping ConfigDB](Configuration.md) | To view the details about the IGMP Snooping |
+| 16 | OSPFv2 | [OSPFv2 CLI](Command-Reference.md#OSPFv2-configuration-and-show-commands) | N/A | To view the details about the OSPFv2 |
+
 
 # 5 Example Configuration
 

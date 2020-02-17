@@ -195,6 +195,12 @@ Table of Contents
          * [Update BUM Storm Control on interface](#Update-BUM-Storm-Control-on-interface)
          * [Disable BUM Storm Control on interface](#Disable-BUM-Storm-Control-on-interface)
       * [BUM Storm Control show commands](#BUM-Storm-Control-show-commands)
+   * [OSPFv2 Configuration And Show Commands](#ospfv2-configuration-and-show-commands)
+      * [OSPFv2 show commands](#ospfv2-show-commands)
+      * [OSPFv2 config commands](#ospfv2-config-commands)
+      * [OSPFv2 clear commands](#ospfv2-debug-commands)
+      * [OSPFv2 debug commands](#ospfv2-debug-commands)
+
 
 # Document History
 
@@ -9386,4 +9392,200 @@ Use this command to display BUM Storm Control configurations done on all the int
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BUM-Storm-Control-Configuration-and-Show-Commands)
+
+
+
+# OSPFv2 Configuration And Show Commands
+
+This section explains all the OSPFv2 show commands and OSPFv2 configuation commands of FRR routing software supported in SONiC.
+
+FRR routing software documentation can be found at: http://docs.frrouting.org/en/latest/
+
+Following features of FRR OSPFv2 proctocol is supported in this release of SONiC.
+  - One OSPF process (single instance) per SONiC system in BGP docker container
+  - Multi-VRF OSPF (OSPF in default and user VRFs)
+  - OSPF over SONiC Ethernet, PortChannel, VLAN IPv4 interfaces.
+  - OSPF in MCLAG Peers with unique IPv4 Addresses on LAG IPv4 interfaces.
+  - OSPF Type-1 to Type-5 LSAs
+  - Multi-Area OSPF
+  - OSPF Stub areas
+  - OSPF router ABR and ASBR roles
+  - OSPF packets simple password authentication
+  - OSPF packets authentication using MD5 HMACs
+  - OSPF Passive interfaces
+  - BFD on OSPF numbered interfaces
+  - Type-3 Summary LSA prefix substitution
+  - Type-3 Summary LSA filtering (using prefix/import/export lists)
+  - Route redistribution to/from OSPF
+  - Type-1 and type-2 metric for imported external protocol routes
+  - OSPF ECMP routes
+  - OSPF Warm reboot 
+  - Maximum of 50 OSPFv2 routers per OSPF area
+  - Maximum of 128 OSPFv2 enabled L3 interfaces 
+  - Maximum of 5000 Intra area routes or prefixes
+  - Maximum of 5000 Inter area summary routes
+  - Maximum of 40000 external (type-5) routes
+
+Following Configuration and Management features OSPFv2 proctocol is supported.
+  - OSPFv2 configuration commands using vtysh
+  - OSPFv2 show commands using vtysh
+  - SNMP AgentX protocol, providing MIB read-only access
+  - SNMP MIB as per RFC 1850 
+  - SONiC split docker routing config mode 
+
+All OSPFv2 configuration and show commands are supported only through vtysh command interface. Klish CLI interface and SONiC Config DB support is not available for OSPFv2 in this release. 
+
+In order to retain OSPFv2 configuration across BGP docker restart and SONiC system reboot,  SONiC docker routing config mode shall be set to "split" mode and FRR vtysh configuration mode shall be set to "integrated mode".   
+
+OSPF Router ID selection will be as per below preference
+ - OSPF router mode configured router id value
+ - If user configured router ID value is not present, then choose the most recently used router id value
+ - FRR Zebra daemon recommended value of Router ID. Zebra daemon will choose router id in below order
+    - FRR global mode configured router id value
+    - Highest IPv4 address value among SONiC physical and loopback interface IPv4 addresses.
+
+SONiC OSPFv2 supports only above listed fature capabilities of FRR OSPFv2. Some FRR OSPFv2 feature capabilities like multi-instance (mutiple ospf procesess), MPLS, Segment Routing etc are not supported in this release.
+
+SONiC OSPFv2 is Single inastnce FRR OSPFv2. Hence all OSPFv2 configuration commands shall ommit intance-id command parameter.
+
+SONiC IPv4 interfaces (Ethernet, VLAN, Portchannel) will be auto populated as FRR Zebra IPv4 interfaces. Only these auto populated IPv4 interfaces shall be used for OSPFv2 interface mode configurations
+
+FRR show commands start with command "show ip ospf ", with optional VRF and other command parameters.
+
+OSPFv2 route warm reboot can be enabled by enabling warm restart on four modules namely 'system', 'swss', 'teamd', and 'bgp' using SONiC CLI command 'config warm_restart enable'.  When warm restart is not enabled, upon system or bgp container restart, all the OSPFv2 routes will be newly populated into forwarding plane. When warm restart is enabled, upon warm reboot, system will reconcile all the OSPFv2 routes with forwarding plane.
+
+  
+## OSPFv2 show commands
+
+OSPF show command list is as below. Please refer to FRR User Manual for more details on these commands.
+
+        show ip ospf
+        show ip ospf interface [INTERFACE]
+        show ip ospf neighbor
+        show ip ospf neighbor INTERFACE
+        show ip ospf neighbor detail
+        show ip ospf neighbor INTERFACE detail
+        show ip ospf database
+        show ip ospf database (asbr-summary|external|network|router|summary)
+        show ip ospf database (asbr-summary|external|network|router|summary) LINK-STATE-ID
+        show ip ospf database (asbr-summary|external|network|router|summary)
+                        LINK-STATE-ID adv-router show ip ospf database
+                        (asbr-summary|external|network|router|summary) adv-router ADV-ROUTER
+        show ip ospf database (asbr-summary|external|network|router|summary) LINK-STATE-ID self-originate
+        show ip ospf database (asbr-summary|external|network|router|summary) self-originate
+        show ip ospf database max-age
+        show ip ospf database self-originate
+        show ip ospf route
+
+   
+
+## OSPFv2 config commands
+
+OSPF router configuration command is as below. Please refer to FRR User Manual for more details on these commands.
+
+        [no] router ospf [vrf NAME]
+
+   OSPF router mode config commands are as below 
+
+        [no] ospf router-id A.B.C.D
+
+        [no] area <A.B.C.D|(0-4294967295)> authentication message-digest
+        [no] area <A.B.C.D|(0-4294967295)> authentication
+        [no] area <A.B.C.D|(0-4294967295)> default-cost (0-16777215)
+        [no] area <A.B.C.D|(0-4294967295)> export-list NAME
+        [no] area <A.B.C.D|(0-4294967295)> filter-list prefix WORD <in|out>
+        [no] area <A.B.C.D|(0-4294967295)> import-list NAME
+        [no] area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [advertise [cost (0-16777215)]]
+        [no] area <A.B.C.D|(0-4294967295)> range A.B.C.D/M cost (0-16777215)
+        [no] area <A.B.C.D|(0-4294967295)> range A.B.C.D/M not-advertise
+        [no] area <A.B.C.D|(0-4294967295)> range A.B.C.D/M substitute A.B.C.D/M
+        [no] area <A.B.C.D|(0-4294967295)> shortcut <default|enable|disable>
+        [no] area <A.B.C.D|(0-4294967295)> stub no-summary
+        [no] area <A.B.C.D|(0-4294967295)> stub
+        [no] area <A.B.C.D|(0-4294967295)> virtual-link A.B.C.D [authentication [<message-digest|null>]] 
+                                           [<message-digest-key (1-255) md5 KEY|authentication-key AUTH_KEY>]
+        [no] area <A.B.C.D|(0-4294967295)> virtual-link A.B.C.D {hello-interval (1-65535)|
+                                           retransmit-interval (1-65535)| 
+                                           transmit-delay (1-65535)|dead-interval (1-65535)}
+
+        [no] auto-cost reference-bandwidth (1-4294967)
+        [no] default-information originate [{always|metric (0-16777214)|metric-type (1-2)|route-map WORD}]
+        [no] default-metric (0-16777214)
+        [no] distribute-list WORD out <kernel|connected|static|bgp>
+        [no] distance (1-255)
+        [no] distance ospf {intra-area (1-255)|inter-area (1-255)|external (1-255)}
+
+        [no] log-adjacency-changes detail
+        [no] log-adjacency-changes
+        [no] max-metric router-lsa administrative
+        [no] max-metric router-lsa on-shutdown (5-100)
+        [no] max-metric router-lsa on-startup (5-86400)
+
+        [no] neighbor A.B.C.D [priority (0-255) [poll-interval (1-65535)]]
+        [no] neighbor A.B.C.D poll-interval (1-65535) [priority (0-255)]
+
+        [no] network A.B.C.D/M area <A.B.C.D|(0-4294967295)>
+
+        [no] ospf router-id [A.B.C.D]
+        [no] passive-interface <IFNAME [A.B.C.D]|default>
+
+
+        [no] redistribute <kernel|connected|static|bgp> [{metric (0-16777214)|metric-type (1-2)|route-map WORD}]
+        [no] redistribute <ospf|table> (1-65535)[{metric (0-16777214)|metric-type (1-2)|route-map WORD}]
+        [no] refresh timer [(10-1800)]
+        [no] timers lsa min-arrival [(0-600000)]
+        [no] timers throttle lsa all [(0-5000)]
+        [no] timers throttle spf [(0-600000)(0-600000)(0-600000)]
+
+
+   OSPF interface mode config commands are as below 
+
+        [no] ip ospf [(1-65535)] area <A.B.C.D|(0-4294967295)> [A.B.C.D]
+        [no] ip ospf authentication <null|message-digest> [A.B.C.D]
+        [no] ip ospf authentication [A.B.C.D]
+        [no] ip ospf authentication-key AUTH_KEY [A.B.C.D]
+        [no] ip ospf bfd
+        [no] ip ospf cost (1-65535) [A.B.C.D]
+        [no] ip ospf dead-interval (1-65535) [A.B.C.D]
+        [no] ip ospf dead-interval minimal hello-multiplier (1-10) [A.B.C.D]
+        [no] ip ospf hello-interval (1-65535) [A.B.C.D]
+        [no] ip ospf message-digest-key (1-255) md5 KEY [A.B.C.D]
+        [no] ip ospf network <broadcast|non-broadcast|point-to-multipoint|point-to-point>
+        [no] ip ospf priority (0-255) [A.B.C.D]
+        [no] ip ospf retransmit-interval (3-65535) [A.B.C.D]
+        [no] ip ospf transmit-delay (1-65535) [A.B.C.D]
+
+
+## OSPFv2 clear commands
+
+OSPF clear commands are as below. Please refer to FRR User Manual for more details on these commands.
+
+        clear ip ospf [vrf NAME] interface IFNAME
+
+## OSPFv2 debug commands
+
+   OSPF debug config commands are as below. Please refer to FRR User Manual for more details on these commands.
+
+        [no] debug ospf event
+        [no] debug ospf ism
+        [no] debug ospf lsa
+        [no] debug ospf nsm
+        [no] debug ospf packet
+        [no] debug ospf zebra
+
+   Required log levels (debugging, informational, errors, etc) have to be enabled under "log syslog " to get above enabled logs in log file.
+
+   Debug file path can be configured under configuration mode as below
+
+        log file <file_path_and_name>
+
+        Example : log file /var/log/frr/frr.log
+
+
+<br>
+<br>
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ospfv2-configuration-and-show-commands)
+
+
+
 
