@@ -70,6 +70,7 @@ Table of Contents
          * [Syslog Server](#syslog-server)  
          * [IPv6 Link-local](#ipv6-link-local)  
          * [IFA](#ifa)  
+         * [PTP](#ptp)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1740,7 +1741,38 @@ IFA ingress node and egress node depend on ACL configuration with TAM specific a
         }
 }
 ```
+### PTP
 
+The global configurations of PTP are part of PTP_CLOCK table.
+The port level configurations are part of PTP_PORT table.
+
+```
+    "PTP_CLOCK": {
+        "GLOBAL": {
+            "clock-type": "BC",
+            "domain-number": "1",
+            "domain-profile": "ieee1588",
+            "log-announce-interval": "0",
+            "network-transport": "UDPv4",
+            "priority1": "110",
+            "priority2": "128",
+            "slave-only": "0",
+            "two-step-flag": "1",
+            "udp6-scope": "0xe",
+            "unicast-multicast": "unicast"
+        }
+    },
+    "PTP_PORT": {
+        "GLOBAL|Ethernet48": {
+            "underlying-interface": "Ethernet48",
+            "unicast-table": "192.168.64.1"
+        },
+        "GLOBAL|Ethernet60": {
+            "underlying-interface": "Ethernet60",
+            "unicast-table": "192.168.56.1"
+        }
+    }
+```
 
 For Developers
 ==============

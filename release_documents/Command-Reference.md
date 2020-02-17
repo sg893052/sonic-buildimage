@@ -176,6 +176,9 @@ Table of Contents
       * [IFA configuration commands](#IFA-configuration-commands)
       * [IFA clear commands](#IFA-clear-commands)
       * [IFA show commands](#IFA-show-commands)
+   * [PTP Configuration And Show Commands](#ptp-configuration-and-show-commands)
+      * [PTP configuration commands](#ptp-configuration-commands)
+      * [PTP show commands](#ptp-show-commands)
 
 # Document History
 
@@ -8497,5 +8500,176 @@ root@sonic:/home/admin# show tam-int-ifa statistics
 ```
 
 
+# PTP Configuration And Show Commands
+
+This section explains the Precision Time Protocol commands supported in SONiC.
+The details of these commands are available in KLISH CLI reference guide.
+
+## PTP configuration commands
+
+**ptp mode <boundary-clock/peer-to-peer-transparent-clock/end-to-end-transparent-clock/disable>**
+Configures the device ptp mode as boundary-clock, peer-to-peer-transparent-clock, end-to-end-transparent-clock or disables ptp.
+
+    Default:disable
+
+**ptp network-transport <l2/ipv4/ipv6> <unicast/multicast>**
+Configures the network transport used and whether unicast or multicast mode.
+
+    Default:l2
+
+**ptp ipv6-scope <0x0..0xf>**
+Configures the desired scope for the IPv6 multicast messages. This will be used as the second byte of the primary address and is relevant only in IPv6 multicast transp
+
+    Default: 0xe
+
+**ptp domain <0..127>**
+Configures the domain number to use for this clock.
+
+    Default: 0
+
+**ptp domain-profile <default/g8275.1/g8275.2>**
+Configures the method to be used when comparing data sets during the Best Master Clock Algorithm.
+
+    Default: default
+
+**ptp two-step <enable/disable>**
+Configures the two-step mode for sync messages. One-step mode can be used only with hardware time stamping.
+
+    Default: enable
+
+**ptp priority1 <0..255>**
+Configures the priority1 attribute of the local clock. It is used int he best master selection algorithm. Lower values take precedence.
+
+    Default: 128
+
+**ptp priority2 <0..255>**
+Configures the priority2 attribute of the local clock. It is used int he best master selection algorithm. Lower values take precedence.
+
+    Default: 128
+
+**ptp announce-timeout <2..128>**
+Configures the number of sync/follow up messages that may go missing before triggering a best master clock election.
+
+    Default: 3
+
+**ptp log-announce-interval <-128..128>**
+Configures the mean time interval between announce messages.
+
+    Default: 1
+
+**ptp log-sync-interval <-128..128>**
+Configures the mean time interval between sync messages.
+
+    Default: 0
+
+**ptp log-min-delay-req-interval <-128..128>**
+Configures the minimum permitted mean time interval between delay_req messages.
+
+    Default: 0
+
+**ptp port add <Interface Name>**
+Specifies the interface on which PTP is enabled.
+
+    Default: N/A
+
+**ptp port del <Interface Name>**
+Removes the interface on which PTP is enabled.
+
+    Default: N/A
+
+**ptp port master-table <Interface Name> add <master-ip-address>**
+Configures the set of master ip addresses that the slave port uses to initiate PTP communication. This is typically the IP address assigned to the interface attached t
+
+    Default: N/A
+
+**ptp port master-table <Interface Name> del <master-ip-address>**
+Removes from the set of master ip addresses that the slave port uses to initiate PTP communication. This is typically the IP address assigned to the interface attached
+
+    Default: N/A
+
+
+## PTP show commands
+
+**show ptp**
+
+Example output:
+
+    sonic# show ptp
+    ---------------------
+    Interface  State
+    ---------------------
+    Ethernet52  master
+    Ethernet64  slave
+
+
+**show ptp time-property**
+
+Example output:
+
+    sonic# show ptp time-property
+    Curr UTC Offset Vld  false
+    Curr UTC Offset      37
+    Leap59               false
+    Leap61               false
+    Time Traceable       false
+    Freq Traceable       false
+    PTP Timescale        true
+
+
+**show ptp clock**
+Example output:
+
+    sonic# show ptp clock
+    Mode                  BC
+    Domain Profile        ieee1588
+    Network Transport     L2 multicast
+    Domain Number         1
+    Clock Identity        b86a97.fffe.2ff1ba
+    Priority1             128
+    Priority2             128
+    Two Step              Enabled
+    Slave Only            False
+    Number Ports          2
+    Clock Quality:
+      Clock Class         248
+      Clock Accuracy      254
+      Ofst Scaled Log Var 65535
+    Mean Path Delay       0
+    Steps Removed         0
+    Ofst From Master      0
+
+**show ptp port**
+
+Example output:
+
+    sonic# show ptp port Ethernet 52
+    Port Number                    52
+    Port State                     master
+    Log Min delay Req Intvl        0
+    Peer Mean Path Delay           0
+    Log Announce Interval          1
+    Log Sync Interval              0
+    Delay Mechanism                e2e
+    Log Min PDelay Req Interval    0
+    Version Number                 2
+    Unicast Master Table:
+                                   192.168.64.1
+
+**show ptp parent**
+
+Example output:
+
+    sonic# show ptp parent
+    Parent Clock Identity          b86a97.fffe.2ff1ba
+    Port Number                    0
+    Grandmaster Clock Class        248
+    Grandmaster Off Scaled Log Var 65535
+    Grandmaster Clock Accuracy     254
+    Grandmaster Identity           b86a97.fffe.2ff1ba
+    Grandmaster Priority1          110
+    Grandmaster Priority2          128
+    Stats Valid                    False
+    Observed Off Scaled Log Var    65535
+    Observed Clock Phase Chg Rate  2147483647
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
