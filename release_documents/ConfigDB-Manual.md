@@ -57,6 +57,7 @@ Table of Contents
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
          * [Scheduler](#scheduler)  
+         * [Shaping (port and queue)](#shaping)  
          * [Spanning Tree (PVST)](#stp-pvst)  
          * [Tacplus Server](#tacplus-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
@@ -1281,6 +1282,55 @@ CPU Tx is configured to send to internal UC queue 9 with strict priority schedul
         "weight": "1"
     }
   }
+}
+```
+
+### Shaping
+
+Shaper attributes are defined as part of scheduler profile in **SCHEDULER** Table
+
+#### Port Shaping
+
+Shaping is applied to a port(or set of ports) by setting the scheduler profile name to the scheduler attribute of an interface(or set of interfaces) in **PORT_QOS_MAP** Table.
+
+In the example below, Port "Ethernet52" will be limited to 8Gbps (1 GB/sec)
+```
+{
+    "SCHEDULER": {
+        "scheduler.port": {
+            "meter_type": "bytes",
+            "pir": "1000000000",
+            "pbs": "8192"
+        }
+    },
+    "PORT_QOS_MAP": {
+        "Ethernet52": {
+            "scheduler": "[SCHEDULER|scheduler.port]"
+        }
+    }
+}
+```
+
+#### Queue Shaping
+
+Shaping is applied to queue(or set of queues) by setting the scheduler profile name to the scheduler attribute of the queue(or queue range) of an interface in the **QUEUE** Table.
+Queue shaping can be configured on any front panel port egress queue.
+
+In the example below, Port "Ethernet52" egress queues 0 through 5 will be limited to 10Gbps each (1.25 GB/sec)
+```
+{
+    "SCHEDULER": {
+        "scheduler.queue": {
+            "meter_type": "bytes",
+            "pir": "1250000000",
+            "pbs": "8192"
+        }
+    },
+    "QUEUE": {
+        "Ethernet52|0-5": {
+            "scheduler": "[SCHEDULER|scheduler.queue]"
+        }
+    }
 }
 ```
 
