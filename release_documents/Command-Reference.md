@@ -3,7 +3,7 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC 2.1.0 
+# Broadcom SONiC 3.0.0 
 ### Command Line Interface Guide
 <br>
 <br>
@@ -183,6 +183,7 @@ Table of Contents
 | --- | --- | --- | --- |
 | 1 | Sep 20, 2019 | v1 | Initial version |
 | 2 | Nov 22, 2019 | v2 | Broadcom SONiC 2.1.0 Release |
+| 3 | Feb 16, 2020 | v3 | Broadcom SONiC 3.0.0 Release |
 
 # Introduction
 SONiC is an open source network operating system based on Linux that runs on switches from multiple vendors and ASICs. SONiC offers a full-suite of network functionality, like BGP and RDMA, that has been production-hardened in the data centers of some of the largest cloud-service providers. It offers teams the flexibility to create the network solutions they need while leveraging the collective strength of a large ecosystem and community.
@@ -704,6 +705,79 @@ This command displays the status of the device's power supply units
   PSU 1  OK
   PSU 2  OK
   ```
+
+**show platform psusummary**  
+This command displays various manufacturer and runtime information of the device's power supply units. On the platforms where this command is not spported, deafult values e.g. None, 0, are printed in the output.
+
+- Usage:  
+  show platform psusummary
+
+- Example:
+  ```
+  admin@sonic:~$ show platform psusummary
+  PSU 1: NOT OK
+
+  PSU 2: OK
+  Manufacturer Id: 3Y POWER
+  Model: YM-2651Y
+  Serial Number: SA290N091739133077
+  Output Voltage (mV): 11906.0
+  Output Current (mA): 11421.0
+  Output Power (mW): 137000.0
+  Fan Direction: INTAKE
+  Fan Speed (RPM): 4696
+  admin@sonic:~$
+  ```
+  
+  ```
+  admin@sonic:~$ show platform psusummary
+  PSU 1: OK
+  Manufacturer Id: None
+  Model: None
+  Serial Number: None
+  Output Voltage (mV): None
+  Output Current (mA): None
+  Output Power (mW): None
+  Fan Direction: None
+  Fan Speed (RPM): 0
+
+  PSU 2: NOT OK
+  admin@sonic:~$
+  ```
+
+
+**show platform fanstatus**  
+This command displays various information of the device's FAN units. On the platforms where this command is not spported, nothing is printed in the output.
+
+- Usage:  
+  show platform fanstatus
+
+- Example:
+  ```
+  admin@sonic:~$ show platform fanstatus
+  FAN     Status      Speed (RPM)  Direction
+  ------  --------  -------------  -----------
+  FAN 1   OK                 8700  INTAKE
+  FAN 2   OK                 7500  INTAKE
+  FAN 3   OK                 8600  INTAKE
+  FAN 4   OK                 7300  INTAKE
+  FAN 5   OK                 8800  INTAKE
+  FAN 6   OK                 7500  INTAKE
+  FAN 7   OK                 8800  INTAKE
+  FAN 8   OK                 7500  INTAKE
+  FAN 9   OK                 8600  INTAKE
+  FAN 10  OK                 7300  INTAKE
+  FAN 11  OK                 8600  INTAKE
+  FAN 12  OK                 7300  INTAKE
+  admin@sonic:~$
+  ```
+
+  ```
+  admin@sonic:~$ show platform fanstatus
+  admin@sonic:~$
+  ```
+
+
 
 ### Transceivers
 Displays diagnostic monitoring information of the transceivers
@@ -7130,12 +7204,15 @@ This tool has facility to install an alternate image, list the available images 
 **sonic_installer install**  
 
 This command is used to install a new image on the alternate image partition.  This command takes a path to an installable SONiC image or URL and installs the image.
+This command has been enhanced to support sftp/scp protocol for image download as well. In such cases extra arguments like server address, username, password etc need to be provided.
 
   - Usage:    
-    sonic_installer install <path>  
+    sonic_installer install <URL path/local path to installable SONiC image>
+    or 
+    sonic_installer install --protocol <scp/sftp> --server <remote server address> --username <username to connect to the remote server> <File path on remote server>
 
 
-- Example:
+- Examples:
   ```	 
   admin@sonic:~$ sonic_installer install https://sonic-jenkins.westus.cloudapp.azure.com/job/xxxx/job/buildimage-xxxx-all/xxx/artifact/target/sonic-xxxx.bin
   New image will be installed, continue? [y/N]: y
@@ -7168,6 +7245,39 @@ This command is used to install a new image on the alternate image partition.  T
 
   Done
   ```
+
+  ```
+  admin@sonic:~$ sudo sonic_installer install --protocol scp --server 10.175.121.155 --username admin /home/admin/sonic-img/sonic-broadcom.bin
+  New image will be installed, continue? [y/N]: y
+  password:
+  Downloading image...
+  ...99%, 2 M101 KB 0 onds left...
+  Command: /tmp/sonic_image
+  Verifying image checksum ... OK.
+  Preparing image archive ... OK.
+  Installing SONiC in SONiC
+  ONIE Installer: platform: xxxx
+  onie_platform: xxxx
+  Installing SONiC to /host/image-xxxx
+  Directory /host/image-xxxx/ already exists. Cleaning up...
+  Archive:  fs.zip
+     creating: /host/image-xxxx/boot/
+    inflating: /host/image-xxxx/fs.squashfs
+  Installed SONiC base image SONiC-OS successfully
+
+  Command: grub-set-default --boot-directory=/host 0
+
+  Command: config-setup backup
+  Taking backup of curent configuration
+
+  Command: sync;sync;sync
+
+  Command: sleep 3
+
+  Done
+  ```
+
+
 
 **sonic_installer list**  
 

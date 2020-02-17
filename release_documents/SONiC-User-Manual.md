@@ -3,7 +3,7 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC 2.1.0 
+# Broadcom SONiC 3.0.0 
 ### User Manual
 <br>
 <br>
@@ -64,6 +64,7 @@ Table of Contents
 | --- | --- | --- | --- |
 | 1 |  Sep 20, 2019 |v1 | Initial version |
 | 2 |  Nov 22, 2019 |v2 | Broadcom SONiC 2.1.0 Release |
+| 3 |  Feb 16, 2020 |v3 | Broadcom SONiC 3.0.0 Release |
 
 
 <br>
@@ -453,7 +454,11 @@ This tool has facility to install an alternate image, list the available images 
 
 **sonic_installer install**  
 
-This command is used to install a new image on the alternate image partition.  This command takes a path to an installable SONiC image or URL and installs the image.
+This command is used to install a new image on the alternate image partition.  This command takes 
+ - A path to an installable SONiC image, or
+ - URL of the image, or
+ - Path of the image on a remote scp/sftp server, where the server address, protocol, username and password can be provided using the command line arguments
+
 After a successful installation, the new image is marked as the image that shall be used in next reboot. SONiC configuration files are also copied to a backup directory and
 restored when the switch reboots to the newly installed image version.
   - Following configuration files are migrated as part of the install command:
@@ -505,6 +510,74 @@ restored when the switch reboots to the newly installed image version.
 
   Done
   ```
+
+  ```
+  admin@sonic:~$ sudo sonic_installer install --protocol scp --server 10.175.121.155 --username admin /home/admin/sonic-img/sonic-broadcom.bin
+  New image will be installed, continue? [y/N]: y
+  password:
+  Downloading image...
+  ...99%, 2 M101 KB 0 seconds left...
+  Command: /tmp/sonic_image
+  Verifying image checksum ... OK.
+  Preparing image archive ... OK.
+  Installing SONiC in SONiC
+  ONIE Installer: platform: xxxx
+  onie_platform: xxxx
+  Installing SONiC to /host/image-xxxx
+  Directory /host/image-xxxx/ already exists. Cleaning up...
+  Archive:  fs.zip
+     creating: /host/image-xxxx/boot/
+    inflating: /host/image-xxxx/fs.squashfs
+  Installed SONiC base image SONiC-OS successfully
+
+  Command: grub-set-default --boot-directory=/host 0
+
+  Command: config-setup backup
+  Taking backup of curent configuration
+
+  Command: sync;sync;sync
+
+  Command: sleep 3
+
+  Done
+  ```
+
+  ```
+  admin@sonic:~$ sudo sonic_installer install --protocol sftp --server 10.59.132.53 --username root /root/sonic-broadcom.bin
+
+  New image will be installed, continue? [y/N]: y
+  password:
+  Downloading image...
+
+  ...1%, 27 MB, 27840 KB/s, 50 seconds left...
+  ...99%, 2 M101 KB 0 seconds left...
+  Command: /tmp/sonic_image
+  Verifying image checksum ... OK.
+  Preparing image archive ... OK.
+  Installing SONiC in SONiC
+  ONIE Installer: platform: xxxx
+  onie_platform: xxxx
+  Installing SONiC to /host/image-xxxx
+  Directory /host/image-xxxx/ already exists. Cleaning up...
+  Archive:  fs.zip
+     creating: /host/image-xxxx/boot/
+     creating: /host/image-xxxx/platform/x86_64-grub/
+    inflating: /host/image-xxxx/platform/x86_64-grub/grub-pc-bin_2.02~beta3-5+deb9u2_amd64.deb
+    inflating: /host/image-xxxx/fs.squashfs
+  Installed SONiC base image SONiC-OS successfully
+
+  Command: grub-set-default --boot-directory=/host 0
+
+  Command: config-setup backup
+  Taking backup of curent configuration
+
+  Command: sync;sync;sync
+
+  Command: sleep 3
+
+  Done
+  ```
+
 
 **sonic_installer list**  
 
