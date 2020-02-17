@@ -94,6 +94,8 @@ Table of Contents
       * [IP-Helper show commands](#ip-helper-show-commands)
       * [IP-Helper configuration commands](#ip-helper-configuration-commands)
       * [IP-Helper clear commands](#ip-helper-clear-commands) 
+   * [IPv4 Unnumbered Interface Commands](#ipv4-unnumbered-interface-commands)
+      * [IPv4 Unnumbered Interface configuration commands](#ipv4-unnumbered-interface-configuration-commands)
    * [LLDP](#lldp)
       * [LLDP show commands](#lldp-show-commands)
    * [Loading, Reloading And Saving Configuration](#loading-reloading-and-saving-configuration)
@@ -3988,7 +3990,7 @@ This command displays either all the route entries from the routing table or a s
 
 **show ip interfaces**  
 
-This command displays the details about all the Layer3 IP interfaces in the device for which IP address has been assigned. This command output has been extnded to display the asscoiated VRF for each L3 interface. A new column has been inserted to display the associated VRF name. If an interface belongs to default VRF, the VRF name displayed is blank.
+This command displays the details about all the Layer3 IP interfaces in the device for which IP address has been assigned. This command output has been extnded to display the asscoiated VRF for each L3 interface. A new column has been inserted to display the associated VRF name. If an interface belongs to default VRF, the VRF name displayed is blank. Flags Column field displays any flags assosiated with the interface.
 The type of interfaces include the following.
 1) Front panel physical ports.
 2) PortChannel.
@@ -3996,6 +3998,7 @@ The type of interfaces include the following.
 4) Loopback interfaces
 5) docker interface and
 6) management interface
+7) IPv4 Unnumbered interface (Denoted by 'U' in the Flags column)
 
   - Usage:  
     show ip interfaces
@@ -4003,14 +4006,16 @@ The type of interfaces include the following.
 - Example:
   ```  
 	admin@sonic:~$ show ip interfaces
-	Interface       IPv4 address/mask    Master    Admin/Oper
-	--------------  -------------------  --------  ------------
+	Interface       IPv4 address/mask    Master    Admin/Oper       Flags
+	--------------  -------------------  --------  ------------     -------
 	Ethernet100     161.29.39.25/27      Vrf-Edge  up/down
 	                12.46.83.58/29
 	Ethernet200     64.27.33.48/21       Vrf-Core  up/down
 	Ethernet204     179.13.79.31/24      Vrf-Core  up/up
 	Ethernet208     192.168.42.91/24     Vrf-Core  up/up
 	Ethernet212     27.135.72.19/24      Vrf-Core  up/down
+	Ethernet220  	3.3.3.3/32                     down/down        U
+	Loopback1    	3.3.3.3/32                     up/up 
 	PortChannel213  71.141.26.9/24       Vrf-Core  up/down
 	Vlan234         10.27.22.219/31      Vrf-Core  down/down
 	docker0         240.127.1.1/24                 up/down
@@ -4395,6 +4400,38 @@ IpHelper Address Statistics are cleared on Ethernet28
 ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ip-helper-commands)
+
+# IPv4 Unnumbered Interface Commands
+
+## IPv4 Unnumbered Interface configuration commands 
+This section explains all the commands that are supported in SONiC to configure IPv4 Unnumbered Interface.
+
+**config interface ip unnumbered add <interface_name> <donor_interface_name>**
+
+This command can be used to configure an IPv4 Unnumbered interface by specifying the Donor interface from which the IPv4 address will be borrowed.
+
+  - Usage:
+    sudo config interface ip unnumbered add <interface_name> <donor_interface_name> 
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface ip unnumbered add Ethernet0 Loopback1 
+  admin@sonic:~$ sudo config interface ip unnumbered add PortChannel1 Loopback1
+  ```
+
+**config interface ip unnumbered del <interface_name>**
+
+This command can be used to unconfigure an IPv4 Unnumbered interface.
+
+  - Usage:
+    sudo config interface ip unnumbered del <interface_name>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface ip unnumbered del Ethernet0
+  admin@sonic:~$ sudo config interface ip unnumbered del PortChannel1
+  ```
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ipv4-unnumbered-interface-commands)
 
 # LLDP
 

@@ -44,6 +44,7 @@ Table of Contents
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [IP Helper](#ip-helper)  
+         * [IPv4 Unnumbered Interface](#ipv4-unnumbered-interface)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [Management Interface](#management-interface)  
@@ -926,6 +927,25 @@ IP Helper global configuration is defined in **UDP_BROADCAST_FORWARDING** table.
         "Ethernet24": {
             "helper_addresses": ["31.1.0.2" , "2.2.2.3" , "vrf20|11.19.0.144"]
     },
+}
+```
+
+### IPv4 Unnumbered Interface
+
+The IPv4 unnumbered interface configuration is part of **INTERFACE** and **PORTCHANNEL_INTERFACE** table.
+
+```
+{
+	"INTERFACE": {
+		"Ethernet0": {
+			"unnumbered": "Loopback1"
+		}
+	},
+	"PORTCHANNEL_INTERFACE": {
+		"PortChannel1": {
+			"unnumbered": "Loopback1"
+		}
+	},
 }
 ```
 
