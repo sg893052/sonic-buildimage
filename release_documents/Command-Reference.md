@@ -181,6 +181,11 @@ Table of Contents
    * [PTP Configuration And Show Commands](#ptp-configuration-and-show-commands)
       * [PTP configuration commands](#ptp-configuration-commands)
       * [PTP show commands](#ptp-show-commands)
+  * [sFlow commands](#sflow-commands)
+      * [sFlow Global configuration commands](#sflow-global-configuration-commands)
+      * [sFlow Interface configuration commands](#sflow-interface-configuration-commands)
+      * [sFlow Global show commands](#sflow-global-show-commands)
+      * [sFlow Inteface show commands](#sflow-interface-show-commands)
 
 # Document History
 
@@ -8646,6 +8651,8 @@ root@sonic:/home/admin# show tam-int-ifa statistics
       flow1        rule1          acl1                9           9000
 ```
 
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#IFA-configuration-and-show-commands)
+
 
 # PTP Configuration And Show Commands
 
@@ -8818,5 +8825,275 @@ Example output:
     Stats Valid                    False
     Observed Off Scaled Log Var    65535
     Observed Clock Phase Chg Rate  2147483647
+
+# sFlow commands
+This section explains all the sFlow configuration commands and sFlow show commands that are supported in SONiC.
+
+## sFlow Global configuration commands
+
+Global sFlow configuration commands are executed in configuration-view.
+
+```
+sonic# configure terminal
+sonic(config)#
+```
+
+**sflow enable**      
+
+Globally, sFlow is disabled by default. This command enables global sFlow.
+
+- Usage:     
+  sflow enable
+
+- Example:
+  
+  ```
+  sonic(config)# sflow enable
+  ```
+
+**no sflow enable**
+
+This command disables global sFlow.
+
+- Usage:  
+  no sflow enable
+
+- Example:
+  ```   
+  sonic(config)# no sflow enable
+  ```
+
+**sflow collector {Collector name} {Collector IP address} [{Collector port number}]**
+
+Use this command to add sFlow collector.
+
+- Usage:  
+  sflow collector {Collector name} {Collector IP address} [{Collector port number}] 
+  
+    - Collector name: unique name of the sFlow collector
+    - Collector IP address : IPv4 or IPv6 address of the sFlow collector
+    - Collector port number[Optional]: UDP port of the collector (the range is from 0 to 65535. The default is 6343.)
+
+- Example-1 :
+  ```
+  sonic(config)# sflow collector collector1 10.0.0.1
+  ```
+
+- Example-2:
+  ```
+  sonic(config)# sflow collector collector2 20.0.0.1 9898
+  ```
+- Note:
+  Maximum of 2 collectors is allowed.
+
+**no sflow collector {Collector name}**
+
+Use this command to delete sFlow collector.
+
+- Usage:  
+  no sflow collector {Collector name} 
+
+  - Collector name: unique name of the sFlow collector
+
+- Example:
+  ```
+  sonic(config)# no sflow collector collector1
+  ```
+
+**sflow polling-interval {interval}**
+
+Use this command to configure sFlow polling-interval.
+
+- Usage:  
+  sflow polling-interval {interval}
+
+  - interval: [5 .. 300] (0 to disable, default is 20)
+- Example:
+  ```
+  sonic(config)# sflow polling-interval 100
+  ```  
+    
+**no sflow polling-interval**
+
+Use this command to reset sFlow polling-interval to default.
+
+- Usage:  
+  no sflow polling-interval
+
+- Example:
+  ```
+  sonic(config)# no sflow polling-interval
+  ```  
+
+**sflow agent {interface name}**
+
+Use this command to configure sFlow agent interface.
+
+- Usage:  
+  sflow agent {interface name}
+
+- Example:
+  ```
+  sonic(config)# sflow agent-id Ethernet 4
+  ```
+
+**no sflow agent-id**
+
+Use this command to reset sFlow agent to default interface.
+
+- Usage:  
+  no sflow agent-id
+
+- Example:
+  ```
+  sonic(config)# no sflow agent-id
+  ```
+
+## sFlow Interface configuration commands
+
+sFlow configurations for specific interface are executed in interface-configuration-view.
+
+```
+sonic# configure terminal
+sonic(config)# interface Ethernet 4
+sonic(conf-if-Ethernet4)#
+```
+
+**sflow sampling-rate {rate}**
+
+The default sample rate for any interface is (ifSpeed / 1e6) where ifSpeed is in bits/sec. 
+So, the default sample rate based on interface speed is:
+
+  - 1-in-1000 for a 1G link
+  - 1-in-10,000 for a 10G link
+  - 1-in-40,000 for a 40G link
+  - 1-in-50,000 for a 50G link
+  - 1-in-100,000 for a 100G link
+
+Use this command to configure sampling-rate for a specific interface.
+
+- Usage:  
+  sflow sampling-rate {rate}
+    - rate: [256..8388608]
+
+
+- Example:
+  ```
+  sonic(config)# interface Ethernet 4
+  sonic(conf-if-Ethernet4)# sflow sampling-rate 10000
+  ```  
+
+**no sflow sampling-rate**
+
+Use this command to reset sampling-rate to default for a specific interface.
+
+- Usage:  
+  no sflow sampling-rate
+
+- Example:
+  ```
+  sonic(config)# interface Ethernet 4
+  sonic(conf-if-Ethernet4)# no sflow sampling-rate
+  ```
+
+**no sflow enable**
+
+Use this command to explicitly disable sFlow for a specific interface.
+
+- Usage:  
+  no sflow enable      
+
+- Example:
+  ```
+  sonic(config)# interface Ethernet 4
+  sonic(conf-if-Ethernet4)# no sflow enable
+  ```
+
+**sflow enable**
+
+Use this command to enable sFlow for a specific interface.
+
+- Usage:  
+  sflow enable
+
+- Example:
+  ```
+  sonic(config)# interface Ethernet 4
+  sonic(conf-if-Ethernet4)# sflow enable
+  ```
+
+## sFlow Global show commands
+
+**show sflow**
+
+This command displays the current sFlow configuration including admin state, polling-interval, agent-id and collectors information.
+
+- Usage:  
+  show sflow  
+
+- Example:
+  ```
+  sonic# show sflow
+  ---------------------------------------------------------
+  Global sFlow Information
+  ---------------------------------------------------------
+	        admin state:            up
+	        polling-interval:       100
+	        agent-id:               default
+	        configured collectors:  2
+	            collector1		10.0.0.1   6343
+	            collector2		20.0.0.1   9898
+  ```
+## sFlow Interface show commands
+
+**show sflow interface**
+
+This command displays the current running configuration of sflow on interfaces
+
+- Usage:  
+  show sflow interface
+
+- Example:
+  ```
+    sonic# show sflow interface
+  -----------------------------------------------------------
+  sFlow interface configurations
+    Interface		Admin State		Sampling Rate
+    Ethernet0            up                      10000
+    Ethernet4            down                    10000
+    Ethernet8            up                      10000
+    Ethernet12           up                      10000
+    Ethernet16           up                      10000
+    Ethernet20           up                      10000
+    Ethernet24           up                      10000
+    Ethernet28           up                      10000
+    Ethernet32           up                      10000
+    Ethernet36           up                      10000
+    Ethernet40           up                      10000
+    Ethernet44           up                      10000
+    Ethernet48           up                      10000
+    Ethernet52           up                      10000
+    Ethernet56           up                      10000
+    Ethernet60           up                      10000
+    Ethernet64           up                      10000
+    Ethernet68           up                      10000
+    Ethernet72           up                      10000
+    Ethernet76           up                      10000
+    Ethernet80           up                      10000
+    Ethernet84           up                      10000
+    Ethernet88           up                      10000
+    Ethernet92           up                      10000
+    Ethernet96           up                      10000
+    Ethernet100          up                      10000
+    Ethernet104          up                      10000
+    Ethernet108          up                      10000
+    Ethernet112          up                      10000
+    Ethernet116          up                      10000
+    Ethernet120          up                      10000
+    Ethernet124          up                      10000
+  sonic#
+  ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#sflow-commands)
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)

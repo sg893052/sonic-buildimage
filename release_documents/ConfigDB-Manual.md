@@ -73,6 +73,7 @@ Table of Contents
          * [IPv6 Link-local](#ipv6-link-local)  
          * [IFA](#ifa)  
          * [PTP](#ptp)  
+         * [sFlow](#sflow)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1842,6 +1843,47 @@ The port level configurations are part of PTP_PORT table.
             "unicast-table": "192.168.56.1"
         }
     }
+```
+
+### sFlow
+
+sFlow global configuration attributes admin_state, agent_id and polling_interval are defined in **SFLOW\_TABLE** 
+
+```
+"SFLOW": {
+        "global": {
+            "admin_state": "up",
+            "agent_id": "Ethernet8",
+            "polling_interval": "100"
+        }
+    },
+```
+
+sFlow Collector configuration is defined in **SFLOW\_COLLECTOR\_TABLE**
+```
+    "SFLOW_COLLECTOR": {
+        "collector1": {
+            "collector_ip": "10.0.0.1",
+            "collector_port": "6343"
+        },
+        "collector2": {
+            "collector_ip": "20.0.0.1",
+            "collector_port": "9898"
+        }
+    },
+```
+
+Interface specific sFlow configuration attributes are defined in **SFLOW\_SESSION\_TABLE**
+```
+    "SFLOW_SESSION": {
+        "Ethernet0": {
+            "admin_state": "up",
+            "sample_rate": "1000"
+        },
+        "Ethernet4": {
+            "admin_state": "up"
+        }
+    },
 ```
 
 For Developers
