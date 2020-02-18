@@ -138,6 +138,7 @@ When the Helper address is configured on an interface and global UDP forwarding 
 - NetBIOS Name Server (port 137)
 - NetBIOS Datagram Server (port 138)
 - TACACS service (port 49)
+
 By default the forwarding to default UDP ports is disabled.
 
 User can exclude any of the default UDP ports from being forwarded to using the 'config ip forward_protocol udp remove [port]' command.
@@ -173,7 +174,7 @@ IP Helper Manager listens to the following events:
 - Interface table create/delete events from CONFIG_DB.
 - Flush notification event from UI to clear the statistics in the COUNTERS_IP_HELPER table.
 
-When the IP UDP forwarding is enabled, an ACL policy is added to trap the UDP broadcast packets to CPU at the configured rate limit value onto a low priority CoS queue 0.
+When the IP UDP forwarding is enabled, an ACL policy is added to trap the UDP broadcast packets to CPU at the configured rate limit value onto a low priority CoS queue 2.
 
 ### 3.1.2 Packet processing
 IP Helper Manager receives the broadcast and net-directed broadcast packets incoming on any interface, via UDP RAW sockets with the IP_PKTINFO socket option enabled.
@@ -345,6 +346,28 @@ Without the optional interface argument, the statistics are displayed for all th
     Invalid TTL packets                           :   22
     All ones broadcast packets received           :  602
     Net directed broadcast packets received       :  496
+
+# show ip helper-address statistics
+
+Ethernet24
+-----------
+  Packets received                              : 1098
+  Packets relayed                               :  980
+  Packets dropped                               :  118
+  Invalid TTL packets                           :   22
+  All ones broadcast packets received           :  602
+  Net directed broadcast packets received       :  496
+
+
+Ethernet28
+-----------
+  Packets received                              : 100
+  Packets relayed                               : 90
+  Packets dropped                               : 10
+  Invalid TTL packets                           : 5
+  All ones broadcast packets received           : 50
+  Net directed broadcast packets received       : 50
+```
 ```
 ### 3.4.4 Clear Commands
 
