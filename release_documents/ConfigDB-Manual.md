@@ -35,6 +35,7 @@ Table of Contents
          * [Cable length](#cable-length)  
          * [COPP_TABLE](#copp_table)  
          * [CORE DUMP](#core-dump)  
+         * [EVPN_NVO](#evpn_nvo)  
          * [Export Service](#export-service)  
          * [CRM](#crm)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
@@ -67,6 +68,8 @@ Table of Contents
          * [Versions](#versions)  
          * [VLAN](#vlan)  
          * [VLAN_MEMBER](#vlan_member)  
+         * [VXLAN_TUNNEL](#vxlan_tunnel)  
+         * [VXLAN_TUNNEL_MAP](#vxlan_tunnel_map)  
          * [WRED_PROFILE](#wred_profile)    
          * [Threshold](#threshold)  
          * [Syslog Server](#syslog-server)  
@@ -696,6 +699,19 @@ BFD_PEER_MULTI_HOP and BFD_PEER_SINGLE_HOP table can be used to configure BFD mu
     }
 } 
 
+```
+
+### EVPN_NVO 
+
+EVPN NVO object is used to associate the EVPN source IP with a configured
+VXLAN_TUNNEL object.
+
+```
+    "EVPN_NVO": {
+        "nvo1": {
+            "source_vtep": "vtep1"
+        }
+    }
 ```
 
 ### Export Service
@@ -1632,6 +1648,39 @@ table allow to change properties of a VRRP instance. Attributes:
         },
 }
 ```
+
+### VXLAN_TUNNEL
+
+The VXLAN_TUNNEL table is used to configure the VTEP. Only a single instance is supported in
+this release. This configures the IP address of the VTEP.
+
+```
+    "VXLAN_TUNNEL": {
+        "vtep1": {
+            "src_ip": "1.1.1.1"
+        }
+    }
+```
+
+### VXLAN_TUNNEL_MAP
+
+The VXLAN_TUNNEL_MAP table is used to configure the VLAN VNI mapping. The key 
+contains the VTEP name as well as the mapname. When configured through click 
+interface the mapname is generated in the format map_vnid_Vlanvlanid.
+
+```
+    "VXLAN_TUNNEL_MAP": {
+        "vtep1|map_50_Vlan5": {
+            "vlan": "Vlan5",
+            "vni": "50"
+        },
+        "vtep1|map_60_Vlan6": {
+            "vlan": "Vlan6",
+            "vni": "60"
+        }
+    }
+```
+
 
 ### WRED_PROFILE
 
