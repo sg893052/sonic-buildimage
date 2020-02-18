@@ -45,6 +45,7 @@ Table of Contents
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [IP Helper](#ip-helper)  
          * [IPv4 Unnumbered Interface](#ipv4-unnumbered-interface)  
+         * [KDUMP](#kdump)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [Management Interface](#management-interface)  
@@ -73,7 +74,7 @@ Table of Contents
          * [IPv6 Link-local](#ipv6-link-local)  
          * [IFA](#ifa)  
          * [PTP](#ptp)  
-         * [sFlow](#sflow) 
+         * [sFlow](#sflow)  
          * [BUM Storm Control](#BUM-Storm-Control)
          * [IGMP Snooping](#igmp-snooping)  
    * [For Developers](#for-developers)  
@@ -951,6 +952,22 @@ The IPv4 unnumbered interface configuration is part of **INTERFACE** and **PORTC
 			"unnumbered": "Loopback1"
 		}
 	},
+}
+```
+
+### KDUMP
+
+The KDUMP configuration is part of the **KDUMP** table.
+
+```
+{
+    "KDUMP": {
+        "config": {
+            "enabled": "true",
+            "num_dumps": "3",
+            "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
+        }
+    }
 }
 ```
 
