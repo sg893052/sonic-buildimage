@@ -143,7 +143,7 @@ Refer to section 1.1
 
 ## 2.3 Limitations
 BUM storm control 
-- Configuration is not supported on VLAN and port-channel interfaces. 
+- Configuration is not supported on VLAN and port-channel interfaces. User can configure on physical port which is part of a VLAN / port-channel.
 - Statistics is not supported. 
 - REST, gNMI and Klish CLI are not supported. 
  
@@ -235,22 +235,22 @@ Configuration is supported using Click CLI commands.
 
 ### 3.5.2 Configuration Commands
 BUM storm-control can be configured only on physical interfaces.  
-**switch# config interface storm-control {broadcast | unknown-unicast | unknown-multicast} {add|del} \<interface_name\> {kbps \<kilo_bits_per_second\>}**
+**switch# config interface storm-control {broadcast | unknown-unicast | unknown-multicast} {add|del} \<interface_name\> {\<kilo_bits_per_second\>}**
 
 
 #### 3.5.2.1 Enable Broadcast storm control on a physical interface
 This command configures broadcast storm-control on a physical interface. <br>
-**switch# config interface storm-control broadcast add \<interface_name\> {kbps \<kilo_bits_per_second\>}**
+**switch# config interface storm-control broadcast add \<interface_name\> {\<kilo_bits_per_second\>}**
 
 
 #### 3.5.2.1 Enable Unknown-unicast storm control on a physical interface
 This command configures unknown-unicast storm-control on a physical interface. <br>
-**switch# config interface storm-control unknown-unicast add \<interface_name\> {kbps \<kilo_bits_per_second\>}**
+**switch# config interface storm-control unknown-unicast add \<interface_name\> {\<kilo_bits_per_second\>}**
 
 
 #### 3.5.2.1 Enable Multicast storm control on a physical interface
 This command configures unknown-multicast storm-control on physical interface. <br>
-**switch# config interface storm-control unknown-multicast add \<interface_name\> {kbps \<kilo_bits_per_second\>}**
+**switch# config interface storm-control unknown-multicast add \<interface_name\> {\<kilo_bits_per_second\>}**
 
 
 ### 3.5.3 Show Commands
@@ -403,6 +403,7 @@ Internal BRCM information to be removed before sharing with the community
 Functionality cannot be supported on Tomahawk 3 platform unless FP entry based approach is used. 
 when rate is configured as 0 kbps, traffic doesnot get rate-limited. Instead it gets forwarded at line rate. This behavior is ASIC specific.
 Minimum rate at which traffic gets forwarded is ~64kbps and is ASIC specific. 
+On Trident-3 platform, in VFI mode, when BUM storm-control is enabled on a port which is part of port-channel, traffic doesnot get rate-limited.
 
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbLTE5Mjc1MzY4MzgsLTIwMzM1NDc2OTksMT

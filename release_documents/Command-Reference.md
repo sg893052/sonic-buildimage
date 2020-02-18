@@ -181,11 +181,17 @@ Table of Contents
    * [PTP Configuration And Show Commands](#ptp-configuration-and-show-commands)
       * [PTP configuration commands](#ptp-configuration-commands)
       * [PTP show commands](#ptp-show-commands)
-  * [sFlow commands](#sflow-commands)
+   * [sFlow commands](#sflow-commands)
       * [sFlow Global configuration commands](#sflow-global-configuration-commands)
       * [sFlow Interface configuration commands](#sflow-interface-configuration-commands)
       * [sFlow Global show commands](#sflow-global-show-commands)
       * [sFlow Inteface show commands](#sflow-interface-show-commands)
+   * [BUM Storm Control Configuration and Show Commands](#BUM-Storm-Control-Configuration-and-Show-Commands)
+      * [BUM Storm Control configuration commands](#BUM-Storm-Control-configuration-commands)
+         * [Enable BUM Storm Control on interface](#Enable-BUM-Storm-Control-on-interface)
+         * [Update BUM Storm Control on interface](#Update-BUM-Storm-Control-on-interface)
+         * [Disable BUM Storm Control on interface](#Disable-BUM-Storm-Control-on-interface)
+      * [BUM Storm Control show commands](#BUM-Storm-Control-show-commands)
 
 # Document History
 
@@ -9096,4 +9102,132 @@ This command displays the current running configuration of sflow on interfaces
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#sflow-commands)
 
-Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
+
+# BUM Storm Control Configuration and Show Commands
+
+This section explains the Broadcast, Unknown-unicast and Unknown-multicast commands supported in SONIC.
+
+## BUM Storm Control configuration commands
+
+This sub-section explains the list of configuration commands for BUM storm control on physical interface.
+
+### Enable BUM Storm Control on interface
+
+**config interface storm-control {broadcast | unknown-unicast | unknown-multicast} {add} \<interface_name\> \<kilo_bits_per_second\>**
+
+Use this command to enable BUM Storm Control on interface. 
+
+- Usage:
+  - config interface storm-control broadcast add {interface_name} {kbps_value}
+  - config interface storm-control unknown-unicast add {interface_name} {kbps_value}
+  - config interface storm-control unknown-multicast add {interface_name} {kbps_value}
+
+- Example:
+
+  ```
+  root@sonic:/home/admin# config interface storm-control broadcast add Ethernet0 10000
+  add broadcast storm-control
+  root@sonic:/home/admin# config interface storm-control unknown-unicast add Ethernet0 20000
+  add unknown-unicast storm-control
+  root@sonic:/home/admin# config interface storm-control unknown-multicast add Ethernet0 30000
+  add unknown-multicast storm-control
+  root@sonic:/home/admin# config interface storm-control broadcast add Ethernet1 40000
+  add broadcast storm-control
+  root@sonic:/home/admin# config interface storm-control unknown-unicast add Ethernet1 50000
+  add unknown-unicast storm-control
+  root@sonic:/home/admin# config interface storm-control unknown-multicast add Ethernet1 60000
+  add unknown-multicast storm-control
+  root@sonic:/home/admin# config interface storm-control broadcast add Ethernet2 40000
+  add broadcast storm-control
+  root@sonic:/home/admin# config interface storm-control unknown-unicast add Ethernet2 50000
+  add unknown-unicast storm-control
+  root@sonic:/home/admin# config interface storm-control unknown-multicast add Ethernet2 60000
+  add unknown-multicast storm-control
+  ```
+
+### Update BUM Storm Control on interface
+
+The command used to enable BUM Storm Control is taken as update when storm control is already enabled on the interface but the same command is given with a different value for kbps.
+
+- Example:
+
+  ```
+  root@sonic:/home/admin# config interface storm-control broadcast add Ethernet2 10000
+  add broadcast storm-control
+  Existing value of bps 40000
+  root@sonic:/home/admin# config interface storm-control unknown-unicast add Ethernet2 20000
+  add unknown-unicast storm-control
+  Existing value of bps 50000
+  root@sonic:/home/admin# config interface storm-control unknown-multicast add Ethernet2 30000
+  add unknown-multicast storm-control
+  Existing value of bps 60000
+  ```
+
+
+### Disable BUM Storm Control on interface
+
+**config interface storm-control {broadcast | unknown-unicast | unknown-multicast} {del} \<interface_name\>**
+
+Use this command to disable BUM Storm Control on interface
+
+- Usage:
+  - config interface storm-control broadcast del {interface_name}
+  - config interface storm-control unknown-unicast del {interface_name}
+  - config interface storm-control unknown-multicast del {interface_name}
+
+- Example:
+
+  ```
+  root@sonic:/home/admin# config interface storm-control broadcast del Ethernet2
+  root@sonic:/home/admin# config interface storm-control unknown-unicast del Ethernet2
+  root@sonic:/home/admin# config interface storm-control unknown-multicast del Ethernet2
+  ```
+
+
+## BUM Storm Control show commands
+
+This sub-section explains the list of show commands for BUM storm control
+
+**show storm-control {all | interface \<interface_name\>}**
+
+Use this command to display BUM Storm Control configurations done on all the interfaces in the device or on a particular interface. 
+
+- Usage:
+  - show storm-control all
+  - show storm-control interface {interface_name}
+
+- Example:
+
+  ```
+  admin@sonic:~$ show storm-control all
+  +------------------+-------------------+---------------+
+  | Interface Name   | Storm Type        |   Rate (kbps) |
+  +==================+===================+===============+
+  | Ethernet0        | broadcast         |         10000 |
+  +------------------+-------------------+---------------+
+  | Ethernet0        | unknown-multicast |         30000 |
+  +------------------+-------------------+---------------+
+  | Ethernet0        | unknown-unicast   |         20000 |
+  +------------------+-------------------+---------------+
+  | Ethernet1        | broadcast         |         40000 |
+  +------------------+-------------------+---------------+
+  | Ethernet1        | unknown-multicast |         60000 |
+  +------------------+-------------------+---------------+
+  | Ethernet1        | unknown-unicast   |         50000 |
+  +------------------+-------------------+---------------+
+
+  admin@sonic:~$ show storm-control interface Ethernet1
+  +------------------+-------------------+---------------+
+  | Interface Name   | Storm Type        |   Rate (kbps) |
+  +==================+===================+===============+
+  | Ethernet1        | broadcast         |         40000 |
+  +------------------+-------------------+---------------+
+  | Ethernet1        | unknown-unicast   |         50000 |
+  +------------------+-------------------+---------------+
+  | Ethernet1        | unknown-multicast |         60000 |
+  +------------------+-------------------+---------------+
+
+  ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BUM-Storm-Control-Configuration-and-Show-Commands)
+

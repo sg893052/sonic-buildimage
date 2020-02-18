@@ -73,7 +73,8 @@ Table of Contents
          * [IPv6 Link-local](#ipv6-link-local)  
          * [IFA](#ifa)  
          * [PTP](#ptp)  
-         * [sFlow](#sflow)
+         * [sFlow](#sflow) 
+         * [BUM Storm Control](#BUM-Storm-Control)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1884,6 +1885,25 @@ Interface specific sFlow configuration attributes are defined in **SFLOW\_SESSIO
             "admin_state": "up"
         }
     },
+```
+
+### BUM Storm Control
+Broadcast, Unknown-multicast and Unknown-unicast storm-control configuration is supported on Ethernet interfaces and the rate is configured in kbps.
+
+```
+{
+    "PORT_STORM_CONTROL": {
+        "Ethernet0:broadcast": {
+            "kbps": "100000"
+        },
+        "Ethernet0:unknown-multicast": {
+            "kbps": "300000"
+        },
+        "Ethernet0:unknown-unicast": {
+            "kbps": "200000"
+        }
+    }
+}
 ```
 
 For Developers
