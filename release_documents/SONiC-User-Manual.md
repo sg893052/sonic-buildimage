@@ -54,6 +54,7 @@ Table of Contents
       * [6.5 Isolate SONiC Device from the Network](#65-isolate-sonic-device-from-the-network)
       * [6.6 NAT troubleshooting](#66-nat-troubleshooting)
       * [6.7 Orchagent troubleshooting](#67-Orchagent-troubleshooting)
+      * [6.8 IGMP Snooping troubleshooting](#igmp-snooping-troubleshooting)
    * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
       * [7.1 Debug Framework](#71-debug-framework)
    * [8 Chef](#8-chef)
@@ -806,6 +807,7 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 12 | Error handling |[Error handling CLI](Command-Reference.md#error-handling-framework-configuration-and-show-commands) | N/A | To view the details about the Error handling framework |
 | 13 | CRM |[CRM CLI](Command-Reference.md#crm-configuration-and-show-commands) | N/A | To view the details about the CRM |
 | 14 | PFC |[PFC CLI](Command-Reference.md#pfc-configuration-and-show-commands) | N/A | To view the details about the PFC |
+| 15 | IGMP Snooping |[IGMP Snooping CLI](Command-Reference.md#pfc-configuration-and-show-commands) | [IGMP Snooping ConfigDB](Configuration.md) | To view the details about the IGMP Snooping |
 
 # 5 Example Configuration
 
@@ -1085,6 +1087,15 @@ All NAT related configuration done via CLI is saved in the REDIS database (CONFI
 
 Orchagent components like RouteOrch, NeighOrch, FdbOrch internal cache/datastructures can be debugged using "show debug <component> <cmd>" commands. For details please refer [here](Command-Reference.md#debug-framework-commands)
 
+## 6.8 IGMP Snooping troubleshooting
+All IGMP Snooping related configuration done via CLI is saved in the REDIS database (CONFIG_DB). Please follow below troubleshooting steps for debugging IGMP Snooping issues.
+
+- Check if IGMP Snooping enabled on VLAN using `show ip igmp snooping vlan <vlan-id>` CLI command to display snooping configuration applied on the VLAN.
+- Check if IGMP Snooping enabled on VLAN is created in CONFIG_DB/APPL_DB/ASIC_DB . Use `redis-cli` to verify DB entries created.
+- Check multicast entry learnt using  `show ip igmp snooping groups vlan <vlan-id>` CLI command to display all multicast groups learnt on given VLAN.
+- Check if the L2mc orchagent received multicast entry update.  Use `show debug l2mcorch all` command in the SONiC Click CLI shell.
+- Check if the multicast entries are installed in the switching ASIC. Use bcmcmd `ipmc table show`  BCM shell commands.
+- Check if the IPMC group created and member added to the group using `multicast show` BCM shell command.
 
 # 7 Common Framework Development & Usage 
 
@@ -1096,3 +1107,7 @@ Please refer to [Debug framework HLD](https://github.com/Azure/SONiC/pull/398) o
 
 # 8 Chef 
 The need for configuring a large number of devices arises with the continuous growth of data center and cloud environments. To make this task of configuration easy and automatic, different suite of tools are being developed. Chef is one such tool which helps the IT and Network configuration automation. Please refer the Chef User Guide for Chef usage in SONiC and for supported SONiC cookbook operations.
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbMTA0MTU5MTA5MCwtNjk5NDI2Njg4LC04Nj
+k1MjE1NzddfQ==
+-->

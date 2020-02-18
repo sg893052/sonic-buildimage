@@ -75,6 +75,7 @@ Table of Contents
          * [PTP](#ptp)  
          * [sFlow](#sflow) 
          * [BUM Storm Control](#BUM-Storm-Control)
+         * [IGMP Snooping](#igmp-snooping)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1885,6 +1886,39 @@ Interface specific sFlow configuration attributes are defined in **SFLOW\_SESSIO
             "admin_state": "up"
         }
     },
+
+### IGMP Snooping
+
+IGMP Snooping configuration is defined in **CFG_L2MC_TABLE**, static mrouter configuration is defined in **CFG_L2MC_MROUTER_TABLE**, and static IGMP group configuration is defined in **CFG_L2MC_STATIC_MEMBER_TABLE** table. And, all these table configurations are per VLAN.
+
+
+
+```
+{
+    "CFG_L2MC_TABLE": {
+        "Vlan200": {
+            "query-interval": "125", 
+            "enabled": "true", 
+            "version": "2", 
+            "last-member-query-interval": "1000", 
+            "querier": "false", 
+            "query-max-response-time": "10", 
+            "fast-leave": "false"
+        }
+    },
+    
+    "CFG_L2MC_MROUTER_TABLE": {
+        "Vlan200|Ethernet0": {
+            "mrouter_port": "Ethernet0"
+        }
+    }, 
+    
+    "CFG_L2MC_STATIC_MEMBER_TABLE": {
+        "Vlan200|225.0.0.1|Ethernet4": {
+            "port": "Ethernet4"
+        }
+    }
+}
 ```
 
 ### BUM Storm Control

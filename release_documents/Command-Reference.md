@@ -113,6 +113,9 @@ Table of Contents
       * [NAT clear commands](#nat-clear-commands) 
    * [NTP](#ntp)
       * [NTP show command](#network-time-protocol-show-command)
+   * [IGMP Snooping commands](#igmp-snooping-commands)
+      * [IGMP Snooping configuration commands](#igmp-snooping-configuration-commands)
+      * [IGMP Snooping show commands](#igmp-snooping-show-commands)
    * [Platform Specific Commands](#platform-specific-commands)
    * [PFC Configuration And Show Commands](#pfc-configuration-and-show-commands)
       * [PFC config commands](#pfc-config-commands)
@@ -5170,6 +5173,159 @@ This command displays a list of NTP peers known to the server as well as a summa
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#NTP)
 
+# IGMP Snooping Commands
+
+This section explains all the IGMP Snooping configuration and show commands that are supported in SONiC.
+
+
+## IGMP Snooping configuration commands 
+This section explains the list of configuration options available for IGMP snooping. Use `no` version of these commands to remove non-default values configured. 
+
+- Usage:
+```
+ip igmp snooping { [ querier ] | [ fast-leave ] | { [ query-interval ] <query-interval-val> } | { [ last-member-query-interval ] <last-mem-query-interval-val> } | { [ query-max-response-time ] <query-max-response-val> } | { [ version ] <igmps-version-val> } | { [ mrouter ] { interface <mrouter-if-name> } } | { [ static-group ] { <group-addr> { interface <grp-if-name> } } } }
+no ip igmp snooping { [ querier ] | [ fast-leave ] | [ query-interval ] | [ last-member-query-interval ] | [ query-max-response-time ] | [ version ] | { [ mrouter ] { interface <mrouter-if-name> } } | { [ static-group ] { <group-addr> { interface <grp-if-name> } } } }
+```
+
+**ip igmp snooping** 
+Use this command to configure IGMP Snooping on a VLAN.
+```
+sonic(config)# interface Vlan 200
+sonic(conf-if-Vlan200)# ip igmp snooping
+```
+**ip igmp snooping { [ querier ]}**
+Use this command to enable IGMP querier on VLAN, by default querier is disabled.
+```
+sonic(conf-if-Vlan)# ip igmp snooping querier
+```
+
+**ip igmp snooping {[ fast-leave ]}**
+Use this command to enable IGMP fast-leave on VLAN, by default fast-leave is disabled.
+```
+sonic(conf-if-Vlan)# ip igmp snooping fast-leave
+```
+
+**ip igmp snooping { [ query-interval ] \<query-interval-val> }**
+Use this command to configure IGMP query-interval, default interval is 125 seconds, range is from 1 to 18000 seconds.
+```
+sonic(conf-if-Vlan)# ip igmp snooping query-interval 20
+```
+
+**ip igmp snooping { [ last-member-query-interval ] \<last-mem-query-interval-val> }**
+Use this command to configure  last member query interval, default is 1000ms, the valid range is from 100ms to 25500ms.
+```
+sonic(conf-if-Vlan200)# ip igmp snooping last-member-query-interval 2000
+```
+
+**ip igmp snooping { [ query-max-response-time ] \<query-max-response-val> }**
+Use this command to configure max response interval, default is 10s, the valid range is from 1 to 25s.
+```
+sonic(conf-if-Vlan)# ip igmp snooping query-max-response-time 12
+```
+
+**ip igmp snooping { [ version ] \<igmps-version-val> }**
+Use this command to configure IGMP version, default is Version2, the valid range is from 1 to 3. 
+```
+sonic(conf-if-Vlan)# ip igmp snooping version 3
+```
+
+**ip igmp snooping { [ mrouter ] { interface \<mrouter-if-name> } }**
+Use this command to configure static multicast router(mrouter) port.
+
+```
+sonic(conf-if-Vlan2)# ip igmp snooping mrouter interface Ethernet4
+```
+
+**ip igmp snooping { [ static-group ] { \<group-addr> { interface \<grp-if-name> } } }**
+Use this command to configure static multicast group.
+```
+sonic(conf-if-Vlan)# ip igmp snooping static-group 225.0.0.1 interface PortChannel2
+```
+
+## IGMP Snooping show commands
+
+**show ip igmp snooping { [ vlan ] \<vlan-id> }**  
+
+This commands displays IGMP snooping configuration across all the VLANs or specified VLAN.
+
+
+- Usage:  
+  show ip igmp snooping
+
+- Example:
+```
+sonic# show ip igmp snooping
+Vlan ID: 100
+Querier: Disabled
+IGMP Operation mode: IGMPv1
+Is Fast-Leave Enabled: Disabled
+Query interval: 125
+Last Member Query Interval: 1000
+Max Response time: 10
+
+Vlan ID: 200
+Querier: Enabled
+IGMP Operation mode: IGMPv2
+Is Fast-Leave Enabled: Disabled
+Query interval: 125
+Last Member Query Interval: 1000
+Max Response time: 10
+
+Vlan ID: 300
+Querier: Enabled
+IGMP Operation mode: IGMPv3
+Is Fast-Leave Enabled: Disabled
+Query interval: 20
+Last Member Query Interval: 1000
+Max Response time: 10
+
+
+sonic# show ip igmp snooping vlan 200
+Vlan ID: 200
+Querier: Enabled
+IGMP Operation mode: IGMPv2
+Is Fast-Leave Enabled: Disabled
+Query interval: 125
+Last Member Query Interval: 1000
+Max Response time: 10
+
+```
+**show ip igmp snooping  groups {[ vlan ] \<vlan-id>}**  
+
+This commands displays IGMP snooping groups learnt  across all the VLANs or specified VLAN.
+
+- Usage:  
+  show ip igmp snooping
+
+- Example:
+
+```
+sonic# show ip igmp snooping groups
+Vlan ID: 100
+-----------
+1 ( *, 225.1.1.1)
+  Outgoing Ports: Ethernet4,PortChannel3
+2 ( *, 225.1.1.2)
+  Outgoing Ports: Ethernet8
+Total number of entries: 2
+
+Vlan ID : 300
+-------------
+1 (100.10.2.3, 226.0.0.1 )
+  Outgoing Ports: Ethernet8,Portchannel2
+Total number of entries: 1
+
+
+sonic# show ip igmp snooping groups vlan 100
+Vlan ID: 100
+-----------
+1 ( *, 225.1.1.1)
+  Outgoing Ports: Ethernet4, PortChannel3
+2 ( *, 225.1.1.2)
+  Outgoing Ports: Ethernet8
+Total number of entries: 2
+```
+Go Back To [Beginning of the document](#table-of-contents) or [Beginning of this section](#igmp-snooping-commands)
 
 # Platform Specific Commands
 
