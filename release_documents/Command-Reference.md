@@ -4821,22 +4821,36 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 This command displays all the mirror sessions that are configured. 
 
 - Usage:  
-  show mirror_session
+  show mirror_session [session_name]
 
 
 - Example:
   ``` 
-  admin@sonic:~$ show mirror session
-  Name       Status    SRC IP     DST IP    GRE    DSCP    TTL    Queue
-  ---------  --------  ---------  --------  -----  ------  -----  -------
-  everflow0  active    10.1.0.32  10.0.0.7
+  admin@sonic:~$ show mirror_session
+  ERSPAN Sessions
+  ---------------------------------------------------------------------------------------------------------
+  Name      Status    SRC IP    DST IP       GRE       DSCP    TTL    Queue  Policer    Monitor Port        SRC Port    Direction
+  --------  --------  --------  -----------  ------  ------  -----  -------  ---------  ------------------  ----------  -----------
+  mrr_ers   active  1.2.3.4   20.21.22.23  0x6558       8    100        0             oid:0x7f620b159b00  Ethernet0   both
+
+  SPAN Sessions
+  --------------------------------------------------------
+  Name      Status    DST Port    SRC Port    Direction
+  --------  --------  ----------  ----------  -----------
+  mrr_span  active    Ethernet4   Ethernet8   rx
                   
   ```
 
 ## Mirroring Config command
 
 This command is used to add or remove mirroring sessions. Mirror session is identified by "session_name". 
-While adding a new session, users need to configure the following fields that are used while forwarding the mirrored packets.
+
+While adding a new SPAN session, users need to configure the following fields that are used while forwarding the mirrored packets.
+1) Destination Port, 
+2) optional - Source Port, 
+3) optional - Direction. Supports rx/tx/both directions
+
+While adding a new ERSPAN session, users need to configure the following fields that are used while forwarding the mirrored packets.
 
 1) source IP address, 
 2) destination IP address, 
@@ -4844,21 +4858,75 @@ While adding a new session, users need to configure the following fields that ar
 4) TTL value
 5) optional - GRE Type in case if user wants to send the packet via GRE tunnel. GRE type could be anything; it could also be left as empty; by default, it is 0x8949 for Mellanox; and 0x88be for the rest of the chips.
 6) optional - Queue in which packets shall be sent out of the device. Valid values 0 to 7 for most of the devices. Users need to know their device and the number of queues supported in that device.
+7) optional - Source Port, 
+8) optional - Direction. Supports rx/tx/both directions
 
   - Usage:  
-    config mirror_session add <session_name> <src_ip> <dst_ip>  
-                                 <dscp> <ttl> [gre_type] [queue]
-
+    config mirror_session add span <session_name> <dst_port>  
+                                      [src_port] [direction]  
+      
+    config mirror_session add erspan <session_name> <src_ip> <dst_ip> <dscp> <ttl>  
+                                      [gre_type] [queue] [src_port] [direction]  
+      
 - Example:
+  ``` 
+    root@sonic:/home/admin# config mirror_session add erspan mrr_erspan 1.2.3.4 20.21.22.23 8 100 0x6558 0 Ethernet0 both
+    root@sonic:/home/admin# config mirror_session add span mrr_span Ethernet4 Ethernet8 rx
+    root@sonic:/home/admin# config mirror_session add erspan mrr_erspan_1 1.2.3.5 20.21.22.24 8 100 0x6558 0
+    root@sonic:/home/admin# config mirror_session add span mrr_span_1 Ethernet16
+    root@sonic:/home/admin# show mirror_session
+    ERSPAN Sessions
+    -------------------------------------------------------------------------------------------------------------------------------------
+    Name          Status    SRC IP    DST IP       GRE       DSCP    TTL    Queue  Policer    Monitor Port        SRC Port    Direction
+    ------------  --------  --------  -----------  ------  ------  -----  -------  ---------  ------------------  ----------  -----------
+    mrr_erspan_1  active  1.2.3.5   20.21.22.24  0x6558       8    100        0             oid:0x7f620b159b00
+    mrr_erspan      active  1.2.3.4   20.21.22.23  0x6558       8    100        0             oid:0x7f620b159b00  Ethernet0   both
+    
+    SPAN Sessions
+    --------------------------------------------------------
+    Name        Status    DST Port    SRC Port    Direction
+    ----------  --------  ----------  ----------  ----------
+    mrr_span    active    Ethernet4   Ethernet8   rx
+    mrr_span_1  active    Ethernet16
+                  
   ```
-	root@T1-2:~# config mirror_session add mrr_abcd 1.2.3.4 20.21.22.23 8 100 0x6558 0
-	root@T1-2:~# show mirror_session 
-	Name       Status    SRC IP       DST IP       GRE     DSCP    TTL    Queue
-	---------  --------  -----------  -----------  ------  ------  -----  -------
-	mrr_abcd   inactive  1.2.3.4      20.21.22.23  0x6558  8       100    0
-	root@T1-2:~#
 
-  ```
+
+## Mirroring configuration commands - KLISH
+
+The details of these commands are available in KLISH CLI reference guide.
+
+ **switch(config-mirror-<session-name>)# [no] destination <dest_ifName> [source <src_ifName> direction <rx/tx/both>]**  
+Create SPAN mirror session to mirror source port traffic to destination port.  
+The source port and direction are optional and allows destination only mirror session for ACL programming.  
+  
+ **switch(config-mirror-<session-name>)# [no] destination erspan src_ip <src_ip> dst_ip <dst_ip> dscp < dscp > ttl < ttl > [ gre < gre >] [queue <queue>] [source <src_ifName> direction <rx/tx>]**  
+Create ERSPAN mirror session to mirror source port traffic to destination host.  
+  
+ **switch(config)# [no] mirror-session <session-name>**   
+Remove mirror session configuration.  
+  
+
+## Mirroring show commands - KLISH
+
+**show mirror-session**
+
+Example output:
+
+    sonic# show mirror-session
+    ERSPAN Sessions
+    ---------------------------------------------------------------------------------------------------------------
+    Name      Status    SRC-IP          DST-IP          GRE   DSCP  TTL   Queue   Policer   SRC-Port        Direction
+    ---------------------------------------------------------------------------------------------------------------
+    mrr_1     active    1.2.3.4         20.21.22.23     0x65588     100   0                 Ethernet0       both
+    mrr_2     active    1.2.3.5         20.21.22.24     0x65588     100   0
+    SPAN Sessions
+    ---------------------------------------------------------------
+    Name      Status    DST-Port        SRC-Port        Direction
+    ---------------------------------------------------------------
+    mrr_sp    active    Ethernet4       Ethernet8       rx
+    mrr_sp_1  active    Ethernet16
+
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Mirroring-Configuration-And-Show)
 
