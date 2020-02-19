@@ -56,6 +56,7 @@ Table of Contents
       * [6.7 Orchagent troubleshooting](#67-Orchagent-troubleshooting)
       * [6.8 IGMP Snooping troubleshooting](#igmp-snooping-troubleshooting)
       * [6.9 PIM troubleshooting](#69-pim-troubleshooting)
+      * [6.10 System Resource Monitoring](#610-system-resource-monitoring)
    * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
       * [7.1 Debug Framework](#71-debug-framework)
    * [8 Chef](#8-chef)
@@ -1116,6 +1117,71 @@ All PIM configuration is done in the FRR VTYSH shell.  If the last-hop PIM route
 - Check if the multicast route entry is installed in the switching ASIC.  Use `bcmcmd 'ipmc table show'` and `bcmcmd 'multicast show'` commands in the SONiC Click CLI shell.
 - Check if the packet counters for the installed multicast route entry are incrementing.  Use `show interfaces counters` in the SONiC Click CLI shell.
 
+## 6.10 System Resource Monitoring
+- The system monitor service monitors the system resource usage and reports the alert message on the syslog console when resource usage crosses the predefined threshold limit. 
+- There are predefined threshold limits for each of the resource types.
+
+### System service monitoring
+- It monitors the system's core services and the ports initialization state. 
+- When the system boots up, the following message on the console indicates that the core services are up and the initialization of ports is done. 
+
+```
+   Feb 18 21:18:47.546456 System is ready
+```
+- The system status can also be viewed by the CLI command -'show system status'. When the system is up with core services, it will print the following message. 
+```
+  admin@sonic:~$ show system status
+  System is ready
+```
+- When one of the core services is down, it prints the following message.
+```
+  root@sonic:/home/admin# show system status
+  System is not ready - Core services are not up
+  swss       : Up
+  bgp        : Down
+  teamd      : Up
+  pmon       : Up
+  syncd      : Up
+  database   : Up
+  mgmt-framework : Up
+```
+- When core services are up, but the port init is not complete, it prints the following message.
+```
+  root@sonic:/home/admin# show system status
+  System is not ready - Ports are not up
+```
+
+### CPU/Memory/Disk usage monitoring
+- It also monitors the CPU/Memory/Disk usage and reports the alert message on the Syslog console. 
+
+### Memory monitoring
+- It monitors the memory usage on system-level and also on a per-process level
+- Report the alert message when it crosses the threshold limits.
+
+  Example:
+```
+  Jan 14 09:26:54.065576 sonic WARNING system#monitor: System free memory usage is below 28%, Total: 15.2G, Free: 4.3G, Used: 9.4G, Buffers: 231.3M, Cached: 1.3G, Avail: 5.5G
+  Jan 14 09:26:54.257784 sonic INFO system#monitor: MEM :: Name:syncd, Pid:16513, Rss:374.5M
+  Jan 14 09:26:54.258232 sonic INFO system#monitor: MEM :: Name:telemetry, Pid:22188, Rss:158.8M
+  ... etc
+```
+### CPU monitoring 
+- It reports the CPU usage of process when a high CPU condition is detected.
+
+  Example:
+```
+  Jan 14 09:21:45.794238 sonic CRIT system#monitor: CPU usage of process syncd[28697] is 98.6%
+  Jan 14 09:22:17.739944 sonic WARNING system#monitor: CPU usage of process syncd[6229] is 79.4%
+  Jan 14 09:22:23.011507 sonic ALERT system#monitor: CPU usage of process syncd[6229] is 82.7%
+```
+
+### Disk Partition Usage monitoring
+- It also monitors the disk partition usage and reports the alert message when usage crosses the pre-defined threshold limits.
+
+  Example:
+```
+  DISK usage of '/' is above [0-70%], Total: 28.6G, Free: 12.5G, Used: 14.7G
+```
 
 # 7 Common Framework Development & Usage 
 
