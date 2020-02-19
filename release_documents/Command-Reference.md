@@ -122,6 +122,13 @@ Table of Contents
       * [PFC show commands](#pfc-show-commands)
       * [pfcstat command](#pfcstat-command)
       * [PFC watchdog commands](#pfc-watchdog-commands)
+   * [PIM Source Specific Multicast](#pim-source-specific-multicast)
+      * [PIM configuration commands](#pim-configuration-commands)
+      * [PIM show commands](#pim-show-commands)
+         * [FRR VTYSH Shell](#frr-vtysh-shell)
+         * [SONiC Click CLI Shell](#sonic-click-cli-shell)
+      * [PIM clear commands](#pim-clear-commands)
+      * [PIM debug commands](#pim-debug-commands)
    * [PortChannel Configuration And Show](#portchannel-configuration-and-show)
       * [PortChannel Show commands](#portchannel-show-commands)
       * [PortChannel Config commands](#portchannel-config-commands)
@@ -5664,7 +5671,6 @@ This command displays/removes the Pause Frames statistics for Rx and Tx priority
   
   admin@sonic:~$ sudo pfcstat -c
   Clear saved counters       
-```
 
 ## PFC watchdog commands
 This section explains PFC Watchdog related commands that are supported in SONiC. 
@@ -5809,6 +5815,627 @@ If the interface_name is not specified, it displays the PFC watchdog configurati
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#PFC-Configuration-And-Show-Commands)
+
+# PIM Source Specific Multicast
+
+PIM source specific multicast (PIM-SSM) is supported in this SONiC release. PIM sparse mode functionality is not available yet. The following multicast features are supported in this SONiC release:
+```
+ 1. PIM-SSM,
+ 2. IGMP versions v2 and v3.
+```
+
+
+PIM and IGMP configuration and show commands are available only via FRR vtysh shell. FRR split mode configuration (config routing_config_mode split) is required in SONiC. And FRR configuration is required to be saved (write memory) from vtysh in order to retain across reloads.
+
+## PIM Configuration Commands
+
+PIM SSM configuration example is provided below.
+
+```
+ip pim join-prune-interval 90
+ip pim ssm prefix-list ssm_list
+ip pim ecmp rebalance
+service integrated-vtysh-config
+!
+vrf Vrf_RED
+ ip pim ecmp rebalance
+ ip pim join-prune-interval 90
+ ip pim ssm prefix-list ssm_list
+ exit-vrf
+!
+interface vlan10
+ ip pim
+ ip pim bfd
+ ip pim drpriority 100
+ ip pim hello 15
+!
+interface Vlan100 vrf Vrf_RED
+ ip pim
+ ip pim bfd
+ ip pim drpriority 100
+ ip pim hello 15
+!
+interface Vlan20
+ ip igmp
+ ip pim
+ ip pim bfd
+ ip pim drpriority 100
+ ip pim hello 15
+!
+interface Vlan200 vrf Vrf_RED
+ ip igmp
+ ip pim
+ ip pim bfd
+ ip pim drpriority 100
+ ip pim hello 15
+!
+ip prefix-list ssm_list seq 5 permit 232.0.0.0/24
+!
+```
+
+The above configuration example shows the PIM-SSM/IGMP configuration for the default VRF and the non-default VRF (Vrf_RED). PIM is enabled on the upstream interface (Vlan10 and Vlan100, the interfaces towards the multicast source, called IIF) and IGMP and PIM are enabled on the downstream interface (Vlan20 and Vlan200, the interfaces towards the multicast host or a downstream PIM router).  PIM adjacency is established on on the upstream interfaces, Vlan10 and Vlan100.  The example also shows that PIM is enabled for BFD.
+
+
+
+## PIM Show Commands
+
+### FRR VTYSH Shell
+
+PIM show commands listed below are available only from FRR vtysh shell.
+
+PIM global configuration parameters, total multicast route count and other PIM related information is displayed using the below command.
+
+```
+sonic# show ip multicast
+Router MLAG Role: NONE
+Mroute socket descriptor: 7(default)
+Mroute socket uptime: 01:36:44
+
+Zclient update socket: 11 failures=0
+Zclient lookup socket: 12 failures=0
+
+Maximum highest VifIndex: 31
+Total number of PIM/IGMP enabled interfaces: 3
+
+Total Dynamic Multicast routes in VRF default: 1
+Total Dynamic Uninstalled Multicast routes in VRF default: 0
+Total Static Multicast routes in VRF default: 0
+Total Static Uninstalled Multicast routes in VRF default: 0
+Total Static Failed Multicast routes in VRF default: 0
+Total Uninstalled Multicast routes in VRF default: 0
+Total Multicast routes in VRF default: 1
+
+Total Dynamic Multicast routes across all VRFs: 2
+Total Dynamic Uninstalled Multicast routes across all VRFs: 0
+Total Static Multicast routes across all VRFs: 0
+Total Static Uninstalled Multicast routes across all VRFs: 0
+Total Uninstalled Multicast routes across all VRFs: 0
+Total Multicast routes across all VRFs: 2
+
+Upstream Join Timer: 90 secs
+Join/Prune Holdtime: 315 secs
+PIM ECMP: Enable
+PIM ECMP Rebalance: Enable
+
+RPF Cache Refresh Delay:    50 msecs
+RPF Cache Refresh Timer:    0 msecs
+RPF Cache Refresh Requests: 0
+RPF Cache Refresh Events:   0
+RPF Cache Refresh Last:     --:--:--
+Nexthop Lookups:            6
+Nexthop Lookups Avoided:    0
+
+Scan OIL - Last: 01:08:42  Events: 7
+MFC Add  - Last: 01:08:42  Events: 3
+MFC Del  - Last: 01:09:04  Events: 4
+
+Interface        Address            ifi Vif  PktsIn PktsOut    BytesIn   BytesOut
+Vlan10           192.168.10.1     66   2       0       0          0          0
+Vlan20           192.168.20.1     68   1       0       0          0          0
+vlan10           0.0.0.0           0  -1       0       0          0          0
+sonic#
+```
+
+
+
+PIM interface status is displayed using the below command.
+
+```
+sonic# show ip pim vrf all interface
+VRF: Vrf_RED
+Interface         State          Address  PIM Nbrs           PIM DR  FHR IfChannels
+Vlan100              up    192.168.100.1         1            local    0          0
+Vlan200              up    192.168.200.1         0            local    0          1
+VRF: default
+Interface         State          Address  PIM Nbrs           PIM DR  FHR IfChannels
+Vlan10               up     192.168.10.1         1            local    0          0
+Vlan20               up     192.168.20.1         0            local    0          1
+```
+
+
+
+PIM interface related operational information in detail is displayed using the below command.
+
+```
+sonic# show ip pim interface Vlan10
+Interface  : Vlan10
+State      : up
+Address    : 192.168.10.1 (primary)
+
+Designated Router
+-----------------
+Address                : 192.168.10.1
+Local DR Priority      : 1
+Neighbors that didn't
+ advertise DR Priority : 0
+Uptime                 : --:--:--
+Elections              : 0
+Changes                : 0
+
+
+FHR - First Hop Router
+----------------------
+232.1.2.1 : 192.168.10.10 is a source, uptime is 01:29:05
+
+
+Hellos
+------
+Period         : 30
+Timer          : 00:00:14
+StatStart      : 01:30:46
+Receive        : 27
+Receive Failed : 0
+Send           : 182
+Send Failed    : 0
+Generation ID  : 4b375a30
+
+
+Flags
+-----
+All Multicast   : no
+Broadcast       : yes
+Deleted         : no
+Interface Index : 66
+Multicast       : yes
+Multicast Loop  : 0
+Promiscuous     : no
+
+
+Join Prune Interval
+-------------------
+LAN Delay                    : yes
+Effective Propagation Delay  : 0 msec
+Effective Override Interval  : 0 msec
+Join Prune Override Interval : 0 msec
+
+
+LAN Prune Delay
+---------------
+Propagation Delay           : 500 msec
+Propagation Delay (Highest) : 0 msec
+Override Interval           : 2500 msec
+Override Interval (Highest) : 0 msec
+
+
+sonic#
+```
+
+
+
+IGMP interface status is displayed using the below command.
+
+```
+sonic# show ip igmp vrf all interface
+VRF: Vrf_RED
+Interface         State          Address  V  Querier  Query Timer    Uptime
+Vlan100              up    192.168.100.1  3    local     00:01:33  115:09:34
+Vlan200              up    192.168.200.1  3    local     00:02:01  115:06:56
+VRF: default
+Interface         State          Address  V  Querier  Query Timer    Uptime
+Vlan10             mtrc     192.168.10.1  3    other     --:--:--  115:08:42
+Vlan20               up     192.168.20.1  3    local     00:02:01  115:07:01
+sonic#
+```
+
+
+
+PIM packet send/receive statistics per interface are displayed using the below command.
+
+```
+sonic# show ip pim vrf all interface traffic
+VRF: Vrf_RED
+
+Interface              HELLO            JOIN            PRUNE         REGISTER      REGISTER-STOP      ASSERT           BSM
+                       Rx/Tx            Rx/Tx           Rx/Tx            Rx/Tx           Rx/Tx           Rx/Tx           Rx/Tx
+--------------------------------------------------------------------------------------------------------------------------------
+Vlan100                 39/42            0/19            0/0             0/0             0/0             0/0             0/0
+Vlan200                 0/407            27/0            0/0             0/0             0/0             0/0             0/0
+VRF: default
+
+Interface              HELLO            JOIN            PRUNE         REGISTER      REGISTER-STOP      ASSERT           BSM
+                       Rx/Tx            Rx/Tx           Rx/Tx            Rx/Tx           Rx/Tx           Rx/Tx           Rx/Tx
+--------------------------------------------------------------------------------------------------------------------------------
+Vlan10                  41/38            0/17            0/0             0/0             0/0             0/0             0/0
+Vlan20                  0/408            11/0            0/0             0/0             0/0             0/0             0/0
+sonic#
+```
+
+
+
+PIM neighbors are displayed using the below command.
+
+```
+sonic# show ip pim neighbor
+Interface         Neighbor    Uptime  Holdtime  DR Pri
+Vlan10        192.168.10.2  00:00:37  00:01:38       1
+sonic#
+
+sonic# show ip pim vrf Vrf_RED neighbor
+Interface         Neighbor    Uptime  Holdtime  DR Pri
+Vlan100       192.168.100.2 00:00:37  00:01:38       1
+sonic#
+```
+
+
+
+IGMP group membership information is displayed using the below command.
+
+```
+sonic# show ip igmp vrf all groups
+VRF: Vrf_RED
+Interface        Address         Group           Mode Timer    Srcs V Uptime
+Vlan200          192.168.200.1   232.1.2.1       INCL --:--:--    1 3 94:57:43
+VRF: default
+Interface        Address         Group           Mode Timer    Srcs V Uptime
+Vlan20           192.168.20.1    232.1.2.1       INCL --:--:--    1 3 94:57:51
+sonic#
+```
+
+
+
+IGMP group and source related membership information is displayed using the below command.
+
+```
+sonic# show ip igmp vrf all sources
+VRF: Vrf_RED
+Interface        Address         Group           Source          Timer Fwd Uptime
+Vlan200          192.168.200.1   232.1.2.1       192.168.100.10  02:26   Y 94:57:52
+VRF: default
+Interface        Address         Group           Source          Timer Fwd Uptime
+Vlan20           192.168.20.1    232.1.2.1       192.168.10.10   02:19   Y 94:58:00
+sonic#
+```
+
+
+
+Multicast routes are displayed using below command.
+
+```
+sonic# show ip mroute vrf all
+VRF: Vrf_RED
+  * -> indicates installed route
+  Source          Group           Proto  Input            Output           TTL  Uptime
+* 192.168.100.10  232.1.2.1       IGMP   Vlan100          Vlan200          1    00:59:25
+VRF: default
+  * -> indicates installed route
+  Source          Group           Proto  Input            Output           TTL  Uptime
+* 192.168.10.10   232.1.2.1       IGMP   Vlan10           Vlan20           1    00:59:52
+sonic#
+```
+
+
+
+The below command displays the number of multicast routes in the MRIB and if they are installed in the linux kernel.
+
+```
+sonic# show ip mroute vrf all summary
+VRF: Vrf_RED
+Mroute Type    Installed/Total
+(*, G)               0/0
+(S, G)               1/1
+------
+Total                1/1
+VRF: default
+Mroute Type    Installed/Total
+(*, G)               0/0
+(S, G)               1/1
+------
+Total                1/1
+sonic#
+```
+
+
+
+The below command displays the software forwarded multicast data packets by the linux kernel.
+
+```
+sonic# show ip mroute vrf all count
+VRF: Vrf_RED
+
+Source          Group           LastUsed Packets Bytes WrongIf
+192.168.100.10  232.1.2.1       0        0       0          0
+VRF: default
+
+Source          Group           LastUsed Packets Bytes WrongIf
+192.168.10.10   232.1.2.1       0        0       0          0
+sonic#
+```
+
+
+
+PIM SSM range prefix list details are displayed using the below command.
+
+```
+sonic# show ip pim vrf all group-type
+VRF: Vrf_RED
+SSM group range : ssm_list
+VRF: default
+SSM group range : ssm_list
+sonic#
+```
+
+
+
+PIM upstream Join state information is displayed using the below command.
+
+```
+sonic# show ip pim vrf all join
+VRF: Vrf_RED
+Interface        Address         Source          Group           State      Uptime   Expire Prune
+Vlan200          192.168.200.1   192.168.100.10  232.1.2.1       NOINFO     --:--:-- --:--  --:--
+VRF: default
+Interface        Address         Source          Group           State      Uptime   Expire Prune
+Vlan20           192.168.20.1    192.168.10.10   232.1.2.1       NOINFO     --:--:-- --:--  --:--
+sonic#
+```
+
+
+
+PIM local membership details are displayed using the below command.
+
+```
+sonic# show ip pim vrf all local-membership
+VRF: Vrf_RED
+Interface         Address          Source           Group            Membership
+Vlan200           192.168.200.1    192.168.100.10   232.1.2.1        INCLUDE
+VRF: default
+Interface         Address          Source           Group            Membership
+Vlan20            192.168.20.1     192.168.10.10    232.1.2.1        INCLUDE
+sonic#
+```
+
+
+
+PIM RPF nexthop information registered with Zebra is displayed using the below command.
+
+```
+sonic# show ip pim vrf all nexthop
+VRF: Vrf_RED
+Number of registered addresses: 1
+Address         Interface        Nexthop
+---------------------------------------------
+192.168.100.10  Vlan100          192.168.100.10
+VRF: default
+Number of registered addresses: 1
+Address         Interface        Nexthop
+---------------------------------------------
+192.168.10.10   Vlan10           192.168.10.10
+sonic#
+```
+
+
+
+PIM upstream RPF related information is displayed using the below command.
+
+```
+sonic# show ip pim vrf all rpf
+VRF: Vrf_RED
+RPF Cache Refresh Delay:    50 msecs
+RPF Cache Refresh Timer:    0 msecs
+RPF Cache Refresh Requests: 0
+RPF Cache Refresh Events:   0
+RPF Cache Refresh Last:     --:--:--
+Nexthop Lookups:            4
+Nexthop Lookups Avoided:    0
+
+Source          Group           RpfIface         RpfAddress      RibNextHop      Metric Pref
+192.168.100.10  232.1.2.1       Vlan100          0.0.0.0         192.168.100.10       0    0
+VRF: default
+RPF Cache Refresh Delay:    50 msecs
+RPF Cache Refresh Timer:    0 msecs
+RPF Cache Refresh Requests: 0
+RPF Cache Refresh Events:   0
+RPF Cache Refresh Last:     --:--:--
+Nexthop Lookups:            6
+Nexthop Lookups Avoided:    0
+
+Source          Group           RpfIface         RpfAddress      RibNextHop      Metric Pref
+192.168.10.10   232.1.2.1       Vlan10           0.0.0.0         192.168.10.10        0    0
+sonic#
+```
+
+
+
+PIM downstream state information is displayed using the below command.
+
+```
+sonic# show ip pim vrf all state
+VRF: Vrf_RED
+Codes: J -> Pim Join, I -> IGMP Report, S -> Source, * -> Inherited from (*,G), V -> VxLAN
+Installed Source           Group            IIF               OIL
+1         192.168.100.10   232.1.2.1        Vlan100           Vlan200(IJ  )
+
+VRF: default
+Codes: J -> Pim Join, I -> IGMP Report, S -> Source, * -> Inherited from (*,G), V -> VxLAN
+Installed Source           Group            IIF               OIL
+1         192.168.10.10    232.1.2.1        Vlan10            Vlan20(IJ  )
+
+sonic#
+```
+
+
+
+PIM upstream state and timers related information is displayed using the below command.
+
+```
+sonic# show ip pim vrf all upstream
+VRF: Vrf_RED
+Iif             Source          Group           State       Uptime   JoinTimer RSTimer   KATimer   RefCnt
+Vlan100         192.168.100.10  232.1.2.1       J           01:23:08 --:--:--  --:--:--  00:02:59       2
+VRF: default
+Iif             Source          Group           State       Uptime   JoinTimer RSTimer   KATimer   RefCnt
+Vlan10          192.168.10.10   232.1.2.1       J           01:23:35 --:--:--  --:--:--  00:03:20       2
+sonic#
+```
+
+
+
+PIM upstream state JoinDesired information is displayed using the below command.
+
+```
+sonic# show ip pim vrf all upstream-join-desired
+VRF: Vrf_RED
+Interface        Source          Group           LostAssert Joins PimInclude JoinDesired EvalJD
+Vlan200          192.168.100.10  232.1.2.1       no         no    yes        yes         yes
+VRF: default
+Interface        Source          Group           LostAssert Joins PimInclude JoinDesired EvalJD
+Vlan20           192.168.10.10   232.1.2.1       no         no    yes        yes         yes
+sonic#
+```
+
+### SONiC Click CLI Shell
+The below show commands are available only in SONiC Click CLI shell
+
+The below command fetches the data from the Multicast OrchAgent and shows the multicast routes, IPMC groups returned by SAI, IPMC RPF groups returned by SAI and some counters related to the above.
+
+```
+root@sonic:/home/admin# show debug ipmcorch -?
+Usage: show debug ipmcorch [OPTIONS] COMMAND [ARGS]...
+
+  Active debugging for IpmcOrch
+
+Options:
+  -?, -h, --help  Show this message and exit.
+
+Commands:
+  all          Dump all ipmcorch debugs
+  counters     Dump IPMC counters
+  ipmc-groups  Dump IPMC groups
+  ipmc-routes  Dump ipmcorch routes
+  rpf-groups   Dump RPF groups
+root@sonic:/home/admin#
+```
+
+The below example shows all the above options:
+
+```
+root@sonic:/home/admin# show debug ipmcorch all
+VRF name "Default", VRF object ID 0x300000000003a
+
+Source IP        Group IP         Incoming Interface   Outgoing Interface(s)
+---------------- ---------------- -------------------- ---------------------
+192.168.10.10    232.1.2.1        Vlan10               Vlan20
+
+Total number of IPMC entries in VRF "Default" : 1
+
+VRF name "Vrf_RED", VRF object ID 0x30000000009ff
+
+Source IP        Group IP         Incoming Interface   Outgoing Interface(s)
+---------------- ---------------- -------------------- ---------------------
+192.168.100.10   232.1.2.1        Vlan100              Vlan200
+
+Total number of IPMC entries in VRF "Vrf_RED" : 1
+
+Total number of IPMC entries : 2
+
+IPMC Group ID      Ref Count Group Members (interface - object ID)
+------------------ --------- -------------------------------------
+0x0033000000000a25 1         Vlan20 - 0x34000000000a26
+0x0033000000000a29 1         Vlan200 - 0x34000000000a2a
+
+Total number of IPMC groups : 2
+
+RPF Group ID       Ref Count Group Members (interface - object ID)
+------------------ --------- -------------------------------------
+0x002f000000000a23 1         Vlan10 - 0x30000000000a24
+0x002f000000000a27 1         Vlan100 - 0x30000000000a28
+
+Total number of RPF groups : 2
+
+IPMC Interface     Ref Count
+------------------ ---------
+Vlan10             1
+Vlan100            1
+Vlan20             1
+Vlan200            1
+root@sonic:/home/admin#
+```
+
+The below command fetches the data from the Error database and displays all the multicast route entries that failed to get added to the ASIC and also the entries that hit the TABLE FULL condition.
+
+```
+root@sonic:/home/admin# show error_database
+VRF Name    Source IP    Group IP      In Interface    Out Interface(s)    Error Code          Operation
+----------  -----------  ------------  --------------  ------------------  ------------------  -----------
+Default     112.0.0.2    232.0.31.64   Ethernet2       Ethernet0           SWSS_RC_TABLE_FULL  create
+Default     112.0.0.2    232.0.31.63   Ethernet2       Ethernet0           SWSS_RC_TABLE_FULL  create
+Default     112.0.0.2    232.0.31.62   Ethernet2       Ethernet0           SWSS_RC_TABLE_FULL  create
+```
+
+## PIM Clear Commands
+
+PIM clear commands listed below are available only from FRR vtysh shell.
+
+
+The below listed clear commands clears the multicast routes, the OIFs of the routes, PIM interface related operational information etc.,
+
+```
+sonic# clear ip mroute
+sonic# clear ip mroute vrf Vrf_RED
+
+sonic# clear ip pim
+  interface   Reset PIM interfaces
+  interfaces  Reset PIM interfaces
+  oil         Rescan PIM OIL (output interface list)
+  statistics  Specify the VRF
+  vrf         Specify the VRF
+sonic#
+
+sonic# clear ip pim vrf Vrf_RED
+  interface   Reset PIM interfaces
+  interfaces  Reset PIM interfaces
+  oil         Rescan PIM OIL (output interface list)
+sonic#
+```
+
+
+
+## PIM Debug Commands
+
+PIM debug commands listed below are available only from FRR vtysh shell.
+
+
+The below listed debug commands enables tracing of PIM events, packets, mroute, PIM's interaction with Zebra etc.,
+
+```
+sonic# debug pim
+  <cr>
+  bsm          BSR message processing activity
+  events       PIM protocol events
+  nht          Nexthop Tracking
+  packet-dump  PIM packet dump
+  packets      PIM protocol packets
+  static       PIM Static Multicast Route activity
+  trace        PIM internal daemon activity
+  vxlan        PIM VxLAN events
+  zebra        ZEBRA protocol activity
+
+sonic# debug mroute
+  <cr>
+  detail  detailed
+sonic#
+```
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#pim-source-specific-multicast)
 # PortChannel Configuration And Show
 
 ## PortChannel Show commands

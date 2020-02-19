@@ -55,6 +55,7 @@ Table of Contents
       * [6.6 NAT troubleshooting](#66-nat-troubleshooting)
       * [6.7 Orchagent troubleshooting](#67-Orchagent-troubleshooting)
       * [6.8 IGMP Snooping troubleshooting](#igmp-snooping-troubleshooting)
+      * [6.9 PIM troubleshooting](#69-pim-troubleshooting)
    * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
       * [7.1 Debug Framework](#71-debug-framework)
    * [8 Chef](#8-chef)
@@ -809,6 +810,7 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 14 | PFC |[PFC CLI](Command-Reference.md#pfc-configuration-and-show-commands) | N/A | To view the details about the PFC |
 | 15 | IGMP Snooping |[IGMP Snooping CLI](Command-Reference.md#pfc-configuration-and-show-commands) | [IGMP Snooping ConfigDB](Configuration.md) | To view the details about the IGMP Snooping |
 | 16 | OSPFv2 | [OSPFv2 CLI](Command-Reference.md#OSPFv2-configuration-and-show-commands) | N/A | To view the details about the OSPFv2 |
+| 17 | PIM |[PIM CLI](Command-Reference.md#pim-source-specific-multicast) | N/A | To view the details about PIM |
 
 
 # 5 Example Configuration
@@ -1098,6 +1100,22 @@ All IGMP Snooping related configuration done via CLI is saved in the REDIS datab
 - Check if the L2mc orchagent received multicast entry update.  Use `show debug l2mcorch all` command in the SONiC Click CLI shell.
 - Check if the multicast entries are installed in the switching ASIC. Use bcmcmd `ipmc table show`  BCM shell commands.
 - Check if the IPMC group created and member added to the group using `multicast show` BCM shell command.
+
+## 6.9 PIM troubleshooting
+
+All PIM configuration is done in the FRR VTYSH shell.  If the last-hop PIM router doesn't receive multicast traffic from the multicast source, please follow the below troubleshooting steps to debug PIM issues.
+
+- Check if the multicast interfaces are programmed in the Linux kernel.  Use `show ip multicast` and `show ip multicast vrf <vrf-name>` commands.
+- Check if PIM and IGMP are enabled on the downstream and upstream interfaces.  Use `show ip pim vrf all interface` and `show ip igmp vrf all interface` commands.
+- Check if IGMP report is received on the downstream interface.  Use `show ip igmp vrf all groups` and `show ip igmp vrf all sources` commands.
+- Check if the multicast route entry is created. Use `show ip mroute vrf all` command.
+- Check if the multicast route entry is correctly programmed in the Linux kernel.  Use `ip mroute show table all` in the Linux shell.
+- Check if the multicast route entry is updated to APP_DB using redis-cli.
+- Check if the multicast orchagent received the multicast route update.  Use `show debug ipmcorch all` command in the SONiC Click CLI shell.
+- Check if the multicast route entry is updated to ASIC_DB using redis-cli.
+- Check if the multicast route entry is installed in the switching ASIC.  Use `bcmcmd 'ipmc table show'` and `bcmcmd 'multicast show'` commands in the SONiC Click CLI shell.
+- Check if the packet counters for the installed multicast route entry are incrementing.  Use `show interfaces counters` in the SONiC Click CLI shell.
+
 
 # 7 Common Framework Development & Usage 
 
