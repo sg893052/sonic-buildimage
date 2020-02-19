@@ -104,6 +104,7 @@ Table of Contents
       * [Load_minigraph config command](#load_minigraph-config-command)
       * [Reload config command](#reload-config-command)
       * [Save config  command](#save-config--command)
+      * [Configuration erase command](#configuration-erase-command)
    * [Mirroring Configuration And Show](#mirroring-configuration-and-show)
       * [Mirroring Show command](#mirroring-show-command)
       * [Mirroring Config command](#mirroring-config-command)
@@ -116,6 +117,9 @@ Table of Contents
    * [IGMP Snooping commands](#igmp-snooping-commands)
       * [IGMP Snooping configuration commands](#igmp-snooping-configuration-commands)
       * [IGMP Snooping show commands](#igmp-snooping-show-commands)
+   * [KDUMP Configuration and Show Commands](#kdump-configuration-and-show-commands)
+      * [KDUMP configuration commands](#kdump-configuration-commands)
+      * [KDUMP show commands](#kdump-show-commands)
    * [Platform Specific Commands](#platform-specific-commands)
    * [PFC Configuration And Show Commands](#pfc-configuration-and-show-commands)
       * [PFC config commands](#pfc-config-commands)
@@ -4825,6 +4829,40 @@ Saved file can be transferred to remote machines for debugging. If users wants t
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#loading-reloading-and-saving-configuration)
 
+## Configuration Erase command
+
+This command is used to remove configuration changes performed by the user and restore the switch to a factory default configuration state. For the changes to take effect,
+a switch reboot is required after executing the command.
+
+  - Usage:
+    config erase [OPTIONS]
+	OPTIONS : boot, cancel, install, -y, --yes
+
+- Example:
+   ```
+   root@T1-2:~# config erase
+   Existing switch configuration files except management interface configuration will be removed, continue? [y/N] y
+   SONiC configuration files will be restored to default values on next reboot
+
+   root@T1-2:~# config erase cancel -y
+   Configuration erase operation is cancelled
+
+   root@T1-2:~# config erase install -y
+   All SONiC switch content will be restored to default values on next reboot
+
+   ```
+
+- Description:
+  - **config erase** : This command deletes the startup configuration JSON file /etc/sonic/config_db.json and all other application configuration files in the /etc/sonic directory. 
+                     The management interface configuration in the startup configuration file is retained so that the user can access the 
+                     switch using the same management address along with other factory default configuration after the switch reboots.
+  - **config erase boot** : This command deletes the startup configuration JSON file and all other application configuration files in the /etc/sonic directory. 
+                          The management interface configuration in the startup configuration JSON file is also removed. 
+                          The SONiC switch boots with a factory default configuration file.
+  - **config erase install** : This command removes all changes made by the user. All user installed packages and file changes are removed. It also deletes the startup configuration JSON file and the files in /etc/sonic directory. The SONiC switch is reverted to a state similar to a newly installed image. After the SONiC switch is rebooted, if the Zero Touch Provisioning (ZTP) feature is enabled, the SONIC switch will start performing ZTP to discover and download the switch configuration.
+  - **config erase cancel** : For the *config erase* command operation to take effect, the user has to reboot the switch after issuing the command. If the user wishes to not proceed with the configuration removal operation, the *config erase cancel* command can be used to undo the previously issued *config erase* command.
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#configuration-erase-command)
 
 # Mirroring Configuration And Show
 
@@ -5326,6 +5364,198 @@ Vlan ID: 100
 Total number of entries: 2
 ```
 Go Back To [Beginning of the document](#table-of-contents) or [Beginning of this section](#igmp-snooping-commands)
+
+
+# KDUMP Configuration and Show Commands
+
+This section provides details about various configuration and show commands for the kernel core dump feaure supported in SONiC.
+
+## KDUMP Configuration commands
+This sub-section explains the list of the configuration options available for using the kernel core dump feature. Some of these configuration options in turn change the configuration files used by the *kdump-tools* service which provides the actual kdump functionality.
+
+All changes done to kdump configuration are automatically saved to the startup configration file, */etc/sonic/config_db.json*
+
+**config kdump enable**
+
+Use this command to administratively enable the capability of kernel core file generation.
+
+- Usage:
+       config kdump enable
+- Example:
+```
+root@sonic:/home/admin# config kdump enable
+```
+
+Since this command requires changing the kernel parameters to specify the amount of memory reserved for the capture kernel (the kernel parameters which are exported through */proc/cmdline*), a reboot is necessary. By default, the command displays a message showing that kdump functionality will be either enabled or disabled following the next reboot. The optional parameter *-y* allows to automatically perform the reboot without user requiring to execute a reboot command.
+
+**config kdump disable**
+
+Use this command to administratively disable the capability of kernel core file generation.
+
+- Usage:
+         config kdump disable
+- Example:
+```
+root@sonic:/home/admin# config kdump disable
+```
+
+By default, kdump is administratively disabled.
+
+**config kdump memory string**
+
+Use this command to set the amount of memory reserved for the capture kernel called with kexec.
+
+- Usage: 
+         config kdump memory <memory-string>
+- Example:
+```
+root@sonic:/home/admin# config kdump memory 0M-2G:256M,2G-4G:320M,4G-8G:512M,8G-:1024M
+```
+
+The amount of memory should always be specified in MB. For instance, the command *config kdump memory 512M* allocates 512MB for the capture kernel. If the memory amount is changed and kdump is currently enabled, the command displays a message showing that the newly provided memory size will be used following a reboot.
+
+If the amount of memory is set too low, kdump will not be able to either store the capture kernel and initramfs image, or store the core dump information. If this value is changed, the user needs to choose a value that has been verified to to be sufficient.
+
+The default value for the memory allocated for the capture memory is set to:
+*0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M*
+
+The above memory setting translates to:
+
+|RAM size|crashkernel<br>parameter|
+|-----|----|
+|<= 2GB|384 MB|
+|<= 4GB|512 MB|
+|<= 8GB|576 MB|
+|> 8GB|640 MB|
+
+For instance, if the system has 8GB of RAM, the kernel will allocate 576MB of memory for the capture kernel.
+
+**config kdump num_dumps**
+
+Use this command to control the number of kernel core files that can be stored locally on the disk. 
+
+- Usage: 
+      config kdump num_dumps <number>
+- Example:
+```
+root@sonic:/home/admin# config kdump num_dumps 4
+```
+
+When a kernel core file is generated, the kdump service stores the generated core file in  compressed form. The number of the kernel core files that can be stored can be configured through this command.
+
+If there are already N kernel core dumps files stored locally and a new value which is less than N is specified, existing core files files are deleted on the local storage to satisfy the new  configuration. For instance, if there are already 6 kernel core dumps saved, and the user specifies keeping only 3 kernel core dump files, 4 of the oldest files are removed from the local storage to make room for 2 existing dump files plus the new core dump file to be generated. It is to be noted that this file pruning only happens when a new kernel crash occurs.
+
+The default value is 3 and the acceptable range is from 1 to 9.
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#kdump-configuration-commands)
+
+## KDUMP show commands
+
+This sub-section lists all the show commands for the KDUMP configuration and status. Subsequent sections explain each of these commands in detail.
+
+**show kdump status**
+
+This command displays complete information about the configuration settings of the kdump feature, its operational state and the list of kernel core files stored locally on the disk:
+- Usage: 
+       show kdump status
+
+- Example:
+
+```
+root@sonic:/home/admin# show kdump status
+Kdump Administrative Mode:  Enabled
+Kdump Operational State:    Ready
+Memory Reserved: 0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M
+Maximum number of Kernel Core files Stored: 3
+ 
+Record Key           Filename
+-------------------------------------------------------------
+     1 202002182141 /var/crash/202002182141/dmesg.202002182141
+                    /var/crash/202002182141/kdump.202002182141
+     2 202002182133 /var/crash/202002182133/dmesg.202002182133
+                    /var/crash/202002182133/kdump.202002182133
+     3 202002182123 /var/crash/202002182123/dmesg.202002182123
+                    /var/crash/202002182123/kdump.202002182123
+```
+
+- Description:
+   - **Kdump Adminstrative Mode**: Displays if the kdump feature is enabled or disabled
+   - **Kdump Operational State**: When kdump is enabled, display whether the kdump feature is operationally ready to perform a kdump in the event of a kernel crash
+   - **Memory Reserved**: Displays the amount of memory reserved for the kdump capture kernel
+   - **Maximum number of kernel core files stored**: Displays the allowed maximum number of kernel core files that are stored locally on the disk
+   - **List of kernel core files:** This command shows the kernel core dump files currently saved on the local storage. They are displayed in reverse chronological order allow with a key value which specifies exact date and time when the kernel crash has happened and the file path where the kernel core file is stored at
+
+**show kdump files**
+
+This command is used to display the kernel core files stored locally.
+
+- Usage: 
+      show kdump log <record> <number of lines>
+- Example:
+```
+root@sonic:/home/admin# show kdump files
+Record Key           Filename
+-------------------------------------------------------------
+     1 202002182141 /var/crash/202002182141/dmesg.202002182141
+                    /var/crash/202002182141/kdump.202002182141
+     2 202002182133 /var/crash/202002182133/dmesg.202002182133
+                    /var/crash/202002182133/kdump.202002182133
+     3 202002182123 /var/crash/202002182123/dmesg.202002182123
+                    /var/crash/202002182123/kdump.202002182123
+root@sonic:/home/admin#
+```
+
+**show kdump log**
+
+This command is used to display a specified number of lines of the kernel log ring buffer which are extracted from the stored kernel core file. When no value is not provided, a default value of 75 lines is used. The kernel log buffer typically contains the kernel back-trace which provides information about what event caused the kernel crash. The corresponding kernel core file can be specified by using either the Record number or the the Key name. The filenames indicating where the kernel core file is stored locally on the disk are also listed.
+
+- Usage: 
+      show kdump log <record> <number of lines>
+- Example:
+
+```
+root@sonic:/home/admin# show kdump log 1 10
+File: /var/crash/202002182133/dmesg.202002182133
+[  520.658277]  [<ffffffffbc02b0db>] ? write_sysrq_trigger+0x2b/0x30
+[  520.664436]  [<ffffffffbbe7ab90>] ? proc_reg_write+0x40/0x70
+[  520.670163]  [<ffffffffbbe0c430>] ? vfs_write+0xb0/0x190
+[  520.675540]  [<ffffffffbbe0d8ca>] ? SyS_write+0x5a/0xd0
+[  520.680826]  [<ffffffffbbc03b7d>] ? do_syscall_64+0x8d/0x100
+[  520.686547]  [<ffffffffbc20484e>] ? entry_SYSCALL_64_after_swapgs+0x58/0xc6
+[  520.693568] Code: 41 5c 41 5d 41 5e 41 5f e9 6c 2f cf ff 66 2e 0f 1f 84 00 00 00 00 00 66 90 0f 1f 44 00 00 c7 05 29 28 a8 00 01 00 00 00 0f ae f8 <c6> 04 25 00 00 00 00 01 c3 0f 1f 44 00 00 0f 1f 44 00 00 53 8d
+[  520.716174] RIP  [<ffffffffbc02a562>] sysrq_handle_crash+0x12/0x20
+[  520.722470]  RSP <ffffa8ce415e7e78>
+[  520.726018] CR2: 0000000000000000
+```
+
+**show kdump memory**
+This command is used to display the amount of memory that is reserved for the catpure kernel to be used in the event of a kernel crash and the subsequent kernel core file generation.  
+
+- Usage: 
+      show kdump memory
+- Example:
+
+
+```
+root@sonic:/home/admin# show kdump memory
+Memory Reserved: 0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M
+```
+
+**show kdump num_dumps**
+
+This command is used to display the maximum number of kernel core files that can be stored locally on disk.  
+
+- Usage: 
+      show kdump num_dumps
+  
+- Example:
+```
+root@sonic:/home/admin# show kdump num_dumps
+Maximum number of Kernel Core files Stored: 3
+root@sonic:/home/admin#
+```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#kdump-show-commands)
 
 # Platform Specific Commands
 
