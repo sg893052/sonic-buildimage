@@ -62,6 +62,7 @@ Table of Contents
          * [Queue](#queue)  
          * [Scheduler](#scheduler)  
          * [Shaping (port and queue)](#shaping)  
+         * [SNMP CLI](#snmp-cli)  
          * [Spanning Tree (PVST)](#stp-pvst)  
          * [Tacplus Server](#tacplus-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
@@ -79,7 +80,7 @@ Table of Contents
          * [IFA](#ifa)  
          * [PTP](#ptp)  
          * [sFlow](#sflow)  
-         * [BUM Storm Control](#BUM-Storm-Control)
+         * [BUM Storm Control](#BUM-Storm-Control)  
          * [IGMP Snooping](#igmp-snooping)  
          * [Drop Monitor](#drop-monitor)  
          * [Tail Timestamping](#tail-timestamping)  
@@ -1418,6 +1419,115 @@ In the example below, Port "Ethernet52" egress queues 0 through 5 will be limite
         }
     }
 }
+```
+
+### SNMP CLI
+
+
+The SNMP CLI feature configuration is defined in **SNMP_AGENT_ADDRESS_CONFIG**, **SNMP_SERVER**,  **SNMP_SERVER_ENGINE**, **SNMP_SERVER_COMMUNITY**, **SNMP_SERVER_GROUP**, **SNMP_SERVER_GROUP_MEMBER**, **SNMP_SERVER_GROUP_ACCESS**, **SNMP_SERVER_PARAMS**, **SNMP_SERVER_TARGET**, **SNMP_SERVER_USER** and **SNMP_SERVER_VIEW**
+
+```
+{
+    "SNMP_AGENT_ADDRESS_CONFIG": {
+        "127.0.0.1|12345|veth0": {}
+    },
+    "SNMP_SERVER": {
+        "SYSTEM": {
+            "sysContact": "contact",
+            "sysLocation": "location",
+            "traps": "enable"
+        }
+    },
+    "SNMP_SERVER_ENGINE": {
+        "GLOBAL": {
+            "engine-id": "80:00:05:23:01:a9:fe:80:74"
+        }
+    },
+    "SNMP_SERVER_COMMUNITY": {
+        "private": {
+            "securityName": "privateGroup"
+        }
+    },
+    "SNMP_SERVER_GROUP": {
+        "privateGroup": {},
+        "DefaultRead": {},
+        "SecureRead": {},
+        "groupname": {},
+    },
+    "SNMP_SERVER_GROUP_MEMBER": {
+        "privateGroup|private": {
+            "securityModel": [
+                "v2c"
+            ]
+        },
+        "groupname|username": {
+            "securityModel": [
+                "usm"
+            ]
+        }
+    }
+    "SNMP_SERVER_GROUP_ACCESS": {
+        "DefaultRead|Default|any|no-auth-no-priv": {
+            "notifyView": "Default",
+            "readView": "Default",
+            "writeView": "None"
+        },
+        "SecureRead|Default|usm|auth-priv": {
+            "notifyView": "Default",
+            "readView": "Default",
+            "writeView": "None"
+        }
+    },
+    "SNMP_SERVER_PARAMS": {
+        "targetEntry1": {
+            "securityNameV2": "public"
+        },
+        "targetEntry2": {
+            "security-level": "auth-priv",
+            "user": "David"
+        }
+    },
+    "SNMP_SERVER_TARGET": {
+        "targetEntry1": {
+            "ip": "1.2.3.4",
+            "port": "162",
+            "retries": "3",
+            "tag": [
+                "trapNotify"
+            ],
+            "targetParams": "targetEntry1",
+            "timeout": "1500"
+        },
+        "targetEntry2": {
+            "ip": "80ef:0620:1963::1776",
+            "port": "162",
+            "retries": "4",
+            "tag": [
+                "informNotify"
+            ],
+            "targetParams": "targetEntry2",
+            "timeout": "600"
+        }
+    },
+    "SNMP_SERVER_USER": {
+        "username": {
+            authKeyType: "01:23:45:67:89:ab:cd:ef:01:23:45:67:89:ab:cd:ef"
+            privKeyType: "01:23:45:67:89:ab:cd:ef:01:23:45:67:89:ab:cd:ef"
+        }
+    }
+    "SNMP_SERVER_VIEW": {
+        "Default": {
+            "exclude": [
+                "1.3.6.1.6.3.15.1.2",
+                "1.3.6.1.6.3.16"
+            ],
+            "include": [
+                "1"
+            ]
+        }
+    },
+}
+
 ```
 
 ### Spanning Tree (PVST+)
