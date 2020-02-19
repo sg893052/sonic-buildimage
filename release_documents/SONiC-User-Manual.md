@@ -43,6 +43,7 @@ Table of Contents
             * [3.3.2.1 Modify config_db.json](#3321-modify-config_dbjson)
             * [3.3.2.2 Modify minigraph.xml](#3322-modify-minigraphxml)
          * [3.3.3 Zero Touch Provisioning](#333-zero-touch-provisioning)
+         * [3.3.4 Erasing Configuration](#334-erasing-configuration)
    * [4 Detailed Configuration &amp; Show](#4-detailed-configuration--show)
       * [4.2 Links to Different Configuration Sections](#42-links-to-different-configuration-sections)
    * [5 Example Configuration](#5-example-configuration)
@@ -57,6 +58,7 @@ Table of Contents
       * [6.8 IGMP Snooping troubleshooting](#igmp-snooping-troubleshooting)
       * [6.9 PIM troubleshooting](#69-pim-troubleshooting)
       * [6.10 System Resource Monitoring](#610-system-resource-monitoring)
+      * [6.11 Kernel Crash troubleshooting](#611-kernel-crash-troubleshooting)
    * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
       * [7.1 Debug Framework](#71-debug-framework)
    * [8 Chef](#8-chef)
@@ -697,7 +699,6 @@ Or, users can modify the "enabled" flag in /etc/sonic/updategraph.conf to true a
 The Zero Touch Provisioning (ZTP) service is used by switch administrators to configure a fleet of switches using common configuration templates. Switches booting from a factory default state should be able to communicate with a remote provisioning server, download  relevant configuration files and scripts to kick start more complex configuration steps. The SONiC ZTP service processes this provisioning information in the form of a JSON file called ZTP JSON file.
 
 
-
 #### SONiC ZTP Service
 
 On a switch bootup, the ZTP service starts and checks for the presence of the startup configuration file */etc/sonic/config_db.json*.  If the startup configuration file is not found on disk, the ZTP service creates a temporary switch configuration to perform DHCP discovery in order to receive information about the location of the ZTP JSON file. If the ZTP admin mode is disabled, the ZTP service exits and the switch proceeds to boot with factory default configuration.
@@ -787,6 +788,24 @@ The ZTP JSON file provides a wide variety of options to the user to fine tune an
 The *show ztp status* command displays detailed information about current state of a ZTP session and also displays the current ZTP configuration of the switch. It displays information related to all the configuration sections defined in the ZTP JSON file that is currently being processed. It also displays information about the previous completed ZTP session. More details about the ztp commands can be found [here](Command-Reference.md#ztp-configuration-and-show-commands).
 
 
+### 3.3.4 Erasing Configuration
+
+Users can rollback the switch configuration to the factory default configuration state using the *config erase* command. It requires a reboot to complete the configuration erase operation. 
+
+Following are available options provided to the user while using this command:
+- **config erase** : This command deletes the startup configuration JSON file /etc/sonic/config_db.json and all other application configuration files in the /etc/sonic directory.
+                   The management interface configuration in the startup configuration file is retained so that the user can access the
+                   switch using the same management address along with other factory default configuration after the switch reboots.
+
+- **config erase boot** : This command deletes the startup configuration JSON file and all other application configuration files in the /etc/sonic directory.
+                        The management interface configuration in the startup configuration JSON file is also removed.
+                        The SONiC switch boots with a factory default configuration file.
+
+- **config erase install** : This command removes all changes made by the user. All user installed packages and file changes are removed. It also deletes the startup configuration JSON file and the files in /etc/sonic directory. The SONiC switch is reverted to a state similar to a newly installed image. After the SONiC switch is rebooted, if the Zero Touch Provisioning (ZTP) feature is enabled, the SONIC switch will start performing ZTP to discover and download the switch configuration.
+
+- **config erase cancel** : For the *config erase* command operation to take effect, the user has to reboot the switch after issuing the command. If the user wishes to not proceed with the configuration removal operation, the *config erase cancel* command can be used to undo the previously issued *config erase* command.
+
+
 # 4 Detailed Configuration & Show  
 
 Basic cable connectivity shall be verified by configuring the IP address for the ports and by using the "ping" test.
@@ -812,6 +831,7 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 15 | IGMP Snooping |[IGMP Snooping CLI](Command-Reference.md#pfc-configuration-and-show-commands) | [IGMP Snooping ConfigDB](Configuration.md) | To view the details about the IGMP Snooping |
 | 16 | OSPFv2 | [OSPFv2 CLI](Command-Reference.md#OSPFv2-configuration-and-show-commands) | N/A | To view the details about the OSPFv2 |
 | 17 | PIM |[PIM CLI](Command-Reference.md#pim-source-specific-multicast) | N/A | To view the details about PIM |
+| 18 | KDUMP |[ KDUMP CLI](Command-Reference.md#kdump-configuration-and-show-commands) | [KDUMP ConfigDB](ConfigDB-Manual.md#kdump) | To view the details about the KDUMP feature|
 
 
 # 5 Example Configuration
@@ -1182,6 +1202,21 @@ All PIM configuration is done in the FRR VTYSH shell.  If the last-hop PIM route
 ```
   DISK usage of '/' is above [0-70%], Total: 28.6G, Free: 12.5G, Used: 14.7G
 ```
+
+
+## 6.11 Kernel Crash troubleshooting
+- If the output of the command *show reboot-cause* is Unknown and the user did not perform a power cycle, it is most likely that a kernel crash has occurred.
+- The kdump feature in SONiC allows the users to identify if a kernel crash has happened. It also captures a snapshot of the kernel state and kernel log buffer, saving it on to the flash for future reference.
+- Enable kdump using the *config kdump enable* command and reboot for kdump to be operational. If and when the switch encounters a kernel crash condition, the kdump service will create a kernel core file along with the kernel message log.
+- The user can use *show kdump status* command to view kernel crash information.
+- To view the kernel crash log, the user can use the *show kdump log <key>* command.
+- The command *show kdump files* displays the location of the kernel core files. The Linux crash utility provides various options to debug the core files to obtain more information about kernel state when the crash has happened. More information can be obtained by visiting the following web links: 
+  - [Crash Utility](https://people.redhat.com/anderson/crash_whitepaper)
+  - [Crash Command Help](https://people.redhat.com/anderson/help.html)
+- More information on how to use SONiC KDUMP feature can be found in the [SONiC KDUMP Design Document](https://github.com/Azure/SONiC/pull/510).
+
+
+### 
 
 # 7 Common Framework Development & Usage 
 
