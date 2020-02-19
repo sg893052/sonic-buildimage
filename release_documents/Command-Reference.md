@@ -184,6 +184,8 @@ Table of Contents
       * [IFA configuration commands](#IFA-configuration-commands)
       * [IFA clear commands](#IFA-clear-commands)
       * [IFA show commands](#IFA-show-commands)
+      * [IFA KLISH config commands](#ifa-klish-config-commands)
+      * [IFA KLISH show commands](#ifa-klish-show-commands)
    * [PTP Configuration And Show Commands](#ptp-configuration-and-show-commands)
       * [PTP configuration commands](#ptp-configuration-commands)
       * [PTP show commands](#ptp-show-commands)
@@ -203,7 +205,20 @@ Table of Contents
       * [OSPFv2 config commands](#ospfv2-config-commands)
       * [OSPFv2 clear commands](#ospfv2-debug-commands)
       * [OSPFv2 debug commands](#ospfv2-debug-commands)
-
+   * [TAM Configuration and Show Commands](#tam-configuration-and-show-commands)
+      * [TAM config commands](#tam-config-commands)
+      * [TAM show commands](#tam-show-commands)
+   * [Sample Configuration and Show Commands](#sample-configuration-and-show-commands)
+      * [Sample config commands](#sample-config-commands)
+      * [Sample show commands](#sample-show-commands)
+   * [Drop monitor Configuration and Show Commands](#drop-monitor-configuration-and-show-commands)
+      * [Drop monitor config commands](#drop-monitor-config-commands)
+      * [Drop monitor show commands](#drop-monitor-show-commands)
+   * [Tail timestamping Configuration and Show Commands](#tail-timestamping-configuration-and-show-commands)
+      * [Tail timestamping config commands](#tail-timestamping-config-commands)
+      * [Tail timestamping show commands](#tail-timestamping-show-commands)
+   * [BroadView Configuration Commands](#broadview-configuration-commands)
+      * [BroadView config commands](#broadview-config-commands)
 
 # Document History
 
@@ -9217,6 +9232,72 @@ root@sonic:/home/admin# show tam-int-ifa statistics
       flow1        rule1          acl1                9           9000
 ```
 
+## IFA KLISH config commands
+This section explains the Precision Time Protocol commands supported in SONiC.
+The details of these commands are available in KLISH CLI reference guide.
+
+**feature <enable/disable>**
+Enable/disable IFA feature functionality.
+
+    Default: disabled
+
+**flow <flow-name> acl-table <acl-table> acl-rule <acl-rule> sampling-rate <sampling-rate>**
+Configure an ingress IFA flow and attach to ACL.
+
+    Default: none
+
+**flow <flow-name> acl-table <acl-table> acl-rule <acl-rule> collector-name <collector-name>**
+Configure an egress IFA flow and attach to ACL.
+
+    Default: none
+
+## IFA KLISH show commands
+
+**show tam int-ifa supported**
+
+Example output:
+
+    sonic# show tam int-ifa supported 
+    ---------------------------------------------------------
+    TAM IFA Feature Information
+    ---------------------------------------------------------
+    IFA Feature Supported: True
+
+
+**show tam int-ifa status <all/flow-name>**
+
+Example output:
+
+    sonic# show tam int-ifa status
+    ---------------------------------------------------------
+    TAM/IFA Status      
+    ---------------------------------------------------------
+    Number of flows      : 2
+    Feature Enabled      : True
+
+**show tam int-ifa statistics <all/flow-name>**
+
+Example output:
+
+    sonic# show tam int-ifa statistics flow1
+    ------------------------------------------------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE       PACKET COUNT   BYTE COUNT
+    ------------------------------------------------------------------------------------------------
+    flow1           T1             R1             8              8000
+    ------------------------------------------------------------------------------------------------
+
+**show tam int-ifa flow <all/flow-name>**
+
+Example output:
+
+    sonic# show tam int-ifa flow all
+    ------------------------------------------------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE       SAMPLING RATE  COLLECTOR 
+    ------------------------------------------------------------------------------------------------
+    f1             a1             r1             20                       
+    f2             a1             r1                            cr1       
+
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#IFA-configuration-and-show-commands)
 
 
@@ -9978,6 +10059,204 @@ OSPF clear commands are as below. Please refer to FRR User Manual for more detai
         log file <file_path_and_name>
 
         Example : log file /var/log/frr/frr.log
+
+# TAM Configuration And Show Commands
+
+This section explains the TAM  commands supported in SONiC.
+The details of these commands are available in KLISH CLI reference guide.
+
+## TAM configuration commands
+
+**device-id 54321**
+Configures the device id to be configured.
+
+    Default: none
+
+**collector cr1 type ipv4 ip 10.10.10.10 port 9070**
+Configures the TAM collector.
+
+    Default: none
+
+## TAM show commands
+
+**show tam device-id**
+
+Example output:
+
+    sonic# show tam device 
+    ------------------------------------------------------------------------------------------------
+    TAM Device Information
+    ------------------------------------------------------------------------------------------------
+    device-id: 2345
+
+**show tam collector <all/collector-name>
+
+Example output:
+
+    sonic# show tam collector all
+    ------------------------------------------------------------------------------------------------
+    NAME           IP TYPE        IP ADDRESS     PORT           
+    ------------------------------------------------------------------------------------------------
+    cr1            ipv4           10.10.10.2     9070          
+
+
+# Sample Configuration And Show Commands
+
+This section explains the sample commands supported in SONiC.
+The details of these commands are available in KLISH CLI reference guide.
+
+## Sample configuration commands
+
+**sample s1 rate 100**
+Configures a sampling object with given sampling rate.
+
+    Default: none
+
+## Sample show commands
+
+**show sample <all/sample-name>**
+
+Example output:
+
+    sonic# show sample all
+    ------------------------------------------------------------------------------------------------
+    SAMPLE NAME    SAMPLE RATE 
+    ------------------------------------------------------------------------------------------------
+     s1             20    
+
+# Drop monitor Configuration And Show Commands
+
+This section explains the drop monitor commands supported in SONiC.
+The details of these commands are available in KLISH CLI reference guide.
+
+## Drop monitor configuration commands
+
+**feature <enable/disable>**
+Enables/Disables the drop monitor feature.
+
+    Default: disabled
+
+**flow acl-table <acl-table> acl-rule <acl-rule> collector <collector-name>  sample <sample-name> flowgroup-id <id>**
+Configure a drop monitor flow that associates an ACL with drop monitor configuration.
+
+    Default: none
+
+**aging-interval <interval>**
+Configure drop monitor aging interval.
+
+    Default: 3s
+
+**config tam-drop-monitor max-flows <max-flows>**
+This command is a CLICK command used to configure the max flows supported for drop monitor feature. This configuration modifies the system settings and requires a reboot to take effect. 
+
+```
+root@sonic:/home/admin# config tam-drop-monitor max-flows 8192
+Device settings may be modified. Reboot/reload config to apply this change. , continue? [y/N]: y
+```
+
+## Drop monitor show commands
+
+**show tam drop-monitor supported**
+
+Example output:
+
+    sonic# show tam drop-monitor supported 
+    Feature Supported      : True
+
+**show tam drop-monitor flow <all/flow-name>**
+
+Example output:
+
+    sonic# show tam drop-monitor flow all
+    ------------------------------------------------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE        COLLECTOR       SAMPLE          FLOWGROUP ID   
+    ------------------------------------------------------------------------------------------------
+    f1             a1             r1              cr1             s1              1             
+
+**show tam drop-monitor aging-interval**
+
+Example output:
+
+    sonic#  show tam drop-monitor aging-interval
+    Aging interval :  3 seconds
+
+**show tam drop-monitor statistics <all/flow-name>**
+
+Example output:
+
+    sonic# show tam drop-monitor statistics all
+    ------------------------------------------------------------------------------------------------
+    FLOW     ACL RULE            ACL TABLE          PACKETS             BYTES
+    ------------------------------------------------------------------------------------------------
+    F1          R1                  T1                 0                  0
+
+# Tail timestamping Configuration And Show Commands
+
+This section explains the tail timestamping commands supported in SONiC.
+The details of these commands are available in KLISH CLI reference guide.
+
+## Tail timestamping configuration commands
+
+**feature <enable/disable>**
+Enables/Disables the tail timestamping feature.
+
+    Default: disabled
+
+**flow <flow-name> acl-table <acl_tbl_name> acl-rule <acl_rule_name>**
+Configures a tail timestamping flow and associates it with ACL.
+
+    Default: none
+
+## Tail timestamping show commands
+
+**show tam int-ifa-ts supported**
+
+Example output:
+
+    sonic# show tam int-ifa-ts supported 
+    Feature Supported      : True
+
+**show tam int-ifa-ts status**
+
+Example output:
+
+    ---------------------------------------------------------
+    TAM INT IFA TS Status
+    ---------------------------------------------------------
+    Device Identifier    : 2345
+    Number of flows      : 1
+    Feature Enabled      : True
+
+**show tam int-ifa-ts flow <flow-name/all>**
+
+Example output:
+
+    sonic# show tam int-ifa-ts flow TS_Flow
+    ---------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE
+    ---------------------------------------------------------
+    TS_Flow        T1             R1
+
+** show tam int-ifa-ts statistics flow <flow-name/all>**
+
+Example output:
+
+    sonic# show tam int-ifa-ts statistics TS_Flow
+    ------------------------------------------------------------------------------------------------
+    FLOW           ACL TABLE      ACL RULE       PACKET COUNT   BYTE COUNT
+    ------------------------------------------------------------------------------------------------
+    TS_Flow        T1             R1             8              8000
+    ---------------------------------------------------------
+
+# BroadView Configuration Commands
+
+This section explains all BroadView configuration commands of BroadView REST interface supported in SONiC.
+
+## BroadView config commands
+
+BroadView collector configuration command is below
+
+        config broadview collector <ip> <port>
 
 
 <br>
