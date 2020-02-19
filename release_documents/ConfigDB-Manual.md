@@ -56,6 +56,7 @@ Table of Contents
          * [Port](#port)  
          * [Port Channel](#port-channel)  
          * [Portchannel member](#portchannel-member)  
+         * [Port Mirroring](#port-mirroring)  
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
          * [Scheduler](#scheduler)  
@@ -1266,6 +1267,31 @@ name as object key and member list as attribute.
     "PortChannel0003|Ethernet54": {}, 
     "PortChannel0004|Ethernet56": {}
   }
+}
+```
+
+### Port Mirroring
+
+Mirroring related configurations are defined in **MIRROR_SESSION** tables.
+```
+{
+    "MIRROR_SESSION": {
+        "Mirror1": {
+            "direction": "rx",
+            "dscp": "10",
+            "dst_ip": "10.1.1.1",
+            "gre_type": "0x88ee",
+            "queue": "5",
+            "src_ip": "11.1.1.1",
+            "src_port": "Ethernet0",
+            "ttl": "63"
+        },
+        "Mirror2": {
+            "direction": "both",
+            "dst_port": "Ethernet4",
+            "src_port": "Ethernet0"
+        }
+    }
 }
 ```
 
