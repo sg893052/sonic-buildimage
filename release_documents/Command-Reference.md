@@ -148,6 +148,9 @@ Table of Contents
          * [VLAN Config commands](#vlan-config-commands)
       * [FDB](#fdb)
          * [FDB show commands](#fdb-show-commands)
+   * [VXLAN](#vxlan)
+      * [VXLAN show commands](#vxlan-show-commands)
+	  * [VXLAN config commands](#vxlan-config-commands)
    * [Warm Restart](#warm-restart)
       * [Warm Restart show command](#warm-restart-show-command)
       * [Warm Restart Config command](#warm-restart-config-command)
@@ -4360,6 +4363,7 @@ This command displays the IP Helper statistics on all the interfaces.
 show ip helper-address statistics
 
 - Example:
+
 ```
 root@sonic:/home/admin# show ip helper-address statistics
 
@@ -4478,6 +4482,7 @@ root@sonic:/home/admin# config ip forward_protocol udp rate_limit 5000
 
 Use this command to clear the relay statistics on all the interfaces.
 - Example:
+
 ```
 root@sonic:/home/admin# sonic-clear ip helper-address statistics  
 
@@ -4489,6 +4494,7 @@ IpHelper Address Statistics are cleared.
 
 Use this command to clear the relay statistics on an interface.
 - Example:
+
 ```
 root@sonic:/home/admin# sonic-clear ip helper-address statistics Ethernet28
 
@@ -4964,6 +4970,7 @@ This command displays the configuration of the NAT module.
 show nat config
 
 - Example:
+
 ```
 root@sonic:/home/admin# show nat config
 
@@ -5008,6 +5015,7 @@ This command displays the statistics per NAT entry.
 show nat statistics
 
 - Example:
+
 ```
 root@sonic:/home/admin#show nat statistics
 
@@ -5030,6 +5038,7 @@ This command displays all the NAT translations entries.
 show nat translations
 
 - Example:
+
 ```
 #show nat translations
 
@@ -5077,6 +5086,7 @@ This sub-section explains the list of configuration options available for NAT mo
 Use this command to add basic static NAT entry
 
 - Example:
+
 ```
 root@sonic:/home/admin# config nat add static basic 65.54.0.1 10.0.0.1
 root@sonic:/home/admin# config nat add static basic 112.0.0.1 111.0.0.2 -nat_type dnat -twice_nat_id 1
@@ -5205,6 +5215,7 @@ Use this command to reset the TCP NAT entry aging timeout to default value.
 
 Use this command to clear all NAT statistics.
 - Example:
+
 ```
 root@sonic:/home/admin# sonic-clear nat statistics  
 
@@ -5215,6 +5226,7 @@ NAT statistics are cleared.
 
 Use this command to clear all dynamic NAT translations.
 - Example:
+
 ```
 root@sonic:/home/admin# sonic-clear nat translations        
 
@@ -5237,6 +5249,7 @@ This command displays a list of NTP peers known to the server as well as a summa
 
 
 - Example:
+
   ``` 
   admin@sonic:~$ show ntp
 		 remote           refid      st t when poll reach   delay   offset  jitter
@@ -5414,6 +5427,7 @@ This command shows the SDK sniffer status
 
 
 - Example:
+
   ```
   admin@arc-switch1004:~$ show platform mlnx sniffer
   sdk sniffer is disabled
@@ -5429,6 +5443,7 @@ This means if ISSU is enabled on this SKU or not. A warm boot command can be exe
 
 
   - Example:
+
   ```
   admin@arc-switch1004:~$ show platform mlnx issu
   ISSU is enabled
@@ -5437,6 +5452,7 @@ This means if ISSU is enabled on this SKU or not. A warm boot command can be exe
 In the case ISSU is disabled and warm-boot is called, the user will get a notification message explaining that the command cannot be invoked.
 
 Example:
+
 ```
 admin@arc-switch1038:~$ sudo warm-reboot
 ISSU is not enabled on this HWSKU
@@ -5464,6 +5480,7 @@ In order to avoid that confirmation the -y / --yes option should be used.
     --help     Show this message and exit.
 
   - Example:
+
   ```
   admin@arc-switch1038:~$ config platform mlnx sniffer sdk
   To change SDK sniffer status, swss service will be restarted, continue? [y/N]: y
@@ -5494,7 +5511,8 @@ This command displays the configured PFC mode on an interface or all interfaces.
     pfc show asymmetric <interface_name>
 
 - Example:  
-  ```
+
+```
   admin@sonic:~$ sudo pfc show asymmetric Ethernet9
   
   
@@ -5557,6 +5575,7 @@ This command displays/removes the Pause Frames statistics for Rx and Tx priority
     -d, --delete   Delete saved stats<br>
 
 - Example:  
+
   ```
     admin@sonic:~$ sudo pfcstat 
       Port Rx    PFC0    PFC1    PFC2    PFC3    PFC4    PFC5    PFC6    PFC7
@@ -5644,10 +5663,8 @@ This command displays/removes the Pause Frames statistics for Rx and Tx priority
   Ethernet124       0       0       0       0       0       0       0       0
   
   admin@sonic:~$ sudo pfcstat -c
-  Clear saved counters
-  
-      
-  ```
+  Clear saved counters       
+```
 
 ## PFC watchdog commands
 This section explains PFC Watchdog related commands that are supported in SONiC. 
@@ -5659,6 +5676,7 @@ This command enables/disables the PFC watchdog counter monitoring.
     pfcwd counter_poll <enable/disable>
 
 - Example:  
+
   ```
   admin@sonic:~$ sudo pfcwd counter_poll disable
   admin@sonic:~$ sudo pfcwd counter_poll enable
@@ -5670,6 +5688,7 @@ This command configures the PFC watchdog counter monitoring interval(in msecs).
     pfcwd interval <value\>
 
 - Example:  
+
   ```
   admin@sonic:~$ sudo pfcwd interval 100
   ```
@@ -5682,6 +5701,7 @@ This command configures the detection period of PFC storm detection and enables 
     pfcwd start --action [drop|forward|alert] ports <interface_name> detection-time <value\> --restoration-time <value\>
 
 - Example:  
+
   ```
   admin@sonic:~$ sudo pfcwd start --action drop ports Ethernet9 detection-time 100
   restoration time not defined; default to 2 times detection time: 200 ms
@@ -5707,6 +5727,7 @@ This command disables PFC watchdog on a specified port(s). If the interface_name
     pfcwd stop [<interface_name>]
 
 - Example:  
+
   ```
   admin@sonic:~$ sudo pfcwd stop Ethernet10
   admin@sonic:~$ sudo pfcwd stop
@@ -5718,6 +5739,7 @@ This command displays the PFC watchdog configuration like action, detection time
     pfcwd show config <interface_name>
 
 - Example:  
+
   ```
   admin@sonic:~$ sudo pfcwd show config Ethernet8
   Changed polling interval to 100ms
@@ -5778,6 +5800,7 @@ If the interface_name is not specified, it displays the PFC watchdog configurati
     pfcwd show stats <interface_name>
 
 - Example:  
+
   ```
   admin@sonic:~$ sudo pfcwd show config Ethernet32
            QUEUE       STATUS    STORM DETECTED/RESTORED       TX OK/DROP    RX OK/DROP    TX LAST OK/DROP    RX LAST OK/DROP
@@ -5798,6 +5821,7 @@ This command displays all the port channels that are configured in the device an
     show interfaces portchannel
 
 - Example:
+
   ```
   admin@sonic:~$ show interfaces portchannel
   Flags: A - active, I - inactive, Up - up, Dw - Down, N/A - not available, S - selected, D - deselected
@@ -7271,13 +7295,319 @@ All MAC entries are cleared from FDB
 admin@sonic:~$ sonic-clear fdb vlan Vlan101
 ('Dynamic FDB entries are cleared on VLAN.', 'Vlan101')
 All MAC entries are cleared from vlan 101
-
 ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#vlan--FDB)
 
 
 
+# VXLAN
+
+## VXLAN show commands
+
+**show vxlan interface** 
+
+   Displays the name, SIP, associated NVO name. 
+   Displays the loopback interface configured with the VTEP SIP. 
+
+- Usage:  
+  show vxlan interface
+
+- Example:
+```
+admin@sonic:~$ show vxlan interface
+VTEP Information:
+
+           VTEP Name : VTEP1, SIP  : 4.4.4.4
+           NVO Name  : nvo1,  VTEP : VTEP1
+           Source interface  : Loopback33
+```
+
+
+**show vxlan vlanvnimap**
+
+   Displays all the VLAN VNI mappings along with the count. With the count
+   argument displays only the total count of the mappings.
+
+- Usage:  
+  show vxlan vlanvnimap [count]
+
+- Example:
+
+```
+  
+admin@sonic:~$ show vxlan vlanvnimap
++--------+-------+
+| VLAN   |   VNI |
++========+=======+
+| Vlan5  |     5 |
++--------+-------+
+| Vlan6  |     6 |
++--------+-------+
+Total count : 2
+
+admin@sonic:~$ show vxlan vlanvnimap count
+Total mapping count:2
+
+```
+
+**show vxlan vrfvnimap**
+
+   Displays all the VRF VNI mappings.
+
+- Usage:  
+  show vxlan vrfvnimap 
+
+- Example:
+
+```
+admin@sonic:~$ show vxlan vrfvnimap
++--------+-------+
+| VRF    |   VNI |
++========+=======+
+| Vrf1   |     5 |
++--------+-------+
+Total count : 1
+```
+
+**show vxlan tunnel**
+
+   Lists all the discovered tunnels. The optional parameter 'count' 
+   displays only the total number of tunnels.  
+
+- Usage:  
+  show vxlan tunnel [count] 
+
+- Example:
+
+```
+admin@sonic:~$ show vxlan tunnel 
+   +---------+---------+-------------------+--------------+
+   | SIP     | DIP     | Creation Source   | OperStatus   |
+   +=========+=========+===================+==============+
+   | 2.2.2.2 | 4.4.4.4 | EVPN              | oper_up      |
+   +---------+---------+-------------------+--------------+
+   | 2.2.2.2 | 3.3.3.3 | EVPN              | oper_up      |
+   +---------+---------+-------------------+--------------+
+   Total count : 2
+
+admin@sonic:~$ show vxlan tunnel count
+Total mapping count:0
+```
+
+**show vxlan evpn_remote_mac**
+
+   Lists all the MACs learnt from the specified remote ip or all the remotes 
+   for the specified/all vlans. (APP DB view). The optional 'count' argument 
+   when given prints only the total number of such MACs.  
+
+- Usage:  
+  show vxlan evpn_remote_mac <remoteip/all> [count]
+
+- Example:
+
+```
+admin@sonic:~$ show vxlan remote_mac all
+   +---------+-------------------+--------------+-------+--------+
+   | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
+   +=========+===================+==============+=======+========+
+   | Vlan101 | 00:00:00:00:00:01 | 4.4.4.4      |  1001 | dynamic|
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:02 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:03 | 4.4.4.4      |  1001 | dynamic|
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:04 | 4.4.4.4      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:05 | 4.4.4.4      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:99 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   Total count : 6
+
+admin@sonic:~$ show vxlan evpn_remote_mac all count
+Total mapping count:6
+   
+admin@sonic:~$ show vxlan remote_mac 3.3.3.3
+   +---------+-------------------+--------------+-------+--------+
+   | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
+   +=========+===================+==============+=======+========+
+   | Vlan101 | 00:00:00:00:00:02 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   | Vlan101 | 00:00:00:00:00:99 | 3.3.3.3      |  1001 | static |
+   +---------+-------------------+--------------+-------+--------+
+   Total count : 2
+
+admin@sonic:~$ show vxlan evpn_remote_mac 3.3.3.3 count
+Total mapping count:2
+
+```
+
+**show vxlan evpn_remote_vni**
+
+   Lists all the VLANs learnt from the specified remote ip or all the remotes.(APP DB view) 
+   The optional count argument when given prints the total number of such VLANs.
+
+- Usage:  
+
+  show vxlan evpn_remote_vni <remoteip/all> [count]
+  
+- Example:
+
+```
+admin@sonic:~$ show vxlan evpn_remote_vni all
+   +---------+--------------+-------+
+   | VLAN    | RemoteVTEP   |   VNI |
+   +=========+==============+=======+
+   | Vlan101 | 3.3.3.3      |  1001 |
+   +---------+--------------+-------+
+   | Vlan101 | 4.4.4.4      |  1001 |
+   +---------+--------------+-------+
+   Total count : 2
+
+admin@sonic:~$ show vxlan evpn_remote_vni all count
+Total mapping count:2
+   
+admin@sonic:~$ show vxlan evpn_remote_vni 3.3.3.3
+   +---------+--------------+-------+
+   | VLAN    | RemoteVTEP   |   VNI |
+   +=========+==============+=======+
+   | Vlan101 | 3.3.3.3      |  1001 |
+   +---------+--------------+-------+
+   Total count : 1
+
+admin@sonic:~$ show vxlan evpn_remote_vni 3.3.3.3 count
+Total mapping count:1
+
+```
+
+## VXLAN config commands
+
+**config vxlan add**
+
+  Creates the VTEP instance. Only a single instance is supported in this release.
+
+- Usage: 
+
+  config vxlan add `<vtepname> <src_ip>`
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan add vtep1 1.1.1.1 
+```
+
+**config vxlan del**
+
+  Deletes the VTEP instance. There should be no EVPN_NVO object or VLAN/VRF VNI mapping
+  for this command to succeed.
+
+- Usage:
+
+    config vxlan del `<vtepname>` 
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan del vtep1  
+```
+
+**config vxlan evpn_nvo add**
+
+  Creates the EVPN instance and associates with the VTEP instance. 
+  Only a single instance is supported in this release.
+
+- Usage:
+
+    config vxlan evpn_nvo add `<nvoname> <vtepname>` 
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan evpn_nvo add nvo1 vtep1 
+```
+
+**config vxlan evpn_nvo del**
+
+  Deletes the EVPN instance. There should be no VLAN VNI mappings for this command to 
+  succeed.
+
+- Usage:
+
+    config vxlan evpn_nvo del `<nvoname>` 
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan evpn_nvo del nvo1 
+```
+
+**config vxlan map add**
+
+  Creates the VLAN VNI mapping. Requires that the VTEP, EVPN_NVO and VLAN be created. 
+
+- Usage:
+
+  config vxlan map add `<vtepname> <vlanid> <vnid>`
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan map add vtep1 100 1200
+```
+
+**config vxlan map del**
+
+  Deletes the VLAN VNI mapping. Requires that there be no VRF-VNI mappings referring to 
+  the VNI being deleted.
+
+- Usage:
+
+  config vxlan map del `<vtepname> <vlanid> <vnid>`
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan map del vtep1 100 1200
+```
+
+**config vxlan map_range add**
+
+  Creates contigous VLAN VNI mappings according to the configured range. 
+  Requires that the VTEP, EVPN_NVO and VLAN be created. 
+  In case of failures, this command displays an error and continues to the next
+  set of VLAN Ids.
+
+- Usage:
+
+    config vxlan map_range add `<vtepname> <start_vlanid> <start_vnid> <end_vlanid>`
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan map_range add vtep1 100 1200 200
+
+This creates mappings as 100-1200, 101-1201, .... , 200-1300
+```
+
+**config vxlan map_range del**
+
+  Deletes contigous VLAN VNI mappings according to the configured range. 
+  Requires that there be no VRF-VNI mappings referring to the VNIs being deleted.
+  In case of failures, this command displays an error and continues to the next
+  set of VLAN Ids.
+  
+
+- Usage:
+
+    config vxlan map_range del `<vtepname> <start_vlanid> <start_vnid> <end_vlanid>`
+
+- Example:
+
+```
+admin@sonic:~$ sudo config vxlan map_range del vtep1 100 1200 200
+This deletes mappings as 100-1200, 101-1201, .... , 200-1300
+```
 # Warm Restart
 
 ## Warm Restart show command
