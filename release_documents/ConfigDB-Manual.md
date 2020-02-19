@@ -81,6 +81,8 @@ Table of Contents
          * [sFlow](#sflow)  
          * [BUM Storm Control](#BUM-Storm-Control)
          * [IGMP Snooping](#igmp-snooping)  
+         * [Drop Monitor](#drop-monitor)  
+         * [Tail Timestamping](#tail-timestamping)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -1978,7 +1980,8 @@ Interface specific sFlow configuration attributes are defined in **SFLOW\_SESSIO
         "Ethernet4": {
             "admin_state": "up"
         }
-    },
+    }
+```
 
 ### IGMP Snooping
 
@@ -2028,6 +2031,110 @@ Broadcast, Unknown-multicast and Unknown-unicast storm-control configuration is 
         },
         "Ethernet0:unknown-unicast": {
             "kbps": "200000"
+        }
+    }
+}
+```
+
+### DROP MONITOR
+
+The drop monitor feature configuration is defined in **TAM_DEVICE_TABLE**, **SAMPLE_RATE_TABLE**, **TAM_COLLECTOR_TABLE**, **TAM_DROP_MONITOR_FEATURE_TABLE**,  **TAM_DROP_MONITOR_FLOW_TABLE** and **TAM_DROP_MONITOR_AGING_INTERVAL_TABLE**. The ACL configuration for drop monitor comes via **ACL_TABLE** and **ACL_RULE**.
+
+```
+{
+    "TAM_DEVICE_TABLE": {
+        "device": {
+            "deviceid": "2345"
+        }
+    },
+    "SAMPLE_RATE_TABLE": {
+        "s1": {
+            "sampling-rate": "10"
+        }
+    },
+    "TAM_COLLECTOR_TABLE": {
+        "cr1": {
+            "ipaddress": "10.10.10.10",
+            "ipaddress-type": "ipv4",
+            "port": "9070"
+        }
+    },
+    "TAM_DROP_MONITOR_FEATURE_TABLE": {
+        "feature": {
+             "enable": "true"
+        }
+    },
+    "TAM_DROP_MONITOR_FLOW_TABLE": {
+        "flow1": {
+            "acl-rule-name": "R1",
+            "acl-table-name": "A1",
+            "collector": "cr1",
+            "sample": "s1",
+            "flowgroup-id": "1"
+        },
+    }
+    "TAM_DROP_MONITOR_AGING_INTERVAL_TABLE": {
+        "aging ": {
+            "aging-interval ": "10"
+        }
+    }
+    "ACL_TABLE": {
+        "A1": {
+            "policy_desc" : "Drop monitor policy",
+            "stage" : "INGRESS",
+            "type" : "TAM" ,
+            "ports" : "Ethernet20"
+        }
+    }
+    "ACL_RULE": {
+        "A1|R1": {
+            "PRIORITY" : "55",
+            "IP_TYPE" : "ipv4any",
+            "IP_PROTOCOL": "17",
+            "SRC_IP" : "10.10.0.26/32",
+            "DST_IP" : "10.10.1.26/32",
+            "PACKET_ACTION" : "MONITOR_DROPS"
+        }
+    }
+}
+```
+
+### TAIL TIMESTAMPING
+
+The tail timestamping feature configuration is defined in **TAM_DEVICE_TABLE**, **TAM_INT_IFA_TS_FEATURE_TABLE** and **TAM_INT_IFA_TS_FLOW*. The ACL configuration comes via **ACL_TABLE** and **ACL_RULE**.
+
+```
+{
+    "TAM_DEVICE_TABLE": {
+        "device": {
+            "deviceid": "2345"
+        }
+    },
+    "TAM_INT_IFA_TS_FEATURE_TABLE": {
+        "feature": {
+            "enable": "true"
+        }
+    },
+    "TAM_INT_IFA_TS_FLOW": {
+        "F1": {
+            "acl-rule-name": "Rule1",
+            "acl-table-name": "TS"
+        }
+    },
+    "ACL_TABLE": {
+        "TS": {
+            "policy_desc" : "IFA - Tail Timestamping Policy - Match IFA packets",
+            "stage" : "INGRESS",
+            "type" : "TAM" ,
+            "ports" : "Ethernet20"
+        }
+    }
+    "ACL_RULE": {
+        "TS|Rule1": {
+            "PRIORITY" : "55",
+            "IP_PROTOCOL": "17",
+            "TAM_INT_TYPE" : "IFA",
+            "PACKET_ACTION" : "int_insert"
         }
     }
 }
