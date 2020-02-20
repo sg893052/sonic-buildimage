@@ -136,11 +136,14 @@ Table of Contents
       * [pfcstat command](#pfcstat-command)
       * [PFC watchdog commands](#pfc-watchdog-commands)
    * [PIM Source Specific Multicast](#pim-source-specific-multicast)
+      * [IGMP configuration commands](#igmp-configuration-commands)
       * [PIM configuration commands](#pim-configuration-commands)
-      * [PIM show commands](#pim-show-commands)
+      * [PIM and IGMP show commands](#pim/igmp-show-commands)
          * [FRR VTYSH Shell](#frr-vtysh-shell)
          * [SONiC Click CLI Shell](#sonic-click-cli-shell)
+      * [IGMP clear commands](#igmp-clear-commands)
       * [PIM clear commands](#pim-clear-commands)
+      * [IGMP debug commands](#igmp-debug-commands)
       * [PIM debug commands](#pim-debug-commands)
    * [PortChannel Configuration And Show](#portchannel-configuration-and-show)
       * [PortChannel Show commands](#portchannel-show-commands)
@@ -7170,6 +7173,31 @@ PIM source specific multicast (PIM-SSM) is supported in this SONiC release. PIM 
 
 PIM and IGMP configuration and show commands are available only via FRR vtysh shell. FRR split mode configuration (config routing_config_mode split) is required in SONiC. And FRR configuration is required to be saved (write memory) from vtysh in order to retain across reloads.
 
+## IGMP Configuration Commands
+
+All IGMP configuration is done in the VTY shell. When IGMP is enabled, PIM recieves IGMP reports and Queries. IGMP Configuration is done under an interface, where pim is also configured. IGMP configuration example is provided below.
+
+```
+ip pim ssm prefix-list ssm_list
+!
+interface Vlan20
+ ip igmp
+ ip igmp join 238.1.1.1 7.7.7.7
+ ip igmp last-member-query-count 3
+ ip igmp last-member-query-interval 11
+ ip igmp query-max-response-time 20
+ ip pim
+!
+interface Vlan200 vrf Vrf_RED
+ ip igmp
+ ip igmp join 224.3.3.4 0.0.0.0
+ ip igmp version 2
+ ip pim
+!
+ip prefix-list ssm_list seq 5 permit any
+!
+```
+
 ## PIM Configuration Commands
 
 PIM SSM configuration example is provided below.
@@ -7220,13 +7248,13 @@ The above configuration example shows the PIM-SSM/IGMP configuration for the def
 
 
 
-## PIM Show Commands
+## PIM/IGMP Show Commands
 
 ### FRR VTYSH Shell
 
 PIM show commands listed below are available only from FRR vtysh shell.
 
-PIM global configuration parameters, total multicast route count and other PIM related information is displayed using the below command.
+PIM global configuration parameters, total multicast route count and other PIM related information is displayed using the below command. 
 
 ```
 sonic# show ip multicast
@@ -7725,33 +7753,35 @@ Default     112.0.0.2    232.0.31.63   Ethernet2       Ethernet0           SWSS_
 Default     112.0.0.2    232.0.31.62   Ethernet2       Ethernet0           SWSS_RC_TABLE_FULL  create
 ```
 
-## PIM Clear Commands
-
-PIM clear commands listed below are available only from FRR vtysh shell.
-
-
-The below listed clear commands clears the multicast routes, the OIFs of the routes, PIM interface related operational information etc.,
-
+## IGMP clear Commands
+IGMP dynamic group information under an interface can be reset using the below command
 ```
-sonic# clear ip mroute
-sonic# clear ip mroute vrf Vrf_RED
+sonic# clear ip igmp vrf Vrf_RED interfaces 
+  <cr>  
+sonic# clear ip igmp interfaces             
+  <cr>   
+```
+## PIM clear Commands
 
-sonic# clear ip pim
+PIM information can be reset using below command.
+```
+sonic# clear ip pim             
   interface   Reset PIM interfaces
   interfaces  Reset PIM interfaces
   oil         Rescan PIM OIL (output interface list)
   statistics  Specify the VRF
   vrf         Specify the VRF
-sonic#
-
-sonic# clear ip pim vrf Vrf_RED
-  interface   Reset PIM interfaces
-  interfaces  Reset PIM interfaces
-  oil         Rescan PIM OIL (output interface list)
-sonic#
 ```
+## IGMP Debug Commands
 
-
+IP igmp commands are listed below and can be enabled from VTY shell.
+```
+sonic# debug igmp    
+  <cr>     
+  events   IGMP protocol events
+  packets  IGMP protocol packets
+  trace    IGMP internal daemon activity
+```
 
 ## PIM Debug Commands
 
@@ -7778,6 +7808,7 @@ sonic# debug mroute
   detail  detailed
 sonic#
 ```
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#pim-source-specific-multicast)
 # PortChannel Configuration And Show
 
