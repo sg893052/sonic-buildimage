@@ -52,6 +52,7 @@ Table of Contents
          * [Management Interface](#management-interface)  
          * [Management port](#management-port)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
+         * [MCLAG](#mclag)
          * [NAT](#nat)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
          * [Port](#port)  
@@ -90,11 +91,11 @@ Table of Contents
 
 # Document History
 
-| # | Date    |  Document Version | Details |
-| --- | --- | --- | --- |
-| 1 |  Sep 20, 2019 |v1 | Initial version |
-| 2 |  Nov 22, 2019 |v2 | Broadcom SONiC 2.1.0 Release |
-| 3 |  Feb 16, 2020 |v3 | Broadcom SONiC 3.0.0 Release |
+| #    | Date         | Document Version | Details                      |
+| ---- | ------------ | ---------------- | ---------------------------- |
+| 1    | Sep 20, 2019 | v1               | Initial version              |
+| 2    | Nov 22, 2019 | v2               | Broadcom SONiC 2.1.0 Release |
+| 3    | Feb 16, 2020 | v3               | Broadcom SONiC 3.0.0 Release |
 
 # INTRODUCTION																																									
 This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.  																																																																					
@@ -1380,6 +1381,79 @@ dec-octet           = DIGIT                     ; 0-9
                        / "1" 2DIGIT            ; 100-199
                        / "2" %x30-34 DIGIT     ; 200-249
 ```
+
+
+
+### MCLAG
+
+MCLAG Domain configuration is defined in MCLAG_DOMAIN table. MCLAG interface configuration is defined in MCLAG_INTERFACE table. Schema and examples for both tables are given below
+
+
+
+**Schema** 
+
+```
+;MCLAG Domain Table
+key               = MCLAG_DOMAIN|domain_id ; DIGIT 1-4095 
+
+;field             = value
+source_ip          = IP               ; local ip address 
+peer_ip            = IP               ; peer  ip address 
+peer_link          = port_name        ; peer link name
+keepalive_interval = time_in_secs     ; keepalive time in seconds 
+session_timeout    = time_in_secs     ; session timeout in multiple of 
+									  ; keepalive_interval.
+
+;value annotations
+port_name         = 1*64VCHAR        ; name of the port, must be unique
+time_in_secs      = dec-octet        ; time in seconds
+IP                = IPV4address
+IPv4address        = dec-octet "." dec-octet "." dec-octet "." dec-octet "
+
+ dec-octet        = DIGIT            ; 0-9
+                / %x31-39 DIGIT      ; 10-99
+                / "1" 2DIGIT         ; 100-199
+                / "2" %x30-34 DIGIT  ; 200-249
+                / "25" %x30-35       ; 250-255
+
+
+;MCLAG Interface Table
+key              = MCLAG_INTERFACE|domain_id|ifname ; 
+
+;value annotations
+domain_id 	   = DIGIT 1-4095     ; domain_id for the MCLAG
+ifname         = 1*64VCHAR        ; name of the MCLAG Interface (PortChannel)
+
+```
+
+
+
+**Example**
+
+```
+"MCLAG_DOMAIN": {
+        "10": {
+            "peer_ip": "10.10.10.2",
+            "peer_link": "PortChannel2",
+            "source_ip": "10.10.10.1"
+        }
+    },
+    "MCLAG_INTERFACE": {
+        "10|PortChannel3": {
+            "if_type": "PortChannel"
+        },
+        "10|PortChannel4": {
+            "if_type": "PortChannel"
+        },
+        "10|PortChannel10": {
+            "if_type": "PortChannel"
+        }
+    }
+
+
+```
+
+### 
 
 ### NAT
 
