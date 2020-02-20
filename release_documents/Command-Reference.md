@@ -30,13 +30,16 @@ Table of Contents
       * [Show System Status](#show-system-status)
       * [Show Hardware Platform](#show-hardware-platform)
          * [Transceivers](#transceivers)
-   * [AAA &amp; TACACS  Configuration And Show](#aaa--tacacs-configuration-and-show)
+   * [AAA TACACS+ &amp; RADIUS Configuration And Show](#aaa-tacacs--radius-configuration-and-show)
       * [AAA Configuration And Show](#aaa-configuration-and-show)
          * [AAA show commands](#aaa-show-commands)
          * [AAA config commands](#aaa-config-commands)
       * [TACACS  Configuration And Show](#tacacs-configuration-and-show)
          * [TACACS  show commands](#tacacs-show-commands)
          * [TACACS  Config commands](#tacacs-config-commands)
+      * [RADIUS  Configuration And Show](#radius-configuration-and-show)
+         * [RADIUS  show commands](#radius-show-commands)
+         * [RADIUS  Config commands](#radius-config-commands)
    * [ACL Configuration And Show](#acl-configuration-and-show)
       * [ACL show commands](#acl-show-commands)
       * [ACL config commands](#acl-config-commands)
@@ -46,6 +49,11 @@ Table of Contents
    * [VRF Configuration And Show Commands](#vrf)
       * [VRF show commands](#vrf-show-commands)
       * [VRF config commands](#vrf-config-commands) 
+   * [Management VRF Configuration Commands](#management-vrf)
+      * [Management VRF config commands](#management-vrf-config-commands)
+         * [Enable or Disable Management VRF](#enable-or-disable-management-vrf)
+         * [Configure SNMP over Management VRF](#configure-snmp-over-management-vrf)
+      * [Using ssh scp ntpstat in Management VRF](#using-ssh-scp-ntpstat-in-management-vrf)
    * [VRRP Configuration And Show Commands](#vrrp)
       * [VRRP show commands](#vrrp-show-commands)
       * [VRRP config commands](#vrrp-show-commands) 
@@ -400,6 +408,7 @@ This command lists all the possible configuration commands at the top level.
     portchannel
     portgroup              Port-group configuration tasks
     qos
+    radius                 RADIUS server configuration
     reload                 Clear current configuration and import a...
     save                   Export current config DB to a file on disk.
     tacacs                 TACACS+ server configuration
@@ -450,6 +459,7 @@ This command displays the full list of show commands available in the software; 
     priority-group        Show details of the PGs
     processes             Display process information
     queue                 Show details of the queues
+    radius                Show RADIUS configuration
     reboot-cause          Show cause of most recent reboot
     route-map             show route-map
     runningconfiguration  Show current running configuration...
@@ -924,8 +934,8 @@ This command displays information for all the interfaces for the transceiver req
   ```
   Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Basic-Configuration-And-Show)
 
-# AAA & TACACS+ Configuration And Show
-This section captures the various show commands & configuration commands that are applicable for the AAA (Authentication, Authorization, and Accounting) module.
+# AAA TACACS+ &amp; RADIUS Configuration And Show
+This section captures the various show commands and configuration commands that are applicable for the AAA (Authentication, Authorization, and Accounting) module.
 Admins can configure the type of authentication (local or remote tacacs based) required for the users and also the authentication failthrough and fallback options.
 Following show command displays the current running configuration related to the AAA.
 
@@ -933,7 +943,7 @@ Following show command displays the current running configuration related to the
 
 ### AAA show commands
 
-This command is used to view the Authentication, Authorization & Accounting settings that are configured in the network node.
+This command is used to view the Authentication, Authorization and Accounting settings that are configured in the network node.
 
 **show aaa**  
 This command displays the AAA settings currently present in the network node
@@ -962,7 +972,7 @@ This sub-section explains all the possible CLI based configuration options for t
 **aaa authentication failthrough**  
 
 This command is used to either enable or disable the failthrough option. 
-This command is useful when user has configured more than one tacacs+ server and when user has enabled tacacs+ authentication.
+This command is useful when user has configured more than one tacacs+/radius server and when user has enabled tacacs+/radius authentication.
 When authentication request to the first server fails, this configuration allows to continue the request to the next server.
 When this configuration is enabled, authentication process continues through all servers configured.
 When this is disabled and if the authentication request fails on first server, authentication process will stop and the login will be disallowed.
@@ -970,7 +980,7 @@ When this is disabled and if the authentication request fails on first server, a
 
 - Usage:  
   config aaa authentication failthrough enable|disable|default
-  ​	   
+
   	   Allow AAA fail-through [enable | disable | default]
   	     enable - this allows the AAA module to process with local authentication if remote authentication fails.
   	   disbale - this disallows the AAA module to proceed further if remote authentication fails.
@@ -990,7 +1000,7 @@ When the tacacs+ authentication fails, it falls back to local authentication by 
 
 - Usage:  
   config aaa authentication fallback enable|disable|default
-  ​     
+
      Allow AAA fallback [enable | disable | default]
 
 - Example:
@@ -1001,27 +1011,37 @@ When the tacacs+ authentication fails, it falls back to local authentication by 
 
 **aaa authentication login**  
 
-This command is used to either configure whether AAA should use local database or remote tacacs+ database for user authentication. 
+This command is used to configure whether AAA should use the local database, remote radius, or remote tacacs+ databases for user authentication. 
 By default, AAA uses local database for authentication. New users can be added/deleted using the linux commands (Note that the configuration done using linux commands are not preserved during reboot).
-Admin can enable remote tacacs+ server based authentication by selecting the AUTH_PROTOCOL as tacacs+ in this command.
-Admins need to configure the tacacs+ server accordingly and ensure that the connectivity to tacacas+ server is available via the management interface.
-Once if the admins choose the remote authentication based on tacacs+ server, all user logins will be authenticated by the tacacs+ server.
+Admins can enable remote tacacs+/radius server based authentication by selecting the AUTH_PROTOCOL as tacacs+/radius in this command.
+Admins need to configure the tacacs+/radius server accordingly and ensure that the connectivity to tacacs+/radius server is available via the management interface.
+Once admins choose remote tacacs+/radius authentication, all user logins will be authenticated by the tacacs+/radius server.
 If the authentication fails, AAA will check the "failthrough" configuration and authenticates the user based on local database if failthrough is enabled.
 
 - Usage:  
-  Switch login authentication [ {tacacs+, local} | default ]
-  ​    
-    Switch login authentication [ {tacacs+, local} | default ]
+  Switch login authentication [ {tacacs+, radius, local} | default ]
+
+    Switch login authentication [ {tacacs+, radius, local} | default ]
     tacacs+ - This enables remote authentication based on tacacs+
+    radius - This enables remote authentication based on radius
     local - this disables remote authentication and uses local authentication
     default - reset back to default value, which is nothing but the "local" authentication
 
 
 - Example:
+  For configuring authentication with tacacs+, and if none respond fallback
+  to local:
   ```
-  root@sonic:~# config aaa authentication login tacacs+
+  root@sonic:~# config aaa authentication login tacacs+ local
   root@sonic:~# 
   ```
+  For configuring authentication with radius, and if none respond fallback
+  to local:
+  ```
+  root@sonic:~# config aaa authentication login radius local
+  root@sonic:~# 
+  ```
+
 
 
 ## TACACS+ Configuration And Show
@@ -1151,6 +1171,7 @@ Default for authtype is "pap", default for passkey is EMPTY_STRING and default f
 
 This command is used to modify the global value for the TACACS+ passkey.
 When user has not configured server specific passkey, this global value shall be used for that server.
+The passkey can include all printable ASCII characters with a few exceptions (#, SPACE, and COMMA). Its maximum length can be 65 characters.
 
    - Usage:  
      config tacacs passkey <pass_key>
@@ -1179,6 +1200,175 @@ When user has not configured server specific timeout, this global value shall be
 - Example: To configure non-default timeout value  
   ```
   root@T1-2:~# config tacacs timeout 60
+  root@T1-2:~#
+  ```
+
+
+
+## RADIUS Configuration And Show
+
+### RADIUS show commands
+
+**show radius**  
+
+This command displays the global configuration fields and the list of all radius servers and their correponding configurations.
+
+- Usage:  
+	show radius 
+
+- Example:
+  ``` 
+	RADIUS global auth_type pap (default)
+        RADIUS global retransmit 3 (default)
+	RADIUS global timeout 5 (default)
+	RADIUS global passkey <EMPTY_STRING> (default)
+
+	RADIUS_SERVER address 10.11.12.17
+				   priority 1
+				   auth_port 1812
+				   auth_type mschapv2
+				   retransmit 2
+				   timeout 10
+				   passkey testing123
+				   vrf mgmt
+
+	RADIUS_SERVER address 10.0.0.15
+				   priority 1
+				   auth_port 1645
+  ```
+
+### RADIUS Config commands
+
+This sub-section explains the command "config radius" and its sub-commands that are used to configure the following radius parameters.
+Some of the parameters like authtype, passkey, retransmit, and timeout can be either configured at per server level or at global level (global value will be applied if there no server level configuration)
+
+1) Add/Delete the radius server details.
+2) authtype - global configuration that is applied to all servers if there is no server specific configuration.
+3) default - reset the authtype, passkey, retranmit, or timeout to the default values.
+4) passkey - global configuration that is applied to all servers if there is no server specific configuration.
+5) timeout - global configuration that is applied to all servers if there is no server specific configuration.
+5) retransmit - global configuration that is applied to all servers if there is no server specific configuration.
+
+**config radius add**  
+
+This command is used to add a RADIUS server to the radius server list.
+Note that more than one radius server (maximum of eight) can be added in the device. 
+When a user tries to login, radius client shall contact the servers one by one. 
+When any server times out, device will try the next server one by one based on the priority value configured for that server.
+When this command is executed, the configured radius server addresses are updated.
+
+- Usage:  
+   config radius add <ip_address> [-r|--retransmit INTEGER] [-t|--timeout SECOND] [-k|--key SECRET] [-a|--type TYPE] [-o|--auth-port PORT] [-p|--pri PRIORITY] [-m|--use-mgmt-vrf]
+	
+	 **Arguments:**  
+	
+	 ip_address - RADIUS server IP address.
+	 retransmit - Retransmit attempts. range 0 to 10. default 3
+	 timeout - Transmission timeout interval in seconds. range 1 to 60. default 5
+	 key - Shared secret
+	 type - Authentication type, "chap","pap", or "mschapv2". default is "pap".
+	 auth-port - UDP port range is 1 to 65535, default 1812
+	 pri - Priority, priority range 1 to 64, default 1.
+	 use-mgmt-vrf - this means that the server is part of Management vrf, default is "no vrf"
+
+
+- Example:
+  ```	 
+  root@T1-2:~# config radius add 10.11.12.17 -t 10 -k testing123 -a mschapv2 -o 1645 -p 9
+  ```
+
+**config radius delete**  
+
+This command is used to delete the radius servers configured.
+
+- Usage:  
+   config radius delete <ip_address>
+
+- Example:
+  ```
+  root@T1-2:~# config radius delete 10.11.12.17
+  root@T1-2:~#
+  ```
+
+**config radius authtype**  
+
+This command is used to modify the global value for the RADIUS authtype.
+When user has not configured server specific authtype, this global value shall be used for that server.
+
+   - Usage:  
+     config radius authtype  chap|pap||mschapv2
+
+- Example:
+  ```
+  root@T1-2:~# config radius authtype mschapv2
+  root@T1-2:~#
+  ```
+  
+
+**config radius default**  
+
+This command is used to reset the global value for authtype, passkey, retransmit, or timeout to default value. 
+Default for authtype is "pap", default for passkey is EMPTY_STRING, default for retransmit is 3, and default for timeout is 5 seconds.
+
+- Usage:  
+   config radius default authtype|passkey|retransmit|timeout
+	
+- Example:
+  ```
+  root@T1-2:~# config radius default authtype
+  This will reset the global authtype back to the default value "pap".
+  ```
+
+**config radius passkey**  
+
+This command is used to modify the global value for the RADIUS passkey.
+When user has not configured server specific passkey, this global value shall be used for that server.
+The passkey can include all printable ASCII characters with a few exceptions (#, SPACE, and COMMA). Its maximum length can be 65 characters.
+
+   - Usage:  
+     config radius passkey <pass_key>
+
+
+- Example:
+  ```
+  root@T1-2:~# config radius passkey testing123
+  root@T1-2:~#
+  ```
+  
+
+**config radius retransmit**  
+
+This command is used to modify the global value for the RADIUS retransmit.
+When user has not configured server specific retransmit, this global value shall be used for that server.
+
+
+   - Usage:  
+
+    config radius [default] retransmit [\<retransmit_attempts\>]  
+     valid values for retransmit are from 0 to 10 seconds. 
+     When the optional keyword "default" is specified, retransmit_attempts parameter wont be used; default value of 3 is used.
+
+- Example: To configure non-default retransmit value  
+  ```
+  root@T1-2:~# config radius retransmit 2
+  root@T1-2:~#
+  ```
+
+**config radius timeout**  
+
+This command is used to modify the global value for the RADIUS timeout.
+When user has not configured server specific timeout, this global value shall be used for that server.
+
+
+   - Usage:  
+
+    config radius [default] timeout [\<timeout_value_in_seconds\>]  
+     valid values for timeout is 1 to 60 seconds. 
+     When the optional keyword "default" is specified, timeout_value_in_seconds parameter wont be used; default value of 5 is used.
+
+- Example: To configure non-default timeout value  
+  ```
+  root@T1-2:~# config radius timeout 60
   root@T1-2:~#
   ```
 
@@ -1686,6 +1876,63 @@ This command allows user to delete an already existing static route in SONIC.
 - ```
   admin@sonic:~$ config route del vrf Vrf-Edge prefix 71.39.196.0/27 next-hop 27.58.64.1
   ```
+
+# Management VRF
+
+Management VRF is a subset of VRF which provides a separation between the out-of-band management network and the in-band data plane network. The main routing table is the default table for all of the data plane switch ports. With Management VRF, a second table, mgmt, is used for routing through the Ethernet ports of the switch.
+
+By default, Management VRF is disabled. The admin user can enable it using the CLI interfaces (Eg: KLISH, click) or programmable interfaces (Eg: RESTCONF)
+
+
+## Management VRF config commands  
+
+### Enable or Disable Management VRF
+
+**config vrf add mgmt**  
+
+This command enable the Management VRF
+
+**config vrf del <vrf_name>**  
+
+This command disables the Management VRF
+
+Note: The corresponding KLISH CLI is:
+
+    [no] ip vrf management
+
+
+### Configure SNMP over Management VRF
+
+When the Mangement VRF is enabled, the user needs to configure the SNMP agent to listen on the mgmt VRF using the "config snmpagentaddress" command.
+
+
+**config snmpagentaddress add|del  [OPTIONS] <SNMP_AGENT_LISTENING_IP_Address>**
+
+  **OPTIONS**
+
+  -p, --port <SNMP_AGENT_LISTENING_PORT>
+
+  -v, --vrf <VRF_Name|mgmt|None>
+
+Note: The corresponding KLISH CLI is:
+
+    snmp-server agentaddress <ip> interface <vrf_name>
+
+
+## Using ssh scp ntpstat in Management VRF
+
+When the Management VRF is enabled, the commands such as ssh, scp, and ntpstat which are used from the switch to outbound will need to be run in the Management VRF control group using cgexec using "cgexec -g l3mdev:mgmt <command>"
+
+Eg:
+
+```
+    cgexec -g l3mdev:mgmt ssh user@ip
+```
+
+```
+    cgexec -g l3mdev:mgmt ntpstat
+```
+
 
 # VRRP Configuration And Show Commands
 

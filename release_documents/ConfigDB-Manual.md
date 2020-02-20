@@ -68,6 +68,7 @@ Table of Contents
          * [Spanning Tree (PVST)](#stp-pvst)  
          * [Spanning Tree (RPVST)](#stp-rpvst)  
          * [Tacplus Server](#tacplus-server)  
+         * [Radius Server](#radius-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)  
          * [UDLD](#udld)  
@@ -2139,16 +2140,69 @@ Rapid Spanning Tree can be configured Globally, per VLAN, per interface and per 
 
 ### Tacplus Server
 
+TACACS+ has tables for global and per server configurations.
 ```
+{
+"TACPLUS": {
+    "global": {
+        "passkey": "testing123",
+        "tcp_port": "49",
+        "auth_type": "pap",
+        "src_ip": "10.0.0.1",
+        "timeout": "5"
+    }
+  }
+}
+
 {
 "TACPLUS_SERVER": {
     "10.0.0.8": {
-        "priority": "1", 
+        "priority": "1",
         "tcp_port": "49"
     }, 
     "10.0.0.9": {
-        "priority": "1", 
+        "priority": "1",
         "tcp_port": "49"
+    }
+  }
+}
+```
+
+### Radius Server
+
+RADIUS has tables for global and per server configurations.
+```
+{
+"RADIUS": {
+    "global": {
+        "passkey": "testing123",
+        "auth_type": "pap",
+        "src_ip": "10.0.0.1",
+        "timeout": "5",
+        "retransmit": "3"
+    }
+  }
+}
+
+{
+"RADIUS_SERVER": {
+    "10.0.0.10": {
+        "priority": "1",
+        "passkey": "testing123",
+        "auth_type": "pap",
+        "timeout": "5",
+        "retransmit": "3"
+        "auth_port": "1812"
+        "vrf": "mgmt"
+    },
+    "10.0.0.11": {
+        "priority": "1",
+        "passkey": "testing123",
+        "auth_type": "pap",
+        "timeout": "5",
+        "retransmit": "3"
+        "auth_port": "1812"
+        "vrf": "mgmt"
     }
   }
 }
