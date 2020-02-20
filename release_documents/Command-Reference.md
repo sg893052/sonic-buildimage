@@ -75,6 +75,11 @@ Table of Contents
    * [CRM Configuration And Show Commands](#crm-configuration-and-show-commands)
       * [CRM config commands](#crm-config-commands)
       * [CRM show commands](#crm-show-commands)
+   * [DHCP Relay Commands](#dhcp-relay-commands)
+      * [DHCP Relay Configuration Commands](#dhcp-relay-configuration-commands)
+      * [DHCP Relay Show Commands](#dhcp-relay-show-commands)
+      * [DHCP Relay Debug commands](#dhcp-relay-debug-commands)
+      * [DHCP Relay Clear commands](#dhcp-relay-clear-commands)
    * [ECN Configuration And Show Commands](#ecn-configuration-and-show-commands)
       * [ECN show commands](#ecn-show-commands)
       * [ECN config commands](#ecn-config-commands)
@@ -3178,9 +3183,9 @@ These commands display threshold type, low and high thresholds configured for a 
   admin@sonic:$ crm show thresholds acl group
   ```
 
-
+  ```
   Resource Name    Threshold Type      Low Threshold    High Threshold
----------------  ----------------  ---------------  ----------------
+  ---------------  ----------------  ---------------  ----------------
   acl_group        used                           30                90
 
 
@@ -3188,7 +3193,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
----------------  ----------------  ---------------  ----------------
+  ---------------  ----------------  ---------------  ----------------
   acl_table        used                           30                90
 
 
@@ -3196,7 +3201,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name         Threshold Type      Low Threshold    High Threshold
---------------------  ----------------  ---------------  ----------------
+  --------------------  ----------------  ---------------  ----------------
   ipv4_route            used                           30                90
   ipv6_route            used                           30                90
   ipv4_nexthop          used                           30                90
@@ -3215,7 +3220,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
----------------  ----------------  ---------------  ----------------
+  ---------------  ----------------  ---------------  ----------------
   fdb_entry        used                           30                90
 
 
@@ -3223,7 +3228,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
----------------  ----------------  ---------------  ----------------
+  ---------------  ----------------  ---------------  ----------------
   ipv4_nexthop     used                           30                90
 
 
@@ -3231,7 +3236,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
----------------  ----------------  ---------------  ----------------
+  ---------------  ----------------  ---------------  ----------------
   ipv6_neighbor    used                           30                90
 
 
@@ -3240,7 +3245,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
----------------  ----------------  ---------------  ----------------
+  ---------------  ----------------  ---------------  ----------------
   nexthop_group    used                           30                90
 
 
@@ -3248,11 +3253,219 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name         Threshold Type      Low Threshold    High Threshold
---------------------  ----------------  ---------------  ----------------
+  --------------------  ----------------  ---------------  ----------------
   nexthop_group_member  used                           30                90
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#CRM-Configuration-And-Show-Commands)
+
+
+# DHCP Relay Commands
+
+This section explains all the DHCP Relay commands that are supported in SONiC.
+
+## DHCP Relay Configuration Commands
+
+**config interface ip dhcp-relay add <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>**
+
+This command enables user to configure IPv4 DHCP Server address on an interface. One address is mandatory and a maximum of four addresses are allowed. If the command is used multiple times with different addresses, the addresses are appended to the list of server addresses.
+
+- Usage:
+  - sudo config interface ip dhcp-relay add <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>
+
+- Examples:
+  ```
+    admin@sonic:~$ sudo config interface ip dhcp-relay add Vlan206 1.2.0.1 3.4.0.1
+    admin@sonic:~$ sudo config interface ip dhcp-relay add PortChannel007 192.168.0.1
+    admin@sonic:~$ sudo config interface ip dhcp-relay add Ethernet52 1.2.0.1 3.4.0.1 192.168.0.1 192.168.5.1
+  ```
+
+**config interface ip dhcp-relay remove <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>**
+
+This command enables user to remove the configured IPv4 DHCP Server address on an interface. One address is mandatory and a maximum of four addresses are allowed. A single server address can be deleted from the list of configured addresses by providing that address as argument.
+
+  - Usage:
+    sudo config interface ip dhcp-relay remove <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface ip dhcp-relay remove Vlan206 1.2.0.1 3.4.0.1
+  admin@sonic:~$ sudo config interface ip dhcp-relay remove PortChannel007 192.168.0.1
+  admin@sonic:~$ sudo config interface ip dhcp-relay remove Ethernet52 1.2.0.1 3.4.0.1 192.168.0.1 192.168.5.1
+  ```
+
+**config interface ipv6 dhcp-relay add <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>**
+
+This command enables user to configure IPv6 DHCP Server address on an interface. One address is mandatory and a maximum of four addresses are allowed. If the command is used multiple times with different addresses, the addresses are appended to the list of server addresses.
+
+- Usage:
+  - sudo config interface ipv6 dhcp-relay add <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>
+
+- Examples:
+  ```
+    admin@sonic:~$ sudo config interface ipv6 dhcp-relay add Vlan206 1122::1
+    admin@sonic:~$ sudo config interface ipv6 dhcp-relay add PortChannel007 3366::1 1112::1
+    admin@sonic:~$ sudo config interface ipv6 dhcp-relay add Ethernet52 1122::1 3366::1 1112::1
+  ```
+
+**config interface ipv6 dhcp-relay remove <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>**
+
+This command enables user to remove the configured IPv6 DHCP Server address on an interface. One address is mandatory and a maximum of four addresses are allowed. A single server address can be deleted from the list of configured addresses by providing that address as argument.
+
+  - Usage:
+    sudo config interface ipv6 dhcp-relay remove <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface ipv6 dhcp-relay remove Vlan206 1122::1
+  admin@sonic:~$ sudo config interface ipv6 dhcp-relay remove PortChannel007 3366::1 1112::1
+  admin@sonic:~$ sudo config interface ipv6 dhcp-relay remove Ethernet52 1122::1 3366::1 1112::1
+  ```
+
+## DHCP Relay Show Commands
+
+**show ip dhcp-relay brief**
+
+This command displays all the configured IPv4 DHCP Server address configurations.
+
+  - Usage:
+    - sudo show ip dhcp-relay brief
+  - Sample Output:
+    ```
+    +------------------+-----------------------+
+    | Interface Name   | DHCP Helper Address   |
+    +==================+=======================+
+    | Vlan10           | 20.20.1.2             |
+    |                  | 1.2.0.1               |
+    +------------------+-----------------------+
+    | PortChannel10    | 40.20.1.2             |
+    +------------------+-----------------------+
+    | Ethernet52       | 10.10.1.2             |
+    +------------------+-----------------------+
+    ```
+
+**show ip dhcp-relay statistics <interface_name>**
+
+This command displays the IPv4 DHCP Relay statistics on the interface.
+
+  - Usage:
+    - sudo show ip dhcp-relay statistics <interface_name>
+  - Sample Output:
+    ```
+    show ip dhcp-relay statistics Vlan10
+
+    Packets relayed from client to server:     2
+    Packets relayed from server to client:     0
+    Errors relaying packets from clients:      0
+    Errors relaying packets from servers:      0
+    Packets dropped with bogus GIADDR:         0
+    Packets dropped due to bad relay info:     0
+    Packets dropped due to missing relay info: 0
+    Packets dropped due to invalid hdr length: 0
+    Packets dropped on interface with no IP:   0
+    Replies dropped on downstream interface:   0
+    Requests dropped on upstream interface:    0
+    ```
+
+**show ipv6 dhcp-relay brief**
+
+This command displays all the configured IPv6 DHCP Server address configurations.
+
+  - Usage:
+    - sudo show ipv6 dhcp-relay brief
+  - Sample Output:
+    ```
+    +------------------+-----------------------+
+    | Interface Name   | DHCP Helper Address   |
+    +==================+=======================+
+    | Vlan10           | 2002::2               |
+    |                  | 1122::1               |
+    +------------------+-----------------------+
+    | PortChannel10    | 4422::2               |
+    +------------------+-----------------------+
+    | Ethernet52       | 1100::2               |
+    +------------------+-----------------------+
+    ```
+
+**show ipv6 dhcp-relay statistics <interface_name>**
+
+This command displays the IPv6 DHCP Relay statistics on the interface.
+
+  - Usage:
+    - sudo show ipv6 dhcp-relay statistics <interface_name>
+  - Sample Output:
+    ```
+    show ipv6 dhcp-relay statistics Vlan10
+
+    Packets relayed from client to server:                            0
+    Packets relayed from server to client:                            0
+    Errors relaying packets from clients:                             0
+    Errors relaying packets from servers:                             0
+    Packets with wrong message type dropped on downstream interface:  0
+    Packets with wrong message type dropped on upstream interface:    0
+    ```
+
+## DHCP Relay Debug Commands
+
+**debug dhcp-relay**
+
+This command enables the user to toggle between DEBUG and INFO logging levels of syslog for all the DHCP Relay processes.
+
+  - Usage:
+    - sudo debug dhcp-relay
+
+**debug ip dhcp-relay <interface_name>**
+
+This command toggles the syslog level for the IPv4 DHCP Relay process the relay interface.
+
+  - Usage:
+    - sudo debug ip dhcp-relay <interface_name>
+  - Example:
+    ```
+    admin@sonic:~$ sudo debug ip dhcp-relay Vlan10
+    admin@sonic:~$ sudo debug ip dhcp-relay Ethernet52
+    ```
+
+**debug ipv6 dhcp-relay <interface_name>**
+
+This command toggles the syslog level for the IPv6 DHCP Relay process the relay interface.
+
+  - Usage:
+    - sudo debug ipv6 dhcp-relay <interface_name>
+  - Example:
+    ```
+    admin@sonic:~$ sudo debug ipv6 dhcp-relay Vlan10
+    admin@sonic:~$ sudo debug ipv6 dhcp-relay Ethernet52
+    ```
+
+## DHCP Relay Clear Commands
+
+**sonic-clear ip dhcp-relay statistics <interface_name>**
+
+This command clears the IPv4 DHCP Relay statistics on a relay interface.
+
+  - Usage:
+    - sonic-clear ip dhcp-relay statistics <interface_name>
+  - Example:
+    ```
+    admin@sonic:~$ sudo sonic-clear ip dhcp-relay statistics Vlan10
+    admin@sonic:~$ sudo sonic-clear ip dhcp-relay statistics Ethernet52
+    ```
+
+**sonic-clear ipv6 dhcp-relay statistics <interface_name>**
+
+This command clears the IPv6 DHCP Relay statistics on a relay interface.
+
+  - Usage:
+    - sonic-clear ipv6 dhcp-relay statistics <interface_name>
+  - Example:
+    ```
+    admin@sonic:~$ sudo sonic-clear ipv6 dhcp-relay statistics Vlan10
+    admin@sonic:~$ sudo sonic-clear ipv6 dhcp-relay statistics Ethernet52
+    ```
+
+Go Back To [Beginning of the document](#command-line-interface-guide) or [Beginning of this section](#dhcp-relay-commands)
+
 # ECN Configuration And Show Commands
 
 This section explains all the Explicit Congestion Notification (ECN) show commands and ECN configuation options that are supported in SONiC.
@@ -3376,7 +3589,7 @@ Optional argument "-p" specify a period (in seconds) with which to gather counte
   ```
   admin@sonic:~$ show interfaces counters
         IFACE    STATE            RX_OK       RX_BPS    RX_UTIL    RX_ERR    RX_DRP    RX_OVR            TX_OK       TX_BPS    TX_UTIL    TX_ERR    TX_DRP    TX_OVR
------------  -------  ---------------  -----------  ---------  --------  --------  --------  ---------------  -----------  ---------  --------  --------  --------
+  -----------  -------  ---------------  -----------  ---------  --------  --------  --------  ---------------  -----------  ---------  --------  --------  --------
     Ethernet0        U  471,729,839,997  653.87 MB/s     12.77%         0    18,682         0  409,682,385,925  556.84 MB/s     10.88%         0         0         0
     Ethernet4        U  453,838,006,636  632.97 MB/s     12.36%         0     1,636         0  388,299,875,056  529.34 MB/s     10.34%         0         0         0
     Ethernet8        U  549,034,764,539  761.15 MB/s     14.87%         0    18,274         0  457,603,227,659  615.20 MB/s     12.02%         0         0         0
@@ -3392,7 +3605,7 @@ Optional argument "-p" specify a period (in seconds) with which to gather counte
   ```
   admin@sonic:~$ show interfaces counters -p 5
         IFACE    STATE    RX_OK       RX_BPS    RX_UTIL    RX_ERR    RX_DRP    RX_OVR    TX_OK       TX_BPS    TX_UTIL    TX_ERR    TX_DRP    TX_OVR
------------  -------  -------  -----------  ---------  --------  --------  --------  -------  -----------  ---------  --------  --------  --------
+  -----------  -------  -------  -----------  ---------  --------  --------  --------  -------  -----------  ---------  --------  --------  --------
   Ethernet0         U      515   59.14 KB/s      0.00%         0         0         0    1,305  127.60 KB/s      0.00%         0         0         0
   Ethernet4         U      305   26.54 KB/s      0.00%         0         0         0      279   39.12 KB/s      0.00%         0         0         0
   Ethernet8         U      437   42.96 KB/s      0.00%         0         0         0      182   18.37 KB/s      0.00%         0         0         0
@@ -3458,7 +3671,7 @@ This command displays the key fields of the interfaces such as Operational Statu
   ```
   admin@sonic:~$ show interfaces description 
   Interface    Oper    Admin            Alias           Description
------------  ------  -------  ---------------  --------------------
+  -----------  ------  -------  ---------------  --------------------
   Ethernet0    down       up   hundredGigE1/1  T0-1:hundredGigE1/30
   Ethernet4    down       up   hundredGigE1/2  T0-2:hundredGigE1/30
   Ethernet8    down     down   hundredGigE1/3        hundredGigE1/3
@@ -3470,7 +3683,7 @@ This command displays the key fields of the interfaces such as Operational Statu
 
   admin@sonic:~$ show interfaces description Ethernet4
   Interface    Oper    Admin           Alias           Description
------------  ------  -------  --------------  --------------------
+  -----------  ------  -------  --------------  --------------------
   Ethernet4    down       up  hundredGigE1/2  T0-2:hundredGigE1/30
 
   ```
@@ -3661,7 +3874,7 @@ This command displays information regarding port-channel interfaces
   admin@sonic:~$ show interfaces portchannel
   Flags: A - active, I - inactive, Up - up, Dw - Down, N/A - not available, S - selected, D - deselected
     No.  Team Dev       Protocol     Ports
------  -------------  -----------  ---------------------------
+  -----  -------------  -----------  ---------------------------
      24  PortChannel24  LACP(A)(Up)  Ethernet28(S) Ethernet24(S)
      48  PortChannel48  LACP(A)(Up)  Ethernet52(S) Ethernet48(S)
      40  PortChannel40  LACP(A)(Up)  Ethernet44(S) Ethernet40(S)
@@ -3683,7 +3896,7 @@ This command displays some more fields such as Lanes, Speed, MTU, Type, Asymmetr
 
   admin@sonic:~$ show interfaces status
   Interface            Lanes    Speed    MTU            Alias    Oper    Admin    Type    Asym PFC
------------  ---------------  -------  -----  ---------------  ------  -------  ------  ----------
+  -----------  ---------------  -------  -----  ---------------  ------  -------  ------  ----------
   Ethernet0      49,50,51,52     100G   9100   hundredGigE1/1    down       up     N/A         off
   Ethernet4      53,54,55,56     100G   9100   hundredGigE1/2    down       up     N/A         off
   Ethernet8      57,58,59,60     100G   9100   hundredGigE1/3    down     down     N/A         off
@@ -3696,7 +3909,7 @@ This command displays some more fields such as Lanes, Speed, MTU, Type, Asymmetr
 
   admin@sonic:~$ show interface status Ethernet0
   Interface     Lanes    Speed    MTU            Alias    Oper    Admin
------------  --------  -------  -----   --------------  ------  -------
+  -----------  --------  -------  -----   --------------  ------  -------
   Ethernet0   101,102      40G   9100   fortyGigE1/1/1      up       up
 
   ```
@@ -3901,7 +4114,7 @@ The command, "show interface description", can be used to view the descriptions 
   show interfaces description Ethernet64
   admin@sonic:~$ show interfaces description Ethernet64
     Interface    Oper    Admin          Alias                      Description
------------  ------  -------  -------------  -------------------------------
+  -----------  ------  -------  -------------  -------------------------------
    Ethernet64    down       up  hundredGigE53  North-bound interface to Spine1
   admin@sonic:~$ sudo config interface description Ethernet60 None
   ```
@@ -4003,7 +4216,7 @@ This command displays portgroup information of current platform. It displays eac
   ```
   admin@sonic:~$ show portgroup
     portgroup          ports      valid speeds
------------  -------------  ----------------
+  -----------  -------------  ----------------
             1   Ethernet0-11  25000,10000,1000
             2  Ethernet12-23  25000,10000,1000
             3  Ethernet24-35  25000,10000,1000
@@ -5588,7 +5801,7 @@ To delete mclag domain,  user needs to use below command with domain id field. M
 
 
 
-**Modifying MCLAG Keepalive/Session timer values **
+**Modifying MCLAG Keepalive/Session timer values**
 
 To modify mclag keepalive timer or session timeout use the following commands. By default keepalive interval is 1 secs and session timeout is 15 secs
 
@@ -6000,7 +6213,6 @@ note:- this commands take only portchannel id and not portchannel name
 
   ```
 
-## 
 
 # Mirroring Configuration And Show
 
@@ -10220,7 +10432,7 @@ This command displays the failure entries logged in the error database.
 show error_database [tablename]
 
 - Example:
-  ```
+```
 admin@sonic:/home/admin# show error_database
 Prefix         Nexthop    Interface    Error Code      Operation
 -------------  ---------  -----------  --------------  -----------
@@ -10951,7 +11163,6 @@ This command enables user to disable use-link-local-only configuration on an int
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Vlan206
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only PortChannel007
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Ethernet52
-  ``
   ```
 
 **config ipv6 enable**
@@ -10976,6 +11187,8 @@ This command enables user to disable use-link-local-only command on all the inte
   ```
   admin@sonic:~$ sudo config ipv6 disable
   ```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ipv6-link-local-configuration-commands)
 
 # BGP Unnumbered Configuration Command
 
@@ -11696,8 +11909,8 @@ This command displays the current running configuration of sflow on interfaces
 - Example:
   ```
     sonic# show sflow interface
------------------------------------------------------------
-  sFlow interface configurations
+  -----------------------------------------------------------
+    sFlow interface configurations
     Interface		Admin State		Sampling Rate
     Ethernet0            up                      10000
     Ethernet4            down                    10000
@@ -11949,17 +12162,6 @@ OSPF show command list is as below. Please refer to FRR User Manual for more det
         show ip ospf database self-originate
         show ip ospf route
 
-   
-
-
-
-
-
-
-
-
-
-
 
 ## OSPFv2 config commands
 
@@ -12037,7 +12239,6 @@ OSPF router configuration command is as below. Please refer to FRR User Manual f
         [no] ip ospf retransmit-interval (3-65535) [A.B.C.D]
         [no] ip ospf transmit-delay (1-65535) [A.B.C.D]
 
-
 ## OSPFv2 clear commands
 
 OSPF clear commands are as below. Please refer to FRR User Manual for more details on these commands.
@@ -12062,6 +12263,8 @@ OSPF clear commands are as below. Please refer to FRR User Manual for more detai
         log file <file_path_and_name>
     
         Example : log file /var/log/frr/frr.log
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ospfv2-configuration-and-show-commands)
 
 # TAM Configuration And Show Commands
 
@@ -12302,13 +12505,7 @@ BroadView collector configuration command is below
 
 <br>
 <br>
-Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ospfv2-configuration-and-show-commands)
 
-
-
-
-
-```
 # Industry Standard CLIs
 
 
@@ -12322,3 +12519,4 @@ admin@sonic:~$ sonic-cli
 
 sonic#
 ```
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)

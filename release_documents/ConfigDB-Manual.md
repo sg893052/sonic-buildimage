@@ -41,6 +41,7 @@ Table of Contents
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [Device Metadata](#device-metadata)   
          * [Device neighbor metada](#device-neighbor-metada)  
+         * [DHCP Relay](#dhcp-relay)
          * [DOT1P_TO_TC_MAP](#dot1p_to_tc_map)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
@@ -1107,6 +1108,32 @@ instance is supported in SONiC.
         "type": "LeafRouter"
     }
   }
+}
+
+```
+
+### DHCP Relay
+
+```
+"INTERFACE": {
+    "Ethernet24": {
+        "dhcp_servers": ["31.1.0.2", "2.2.2.3", "11.19.0.144"],
+        "dhcpv6_servers": ["2001::2", "3366::1"]
+    }
+}
+
+"VLAN": {
+    "Vlan10": {
+        "dhcp_servers": ["1.2.0.1"],
+        "dhcpv6_servers": ["2001::2", "3366::1"]
+    }
+}
+
+"PORTCHANNEL_INTERFACE": {
+    "PortChannel10": {
+        "dhcp_servers": ["31.1.0.2", "2.2.2.3", "11.19.0.144"],
+        "dhcpv6_servers": ["2001::2", "3366::1"]
+    }
 }
 
 ```
