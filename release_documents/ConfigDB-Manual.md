@@ -66,6 +66,7 @@ Table of Contents
          * [Shaping (port and queue)](#shaping)  
          * [SNMP CLI](#snmp-cli)  
          * [Spanning Tree (PVST)](#stp-pvst)  
+         * [Spanning Tree (RPVST)](#stp-rpvst)  
          * [Tacplus Server](#tacplus-server)  
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)  
@@ -2033,6 +2034,73 @@ Spanning Tree can be configured Globally, per VLAN, per interface and per VLAN-i
         "portfast": "true", 
         "root_guard": "false", 
         "uplink_fast": "false",
+        "bpdu_filter": "enable"
+    }
+}
+
+"STP_VLAN":
+{
+    "Vlan100": {
+        "enabled": "true", 
+        "forward_delay": "15", 
+        "hello_time": "2", 
+        "max_age": "20", 
+        "priority": "32768"
+    },
+    "Vlan200": {
+        "enabled": "true", 
+        "forward_delay": "15", 
+        "hello_time": "2", 
+        "max_age": "20", 
+        "priority": "32768"
+    }
+}
+
+"STP_VLAN_INTF":
+{
+    "Vlan100|Ethernet0": {
+        "path_cost": "100", 
+        "priority": "10"
+    }, 
+    "Vlan200|PortChannel100": {
+        "path_cost": "100", 
+        "priority": "10"
+    }
+}
+```
+
+### Spanning Tree (RPVST+)
+
+Rapid Spanning Tree can be configured Globally, per VLAN, per interface and per VLAN-interface as below:
+```
+"STP":
+{
+    "GLOBAL": {
+        "forward_delay": "15", 
+        "hello_time": "2", 
+        "max_age": "20", 
+        "mode": "rpvst", 
+        "priority": "32768", 
+        "rootguard_timeout": "30",
+        "bpdu_filter": "true"
+    }
+}
+
+"STP_INTF":
+{
+    "Ethernet0": {
+        "bpdu_guard": "false", 
+        "bpdu_guard_do_disable": "false", 
+        "enabled": "true", 
+        "edgeport": "true", 
+        "root_guard": "false" 
+    }, 
+    "PortChannel100": {
+        "bpdu_guard": "false", 
+        "bpdu_guard_do_disable": "false", 
+        "enabled": "true", 
+        "edgeport": "true", 
+        "root_guard": "false", 
         "bpdu_filter": "enable"
     }
 }

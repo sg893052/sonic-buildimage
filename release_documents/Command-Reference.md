@@ -8403,29 +8403,38 @@ The Spanning Tree Protocol (STP) prevents Layer 2 loops in a network and provide
 
 When spanning tree is used, the network switches transform the real network topology into a spanning tree topology. In an STP topology any LAN in the network can be reached from any other LAN through a unique path. The network switches recalculate a new spanning tree topology whenever there is a change to the network topology.
 
+Two modes of spanning tree protocol are supported: Per VLAN Spanning Tree and Rapid Per VLAN Spanning Tree. At any given time, only one of the modes is configurable. Most of the commands listed below are applicable to both the modes. Commands not applicable to a particular mode are explicitly called out.
+
 
 ## Per VLAN Spanning Tree (PVST)
 
-PVST+ allows for running multiple instances of spanning tree on per VLAN basis. Following sections explain PVST configuration and show commands.  
+PVST+ allows for running multiple instances of spanning tree on per VLAN basis. 
+
+## Rapid Per VLAN Spanning Tree (RPVST)
+
+RPVST+ allows for running multiple instances of rapid spanning tree on per VLAN basis. 
+
+Following sections explain PVST and RPVST configuration and show commands. The details of the equivalent PVST and RPVST KLISH CLI commands commands are available in KLISH CLI reference guide.
 
 ### Configuration commands 
 
 #### Global commands
 
-Following command allow to enable or disable PVST globally and to configure STP parameters globally. 
+Following commands allow to enable or disable PVST or RPVST globally and to configure STP parameters globally. 
 
-**config spanning_tree enable or disable pvst**
+**config spanning_tree enable or disable pvst or rpvst**
 
-This command allows enabling or disabling spanning tree mode (pvst) for the device globally. 
+This command allows enabling or disabling spanning tree mode (pvst or rpvst) for the device globally. 
 
-Note: When global pvst mode is enabled, by default spanning tree will be enabled on the VLANs for VLANs up to maximum PVST instances are supported on the hardware, for rest of the VLANs spanning tree will be disabled.
+Note: When global pvst or rpvst mode is enabled, by default spanning tree will be enabled on the VLANs for VLANs up to maximum PVST or RPVST instances supported on the hardware, for rest of the VLANs spanning tree will be disabled.
 
 - Usage: 
-  config spanning_tree {enable|disable} {pvst}
+  config spanning_tree {enable|disable} {pvst|rpvst}
 - Example:
 
 ```
   admin@sonic:~$ sudo config spanning_tree enable pvst
+  admin@sonic:~$ sudo config spanning_tree enable rpvst
 ```
 
 **config spanning_tree root_guard_timeout **
@@ -8490,7 +8499,7 @@ This command allows configuring the bridge priority in increments of 4096 (defau
 
 #### VLAN commands
 
-Following commands allow to enable or disable PVST per VLAN and configure STP parameters per VLAN.
+Following commands allow to enable or disable PVST or RPVST per VLAN and configure STP parameters per VLAN.
 
 **config spanning_tree vlan enable or disable**
 
@@ -8521,7 +8530,7 @@ Below commands are similar to the global level commands but allow configuring ST
 
 #### Interface commands
 
-Following command allow to enable or disable PVST per interface and configure STP parameters per interface.
+Following command allow to enable or disable PVST or RPVST per interface and configure STP parameters per interface.
 
 **config spanning_tree interface enable or disable** 
 
@@ -8589,7 +8598,7 @@ This command allows enabling or disabling of bpdu guard on an interface. By defa
 
 **config spanning_tree interface portfast**
 
-This command allows enabling or disabling of portfast on an interface. Portfast command is enabled by default on all ports.  
+This command allows enabling or disabling of portfast on an interface. Portfast command is enabled by default on all ports. This command is not applicable to RPVST.  
 
 - Usage: 
   config spanning_tree interface portfast {enable|disable} <if-name\>
@@ -8601,7 +8610,7 @@ This command allows enabling or disabling of portfast on an interface. Portfast 
 
 **config spanning_tree interface uplink_fast**
 
-This command allows enabling or disabling of uplink_fast on an interface. uplink_fast command is disabled by default on all ports. 
+This command allows enabling or disabling of uplink_fast on an interface. uplink_fast command is disabled by default on all ports. This command is not applicable to RPVST. 
 
 - Usage: 
   config spanning_tree interface uplink_fast {enable|disable} <if-name\>
@@ -8652,11 +8661,35 @@ This command shows information about spanning tree state information.
 - Usage: 
   show spanning_tree vlan <vlanid\> interface <if-name\>
 
-- Example:
+- Examples:
 
   ```
   admin@sonic:~$ show spanning_tree
   Spanning-tree Mode: PVST
+  VLAN 100 - STP instance 3
+  --------------------------------------------------------------------
+  STP Bridge Parameters:
+
+  Bridge           Bridge Bridge Bridge Hold  LastTopology Topology
+  Identifier       MaxAge Hello  FwdDly Time  Change       Change
+  hex              sec    sec    sec    sec   sec          cnt
+  8000002438eefbc3 20     2      15     1     0            0       
+
+  RootBridge       RootPath  DesignatedBridge Root  Max Hel Fwd
+  Identifier       Cost      Identifier       Port  Age lo  Dly
+  hex                        hex                    sec sec sec
+  8000002438eefbc3 0         8000002438eefbc3 Root  20  2   15  
+
+  STP Port Parameters:
+
+  Port        Prio Path Port Uplink   State      Designated  Designated       Designated
+  Num         rity Cost Fast Fast                Cost        Root             Bridge
+  Ethernet13  128  4    Y    N        FORWARDING 0           8000002438eefbc3 8000002438eefbc3 
+  ```
+
+  ```
+  admin@sonic:~$ show spanning_tree
+  Spanning-tree Mode: RPVST
   VLAN 100 - STP instance 3
   --------------------------------------------------------------------
   STP Bridge Parameters:
