@@ -192,7 +192,7 @@ Table of Contents
    * [Quagga BGP Show Commands](#Quagga-BGP-Show-Commands)
    * [Error Handling Framework Configuration and Show Commands](#error-handling-framework-configuration-and-show-commands) 
       * [Error Handling Framework show commands](#error-handling-framework-show-commands) 
-        * [Error Handling Framework clear commands](#error-handling-framework-clear-commands)   
+      * [Error Handling Framework clear commands](#error-handling-framework-clear-commands)   
    * [Threshold Configuration and Show commands](#threshold-configuration-and-show-commands) 
       * [Threshold show commands](#threshold-show-commands)
       * [Threshold configuration commands](#threshold-configuration-commands)
@@ -218,10 +218,16 @@ Table of Contents
       * [PTP configuration commands](#ptp-configuration-commands)
       * [PTP show commands](#ptp-show-commands)
    * [sFlow commands](#sflow-commands)
-      * [sFlow Global configuration commands](#sflow-global-configuration-commands)
-      * [sFlow Interface configuration commands](#sflow-interface-configuration-commands)
-      * [sFlow Global show commands](#sflow-global-show-commands)
-      * [sFlow Inteface show commands](#sflow-interface-show-commands)
+      * [sFlow KLISH commands](#sflow-klish-commands)
+        * [sFlow KLISH Global configuration commands](#sflow-klish-global-configuration-commands)
+        * [sFlow KLISH Interface configuration commands](#sflow-klish-interface-configuration-commands)
+        * [sFlow KLISH Global show commands](#sflow-klish-global-show-commands)
+        * [sFlow KLISH Inteface show commands](#sflow-klish-interface-show-commands)
+      * [sFlow Click commands](#sflow-click-commands)
+        * [sFlow Click Global configuration commands](#sflow-click-global-configuration-commands)
+        * [sFlow Click Interface configuration commands](#sflow-click-interface-configuration-commands)
+        * [sFlow Click Global show commands](#sflow-click-global-show-commands)
+        * [sFlow Click Inteface show commands](#sflow-click-interface-show-commands)
    * [BUM Storm Control Configuration and Show Commands](#BUM-Storm-Control-Configuration-and-Show-Commands)
       * [BUM Storm Control configuration commands](#BUM-Storm-Control-configuration-commands)
          * [Enable BUM Storm Control on interface](#Enable-BUM-Storm-Control-on-interface)
@@ -11681,7 +11687,9 @@ Example output:
 # sFlow commands
 This section explains all the sFlow configuration commands and sFlow show commands that are supported in SONiC.
 
-## sFlow Global configuration commands
+## sFlow KLISH commands
+
+### sFlow KLISH Global configuration commands
 
 Global sFlow configuration commands are executed in configuration-view.
 
@@ -11699,7 +11707,7 @@ Globally, sFlow is disabled by default. This command enables global sFlow.
 
 - Example:
   
-```
+  ```
   sonic(config)# sflow enable
   ```
 
@@ -11802,7 +11810,7 @@ Use this command to reset sFlow agent to default interface.
   sonic(config)# no sflow agent-id
   ```
 
-## sFlow Interface configuration commands
+### sFlow KLISH Interface configuration commands
 
 sFlow configurations for specific interface are executed in interface-configuration-view.
 
@@ -11875,7 +11883,7 @@ Use this command to enable sFlow for a specific interface.
   sonic(conf-if-Ethernet4)# sflow enable
   ```
 
-## sFlow Global show commands
+### sFlow KLISH Global show commands
 
 **show sflow**
 
@@ -11897,7 +11905,7 @@ This command displays the current sFlow configuration including admin state, pol
 	            collector1		10.0.0.1   6343
 	            collector2		20.0.0.1   9898
   ```
-## sFlow Interface show commands
+### sFlow KLISH Interface show commands
 
 **show sflow interface**
 
@@ -11946,6 +11954,264 @@ This command displays the current running configuration of sflow on interfaces
     Ethernet124          up                      10000
   sonic#
   ```
+
+## sFlow Click commands
+
+### sFlow Click Global configuration commands
+
+**config sflow enable**      
+
+Globally, sFlow is disabled by default. This command enables global sFlow.
+
+- Usage:     
+  config sflow enable
+
+- Example:
+  
+  ```
+  root@sonic:/home/admin# config sflow enable
+  ```
+
+**config sflow disable**
+
+This command disables global sFlow.
+
+- Usage:  
+  config sflow disable
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow disable
+  ```
+
+**config sflow collector add**
+
+Use this command to add sFlow collector.
+
+- Usage:  
+  config sflow collector add {Collector name} {Collector IP address} [--port {Collector port number}] 
+  
+    - Collector name: unique name of the sFlow collector
+    - Collector IP address : IPv4 or IPv6 address of the sFlow collector
+    - Collector port number[Optional]: UDP port of the collector (the range is from 0 to 65535. The default is 6343.)
+
+- Example-1 :
+  ```
+  root@sonic:/home/admin# config sflow collector add collector1 10.0.0.1
+  ```
+
+- Example-2:
+  ```
+  root@sonic:/home/admin# config sflow collector add collector2 20.0.0.1 --port 9898
+  ```
+- Note:
+  Maximum of 2 collectors is allowed.
+
+**config sflow collector del**
+
+Use this command to delete sFlow collector.
+
+- Usage:  
+  config sflow collector del {Collector name} 
+
+  - Collector name: unique name of the sFlow collector
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow collector del collector1
+  ```
+
+**config sflow polling-interval**
+
+Use this command to configure sFlow polling-interval.
+
+- Usage:  
+  config sflow polling-interval {interval}
+
+  - interval: [5 .. 300] (0 to disable, default is 20)
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow polling-interval 100
+  ```
+
+**config sflow agent-id add**
+
+Use this command to configure sFlow agent interface.
+
+- Usage:  
+  config sflow agent-id add {interface name}
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow agent-id add Ethernet0
+  ```
+
+**config sflow agent-id del**
+
+Use this command to reset sFlow agent to default interface.
+
+- Usage:  
+  config sflow agent-id del
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow agent-id del
+  ```
+
+### sFlow Click Interface configuration commands
+
+**config sflow interface sample-rate**
+
+The default sample rate for any interface is (ifSpeed / 1e6) where ifSpeed is in bits/sec. 
+So, the default sample rate based on interface speed is:
+
+  - 1-in-1000 for a 1G link
+  - 1-in-10,000 for a 10G link
+  - 1-in-40,000 for a 40G link
+  - 1-in-50,000 for a 50G link
+  - 1-in-100,000 for a 100G link
+
+Use this command to configure sampling-rate for a specific interface.
+
+- Usage:  
+  config sflow interface sample-rate {interface name} {rate}
+    - rate: [256..8388608]
+
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow interface sample-rate Ethernet4 10000
+  ```
+
+**config sflow interface disable**
+
+Use this command to explicitly disable sFlow for a specific interface.
+
+- Usage:  
+  config sflow interface disable {interface name}     
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow interface disable Ethernet4
+  ```
+
+**config sflow interface enable**
+
+Use this command to enable sFlow for a specific interface.
+
+- Usage:  
+  config sflow interface enable {interface name}
+
+- Example:
+  ```
+  root@sonic:/home/admin# config sflow interface enable Ethernet4
+  ```
+
+### sFlow Click Global show commands
+
+**show sflow**
+
+This command displays the current sFlow configuration including admin state, polling-interval, agent-id and collectors information.
+
+- Usage:  
+  show sflow  
+
+- Example:
+  ```
+  show root@sonic:/home/admin# show sflow
+
+  sFlow Global Information:
+    sFlow Admin State:          up
+    sFlow Polling Interval:     100
+    sFlow AgentID:              default
+
+    2 Collectors configured:
+      Name: collector1          IP addr: 10.0.0.1   UDP port: 6343
+      Name: collector2          IP addr: 20.0.0.1   UDP port: 9898
+  ```
+### sFlow Click Interface show commands
+
+**show sflow interface**
+
+This command displays the current running configuration of sflow on interfaces
+
+- Usage:  
+  show sflow interface
+
+- Example:
+```
+root@sonic:/home/admin# show sflow interface
+
+sFlow interface configurations
++-------------+---------------+-----------------+
+| Interface   | Admin State   |   Sampling Rate |
++=============+===============+=================+
+| Ethernet0   | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet4   | down          |           10000 |
++-------------+---------------+-----------------+
+| Ethernet8   | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet12  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet16  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet20  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet24  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet28  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet32  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet36  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet40  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet44  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet48  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet52  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet56  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet60  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet64  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet68  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet72  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet76  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet80  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet84  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet88  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet92  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet96  | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet100 | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet104 | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet108 | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet112 | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet116 | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet120 | up            |           10000 |
++-------------+---------------+-----------------+
+| Ethernet124 | up            |           10000 |
++-------------+---------------+-----------------+
+root@sonic:/home/admin#
+```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#sflow-commands)
 
