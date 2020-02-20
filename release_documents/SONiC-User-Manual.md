@@ -56,7 +56,7 @@ Table of Contents
       * [6.6 NAT troubleshooting](#66-nat-troubleshooting)
       * [6.7 Orchagent troubleshooting](#67-Orchagent-troubleshooting)
       * [6.8 IGMP Snooping troubleshooting](#igmp-snooping-troubleshooting)
-      * [6.9 PIM troubleshooting](#69-pim-troubleshooting)
+      * [6.9 PIM and IGMP troubleshooting](#69-pim-troubleshooting)
       * [6.10 System Resource Monitoring](#610-system-resource-monitoring)
       * [6.11 Kernel Crash troubleshooting](#611-kernel-crash-troubleshooting)
    * [7 Common Framework Development & Usage](#7-common-framework-development-usage)
@@ -1122,7 +1122,7 @@ All IGMP Snooping related configuration done via CLI is saved in the REDIS datab
 - Check if the multicast entries are installed in the switching ASIC. Use bcmcmd `ipmc table show`  BCM shell commands.
 - Check if the IPMC group created and member added to the group using `multicast show` BCM shell command.
 
-## 6.9 PIM troubleshooting
+## 6.9 PIM and IGMP  troubleshooting
 
 All PIM configuration is done in the FRR VTYSH shell.  If the last-hop PIM router doesn't receive multicast traffic from the multicast source, please follow the below troubleshooting steps to debug PIM issues.
 
