@@ -1736,6 +1736,7 @@ name as object key and member list as attribute.
     "PortChannel0004": {
         "admin_status": "up",
         "min_links": "1",
+        "static": "true",
         "members": [
             "Ethernet56"
         ],
