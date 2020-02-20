@@ -832,6 +832,8 @@ Basic cable connectivity shall be verified by configuring the IP address for the
 | 16 | OSPFv2 | [OSPFv2 CLI](Command-Reference.md#OSPFv2-configuration-and-show-commands) | N/A | To view the details about the OSPFv2 |
 | 17 | PIM |[PIM CLI](Command-Reference.md#pim-source-specific-multicast) | N/A | To view the details about PIM |
 | 18 | KDUMP |[ KDUMP CLI](Command-Reference.md#kdump-configuration-and-show-commands) | [KDUMP ConfigDB](ConfigDB-Manual.md#kdump) | To view the details about the KDUMP feature|
+| 19 | UDLD |[UDLD CLI](Command-Reference.md##udld) | [UDLD ConfigDB](Configuration.md) | To view the details about UDLD feature |
+| 20 | IP Unnumbered |[IP Unnumbered CLI](Command-Reference.md###ipv4-unnumbered-interface-commands) | [IP unnumbered ConfigDB](Configuration.md) | To view the details about IP unnumbered feature |
 
 
 # 5 Example Configuration
