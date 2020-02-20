@@ -8055,6 +8055,7 @@ This command displays all the port channels that are configured in the device an
      40  PortChannel40  LACP(A)(Up)  Ethernet44(S) Ethernet40(S)
       0  PortChannel0   LACP(A)(Up)  Ethernet0(S) Ethernet4(S)
       8  PortChannel8   LACP(A)(Up)  Ethernet8(S) Ethernet12(S)
+      1  PortChannel1   NONE(A)(Up)  Ethernet19(S) Ethernet18(S)
   ```
 
 
@@ -8071,17 +8072,22 @@ NOTE: If users specify any other name like "pc99", command will succeed, but suc
 
 When any port is already member of any other portchannel and if user tries to add the same port in some other portchannel (without deleting it from the current portchannel), the command fails internally. But, it does not print any error message. In such cases, remove the member from current portchannel and then add it to new portchannel.
 
-Command takes two optional arguements given below.
+Command takes following optional arguments:
 1) min-links  - minimum number of links required to bring up the portchannel
 2) fallback - true/false. LACP fallback feature can be enabled / disabled.  When it is set to true, only one member port will be selected as active per portchannel during fallback mode. Refer https://github.com/Azure/SONiC/blob/master/doc/lag/LACP%20Fallback%20Feature%20for%20SONiC_v0.5.md for more details about fallback feature.
+3) static - configures the portchannel as static.
 
   - Usage:  
-    config portchannel add/del <portchannel_name> [min-links INTEGER] [fallback true/false]
+    config portchannel add/del <portchannel_name> [min-links INTEGER] [fallback true/false] [static true/false]
 
 - Example:
   ```
   admin@sonic:~$ sudo config portchannel add PortChannel0011
   This command will create the portchannel with name "PortChannel0011".
+
+  admin@sonic:~$ sudo config portchannel add PortChannel0011 --static=true
+  This command will create a static portchannel with name "PortChannel0011".
+
   ```
 
 **config portchannel member add/del <portchannel_name> <member_portname>**  
