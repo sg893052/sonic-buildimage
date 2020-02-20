@@ -239,6 +239,7 @@ Table of Contents
       * [Tail timestamping show commands](#tail-timestamping-show-commands)
    * [BroadView Configuration Commands](#broadview-configuration-commands)
       * [BroadView config commands](#broadview-config-commands)
+   * [Industry Standard CLIs](#industry-standard-clis)
 
 # Document History
 
@@ -12235,4 +12236,17 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 
 
 
+```
+# Industry Standard CLIs
+
+
+As part of SONiC 3.0, a new management framework has been introduced. The new management framework provides an industry standard CLIs (IS-CLIs). The commands modelled as IS-CLIs can be referred using a link below<br>
+[Industry Standard CLI's Reference Guide](industry_standard_cli_reference_guide.md)
+<br>
+The Industry Standard CLIs are executed in a SONiC shell which the new management framework provides. The SONiC shell can be accessed from host of the SONiC system as shown below
+<br>
+```
+admin@sonic:~$ sonic-cli
+
+sonic#
 ```
