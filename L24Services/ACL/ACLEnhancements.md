@@ -1,14 +1,13 @@
 # ACL Enhancements in SONiC
 
-High level design document version 0.2
+High level design document version 0.3
 
 # Table of Contents
-- **[ACL Enhancements in SONiC](#ACL-Enhancements-in-SONiC)**
 - **[List of Tables](#List-of-Tables)**
 - **[Revision](#Revision)**
 - **[About this Manual](#About-this-Manual)**
 - **[Scope](#Scope)**
-- **[Definition/Abbreviation](#DefinitionAbbreviation)**
+- **[Definition/Abbreviation](#Definition_Abbreviation)**
 	- [Table 1 Abbreviations](#Table-1-Abbreviations)
 - **[1 Feature Overview](#1-Feature-Overview)**
 	- [1.1 Access control Lists](#1_1-Access-control-Lists)
@@ -29,20 +28,19 @@ High level design document version 0.2
 	- [2.2 Functional Description](#2_2-Functional-Description)
 		- [2.2.1 ACL](#2_2_1-ACL)
 			- [2.2.1.1 ACL enhancements for table of type l3 and l3v6](#2_2_1_1-ACL-enhancements-for-table-of-type-l3-and-l3v6)
-			- [2.2.1.2 ACL enhancements for table of type mirror](#2_2_1_2-ACL-enhancements-for-table-of-type-mirror)
-			- [2.2.1.3 L2 ACLs](#2_2_1_3-L2-ACLs)
-			- [2.2.1.4 VLAN ACLs](#2_2_1_4-VLAN-ACLs)
-			- [2.2.1.5 Switch ACLs](#2_2_1_5-Switch-ACLs)
-			- [2.2.1.6 ACL Lookup mode](#2_2_1_6-ACL-Lookup-mode)
-			- [2.2.1.7 Default rule for ACL tables of type l2, l3 and l3v6](#2_2_1_7-Default-rule-for-ACL-tables-of-type-l2,-l3-and-l3v6)
-			- [2.2.1.8 Evaluation of ACLs applied on different interfaces](#2_2_1_8-Evaluation-of-ACLs-applied-on-different-interfaces)
-			- [2.2.1.9 Interaction of L2 and IPv4/IPv6 ACLs](#2_2_1_9-Interaction-of-L2-and-IPv4IPv6-ACLs)
+			- [2.2.1.2 L2 ACLs](#2_2_1_2-L2-ACLs)
+			- [2.2.1.3 VLAN ACLs](#2_2_1_3-VLAN-ACLs)
+			- [2.2.1.4 Switch ACLs](#2_2_1_4-Switch-ACLs)
+			- [2.2.1.5 ACL Lookup mode](#2_2_1_5-ACL-Lookup-mode)
+			- [2.2.1.6 Default rule for ACL tables of type l2, l3 and l3v6](#2_2_1_6-Default-rule-for-ACL-tables-of-type-l2,-l3-and-l3v6)
+			- [2.2.1.7 Evaluation of ACLs applied on different interfaces](#2_2_1_7-Evaluation-of-ACLs-applied-on-different-interfaces)
+			- [2.2.1.8 Interaction of L2 and IPv4/IPv6 ACLs](#2_2_1_8-Interaction-of-L2-and-IPv4_IPv6-ACLs)
 		- [2.2.2 Flow based services](#2_2_2-Flow-based-services)
 			- [2.2.2.1 Classifiers](#2_2_2_1-Classifiers)
 				- *[2.2.2.1.1 Classification using ACLs](#2_2_2_1_1-Classification-using-ACLs)*
 					- *[2.2.2.1.1.1 ACL Rules with permit action](#2_2_2_1_1_1-ACL-Rules-with-permit-action)*
 					- *[2.2.2.1.1.2 ACL Rules with deny action](#2_2_2_1_1_2-ACL-Rules-with-deny-action)*
-				- *[2.2.2.1.2 Classification using L2-L4 header fields](#2_2_2_1_2-Classification-using-L2-L4-header-fields)*
+				- *[2.2.2.1.2 Classification using L2-L4 header fields](#2_2_2_1_2-Classification-using-L2_L4-header-fields)*
 			- [2.2.2.2 Policies](#2_2_2_2-Policies)
 				- *[2.2.2.2.1 Policy of type QoS](#2_2_2_2_1-Policy-of-type-QoS)*
 				- *[2.2.2.2.2 Policy of type Monitoring](#2_2_2_2_2-Policy-of-type-Monitoring)*
@@ -86,26 +84,30 @@ High level design document version 0.2
 		- [3.6.1 Data Models](#3_6_1-Data-Models)
 		- [3.6.2 Configuration Commands](#3_6_2-Configuration-Commands)
 			- [3.6.2.1 Configuring ACL lookup mode](#3_6_2_1-Configuring-ACL-lookup-mode)
-			- [3.6.2.2 Creating a MAC ACL](#3_6_2_2-Creating-a-MAC-ACL)
-			- [3.6.2.3 Creating a MAC ACL Rule](#3_6_2_3-Creating-a-MAC-ACL-Rule)
-			- [3.6.2.4 Applying ACL to different interfaces](#3_6_2_4-Applying-ACL-to-different-interfaces)
-			- [3.6.2.5 Applying ACL to switch](#3_6_2_5-Applying-ACL-to-switch)
-			- [3.6.2.6 Create classifier](#3_6_2_6-Create-classifier)
-			- [3.6.2.7 Update classifier with match parameters](#3_6_2_7-Update-classifier-with-match-parameters)
-			- [3.6.2.8 Delete classifier](#3_6_2_8-Delete-classifier)
-			- [3.6.2.9 Add policy](#3_6_2_9-Add-policy)
-			- [3.6.2.10 Delete policy](#3_6_2_10-Delete-policy)
-			- [3.6.2.11 Add flow identified by a classifier to a policy](#3_6_2_11-Add-flow-identified-by-a-classifier-to-a-policy)
-			- [3.6.2.12 Delete flow identified by a classifier to a policy](#3_6_2_12-Delete-flow-identified-by-a-classifier-to-a-policy)
-			- [3.6.2.13 Add action(s) to flows](#3_6_2_13-Add-actions-to-flows)
-			- [3.6.2.14 Apply and remove the policy to interface](#3_6_2_14-Apply-and-remove-the-policy-to-interface)
+			- [3.6.2.2 Create classifier](#3_6_2_2-Create-classifier)
+			- [3.6.2.3 Update classifier with match parameters](#3_6_2_3-Update-classifier-with-match-parameters)
+			- [3.6.2.4 Delete classifier](#3_6_2_4-Delete-classifier)
+			- [3.6.2.5 Add policy](#3_6_2_5-Add-policy)
+			- [3.6.2.6 Delete policy](#3_6_2_6-Delete-policy)
+			- [3.6.2.7 Add flow identified by a classifier to a policy](#3_6_2_7-Add-flow-identified-by-a-classifier-to-a-policy)
+			- [3.6.2.8 Delete flow identified by a classifier to a policy](#3_6_2_8-Delete-flow-identified-by-a-classifier-to-a-policy)
+			- [3.6.2.9 Add action(s) to flows](#3_6_2_9-Add-actions-to-flows)
+			- [3.6.2.10 Apply and remove the policy to interface](#3_6_2_10-Apply-and-remove-the-policy-to-interface)
 		- [3.6.3 Show Commands](#3_6_3-Show-Commands)
 			- [3.6.3.1 Show classifier details](#3_6_3_1-Show-classifier-details)
 			- [3.6.3.2 Show policy details](#3_6_3_2-Show-policy-details)
 			- [3.6.3.3 Show policy binding summary](#3_6_3_3-Show-policy-binding-summary)
-			- [3.6.3.4 Show/Clear policy binding and counters for an interface](#3_6_3_4-ShowClear-policy-binding-and-counters-for-an-interface)
-			- [3.6.3.5 Show/Clear policy binding and counters for a policy](#3_6_3_5-ShowClear-policy-binding-and-counters-for-a-policy)
-		- [3.6.4 REST API Support](#3_6_4-REST-API-Support)
+			- [3.6.3.4 Show/Clear policy binding and counters for an interface](#3_6_3_4-Show_Clear-policy-binding-and-counters-for-an-interface)
+			- [3.6.3.5 Show/Clear policy binding and counters for a policy](#3_6_3_5-Show_Clear-policy-binding-and-counters-for-a-policy)
+			- [3.6.3.6 TCAM Allocation](#3_6_3_6-TCAM-Allocation)
+				- *[3.6.3.6.1 Available predefined TCAM profiles](#3_6_3_6_1-Available-predefined-TCAM-profiles)*
+				- *[3.6.3.6.2 Predefined TCAM profile details](#3_6_3_6_2-Predefined-TCAM-profile-details)*
+				- *[3.6.3.6.3 Setting the predefined profile](#3_6_3_6_3-Setting-the-predefined-profile)*
+				- *[3.6.3.6.4 Checking the current TCAM Allocation](#3_6_3_6_4-Checking-the-current-TCAM-Allocation)*
+				- *[3.6.3.6.5 Clearing the TCAM Allocation scheme.](#3_6_3_6_5-Clearing-the-TCAM-Allocation-scheme_)*
+				- *[3.6.3.6.6 Modifying the current TCAM allocation](#3_6_3_6_6-Modifying-the-current-TCAM-allocation)*
+				- *[3.6.3.6.7 Setting a custom TCAM allocation](#3_6_3_6_7-Setting-a-custom-TCAM-allocation)*
+		- [3.6.4 REST / gNMI / IS CLI API Support](#3_6_4-REST-_-gNMI-_-IS-CLI-API-Support)
 - **[4 Flow Diagrams](#4-Flow-Diagrams)**
 	- [4.1 Create a Classifier](#4_1-Create-a-Classifier)
 	- [4.2 Create a QoS Policy and Section](#4_2-Create-a-QoS-Policy-and-Section)
@@ -153,6 +155,11 @@ High level design document version 0.2
 			- [12.2.2.5 Show policy binding for a given policy](#12_2_2_5-Show-policy-binding-for-a-given-policy)
 			- [12.2.2.6 Clear policy binding statistics for an interface](#12_2_2_6-Clear-policy-binding-statistics-for-an-interface)
 			- [12.2.2.7 Clear policy binding statistics for a given policy](#12_2_2_7-Clear-policy-binding-statistics-for-a-given-policy)
+			- [12.2.2.8 Configuring ACL lookup mode](#12_2_2_8-Configuring-ACL-lookup-mode)
+			- [12.2.2.9 Creating a MAC ACL](#12_2_2_9-Creating-a-MAC-ACL)
+			- [12.2.2.10 Creating a MAC ACL Rule](#12_2_2_10-Creating-a-MAC-ACL-Rule)
+			- [12.2.2.11 Applying ACL to different interfaces](#12_2_2_11-Applying-ACL-to-different-interfaces)
+			- [12.2.2.12 Applying ACL to switch](#12_2_2_12-Applying-ACL-to-switch)
 
 # List of Tables
 [Table 1 Abbreviations](#table-1-abbreviations)
@@ -226,9 +233,7 @@ The following are the requirements for ACL enhancements and Flow Based Services 
 13. Merge non conflicting actions from different policies using ASIC capabilities to simplify user configuration. 
 
 ### 1.3.2 Configuration and Management Requirements
-1. Support Classifiers from [QoS Openconfig](https://github.com/openconfig/public/blob/master/release/models/qos) except TTL and IPv6 Flow labels.
-2. Augment conditions yang container to support match on ACL of types L2, IPv4, IPV6. 
-3. Provide config commands to support configuration and application of Flow based Services Policies.
+1. Provide config commands to support configuration and application of Flow based Services Policies.
 4. Provide statistics support
 
 ### 1.3.3 Scalability Requirements
@@ -271,47 +276,43 @@ Existing [ACL SAI](https://github.com/opencomputeproject/SAI/blob/master/inc/sai
 
 DSCP, ICMP(v6) Type and ICMP(v6) Code keys are enabled on tables of type l3(v6) along with mirror table.
 
-#### 2.2.1.2 ACL enhancements for table of type mirror
-
-ACL tables of type mirror will support additional match criteria for VLAN and PCP along with existing L3 and L4 header keys.
-
-#### 2.2.1.3 L2 ACLs
+#### 2.2.1.2 L2 ACLs
 
 Layer 2 ACL can be used to filter traffic based on MAC header fields like Source MAC, Destination MAC, VLAN etc. Layer 2 ACLs can be used to filter traffic of any ether type including IPv4 and IPv6. Layer 2 ACLs can be applied to all interfaces ie Ethernet, PortChannel, VLAN or Switch. 
 
-#### 2.2.1.4 VLAN ACLs
+#### 2.2.1.3 VLAN ACLs
 
 VLAN ACLs provide traffic filtering for all traffic that is bridged within the same VLAN or routed in or out of a VLAN. VLAN ACLs are applied to both bridged and routed traffic. VLAN ACLs supports MAC, IPv4 or IPv6 ACLs.
 
-#### 2.2.1.5 Switch ACLs
+#### 2.2.1.4 Switch ACLs
 
 Switch ACLs provide traffic filtering for all bridged or routed traffic in the switch. Switch ACLs supports MAC, IPv4 or IPv6 ACLs.
 
-#### 2.2.1.6 ACL Lookup mode
+#### 2.2.1.5 ACL Lookup mode
 
-A new mode called ***advanced*** mode is available to help optimize TCAM utilization. The older ACL behavior is new called as ***legacy*** mode. In Legacy mode, each ACL Table of a given type consumes 1 SAI ACL table ( i.e. 1 to 1 mapped). Since each silicon only supports a small number of SAI ACL tables (typically single digit) this may lead to under utilization of TCAM resources of all entries in the Table are not used. In Advanced mode, all ACL tables used for the same functionality will be using the same SAI ACL table. Example All Datapath ACL bindings for L3 ACL will use 1 SAI table. Similarly all QoS Flow based services policies applied will use the same SAI ACL Table. This leads to better TCAM utilization in certain cases.
+A new mode called ***optimized*** mode is available to help optimize TCAM utilization. The older ACL behavior is new called as ***legacy*** mode. In Legacy mode, each ACL Table of a given type consumes 1 SAI ACL table ( i.e. 1 to 1 mapped). Since each silicon only supports a small number of SAI ACL tables (typically single digit) this may lead to under utilization of TCAM resources of all entries in the Table are not used. In optimized mode, all ACL tables used for the same functionality will be using the same SAI ACL table. Example all datapath ACL bindings for L3 ACL will use 1 SAI table. Similarly all QoS Flow based services policies applied will use the same SAI ACL Table. This leads to better TCAM utilization in certain cases.
 
-Lookup mode is only applicable for datapath ACL. Flow based services will always use lookup mode as ***advanced*** with no TCAM sharing, as actions like policing cant be supported in legacy mode.
+Lookup mode is only applicable for datapath ACL. Flow based services will always use lookup mode as ***optimized*** with no TCAM sharing, as actions like policing cant be supported in legacy mode.
 
-#### 2.2.1.7 Default rule for ACL tables of type l2, l3 and l3v6
+#### 2.2.1.6 Default rule for ACL tables of type l2, l3 and l3v6
 
-All ACLs of type l2, l3 and l3v6 has a default deny any rule appended at the end with lowest priority internally for Datapath ACL. The default deny any rule is not applicable for Flow based services.
+All ACLs of type l2, l3 and l3v6 has a default deny any rule appended at the end with lowest priority internally for datapath ACL. The default deny any rule is not applicable for Flow based services.
 
-#### 2.2.1.8 Evaluation of ACLs applied on different interfaces
+#### 2.2.1.7 Evaluation of ACLs applied on different interfaces
 
 The following diagram shows the different ACLs supported and the location where the ACLs will be applied.
 
 ![ACL application at different stages](images/ACLStages.png "ACL application at different stages")
- 
+
 **Figure 1: ACL application at different stages**
 
 The following diagram shows the evaluation order for datapath ACLs. The same is applicable for Flow based services also and will be captured in upcoming sections. datapath ACLs have a default deny any rule. This rule will be applied only after user configured ACL rules are evaluated at Port/LAG, VLAN and Switch Level. 
 
 ![ACL Evaluation order](images/ACLEvalMultiIntf.png "ACL Evaluation order")
- 
+
 **Figure 2: ACL Evaluation order**
 
-#### 2.2.1.9 Interaction of L2 and IPv4/IPv6 ACLs
+#### 2.2.1.8 Interaction of L2 and IPv4/IPv6 ACLs
 
 An incoming traffic can match both L2 and L3 (IPv4/IPv6) datapath ACLs. The traffic will be dropped when either of the ACL gives a result of drop. The counters for both ACLs will be incremented to indicate the match.
 
@@ -391,18 +392,18 @@ The same policy can be applied to different interfaces and both ingress and egre
 
 ##### 2.2.2.3.1 Evaluation of traffic within the same policy
 
-As mentioned in [section 2.2.2](#2_2_2-policies), a policy can have multiple sections. Each section has a classifier, priority and actions associated with it. The policies are programmed in the ASIC in the order of the priority or the sections. The order of the evaluation is based on the numerical value of `PRIORITY`.
+As mentioned in [section 2.2.2.2](#2_2_2_2-policies), a policy can have multiple sections. Each section has a classifier, priority and actions associated with it. The policies are programmed in the ASIC in the order of the priority or the sections. The order of the evaluation is based on the numerical value of `PRIORITY`.
 
 The following diagram shows the order in which the policy sections are evaluated and final results when only 1 section matches the traffic. The final result is picked up only from the matching section.
 
 ![Policy evaluation with single match](images/PolicyEval.png "Policy evaluation with single match")
- 
+
 **Figure 3: Policy evaluation with single match**
 
 The following diagram shows the order in which the policy sections are evaluated and final results when multiple sections match the traffic. The final result is picked up from the section with highest numerical value of the priority.
 
 ![Policy evaluation with multiple match](images/PolicyEvalMultiHit.png "Policy evaluation with multiple match")
- 
+
 **Figure 4: Policy evaluation with multiple match**
 
 ##### 2.2.2.3.2 Evaluation of traffic across interfaces of same types
@@ -411,10 +412,10 @@ Policies applied to interfaces of same types are always non conflicting hence th
 
 ##### 2.2.2.3.3 Evaluation of traffic across interfaces of different types
 
-A policy can be applied at Port level, VLAN level and Switch level. A given packet can match all the 3 policies.  All interface types have a implicit priority associated with them which is in the order Port/LAG > VLAN > Switch. When a packet matches Port Policy, VLAN Policy and Switch policy, only Port policy will be applied. The evaluation of the port policy is  same as described in [section 2.2.3](#2_2_3-evaluation-of-traffic-within-the-same-policy). Counter of only Port policy will increment.
+A policy can be applied at Port level, VLAN level and Switch level. A given packet can match all the 3 policies.  All interface types have a implicit priority associated with them which is in the order Port/LAG > VLAN > Switch. When a packet matches Port Policy, VLAN Policy and Switch policy, only Port policy will be applied. The evaluation of the port policy is  same as described in [section 2.2.2.3.1](#2_2_2_3_1-evaluation-of-traffic-within-the-same-policy). Counter of only Port policy will increment.
 
 ![Policy evaluation across interface types](images/PolicyEvalMultiIntf.png "Policy evaluation across interface types")
- 
+
 **Figure 5: Policy evaluation across interface types**
 
 ##### 2.2.2.3.4 Evaluation of traffic across policies of different types
@@ -424,7 +425,7 @@ Data path ACLs, Mirror ACLs and Flow based services policies are internally conv
 Policies of different types are designed to take specific actions. QoS Polices are meant to take only QoS actions like DSCP remarking. Data path ACLs only support forward and drop actions and mirror ACL supports only mirror action. These actions are non conflicting so when a packet matches a QoS Policy, Data Path ACL to permit and mirror ACL, the packet will be permitted, QoS actions will be applied and a mirror copy will also be generated. Counters of Data path ACL, Mirror ACL and QoS policy may increment depending on the capability of the ASIC.
 
 ![Result merge across interfaces of different types](images/PolicyEvalMultiPolicy.png "Result merge across interfaces of different types")
- 
+
 **Figure 6: Result merge across interfaces of different types**
 
 ## 2.3 Feature support matrix
@@ -455,7 +456,7 @@ Policies of different types are designed to take specific actions. QoS Polices a
 The following diagram shows the high level design overview of ACL enhancements and flow based services in SONiC. ACL Services Daemon is  composed of multiple sub-modules. The main module i.e. ACL Manager provides the ACL related APIs to create an ACL, delete an ACL, bind to an interface etc. Flow based services manager will handle the flow based services configuration and invoke appropriate ACL Manager APIs to program the polices in hardware.
 
 ![Flow Based Service Overview](images/Overview.png "Flow Based Service Overview")
- 
+
 **Figure 7: Flow Based Service Overview**
 
 ## 3.2 DB Changes
@@ -469,11 +470,8 @@ A new table called HARDWARE is introduced to configure ACL lookup parameters
 ```
 key = HARDWARE:ACCESS_LIST
 ;field       = value
-LOOKUP       = "advanced" / "legacy"
-TCAM_SHARING = [0-1]*sharing_mode
-
-;value annotations
-sharing_mode = "ports"
+LOOKUP_MODE  = "optimized" / "legacy"
+COUNTER_MODE = "per-rule" / "per-interface-rule"
 ```
 
 #### 3.2.1.2 ACL Table
@@ -691,9 +689,11 @@ This provides information on Policy application on ports
 key           = POLICY_BINDING_TABLE:port_name   ; port_name is the name of the Port or
                                                  ; LAG or VLAN or "switch"
 
-;field              = value
-INGRESS_QOS_POLICY  = 1*63VCHAR
-EGRESS_QOS_POLICY   = 1*63VCHAR
+;field                     = value
+INGRESS_QOS_POLICY         = 1*63VCHAR
+INGRESS_MONITORING_POLICY  = 1*63VCHAR
+EGRESS_QOS_POLICY          = 1*63VCHAR
+EGRESS_MONITORING_POLICY   = 1*63VCHAR
 
 ;value annotations
 ```
@@ -739,7 +739,7 @@ None
 
 ### 3.2.5 Counter DB
 
-When ACL lookup mode is legacy, the counters will be stored in counters table as its done currently. When ACL lookup is in **advanced** mode, ACL counters will be stored in ACL_COUNTERS table. The schema for the same will be.
+When ACL lookup mode is legacy, the counters will be stored in counters table as its done currently. When ACL lookup is in **optimized** mode, ACL counters will be stored in ACL_COUNTERS table. The schema for the same will be.
 
 ```
 ACL_COUNTERS: rule_counter_name 
@@ -786,7 +786,7 @@ Flow based services manager will utilize and extend the ACL Orchagent. ACL Orcha
 
 #### 3.3.2.1 ACL Manager
 
-ACL Manager handles the notification from Config DB ACL tables and ACL rules and populates them in App DB. When the ACL Lookup mode is configured as **advanced**,  ACL manager consolidates all ACL bindings for the ACL tables of the same type and populates the information in the same App DB thereby reducing the number of SAI ACL tables needed. If ACL lookup mode is configured as **legacy**, ACL manager acts as passthrough for all ACL tables and rules and populates them in App DB without any modifications.
+ACL Manager handles the notification from Config DB ACL tables and ACL rules and populates them in App DB. When the ACL Lookup mode is configured as **optimized**,  ACL manager consolidates all ACL bindings for the ACL tables of the same type and populates the information in the same App DB thereby reducing the number of SAI ACL tables needed. If ACL lookup mode is configured as **legacy**, ACL manager acts as passthrough for all ACL tables and rules and populates them in App DB without any modifications.
 
 ACL Manager also provides APIs to Create, Delete ACLs, Rules, and bind and unbind to various interfaces. No change is necessary to ACL manager is generic and can be used for datapath ACLs and Flow based services.
 
@@ -816,44 +816,20 @@ The following commands are used to configure Policy based services
 #### 3.6.2.1 Configuring ACL lookup mode
 
 ```
-sonic(config)# hardware
-sonic(config-hardware)# access-list
-sonic(config-hardware-acl)# lookup { advanced | legacy }
+root@sonic:/home/admin# config hardware access-list --help
+Usage: config hardware access-list [OPTIONS]
+
+  Configure ACL Hardware parameters
+
+Options:
+  -l, --lookup <lookup_mode>    Lookup mode. Valid options are optimized,
+                                legacy
+  -c, --counter <counter_mode>  Counter mode. Valid options are per-rule, per-
+                                interface-rule
+  -?, -h, --help                Show this message and exit.
 ```
 
-
-#### 3.6.2.2 Creating a MAC ACL
-
-```
-sonic(config)# [no] mac access-list NAME
-```
-
-#### 3.6.2.3 Creating a MAC ACL Rule
-
-```
-sonic(config-mac-acl)# [no] seq <1-65535> {permit | deny} {any | SMAC[/SMAC_MASK]}  {any | DMAC[/DMAC_MASK]}  [ETHERTYPE | ipv4 | ipv6 | arp] [vlan VLANID] [pcp <0-7>]
-```
-
-MAC address are in format documented in Config DB schema.
-
-ETHERTYPE can be in decimal or hexadecimal format.
-
-#### 3.6.2.4 Applying ACL to different interfaces
-
-```
-sonic(config)# interface INTF_TYPE INTF_ID
-sonic(config-if)# mac access-group NAME {in | out}
-```
-
-Supported INTF_TYPE are Ethernet, Vlan and PortChannel
-
-#### 3.6.2.5 Applying ACL to switch
-
-```
-sonic(config)# [no] {mac|ip|ipv6} access-group NAME {in | out}
-```
-
-#### 3.6.2.6 Create classifier
+#### 3.6.2.2 Create classifier
 
 ```
 root@sonic:~# config classifier add --help
@@ -869,7 +845,7 @@ Options:
 
 ```
 
-#### 3.6.2.7 Update classifier with match parameters
+#### 3.6.2.3 Update classifier with match parameters
 
 ```
 root@sonic:~# config classifier update --help
@@ -928,7 +904,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-#### 3.6.2.8 Delete classifier
+#### 3.6.2.4 Delete classifier
 
 ```
 root@sonic:~# config classifier del --help
@@ -940,7 +916,7 @@ Options:
   --help  Show this message and exit.
 ```
 
-#### 3.6.2.9 Add policy
+#### 3.6.2.5 Add policy
 
 ```
 root@sonic:~# config policy add --help
@@ -955,7 +931,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-#### 3.6.2.10 Delete policy
+#### 3.6.2.6 Delete policy
 
 ```
 root@sonic:~# config policy del --help
@@ -967,7 +943,7 @@ Options:
   --help  Show this message and exit.
 ```
 
-#### 3.6.2.11 Add flow identified by a classifier to a policy
+#### 3.6.2.7 Add flow identified by a classifier to a policy
 
 ```
 root@sonic:~# config flow add --help
@@ -982,7 +958,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-#### 3.6.2.12 Delete flow identified by a classifier to a policy
+#### 3.6.2.8 Delete flow identified by a classifier to a policy
 
 ```
 root@sonic:~# config flow del --help
@@ -994,7 +970,7 @@ Options:
   --help  Show this message and exit.
 ```
 
-#### 3.6.2.13 Add action(s) to flows
+#### 3.6.2.9 Add action(s) to flows
 
 ```
 root@sonic:~# config flow update --help
@@ -1024,7 +1000,7 @@ Options:
 
 The policers are implicitly configured as TRTCM policers of type bytes in color blind mode and drop as default action for packets of color red. 
 
-#### 3.6.2.14 Apply and remove the policy to interface
+#### 3.6.2.10 Apply and remove the policy to interface
 
 ```
 root@sonic:~# config service-policy bind --help
@@ -1122,7 +1098,6 @@ Policy qos_policy_0 Type qos
     police cir 40000000 cbs 4000000 pir 0 pbs 0
   Applied to:
     Ethernet0 at ingress
-
 
 root@sonic:~# show policy mon_policy_0
 Policy mon_policy_0 Type monitoring
@@ -1258,40 +1233,295 @@ Ethernet0
       Packet matches: 0 frames 0 bytes
 ```
 
-### 3.6.4 REST API Support
+#### 3.6.3.6 TCAM Allocation
 
-Flow based services does not support any Rest APIs.
+By default the TCAM allocation is set to First come first serve. When certain features are configured beyond scale, after reboot they may consume more resources than pre-reboot which may affect other features. The feature behavior becomes unpredictable across reboots. A TCAM allocation utility is provided to partition the TCAMs as per users requirements. This ensures that all TCAM based features only consume the resources allocated to them and not impact others when they are configured beyond what's allocation in the allocation scheme.
+
+**NOTE: Its recommended that the TCAM allocation is done with clean configuration i.e. none of the features using TCAMs are configured.**  The following features use TCAMs
+
+1) ACLs and ACL based features like QoS, Monitoring, Telemetry etc
+
+2) MCLAG
+
+3) PFC Watchdog
+
+##### 3.6.3.6.1 Available predefined TCAM profiles
+
+The following command can be used to view the predefined profile names.
+
+```
+admin@sonic:~$ sudo tcamutil show profile all
+================================================================================
+Name             Description
+================================================================================
+DEFAULT-L2       Optimized for Layer 2 ACLs
+DEFAULT-L3       Optimized for Layer 3 ACLs
+```
+
+##### 3.6.3.6.2 Predefined TCAM profile details
+
+The following command can be used to see the predefined profile details. The following is an example and the output will be different on different platforms depending on the capabilities of the ASIC used.
+
+```
+admin@sonic:~$ sudo tcamutil show profile <ProfileName>
+
+Example:
+admin@sonic:~$ sudo tcamutil show profile DEFAULT-L2
+=========================================================================================
+   Ingress features  Width      Entries Description
+=========================================================================================
+             l2-acl  160bit(1)  1x1024  MAC ACLs
+           ipv4-acl  320bit(2)  1x256   IPv4 ACLs
+           ipv6-acl  480bit(3)  0x0     IPv6 ACLs
+             ip-acl  480bit(3)  0x0     IPv4 and IPv6 ACLs
+           l2-fbqos  160bit(1)  1x512   Flow based QoS using MAC ACL/fields
+         ipv4-fbqos  320bit(2)  0x0     Flow based QoS using IPv4 ACL/fields
+         ipv6-fbqos  480bit(3)  0x0     Flow based QoS using IPv6 ACL/fields
+       l2ipv4-fbqos  320bit(2)  0x0     Flow based QoS using MAC and IPv4 ACL/fields
+           ip-fbqos  480bit(3)  0x0     Flow based QoS using IPv4 and IPv6 ACL/fields
+    l2-fbmonitoring  160bit(1)  0x0     Flow based monitoring using MAC ACL/fields
+  ipv4-fbmonitoring  320bit(2)  0x0     Flow based monitoring using IPv4 ACL/fields
+  ipv6-fbmonitoring  480bit(3)  0x0     Flow based monitoring using IPv6 ACL/fields
+l2ipv4-fbmonitoring  480bit(3)  0x0     Flow based monitoring using MAC and IPv4 ACL/fields
+    ip-fbmonitoring  480bit(3)  0x0     Flow based monitoring using IPv4 and IPv6 ACL/fields
+              pfcwd  160bit(1)  0x0     PFC Watchdog
+                tam  320bit(2)  0x0     Telemetry
+              mclag  160bit(1)  1x256   MCLAG Port Isolation
+-----------------------------------------------------------------------------------------
+Total 9 TCAM slices of 9 allocated. Each slice has 256 entries
+=========================================================================================
+    Egress features  Width      Entries Description
+=========================================================================================
+             l2-acl  160bit(1)  1x512   MAC ACLs
+           ipv4-acl  160bit(1)  0x0     IPv4 ACLs
+           ipv6-acl  320bit(2)  0x0     IPv6 ACLs
+             ip-acl  320bit(2)  0x0     IPv4 and IPv6 ACLs
+           l2-fbqos  160bit(1)  0x0     Flow based QoS using MAC ACL/fields
+         ipv4-fbqos  160bit(1)  0x0     Flow based QoS using IPv4 ACL/fields
+         ipv6-fbqos  320bit(2)  0x0     Flow based QoS using IPv6 ACL/fields
+       l2ipv4-fbqos  320bit(2)  0x0     Flow based QoS using MAC and IPv4 ACL/fields
+           ip-fbqos  320bit(2)  0x0     Flow based QoS using IPv4 and IPv6 ACL/fields
+              pfcwd  160bit(1)  0x0     PFC Watchdog
+-----------------------------------------------------------------------------------------------
+Total 2 TCAM slices of 2 allocated. Each slice has 256 entries
+```
+
+##### 3.6.3.6.3 Setting the predefined profile
+
+The following command is used to set the TCAM profile. A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
+
+```
+admin@sonic~$ sudo tcamutil set profile <ProfileName>
+
+Example:
+admin@sonic:~$ sudo tcamutil set profile DEFAULT-L2
+```
+
+##### 3.6.3.6.4 Checking the current TCAM Allocation
+
+The following command can be used to check the current TCAM allocation
+
+```
+admin@sonic:~$ sudo tcamutil show current
+
+Example:
+admin@sonic:~$ sudo tcamutil show current
+=========================================================================================
+   Ingress features  Width      Entries Description
+=========================================================================================
+             l2-acl  160bit(1)  1x1024  MAC ACLs
+           ipv4-acl  320bit(2)  1x256   IPv4 ACLs
+           ipv6-acl  480bit(3)  0x0     IPv6 ACLs
+             ip-acl  480bit(3)  0x0     IPv4 and IPv6 ACLs
+           l2-fbqos  160bit(1)  1x512   Flow based QoS using MAC ACL/fields
+         ipv4-fbqos  320bit(2)  0x0     Flow based QoS using IPv4 ACL/fields
+         ipv6-fbqos  480bit(3)  0x0     Flow based QoS using IPv6 ACL/fields
+       l2ipv4-fbqos  320bit(2)  0x0     Flow based QoS using MAC and IPv4 ACL/fields
+           ip-fbqos  480bit(3)  0x0     Flow based QoS using IPv4 and IPv6 ACL/fields
+    l2-fbmonitoring  160bit(1)  0x0     Flow based monitoring using MAC ACL/fields
+  ipv4-fbmonitoring  320bit(2)  0x0     Flow based monitoring using IPv4 ACL/fields
+  ipv6-fbmonitoring  480bit(3)  0x0     Flow based monitoring using IPv6 ACL/fields
+l2ipv4-fbmonitoring  480bit(3)  0x0     Flow based monitoring using MAC and IPv4 ACL/fields
+    ip-fbmonitoring  480bit(3)  0x0     Flow based monitoring using IPv4 and IPv6 ACL/fields
+              pfcwd  160bit(1)  0x0     PFC Watchdog
+                tam  320bit(2)  0x0     Telemetry
+              mclag  160bit(1)  1x256   MCLAG Port Isolation
+-----------------------------------------------------------------------------------------
+Total 9 TCAM slices of 9 allocated. Each slice has 256 entries
+=========================================================================================
+    Egress features  Width      Entries Description
+=========================================================================================
+             l2-acl  160bit(1)  1x512   MAC ACLs
+           ipv4-acl  160bit(1)  0x0     IPv4 ACLs
+           ipv6-acl  320bit(2)  0x0     IPv6 ACLs
+             ip-acl  320bit(2)  0x0     IPv4 and IPv6 ACLs
+           l2-fbqos  160bit(1)  0x0     Flow based QoS using MAC ACL/fields
+         ipv4-fbqos  160bit(1)  0x0     Flow based QoS using IPv4 ACL/fields
+         ipv6-fbqos  320bit(2)  0x0     Flow based QoS using IPv6 ACL/fields
+       l2ipv4-fbqos  320bit(2)  0x0     Flow based QoS using MAC and IPv4 ACL/fields
+           ip-fbqos  320bit(2)  0x0     Flow based QoS using IPv4 and IPv6 ACL/fields
+              pfcwd  160bit(1)  0x0     PFC Watchdog
+-----------------------------------------------------------------------------------------
+Total 2 TCAM slices of 2 allocated. Each slice has 256 entries
+
+```
+
+##### 3.6.3.6.5 Clearing the TCAM Allocation scheme.
+
+The following command can be used to clear the TCAM allocation scheme and set it to First Come First Serve.  A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
+
+```
+admin@sonic:~$ sudo tcamutil clear 
+Info: TCAM Allocation cleared from the running config. Please save the config before doing reboot or config reload
+```
+
+##### 3.6.3.6.6 Modifying the current TCAM allocation
+
+The following command is used to modify the current TCAM allocation scheme. A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
+
+```
+admin@sonic:~$ sudo tcamutil modify {ingress,egress,both} ...
+```
+
+A TCAM allocation must be set currently to modify it. If no current TCAM allocation is set then use the **set** option described below.
+
+##### 3.6.3.6.7 Setting a custom TCAM allocation
+
+The following command is used to set the current TCAM allocation scheme. This can be used when the predefined profile fit the requirement and  and its not desired to set a predefined profile and modify it multiple times to fit the need. A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
+
+```
+admin@sonic:~$ sudo tcamutil set allocation ingress --help
+usage: tcamutil set allocation ingress [-h] [--l2-acl SIZE] [--ipv4-acl SIZE]
+                                       [--ipv6-acl SIZE] [--ip-acl SIZE]
+                                       [--l2-fbqos SIZE] [--ipv4-fbqos SIZE]
+                                       [--ipv6-fbqos SIZE]
+                                       [--l2ipv4-fbqos SIZE] [--ip-fbqos SIZE]
+                                       [--l2-fbmonitoring SIZE]
+                                       [--ipv4-fbmonitoring SIZE]
+                                       [--ipv6-fbmonitoring SIZE]
+                                       [--l2ipv4-fbmonitoring SIZE]
+                                       [--ip-fbmonitoring SIZE] [--tam SIZE]
+                                       [--mclag SIZE] [--startup] [-f]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --l2-acl SIZE         MAC ACLs
+  --ipv4-acl SIZE       IPv4 ACLs
+  --ipv6-acl SIZE       IPv6 ACLs
+  --ip-acl SIZE         IPv4 and IPv6 ACLs
+  --l2-fbqos SIZE       Flow based QoS using MAC ACL/fields
+  --ipv4-fbqos SIZE     Flow based QoS using IPv4 ACL/fields
+  --ipv6-fbqos SIZE     Flow based QoS using IPv6 ACL/fields
+  --l2ipv4-fbqos SIZE   Flow based QoS using MAC and IPv4 ACL/fields
+  --ip-fbqos SIZE       Flow based QoS using IPv4 and IPv6 ACL/fields
+  --l2-fbmonitoring SIZE
+                        Flow based monitoring using MAC ACL/fields
+  --ipv4-fbmonitoring SIZE
+                        Flow based monitoring using IPv4 ACL/fields
+  --ipv6-fbmonitoring SIZE
+                        Flow based monitoring using IPv6 ACL/fields
+  --l2ipv4-fbmonitoring SIZE
+                        Flow based monitoring using MAC and IPv4 ACL/fields
+  --ip-fbmonitoring SIZE
+                        Flow based monitoring using IPv4 and IPv6 ACL/fields
+  --tam SIZE            Telemetry
+  --mclag SIZE          MCLAG Port Isolation
+  --startup             Modify startup config. (Requires reboot/config reload
+                        for changes to take effect).
+  -f, --force           Force TCAM allocation modification even when TCAM
+                        based features are configured
+
+SIZE should be in format NumTablesxNumEntries if the feature supports multiple
+tables or NumEntries if the feature supports single table. Example 2x256 or
+256
+```
+
+
+
+```
+
+admin@sonic:~$ sudo tcamutil set allocation egress --help
+usage: tcamutil set allocation egress [-h] [--l2-acl SIZE] [--ipv4-acl SIZE]
+                                      [--ipv6-acl SIZE] [--ip-acl SIZE]
+                                      [--l2-fbqos SIZE] [--ipv4-fbqos SIZE]
+                                      [--ipv6-fbqos SIZE]
+                                      [--l2ipv4-fbqos SIZE] [--ip-fbqos SIZE]
+                                      [--startup] [-f]
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --l2-acl SIZE        MAC ACLs
+  --ipv4-acl SIZE      IPv4 ACLs
+  --ipv6-acl SIZE      IPv6 ACLs
+  --ip-acl SIZE        IPv4 and IPv6 ACLs
+  --l2-fbqos SIZE      Flow based QoS using MAC ACL/fields
+  --ipv4-fbqos SIZE    Flow based QoS using IPv4 ACL/fields
+  --ipv6-fbqos SIZE    Flow based QoS using IPv6 ACL/fields
+  --l2ipv4-fbqos SIZE  Flow based QoS using MAC and IPv4 ACL/fields
+  --ip-fbqos SIZE      Flow based QoS using IPv4 and IPv6 ACL/fields
+  --startup            Modify startup config. (Requires reboot/config reload
+                       for changes to take effect).
+  -f, --force          Force TCAM allocation modification even when TCAM based
+                       features are configured
+
+SIZE should be in format NumTablesxNumEntries if the feature supports multiple
+tables or NumEntries if the feature supports single table. Example 2x256 or
+```
+
+
+
+```
+admin@sonic:~$ sudo tcamutil set allocation both --help
+usage: tcamutil set allocation both [-h] [--pfcwd SIZE] [--startup] [-f]
+
+optional arguments:
+  -h, --help    show this help message and exit
+  --pfcwd SIZE  PFC Watchdog
+  --startup     Modify startup config. (Requires reboot/config reload for
+                changes to take effect).
+  -f, --force   Force TCAM allocation modification even when TCAM based
+                features are configured
+
+SIZE should be in format NumTablesxNumEntries if the feature supports multiple
+tables or NumEntries if the feature supports single table. Example 2x256 or
+```
+
+### 3.6.4 REST / gNMI / IS CLI API Support
+
+Flow based services does not support Rest / gNMI / IS CLIs.
+
+L2 ACLs doesn't support Rest / gNMI / IS CLIs.
 
 # 4 Flow Diagrams
 
 ## 4.1 Create a Classifier
 
 ![Creating classifier](images/CreateClassifier.png "Create a Classifier")
- 
+
 **Figure 8: Create a Classifier**
 
 ## 4.2 Create a QoS Policy and Section
 
 ![Create a QoS Policy and Section](images/CreatePolicy.png "Create a QoS Policy and Section")
- 
+
 **Figure 9: Create a QoS Policy and Section**
 
 ## 4.3 Bind QoS policy to an interface
 
 ![Bind QoS policy to an interface](images/ApplyPolicy.png "Bind QoS policy to an interface")
- 
+
 **Figure 10: Bind QoS policy to an interface**
 
 ## 4.4 Creating ACL rules with policer
 
 ![Adding Rule with policer](images/RuleAddPolicer.png "Adding Rule with policer")
- 
+
 **Figure 11: Adding Rule with policer**
 
 ## 4.5 Deleting ACL Rules with policer
 
 ![Deleteing Rule with policer](images/RuleDelPolicer.png "Deleting Rule with policer")
- 
+
 **Figure 12: Deleting Rule with policer**
 
 # 5 Error Handling
@@ -1332,6 +1562,8 @@ The following the ASIC limitations that must be noted when configuring the polic
    2. IPv4 + IPv6
 2. At egress all sections of the policy must have the same type of ACLs ie L2 or IPv4 or IPv6. Applying a policy which has different combinations will be inactive.
 3. All applied policies of the same type must have the same ACL key combinations across all interfaces. Example its not valid to apply QoS Policy P1 on Ethernet0 which uses L2 ACL1 and IPv4 ACL2 and QoS Policy P2 on Ethernet4 which uses IPv4 ACL3 and IPv6 ACL4.
+4. Flow counters are not available for QoS Policies at egress. 
+5. Only policer Green and Red counters will be supported due to ASIC limitation at egress.
 
 # 10 Unit Test
 1. Verify Classifier creation with ACL
@@ -1379,15 +1611,15 @@ config classifier update class1 -a l2_ACL_0
 # Create policy policy0
 config policy add policy0 -t qos
 
-#create flow using classifier class0 and set results
+# Create flow using classifier class0 and set results
 config flow add policy0 class0 -p 200
 config flow update policy0 class0 --set-dscp 15 --set-pcp 5
 
-#create flow using classifier class0 and set results
+# Create flow using classifier class0 and set results
 config flow add policy0 class1 -p 100
 config flow update policy0 class1 --set-dscp 30 --set-pcp 2
 
-#apply policy to required interfaces
+# Apply policy to required interfaces
 config service-policy bind Ethernet0 qos in policy0
 config service-policy bind Ethernet4 qos in policy0
 config service-policy bind Ethernet8 qos out policy0
@@ -1449,7 +1681,7 @@ Internal BRCM information to be removed before sharing with the community
 
 1. Once ACLs supports UDF, provide an option to use UDF also as part of field qualifier.
 2. Use framework for Routing/Forwarding, sFlow etc.
-3. Advanced mode can also support TCAM sharing for ports and VLANs. It can be enabled in next release.
+3. Optimized mode can also support TCAM sharing for ports and VLANs. It can be enabled in next release.
 
 ## 12.2 IS CLIs (Deferred from Buzznik release)
 ### 12.2.1 Configuration Commands
@@ -1643,4 +1875,42 @@ The following commands are used to configure Policy based services
 | Syntax    | SONiC# **clear statistics service-policy policy** *POLICY_NAME* |
 | SONiC 3.0 | Introduced                                                   |
 
+#### 12.2.2.8 Configuring ACL lookup mode
 
+```
+sonic(config)# hardware
+sonic(config-hardware)# access-list
+sonic(config-hardware-acl)# lookup { optimized | legacy }
+sonic(config-hardware-acl)# counter { per-rule | per-interface-rule }
+```
+
+#### 12.2.2.9 Creating a MAC ACL
+
+```
+sonic(config)# [no] mac access-list NAME
+```
+
+#### 12.2.2.10 Creating a MAC ACL Rule
+
+```
+sonic(config-mac-acl)# [no] seq <1-65535> {permit | deny} {any | SMAC[/SMAC_MASK]}  {any | DMAC[/DMAC_MASK]}  [ETHERTYPE | ipv4 | ipv6 | arp] [vlan VLANID] [pcp <0-7>]
+```
+
+MAC address are in format documented in Config DB schema.
+
+ETHERTYPE can be in decimal or hexadecimal format.
+
+#### 12.2.2.11 Applying ACL to different interfaces
+
+```
+sonic(config)# interface INTF_TYPE INTF_ID
+sonic(config-if)# mac access-group NAME {in | out}
+```
+
+Supported INTF_TYPE are Ethernet, Vlan and PortChannel
+
+#### 12.2.2.12 Applying ACL to switch
+
+```
+sonic(config)# [no] {mac|ip|ipv6} access-group NAME {in | out}
+```

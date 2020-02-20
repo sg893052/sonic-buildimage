@@ -78,6 +78,9 @@ Table of Contents
    * [ECN Configuration And Show Commands](#ecn-configuration-and-show-commands)
       * [ECN show commands](#ecn-show-commands)
       * [ECN config commands](#ecn-config-commands)
+   * [Flow based services commands](#Flow-based-services-commands)
+      * [Flow based services config commands](#Flow-based-services-config-commands)
+      * [Flow based services show and clear commands](#Flow-based-services-show-and-clear-commands)
    * [Interface Configuration And Show-Commands](#interface-configuration-and-show-commands)
       * [Interface Show Commands](#interface-show-commands)
       * [Interface Config Commands](#interface-config-commands)
@@ -96,6 +99,9 @@ Table of Contents
       * [IP-Helper clear commands](#ip-helper-clear-commands) 
    * [IPv4 Unnumbered Interface Commands](#ipv4-unnumbered-interface-commands)
       * [IPv4 Unnumbered Interface configuration commands](#ipv4-unnumbered-interface-configuration-commands)
+   * [Link state tracking](#Link-state-tracking)
+      * [Link state tracking show commands](#Link-state-tracking-show-commands)
+      * [Link state tracking config commands](#Link-state-tracking-config-commands)
    * [LLDP](#lldp)
       * [LLDP show commands](#lldp-show-commands)
    * [Loading, Reloading And Saving Configuration](#loading-reloading-and-saving-configuration)
@@ -161,7 +167,7 @@ Table of Contents
          * [FDB show commands](#fdb-show-commands)
    * [VXLAN](#vxlan)
       * [VXLAN show commands](#vxlan-show-commands)
-	  * [VXLAN config commands](#vxlan-config-commands)
+      * [VXLAN config commands](#vxlan-config-commands)
    * [Warm Restart](#warm-restart)
       * [Warm Restart show command](#warm-restart-show-command)
       * [Warm Restart Config command](#warm-restart-config-command)
@@ -1310,6 +1316,34 @@ When the optional argument "max_priority"  is specified, each rule?s priority is
   File "acl_incremental_snmp_1_3_ssh_4.json" has got SNMP Rule1, SNMP Rule3 and SSH Rule4.
   This file is created by copying the file "acl_full_snmp_1_2_ssh_4.json" to "acl_incremental_snmp_1_3_ssh_4.json" and then removing SNMP Rule2 and adding SNMP Rule3. 
 
+  ```
+
+**config acl rule delete <table_name> [rule_name]**
+
+Deletes a specified rule from the ACL. If the rule name is not provided then deletes all the rules for the ACL.
+
+- Usage:  
+  sudo config acl rule delete <table_name> [rule_name]
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config acl rule delete l3_acl_0 rule_1
+  admin@sonic:~$ sudo config acl rule delete l3_acl_0
+  ```
+
+**config acl table delete [table_name]**
+
+Deletes a specified ACL Table. If the table name is not provided then deletes all the ACL Tables.
+
+- Usage:  
+  sudo config acl table delete [table_name]
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config acl table delete l3_acl_0
+  admin@sonic:~$ sudo config acl table delete
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ACL-Configuration-And-Show)
@@ -2946,9 +2980,9 @@ These commands configure the thresholds type for a critical resource. Threshold 
 This command displays the CRM related general, resource usage and thresholds information.
 
   - Usage:<br>
-   crm show [OPTIONS] COMMAND [ARGS]...
+      crm show [OPTIONS] COMMAND [ARGS]...
 
-      
+
 <pre>
     Options:
        --help  Show this message and exit.
@@ -3030,10 +3064,11 @@ These commands display currently USED and AVAILABLE number of entries for a crit
   0x70000000009e3  acl_counter                20              30148
 
   admin@sonic:$ crm show resources acl group
+  ```
 
 
   Stage    Bind Point    Resource Name      Used Count    Available Count
-  -------  ------------  ---------------  ------------  -----------------
+-------  ------------  ---------------  ------------  -----------------
   INGRESS  PORT          acl_group                   0               1024
   INGRESS  PORT          acl_table                   0                  3
   INGRESS  LAG           acl_group                   0               1024
@@ -3060,7 +3095,7 @@ These commands display currently USED and AVAILABLE number of entries for a crit
 
 
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   fdb_entry                   2              40957
 
 
@@ -3068,7 +3103,7 @@ These commands display currently USED and AVAILABLE number of entries for a crit
 
 
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   ipv4_route                  1              49151
 
 
@@ -3076,7 +3111,7 @@ These commands display currently USED and AVAILABLE number of entries for a crit
 
 
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   ipv6_neighbor               0              10240
 
 
@@ -3084,7 +3119,7 @@ These commands display currently USED and AVAILABLE number of entries for a crit
 
 
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   nexthop_group               0                128
 
 
@@ -3092,7 +3127,7 @@ These commands display currently USED and AVAILABLE number of entries for a crit
 
 
   Resource Name           Used Count    Available Count
-  --------------------  ------------  -----------------
+--------------------  ------------  -----------------
   nexthop_group_member             0              16384
 
   ```
@@ -3107,7 +3142,7 @@ This command displays the polling interval for CRM.
 - Example:  
   ```
   admin@sonic:~$ crm show summary 
-  
+
   Polling Interval: 100 second(s)
 
 **thresholds [critical resource]**
@@ -3131,10 +3166,11 @@ These commands display threshold type, low and high thresholds configured for a 
 - Example:  
   ```
   admin@sonic:$ crm show thresholds acl group
+  ```
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   acl_group        used                           30                90
 
 
@@ -3142,7 +3178,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   acl_table        used                           30                90
 
 
@@ -3150,7 +3186,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name         Threshold Type      Low Threshold    High Threshold
-  --------------------  ----------------  ---------------  ----------------
+--------------------  ----------------  ---------------  ----------------
   ipv4_route            used                           30                90
   ipv6_route            used                           30                90
   ipv4_nexthop          used                           30                90
@@ -3169,7 +3205,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   fdb_entry        used                           30                90
 
 
@@ -3177,7 +3213,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   ipv4_nexthop     used                           30                90
 
 
@@ -3185,7 +3221,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   ipv6_neighbor    used                           30                90
 
 
@@ -3194,7 +3230,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   nexthop_group    used                           30                90
 
 
@@ -3202,7 +3238,7 @@ These commands display threshold type, low and high thresholds configured for a 
 
 
   Resource Name         Threshold Type      Low Threshold    High Threshold
-  --------------------  ----------------  ---------------  ----------------
+--------------------  ----------------  ---------------  ----------------
   nexthop_group_member  used                           30                90
   ```
 
@@ -3222,7 +3258,7 @@ This command displays all the WRED profiles that are configured in the device.
     show ecn
 
 - Example:
-  ```	  
+  ```
 	show ecn
 	Profile: **AZURE_LOSSLESS**
 	-----------------------  -------
@@ -3240,12 +3276,12 @@ This command displays all the WRED profiles that are configured in the device.
 	yellow_drop_probability  5
 	wred_red_enable          true
 	-----------------------  -------
-
+	
 	Profile: **wredprofileabcd**
 	-----------------  ---
 	red_max_threshold  100
 	-----------------  ---
-	
+
   ```
 
 ## ECN config commands
@@ -3262,20 +3298,20 @@ The list of the WRED profile fields that are configurable is listed in the below
 	
   ```
     ECN Config OPTIONS:
-	  -profile <profile_name>       Profile name  [required] - Even though the profile_name is specified as optional parameter, it is a mandatory parameter.
-	  -rmax <red threshold max>     Set red max threshold
-	  -rmin <red threshold min>     Set red min threshold
-	  -ymax <yellow threshold max>  Set yellow max threshold
-	  -ymin <yellow threshold min>  Set yellow min threshold
-	  -gmax <green threshold max>   Set green max threshold
-	  -gmin <green threshold min>   Set green min threshold
-	  -v, --verbose                 Enable verbose output
-	  --help                        Show this message and exit.
+      -profile <profile_name>       Profile name  [required] - Even though the profile_name is specified as optional parameter, it is a mandatory parameter.
+      -rmax <red threshold max>     Set red max threshold
+      -rmin <red threshold min>     Set red min threshold
+      -ymax <yellow threshold max>  Set yellow max threshold
+      -ymin <yellow threshold min>  Set yellow min threshold
+      -gmax <green threshold max>   Set green max threshold
+      -gmin <green threshold min>   Set green min threshold
+      -v, --verbose                 Enable verbose output
+      --help                        Show this message and exit.
   ```
 
 
 - Example:
-  ``` 
+  ```
      root@T1-2:~# config ecn -profile wredprofileabcd -rmax 100
         This command configures the "red max threshold" for the WRED profile name "wredprofileabcd". It will create the WRED profile if it does not exist.
   ```
@@ -3330,7 +3366,7 @@ Optional argument "-p" specify a period (in seconds) with which to gather counte
   ```
   admin@sonic:~$ show interfaces counters
         IFACE    STATE            RX_OK       RX_BPS    RX_UTIL    RX_ERR    RX_DRP    RX_OVR            TX_OK       TX_BPS    TX_UTIL    TX_ERR    TX_DRP    TX_OVR
-  -----------  -------  ---------------  -----------  ---------  --------  --------  --------  ---------------  -----------  ---------  --------  --------  --------
+-----------  -------  ---------------  -----------  ---------  --------  --------  --------  ---------------  -----------  ---------  --------  --------  --------
     Ethernet0        U  471,729,839,997  653.87 MB/s     12.77%         0    18,682         0  409,682,385,925  556.84 MB/s     10.88%         0         0         0
     Ethernet4        U  453,838,006,636  632.97 MB/s     12.36%         0     1,636         0  388,299,875,056  529.34 MB/s     10.34%         0         0         0
     Ethernet8        U  549,034,764,539  761.15 MB/s     14.87%         0    18,274         0  457,603,227,659  615.20 MB/s     12.02%         0         0         0
@@ -3346,7 +3382,7 @@ Optional argument "-p" specify a period (in seconds) with which to gather counte
   ```
   admin@sonic:~$ show interfaces counters -p 5
         IFACE    STATE    RX_OK       RX_BPS    RX_UTIL    RX_ERR    RX_DRP    RX_OVR    TX_OK       TX_BPS    TX_UTIL    TX_ERR    TX_DRP    TX_OVR
-  -----------  -------  -------  -----------  ---------  --------  --------  --------  -------  -----------  ---------  --------  --------  --------
+-----------  -------  -------  -----------  ---------  --------  --------  --------  -------  -----------  ---------  --------  --------  --------
   Ethernet0         U      515   59.14 KB/s      0.00%         0         0         0    1,305  127.60 KB/s      0.00%         0         0         0
   Ethernet4         U      305   26.54 KB/s      0.00%         0         0         0      279   39.12 KB/s      0.00%         0         0         0
   Ethernet8         U      437   42.96 KB/s      0.00%         0         0         0      182   18.37 KB/s      0.00%         0         0         0
@@ -3409,21 +3445,22 @@ This command displays the key fields of the interfaces such as Operational Statu
     show interfaces description [INTERFACENAME]
   
 - Example:
-   ```  
+  ```
   admin@sonic:~$ show interfaces description 
   Interface    Oper    Admin            Alias           Description
-  -----------  ------  -------  ---------------  --------------------
+-----------  ------  -------  ---------------  --------------------
   Ethernet0    down       up   hundredGigE1/1  T0-1:hundredGigE1/30
   Ethernet4    down       up   hundredGigE1/2  T0-2:hundredGigE1/30
   Ethernet8    down     down   hundredGigE1/3        hundredGigE1/3
   Ethernet12   down     down   hundredGigE1/4        hundredGigE1/4
   ```
+
   ```
   show the description for one particular interface.  
-  
+
   admin@sonic:~$ show interfaces description Ethernet4
   Interface    Oper    Admin           Alias           Description
-  -----------  ------  -------  --------------  --------------------
+-----------  ------  -------  --------------  --------------------
   Ethernet4    down       up  hundredGigE1/2  T0-2:hundredGigE1/30
 
   ```
@@ -3442,7 +3479,7 @@ This command is used to display the list of expected neighbors for all interface
     show interfaces neighbor expected [INTERFACENAME]
 
 - Example:
-  ``` 
+  ```
   root@sonic-z9264f-9251:~# show interfaces neighbor expected
 	LocalPort    Neighbor    NeighborPort    NeighborLoopback    NeighborMgmt    NeighborType
 	-----------  ----------  --------------  ------------------  --------------  --------------
@@ -3461,7 +3498,7 @@ This command displays detailed packet drop counters for all interfaces. The opti
     show interfaces pktdrops [nonzero]
 
 - Example:
-  ``` 
+  ```
   admin@sonic:~$ show interfaces pktdrops
 
     IFACE      COUNTER                    COUNT    CHANGE
@@ -3527,7 +3564,7 @@ This command displays detailed packet drop counters for all interfaces. The opti
 The command also displays a brief description of each drop counter before displaying the packet drop counters.
 
 - Example:
-  ``` 
+  ```
   admin@sonic:~$ show interfaces pktdrops
 
     COUNTER                  DESCRIPTION
@@ -3614,7 +3651,7 @@ This command displays information regarding port-channel interfaces
   admin@sonic:~$ show interfaces portchannel
   Flags: A - active, I - inactive, Up - up, Dw - Down, N/A - not available, S - selected, D - deselected
     No.  Team Dev       Protocol     Ports
-  -----  -------------  -----------  ---------------------------
+-----  -------------  -----------  ---------------------------
      24  PortChannel24  LACP(A)(Up)  Ethernet28(S) Ethernet24(S)
      48  PortChannel48  LACP(A)(Up)  Ethernet52(S) Ethernet48(S)
      40  PortChannel40  LACP(A)(Up)  Ethernet44(S) Ethernet40(S)
@@ -3633,23 +3670,23 @@ This command displays some more fields such as Lanes, Speed, MTU, Type, Asymmetr
 - Example:
   ```
   show interface status of all interfaces
-  
+
   admin@sonic:~$ show interfaces status
   Interface            Lanes    Speed    MTU            Alias    Oper    Admin    Type    Asym PFC
-  -----------  ---------------  -------  -----  ---------------  ------  -------  ------  ----------
+-----------  ---------------  -------  -----  ---------------  ------  -------  ------  ----------
   Ethernet0      49,50,51,52     100G   9100   hundredGigE1/1    down       up     N/A         off
   Ethernet4      53,54,55,56     100G   9100   hundredGigE1/2    down       up     N/A         off
   Ethernet8      57,58,59,60     100G   9100   hundredGigE1/3    down     down     N/A         off
   <contiues to display all the interfaces>
-  
+
   ```
   
   ```
   show interface status for one particular interface
-  
+
   admin@sonic:~$ show interface status Ethernet0
   Interface     Lanes    Speed    MTU            Alias    Oper    Admin
-  -----------  --------  -------  -----   --------------  ------  -------
+-----------  --------  -------  -----   --------------  ------  -------
   Ethernet0   101,102      40G   9100   fortyGigE1/1/1      up       up
 
   ```
@@ -3695,7 +3732,7 @@ IP address for either physical interface or for portchannel or for VLAN interfac
     config interface <interface-name> ip add <ip_addr> (for 201811- version)  
 
 - Example:  
-  ```	
+  ```
   admin@sonic:~$ sudo config interface ip add Ethernet63 10.11.12.13/24 
   ```
 NOTE: In SONiC versions until 201811, syntax was "config <interface_name> ip add <ip_addr>"
@@ -3708,7 +3745,7 @@ NOTE: In SONiC versions until 201811, syntax was "config <interface_name> ip add
     config interface ip add <ip_addr> <vlan_IDName>
 
 - Example:  
-  ```	
+  ```
   admin@sonic:~$ sudo config interface ip add vlan100 10.11.12.13/24 
   ```
 NOTE: In versions until 201811, syntax was "config interface <vlan_IDName> ip add <ip_addr>"
@@ -3780,7 +3817,7 @@ This command allows user to delete an already existing loopback interface
     config interface <interface_name> pfc asymmetric on/off (for 201811- version)
 
 - Example:  
-  ```	
+  ```
   admin@sonic:~$ sudo config interface pfc asymmetric Ethernet60 on 
   ```
 
@@ -3854,7 +3891,7 @@ The command, "show interface description", can be used to view the descriptions 
   show interfaces description Ethernet64
   admin@sonic:~$ show interfaces description Ethernet64
     Interface    Oper    Admin          Alias                      Description
-  -----------  ------  -------  -------------  -------------------------------
+-----------  ------  -------  -------------  -------------------------------
    Ethernet64    down       up  hundredGigE53  North-bound interface to Spine1
   admin@sonic:~$ sudo config interface description Ethernet60 None
   ```
@@ -3956,7 +3993,7 @@ This command displays portgroup information of current platform. It displays eac
   ```
   admin@sonic:~$ show portgroup
     portgroup          ports      valid speeds
-  -----------  -------------  ----------------
+-----------  -------------  ----------------
             1   Ethernet0-11  25000,10000,1000
             2  Ethernet12-23  25000,10000,1000
             3  Ethernet24-35  25000,10000,1000
@@ -3992,11 +4029,11 @@ This command displays the current interface naming mode
     show interfaces naming_mode 
     
 - Example:
-  ``` 
+  ```
   admin@sonic:~$ show interfaces naming_mode 
   **default**
   - "default" is the name of the default naming_mode since users have not modified it in this example.
-  
+
   Following example shows the modified interface_naming_mode
   admin@sonic:~$ show interfaces naming_mode 
   **alias**
@@ -4023,12 +4060,12 @@ NOTE: Some platforms do not support alias mapping. In such cases, this command i
   ```
     admin@sonic:~$ show interfaces naming_mode 
     default
-
+    
     admin@sonic:~$ show interface status Ethernet0
       Interface     Lanes    Speed    MTU            Alias    Oper    Admin
     -----------  --------  -------  -----   --------------  ------  -------
       Ethernet0   101,102      40G   9100   fortyGigE1/1/1      up       up
-
+    
     admin@sonic:~$ sudo config interface_naming_mode alias
     Please logout and log back in for changes take effect.
   ```
@@ -4038,7 +4075,7 @@ NOTE: Some platforms do not support alias mapping. In such cases, this command i
   ```
     admin@sonic:~$ show interfaces naming_mode 
     alias
-
+    
     admin@sonic:~$ sudo config interface fortyGigE1/1/1 shutdown
     admin@sonic:~$ show interface status fortyGigE1/1/1
       Interface     Lanes    Speed    MTU            Alias    Oper    Admin
@@ -4107,8 +4144,8 @@ This command displays either all the route entries from the routing table or a s
          T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
          F - PBR, f - OpenFabric,
          > - selected route, * - FIB route # - not installed in hardware
-  
-  
+
+
   VRF Vrf-Core:
   C>*  179.13.79.0/24 is directly connected, Ethernet204, 00:00:40
   C>*  192.168.42.0/24 is directly connected, Ethernet208, 00:00:37
@@ -4130,7 +4167,7 @@ The type of interfaces include the following.
     show ip interfaces
 
 - Example:
-  ```  
+  ```
 	admin@sonic:~$ show ip interfaces
 	Interface       IPv4 address/mask    Master    Admin/Oper       Flags
 	--------------  -------------------  --------  ------------     -------
@@ -4159,7 +4196,7 @@ Refer the routing stack [Quagga Command Reference](https://www.quagga.net/docs/q
 
 
 - Example:
-  ```  
+  ```
 	show ip protocol
 	Protocol    : route-map 
 	------------------------
@@ -4238,8 +4275,8 @@ This command displays either all the IPv6 route entries from the routing table o
          v - VNC, V - VNC-Direct, A - Babel, D - SHARP, F - PBR,
          f - OpenFabric,
          > - selected route, * - FIB route # - not installed in hardware
-  
-  
+
+
   VRF Vrf-Core:
   C *  fe80::/64 is directly connected, Ethernet208, 00:17:01
   C>*  fe80::/64 is directly connected, Ethernet204, 00:17:04
@@ -4261,7 +4298,7 @@ The type of interfaces include the following.
 
 
 - Example:
-  ```  
+  ```
 	admin@sonic:~$ show ipv6 interfaces
 	Interface       IPv6 address/mask                         Master     Admin/Oper
 	--------------  ----------------------------------------  ---------  ------------
@@ -4317,13 +4354,450 @@ Refer the routing stack [Quagga Command Reference](https://www.quagga.net/docs/q
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#IP)
 
+# Flow based services commands
+
+## Flow based services config commands
+
+**Create classifier**
+
+```
+root@sonic:~# config classifier add --help
+Usage: config classifier add [OPTIONS] <name>
+
+  Add a Classifier
+
+Options:
+  -m, --match-type <match-type>   Set match type to acl or fields  [required]
+  -d, --description <description>
+                                  Set classifier description
+  --help                          Show this message and exit.
+
+```
+
+**Update classifier with match parameters**
+
+```
+root@sonic:~# config classifier update --help
+Usage: config classifier update [OPTIONS] <name>
+
+  Update a Classifier with flow identification criterion/criteria.
+
+Options:
+  --acl <acl-name>                Add ACL table name for flow classification
+  --no-acl                        Delete ACL Table name used for flow
+                                  classification
+  --src-mac <src-mac>             Match source mac address (xx-xx-xx-xx-xx-xx
+                                  [/xx-xx-xx-xx-xx-xx] format)
+  --no-src-mac                    Delete match on source mac address
+  --dst-mac <dst-mac>             Match destination mac address (xx-xx-xx-xx-
+                                  xx-xx[/xx-xx-xx-xx-xx-xx] format)
+  --no-dst-mac                    Delete match on destination mac address
+  --ether-type <ether-type>       Match ethertype (hex or decimal format in
+                                  1536-65535 range)
+  --no-ether-type                 Delete match on ethertype
+  --pcp <pcp>                     Match on PCP (0-7)
+  --no-pcp                        Delete match on PCP
+  --src-ip <src-ip>               Match source IP address (A.B.C.D[/M] format)
+  --no-src-ip                     Delete match on source IP address
+  --dst-ip <dst-ip>               Match on destination IP address (A.B.C.D[/M]
+                                  format)
+  --no-dst-ip                     Delete match on destination IP address
+  --src-ipv6 <src-ipv6>           Match source IPv6 address (X:X::X.X[/M]
+                                  format)
+  --no-src-ipv6                   Delete match on source IPv6 address
+  --dst-ipv6 <dst-ipv6>           Match on destination IPv6 address
+                                  (X:X::X.X[/M] format)
+  --no-dst-ipv6                   Delete match on destination IPv6 address
+  --ip-proto <ip-proto>           Match on IP protocol/next Header (0-255)
+  --no-ip-proto                   Delete match on IP protocol/next header
+  --src-port <value or begin-end>
+                                  Match on source port or source port range
+                                  (0-65535)
+  --no-src-port                   Delete match on source port or source port
+                                  range
+  --dst-port <dst-port>           Match on destination port or destination
+                                  port range (0-65535)
+  --no-dst-port                   Delete match on destination port or
+                                  destination port range
+  --tcp-flags <tcp-flags>         Match on TCP flags (fin not-fin syn not-syn
+                                  rst not-rst psh not-psh ack not-ack urg not-
+                                  urg ece not-ece cwr not-cwr in comma
+                                  separated format)
+  --no-tcp-flags <tcp-flags>      Delete match on TCP flags (fin not-fin syn
+                                  not-syn rst not-rst psh not-psh ack not-ack
+                                  urg not-urg ece not-ece cwr not-cwr in comma
+                                  separated format)
+  --dscp <dscp>                   Match on DSCP (0-63)
+  --no-dscp                       Delete match on DSCP
+  -d, --description <description>
+  --help                          Show this message and exit.
+```
+
+**Delete classifier**
+
+```
+root@sonic:~# config classifier del --help
+Usage: config classifier del [OPTIONS] <name>
+
+  Delete a Classifier
+
+Options:
+  --help  Show this message and exit.
+```
+
+**Add policy**
+
+```
+root@sonic:~# config policy add --help
+Usage: config policy add [OPTIONS] <name>
+
+  Add a Flow Based Services Policy
+
+Options:
+  -t, --type <type>               Policy type (qos or monitoring)  [required]
+  -d, --description <description>
+                                  Set policy description
+  --help                          Show this message and exit.
+```
+
+**Delete policy**
+
+```
+root@sonic:~# config policy del --help
+Usage: config policy del [OPTIONS] <name>
+
+  Delete a Flow Based Services Policy
+
+Options:
+  --help  Show this message and exit.
+```
+
+**Add flow identified by a classifier to a policy**
+
+```
+root@sonic:~# config flow add --help
+Usage: config flow add [OPTIONS] <policy_name> <classifier_name>
+
+  Add a Flow to Policy
+
+Options:
+  -p, --priority <type>           Set flow priority (0-1023)  [required]
+  -d, --description <description>
+                                  Set flow description
+  --help                          Show this message and exit.
+```
+
+**Delete flow identified by a classifier to a policy**
+
+```
+root@sonic:~# config flow del --help
+Usage: config flow del [OPTIONS] <policy_name> <classifier_name>
+
+  Delete a Flow from Policy
+
+Options:
+  --help  Show this message and exit.
+```
+
+**Add action(s) to flows**
+
+```
+root@sonic:~# config flow update --help
+Usage: config flow update [OPTIONS] <policy_name> <classifier_name>
+
+  Add or Update flow results
+
+Options:
+  -p, --priority <type>           Set flow priority (0-1023)
+  --set-dscp <Value>              DSCP remark to value (0-63)
+  --no-set-dscp                   Delete DSCP remarking action
+  --set-pcp <Value>               PCP remark to value (0-7)
+  --no-set-pcp                    Delete PCP Remarking action
+  --police                        Add rate limiting action
+  --cir <cir>                     Conform rate
+  --cbs <cbs>                     Conform burst size
+  --pir <pir>                     Peak rate
+  --pbs <pbs>                     Peak burst size
+  --no-police                     Delete rate limiting action
+  --mirror-session <session_name>
+                                  Set mirror destination
+  --no-mirror-session             Delete mirror destination
+  -d, --description <description>
+                                  Set flow description
+  --help                          Show this message and exit.
+```
+
+The policers are implicitly configured as TRTCM policers of type bytes in color blind mode and drop as default action for packets of color red. 
+
+**Apply and remove the policy to interface**
+
+```
+root@sonic:~# config service-policy bind --help
+Usage: config service-policy bind [OPTIONS] <interface_name> <type> <stage>
+                                  <policy_name>
+
+  Apply policy to interface
+
+Options:
+  --help  Show this message and exit.
+
+
+root@sonic:~# config service-policy unbind --help
+Usage: config service-policy unbind [OPTIONS] <interface_name> <type> <stage>
+
+  Remove policy from interface
+
+Options:
+  --help  Show this message and exit.
+```
+
+**Examples**
+
+```
+# Create classifier class0
+config classifier add class0 -m acl
+config classifier update class0 -a l3_ACL_0
+
+# Create classifier class1
+config classifier add class1 -m acl
+config classifier update class1 -a l2_ACL_0
+
+# Create policy policy0
+config policy add policy0 -t qos
+
+# Create flow using classifier class0 and set results
+config flow add policy0 class0 -p 200
+config flow update policy0 class0 --set-dscp 15 --set-pcp 5
+
+# Create flow using classifier class0 and set results
+config flow add policy0 class1 -p 100
+config flow update policy0 class1 --set-dscp 30 --set-pcp 2
+
+# Apply policy to required interfaces
+config service-policy bind Ethernet0 qos in policy0
+config service-policy bind Ethernet4 qos in policy0
+config service-policy bind Ethernet8 qos out policy0
+```
+
+## Flow based services show and clear commands
+
+**Show classifier details**
+
+```
+root@sonic:~# show classifier --help
+Usage: show classifier [OPTIONS] [NAME]
+
+  Show flow based services classifiers related information
+
+Options:
+  -m, --match-type <match-type>  Classifier type acl or fields
+  -?, -h, --help                 Show this message and exit.
+```
+
+The following is the sample output
+
+```
+root@sonic:~# show classifier class0
+classifier class0 match-type acl
+  match-acl l3_ACL_0
+  Referenced in flows:
+    policy policy0 at priority 200
+    
+root@sonic:~# show classifier fields_class_0
+Classifier fields_class_0 match-type fields
+  Description:
+  Match:
+    src-ip 40.1.1.100/32
+  Referenced in flows:
+    policy mon_policy_0 at priority 999
+    policy qos_policy_0 at priority 999
+```
+
+**Show policy details**
+
+```
+root@sonic:~# show policy --help
+Usage: show policy [OPTIONS] [NAME]
+
+  Show flow based services policies related information
+
+Options:
+  -f, --flow <flow>  Show information only for flow identified by classifer
+  -t, --type <type>  Policy type (qos)
+  -?, -h, --help     Show this message and exit.
+```
+
+The following is the sample output
+
+```
+root@sonic:~# show policy qos_policy_0
+Policy qos_policy_0 Type qos
+  Description: 
+  Flow fields_class_0 at priority 999
+    Description: 
+    set-pcp 1
+    set-pcp 1
+    police cir 10000000 cbs 1000000 pir 0 pbs 0
+  Flow fields_class_1 at priority 998
+    Description: 
+    set-pcp 2
+    set-pcp 2
+    police cir 20000000 cbs 2000000 pir 0 pbs 0
+  Flow fields_class_2 at priority 997
+    Description: 
+    set-pcp 3
+    set-pcp 3
+    police cir 30000000 cbs 3000000 pir 0 pbs 0
+  Flow fields_class_3 at priority 996
+    Description: 
+    set-pcp 4
+    set-pcp 4
+    police cir 40000000 cbs 4000000 pir 0 pbs 0
+  Applied to:
+    Ethernet0 at ingress
+
+root@sonic:~# show policy mon_policy_0
+Policy mon_policy_0 Type monitoring
+  Description: 
+  Flow fields_class_0 at priority 999
+    Description: 
+    mirror-session ERSPAN_DestIP_50.1.1.2
+  Flow fields_class_1 at priority 998
+    Description: 
+    mirror-session ERSPAN_DestIP_60.1.1.2
+  Flow fields_class_2 at priority 997
+    Description: 
+    mirror-session ERSPAN_DestIP_50.1.1.2
+  Flow fields_class_3 at priority 996
+    Description: 
+    mirror-session ERSPAN_DestIP_60.1.1.2
+  Applied to:
+    Ethernet0 at ingress
+```
+
+**Show policy binding summary**
+
+```
+root@sonic:~# show service-policy summary --help
+Usage: show service-policy summary [OPTIONS]
+
+  Show summary of applied flow based services policies
+
+Options:
+  -i, --interface <interface>  Interface name
+  -t, --type <type>            Policy type (qos)
+  -?, -h, --help               Show this message and exit.
+```
+
+The following is the sample output
+
+```
+root@sonic:~# show service-policy summary
+Ethernet0
+  qos policy policy0 at ingress
+  monitoring policy mon_policy_0 at ingress
+Ethernet4
+  qos policy policy0 at ingress
+Ethernet8
+  qos policy policy0 at egress
+
+root@sonic:~# show service-policy summary -i Ethernet0
+Ethernet0
+  qos policy policy0 at ingress
+```
+
+**Show/Clear policy binding and counters for an interface**
+
+```
+root@sonic:~# show service-policy interface --help
+Usage: show service-policy interface [OPTIONS] <interface_name>
+
+  Show details by interface name
+
+Options:
+  -t, --type <type>    Policy type (qos or monitoring)
+  -s, --stage <stage>  Stage (in or out)
+  -c, --clear          Clear statistics
+  -?, -h, --help       Show this message and exit.
+```
+
+The following is the sample output
+
+```
+root@sonic:~# show service-policy interface Ethernet0
+Ethernet0
+  Policy qos_policy_0 Type qos at ingress
+  Description: 
+    Flow fields_class_3 at priority 996 (Active)
+      Description: 
+      set-pcp 4
+      set-dscp 4
+      police: cir 40000000 cbs 4000000 pir 0 pbs 0
+        type bytes mode color-blind
+        operational cir 40000000 cbs 4000000 pir 0 pbs 0
+        conformed 0 packets 0 bytes action forward
+        exceed 0 frames 0 bytes action forward
+        violated 0 frames 0 bytes action drop
+      Packet matches: 0 frames 0 bytes
+    Flow fields_class_2 at priority 997 (Active)
+      Description: 
+      set-pcp 3
+      set-dscp 3
+      police: cir 30000000 cbs 3000000 pir 0 pbs 0
+        type bytes mode color-blind
+        operational cir 30000000 cbs 3000000 pir 0 pbs 0
+        conformed 0 packets 0 bytes action forward
+        exceed 0 frames 0 bytes action forward
+        violated 0 frames 0 bytes action drop
+      Packet matches: 0 frames 0 bytes
+```
+**Show/Clear policy binding and counters for a policy**
+
+```
+root@sonic:~# show service-policy policy --help
+Usage: show service-policy policy [OPTIONS] <policy_name>
+
+  Show flow based services applied polcies information by policies name
+
+Options:
+  -t, --type <type>  Policy type (qos)
+  -c, --clear        Clear statistics
+  -?, -h, --help     Show this message and exit.
+```
+
+The following is the sample output 
+
+```
+root@sonic:~# show service-policy policy mon_policy_0
+Ethernet0
+  Policy mon_policy_0 Type monitoring at ingress
+  Description: 
+    Flow fields_class_3 at priority 996 (Active)
+      Description: 
+      mirror-session ERSPAN_DestIP_60.1.1.2
+      Packet matches: 0 frames 0 bytes
+    Flow fields_class_2 at priority 997 (Active)
+      Description: 
+      mirror-session ERSPAN_DestIP_50.1.1.2
+      Packet matches: 0 frames 0 bytes
+    Flow fields_class_1 at priority 998 (Active)
+      Description: 
+      mirror-session ERSPAN_DestIP_60.1.1.2
+      Packet matches: 0 frames 0 bytes
+    Flow fields_class_0 at priority 999 (Active)
+      Description: 
+      mirror-session ERSPAN_DestIP_50.1.1.2
+      Packet matches: 0 frames 0 bytes
+```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Flow-based-services-commands)
 
 # IP-Helper Commands
 
 This section explains all the IP-Helper show, configuration and clear commands that are supported in SONiC.
 
 ## IP-Helper show commands 
-  
+
 **show ip forward_protocol config** 
 
 This command displays the IP Helper Global configuration.
@@ -4561,6 +5035,112 @@ This command can be used to unconfigure an IPv4 Unnumbered interface.
   admin@sonic:~$ sudo config interface ip unnumbered del PortChannel1
   ```
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#ipv4-unnumbered-interface-commands)
+
+# Link state tracking
+
+## Link state tracking show commands
+
+**show link state group**
+
+```
+sonic# show link state group
+Name: MclagLinkTracking
+Description: Interface tracking for all MCLAGs
+Timeout: 120 seconds
+
+sonic# show link state group MclagLinkTracking
+Name: MclagLinkTracking
+Description: Interface tracking for all MCLAGs
+Timeout: 120 seconds
+Upstream Interfaces:
+    Ethernet0 (Up)
+    Ethernet4 (Up)
+    Vlan100   (Up)
+Downstream Interfaces:
+    PortChannel1 (Up)
+    PortChannel2 (Up)
+```
+**show link state group *NAME***
+
+```
+sonic# show link state group MclagLinkTracking
+Name: MclagLinkTracking
+Description: Interface tracking for all MCLAGs
+Timeout: 60 seconds
+Upstream:
+    Ethernet0 (Down)
+    Ethernet4 (Down)
+    Vlan100   (Down)
+Downstream:
+    PortChannel1 (Disabled)
+    PortChannel2 (Disabled)
+```
+
+## Link state tracking config commands
+
+**Through Klish**
+
+```
+sonic(config)# [no] link state track NAME
+sonic(config-link-track)# [no] description STRING
+sonic(config-link-track)# [no] timeout <1-999>
+sonic(config-link-track)# [no] downstream all-mclag
+
+sonic(config)# interface (Ethernet|PortChannel|Vlan) PORTNUM
+sonic(config-if) [no] link state group NAME upstream
+```
+
+**Through Click**
+
+**config linktrack add**
+
+```
+admin@sonic:~$ sudo config linktrack add --help
+Usage: config linktrack add [OPTIONS] <name>
+
+  Add Interface tracking group
+
+Options:
+  -u, --upstream <upstream>      Set upstream interfaces
+  -d, --downstream <downstream>  Set downstream ports
+  -t, --timeout <timeout>        Set timeout value in seconds
+  --description <description>    Set group description
+  -?, -h, --help                 Show this message and exit.
+```
+
+**config linktrack add del**
+
+```
+admin@sonic:~$ sudo config linktrack add del --help
+Usage: config linktrack add [OPTIONS] <name>
+
+  Add Interface tracking group
+
+Options:
+  -u, --upstream <upstream>      Set upstream interfaces
+  -d, --downstream <downstream>  Set downstream ports
+  -t, --timeout <timeout>        Set timeout value in seconds
+  --description <description>    Set group description
+  -?, -h, --help                 Show this message and exit.
+```
+
+**sudo config linktrack add update**
+
+```
+admin@sonic:~$ sudo config linktrack add update --help
+Usage: config linktrack add [OPTIONS] <name>
+
+  Add Interface tracking group
+
+Options:
+  -u, --upstream <upstream>      Set upstream interfaces
+  -d, --downstream <downstream>  Set downstream ports
+  -t, --timeout <timeout>        Set timeout value in seconds
+  --description <description>    Set group description
+  -?, -h, --help                 Show this message and exit
+```
+
+Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Link-state-tracking)
 
 # LLDP
 
@@ -4950,10 +5530,10 @@ While adding a new ERSPAN session, users need to configure the following fields 
   - Usage:  
     config mirror_session add span <session_name> <dst_port>  
                                       [src_port] [direction]  
-      
+    
     config mirror_session add erspan <session_name> <src_ip> <dst_ip> <dscp> <ttl>  
                                       [gre_type] [queue] [src_port] [direction]  
-      
+    
 - Example:
   ``` 
     root@sonic:/home/admin# config mirror_session add erspan mrr_erspan 1.2.3.4 20.21.22.23 8 100 0x6558 0 Ethernet0 both
@@ -4985,13 +5565,13 @@ The details of these commands are available in KLISH CLI reference guide.
  **switch(config-mirror-<session-name>)# [no] destination <dest_ifName> [source <src_ifName> direction <rx/tx/both>]**  
 Create SPAN mirror session to mirror source port traffic to destination port.  
 The source port and direction are optional and allows destination only mirror session for ACL programming.  
-  
+
  **switch(config-mirror-<session-name>)# [no] destination erspan src_ip <src_ip> dst_ip <dst_ip> dscp < dscp > ttl < ttl > [ gre < gre >] [queue <queue>] [source <src_ifName> direction <rx/tx>]**  
 Create ERSPAN mirror session to mirror source port traffic to destination host.  
-  
+
  **switch(config)# [no] mirror-session <session-name>**   
 Remove mirror session configuration.  
-  
+
 
 ## Mirroring show commands - KLISH
 
@@ -5810,7 +6390,7 @@ This command displays the configured PFC mode on an interface or all interfaces.
   Ethernet92   N/A
   Ethernet96   N/A
   Ethernet100  N/A
-  ```
+```
 
 ## pfcstat command
 This command displays/removes the Pause Frames statistics for Rx and Tx priority queues of all interfaces.
@@ -5916,6 +6496,7 @@ This command displays/removes the Pause Frames statistics for Rx and Tx priority
   
   admin@sonic:~$ sudo pfcstat -c
   Clear saved counters       
+  ```
 
 ## PFC watchdog commands
 This section explains PFC Watchdog related commands that are supported in SONiC. 
@@ -5947,7 +6528,7 @@ This command configures the PFC watchdog counter monitoring interval(in msecs).
 
 This command configures the detection period of PFC storm detection and enables watchdog on a specified port(s) and can specify the action [drop|forward|alert] to be performed on detection of storm. Restoration time is 2 times the detection time (if not specified). 
 
- 
+
 - Usage:<br>
     pfcwd start --action [drop|forward|alert] ports <interface_name> detection-time <value\> --restoration-time <value\>
 
@@ -5973,7 +6554,7 @@ This command configures the detection period of PFC storm detection and enables 
 
 This command disables PFC watchdog on a specified port(s). If the interface_name is not specified, PFC watchdog is disabled for all the interfaces.
 
- 
+
 - Usage:<br>
     pfcwd stop [<interface_name>]
 
@@ -6889,6 +7470,7 @@ This command can be used to clear the counters for all queues of all ports or on
       ...
   ```
   
+
 **show queue watermark**  
 
 This command displays the user watermark for the queues (Egress shared pool occupancy per queue) for either the unicast queues or multicast queues for all ports
@@ -8468,7 +9050,7 @@ This creates mappings as 100-1200, 101-1201, .... , 200-1300
   Requires that there be no VRF-VNI mappings referring to the VNIs being deleted.
   In case of failures, this command displays an error and continues to the next
   set of VLAN Ids.
-  
+
 
 - Usage:
 
@@ -9589,7 +10171,7 @@ This command is the superset of all routeorch debug commands. This command displ
 - Usage: show debug routeOrch all
 
 ### Component: NeighborOrch 
- 
+
 **Debug NeighborOrch Nexthops:**
 
 This command displays the nexthops added in NeighorOrch. Nexthops displayed are added to ASIC_DB and has their corresponding SAI object ID.
@@ -9818,6 +10400,7 @@ This command enables user to disable use-link-local-only configuration on an int
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only PortChannel007
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Ethernet52
   ``
+  ```
 
 **config ipv6 enable**
 
@@ -10415,8 +10998,9 @@ Use this command to configure sFlow polling-interval.
 - Example:
   ```
   sonic(config)# sflow polling-interval 100
-  ```  
-    
+  ```
+  
+
 **no sflow polling-interval**
 
 Use this command to reset sFlow polling-interval to default.
@@ -10427,7 +11011,7 @@ Use this command to reset sFlow polling-interval to default.
 - Example:
   ```
   sonic(config)# no sflow polling-interval
-  ```  
+  ```
 
 **sflow agent {interface name}**
 
@@ -10485,7 +11069,7 @@ Use this command to configure sampling-rate for a specific interface.
   ```
   sonic(config)# interface Ethernet 4
   sonic(conf-if-Ethernet4)# sflow sampling-rate 10000
-  ```  
+  ```
 
 **no sflow sampling-rate**
 
@@ -10790,7 +11374,7 @@ FRR show commands start with command "show ip ospf ", with optional VRF and othe
 
 OSPFv2 route warm reboot can be enabled by enabling warm restart on four modules namely 'system', 'swss', 'teamd', and 'bgp' using SONiC CLI command 'config warm_restart enable'.  When warm restart is not enabled, upon system or bgp container restart, all the OSPFv2 routes will be newly populated into forwarding plane. When warm restart is enabled, upon warm reboot, system will reconcile all the OSPFv2 routes with forwarding plane.
 
-  
+
 ## OSPFv2 show commands
 
 OSPF show command list is as below. Please refer to FRR User Manual for more details on these commands.
@@ -10815,6 +11399,16 @@ OSPF show command list is as below. Please refer to FRR User Manual for more det
 
    
 
+
+
+
+
+
+
+
+
+
+
 ## OSPFv2 config commands
 
 OSPF router configuration command is as below. Please refer to FRR User Manual for more details on these commands.
@@ -10824,7 +11418,7 @@ OSPF router configuration command is as below. Please refer to FRR User Manual f
    OSPF router mode config commands are as below 
 
         [no] ospf router-id A.B.C.D
-
+    
         [no] area <A.B.C.D|(0-4294967295)> authentication message-digest
         [no] area <A.B.C.D|(0-4294967295)> authentication
         [no] area <A.B.C.D|(0-4294967295)> default-cost (0-16777215)
@@ -10843,25 +11437,25 @@ OSPF router configuration command is as below. Please refer to FRR User Manual f
         [no] area <A.B.C.D|(0-4294967295)> virtual-link A.B.C.D {hello-interval (1-65535)|
                                            retransmit-interval (1-65535)| 
                                            transmit-delay (1-65535)|dead-interval (1-65535)}
-
+    
         [no] auto-cost reference-bandwidth (1-4294967)
         [no] default-information originate [{always|metric (0-16777214)|metric-type (1-2)|route-map WORD}]
         [no] default-metric (0-16777214)
         [no] distribute-list WORD out <kernel|connected|static|bgp>
         [no] distance (1-255)
         [no] distance ospf {intra-area (1-255)|inter-area (1-255)|external (1-255)}
-
+    
         [no] log-adjacency-changes detail
         [no] log-adjacency-changes
         [no] max-metric router-lsa administrative
         [no] max-metric router-lsa on-shutdown (5-100)
         [no] max-metric router-lsa on-startup (5-86400)
-
+    
         [no] neighbor A.B.C.D [priority (0-255) [poll-interval (1-65535)]]
         [no] neighbor A.B.C.D poll-interval (1-65535) [priority (0-255)]
-
+    
         [no] network A.B.C.D/M area <A.B.C.D|(0-4294967295)>
-
+    
         [no] ospf router-id [A.B.C.D]
         [no] passive-interface <IFNAME [A.B.C.D]|default>
 
@@ -10914,7 +11508,7 @@ OSPF clear commands are as below. Please refer to FRR User Manual for more detai
    Debug file path can be configured under configuration mode as below
 
         log file <file_path_and_name>
-
+    
         Example : log file /var/log/frr/frr.log
 
 # TAM Configuration And Show Commands

@@ -195,137 +195,283 @@ Full sample config_db.json files are availables at
 and
 [here](https://github.com/Azure/SONiC/blob/gh-pages/doc/config_db_t0.json).
 
+### ACL_TABLE
 
-### ACL and Mirroring
+Stores information about ACL tables on the switch.
 
-ACL and mirroring related configuration are defined in
-**MIRROR_SESSION**, **ACL_TABLE** and **ACL_RULE** tables. Those
-tables are in progress of migrating from APPDB. Please refer to their
-schema in APPDB
-[here](https://github.com/Azure/sonic-swss/blob/4c56d23b9ff4940bdf576cf7c9e5aa77adcbbdcc/doc/swss-schema.md)
-and migration plan
-[here](https://github.com/Azure/SONiC/wiki/ACL-Configuration-Requirement-Description).
+```
+key           = ACL_TABLE:name            ; acl_table_name must be unique
+;field        = value
+policy_desc   = 1*255VCHAR                ; name of the ACL policy table description
+stage         = "INGRESS"/"EGRESS"        ; stage of ACL lookup
+type          = "l2"/"l3"/"l3v6"/"mirror" ; type of acl table, every type of
+                                          ; table defines the match/action a
+                                          ; specific set of match and actions.
+ports         = [0-max_ports]*port_name   ; the ports to which this ACL
+                                          ; table is applied, can be entry
+                                          ; value annotations
+
+;value annotations
+max_ports     = 1*5DIGIT                ; number of ports supported on the chip
+port_name     = 1*64VCHAR               ; name of the port, must be unique
+                                        ; port name can be Ethernetxxx or
+                                        ; PortChannelxxx, Vlanxxxx or Switch
+```
+
+### ACL_RULE_TABLE
+
+Stores rules associated with a specific ACL table on the switch.
+
+#### ACL_RULE_TABLE for type L3, L3v6 and Mirror
+
+```
+key: ACL_RULE_TABLE:table_name:rule_name   ; key of the rule entry in the table,
+                                           ; seq is the order of the rules
+                                           ; when the packet is filtered by the
+                                           ; ACL "policy_name".
+                                           ; A rule is always assocaited with a
+                                           ; policy.
+
+;field        = value
+priority      = 1*3DIGIT  ; rule priority. Valid values range
+                          ; could be platform dependent
+
+packet_action = "forward"/"drop"      ; an action when the fields are matched
+redirect_action = 1*255CHAR           ; redirect parameter
+            ; This parameter defines a destination for redirected packets
+            ; it could be:
+            ; name of physical port.          Example: "Ethernet10"
+            ; name of LAG port                Example: "PortChannel5"
+            ; next-hop ip address (in global) Example: "10.0.0.1"
+            ; next-hop ip address and vrf     Example: "10.0.0.2@Vrf2"
+            ; next-hop ip address and ifname  Example: "10.0.0.3@Ethernet1"
+            ; next-hop group set of next-hop  Example: "10.0.0.1,10.0.0.3@Ethernet1"
+
+mirror_action = 1*255VCHAR                 ; refer to the mirror session (by default it will be ingress mirror action)
+mirror_ingress_action = 1*255VCHAR         ; refer to the mirror session
+mirror_egress_action = 1*255VCHAR          ; refer to the mirror session
+
+ether_type    = h16                        ; Ethernet type field
+ip_type       = ip_types                   ; options of the l2_protocol_type
+                                           ; field.
+ip_protocol   = h8                         ; options of the l3_protocol_type field
+
+src_ip        = ipv4_prefix                ; options of the source ipv4
+                                           ; address (and mask) field
+
+dst_ip        = ipv4_prefix                ; options of the destination ipv4
+                                           ; address (and mask) field
+
+src_ipv6      = ipv6_prefix                ; options of the source ipv6
+                                           ; address (and mask) field
+
+dst_ipv6      = ipv6_prefix                ; options of the destination ipv6
+                                           ; address (and mask) field
+
+l4_src_port   = port_num                   ; source L4 port or the
+l4_dst_port   = port_num                   ; destination L4 port
+
+l4_src_port_range = port_num_L-port_num_H  ; source ports range of L4 ports field
+l4_dst_port_range = port_num_L-port_num_H  ; destination ports range of L4 ports field
+
+tcp_flags     = h8/h8                      ; TCP flags field and mask
+DSCP          = dscp_val["/"dscp_val]  ; DSCP field. Valid range is 0-63
+ICMP_TYPE     = h8/dec-octet         ; ICMP Type Value
+ICMP_CODE     = h8/dec-octet         ; ICMP Code value
+VLAN          = vlan_id              ; VLAN ID. Supported range is 1-4094. This is
+                                     ; valid only if the ACL is applied to Port or
+                                     ; LAG or Switch. For VLAN binding this will be
+                                     ; ignored.
+;value annotations
+ip_types = any | ip | ipv4 | ipv4any | non_ipv4 | ipv6any | non_ipv6
+port_num      = 1*5DIGIT   ; a number between 0 and 65535
+port_num_L    = 1*5DIGIT   ; a number between 0 and 65535,
+                           ; port_num_L < port_num_H
+port_num_H    = 1*5DIGIT   ; a number between 0 and 65535,
+                           ; port_num_L < port_num_H
+ipv6_prefix   =                 6( h16 ":" ) ls32
+   /                       "::" 5( h16 ":" ) ls32
+   / [               h16 ] "::" 4( h16 ":" ) ls32
+   / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+   / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+   / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+   / [ *4( h16 ":" ) h16 ] "::"              ls32
+   / [ *5( h16 ":" ) h16 ] "::"              h16
+   / [ *6( h16 ":" ) h16 ] "::"
+h8          = 1*2HEXDIG
+h16         = 1*4HEXDIG
+ls32        = ( h16 ":" h16 ) / IPv4address
+ipv4_prefix = dec-octet "." dec-octet "." dec-octet "." dec-octet “/” %d1-32
+dec-octet   = DIGIT                     ; 0-9
+                / %x31-39 DIGIT         ; 10-99
+                / "1" 2DIGIT            ; 100-199
+                / "2" %x30-34 DIGIT     ; 200-249
+dscp_val    = DIGIT / %x31-36 %x30-33
+vlan_id      = %x31-39                     ; 1-9
+               / %x31-39 DIGIT             ; 10-99
+               / %x31-39 2DIGIT            ; 100-999
+               / %x31-33 3DIGIT            ; 1000-3999
+               / %x34 %x30 %x30-39 %x30-34 ; 4000 - 4094
+```
+
+#### ACL_RULE_TABLE for type L2
+
+```
+key = ACL_RULE:table_name:rule_name  ; key of the rule entry in the table,
+                                     ; seq is the order of the rules
+                                     ; when the packet is filtered by the
+                                     ; ACL "policy_name".
+                                     ; A rule is always assocaited with a
+                                     ; policy.
+;field        = value
+PRIORITY      = acl_priority         ; rule priority. Supported range is 1-65535
+PACKET_ACTION = "forward"/"drop"
+redirect_action = 1*255CHAR           ; redirect parameter
+            ; This parameter defines a destination for redirected packets
+            ; it could be:
+            ; name of physical port.          Example: "Ethernet10"
+            ; name of LAG port                Example: "PortChannel5"
+
+
+SRC_MAC       = mac_addr ["/" mac_mask ] ; Source MAC address
+DST_MAC       = mac_addr ["/" mac_mask ] ; Destination MAC address
+ETHER_TYPE    = ethtype                  ; Ethernet type field
+PCP           = pcp_val [ "/"" pcp_val]  ; PCP Value in range of 0-7
+DEI           = BIT ["/" BIT ]           ; DEI Value. 0 or 1.
+VLAN          = vlan_id                  ; VLAN ID. Supported range is 1-4094.
+                                         ; valid only if the ACL is applied to Port or
+                                         ; LAG or Switch. For VLAN binding this will be
+                                         ; ignored.
+    
+;value annotations
+acl_priority = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
+ethtype      = "0x"3*4HEXDIG ; Must be in range 1536 to 65535 in decimal
+mac_addr     = 2HEXDIG "-" 2HEXDIG "-" 2HEXDIG "-" 2HEXDIG "-" 2HEXDIG "-" 2HEXDIG 
+               / 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG
+vlan_id      = %x31-39                     ; 1-9
+               / %x31-39 DIGIT             ; 10-99
+               / %x31-39 2DIGIT            ; 100-999
+               / %x31-33 3DIGIT            ; 1000-3999
+               / %x34 %x30 %x30-39 %x30-34 ; 4000 - 4094
+pcp_val      = %x30-37
+```
+
+#### Example
 
 ```
 {
-"MIRROR_SESSION": {
-        "everflow0": {
-                "src_ip": "10.1.0.32",
-                "dst_ip": "2.2.2.2"
-        }
+  "ACL_TABLE": {
+    "l2_ACL_0_INGRESS": {
+      "policy_desc": "Description of l2_ACL_0_INGRESS",
+      "type": "l2",
+      "stage": "INGRESS",
+      "ports": [
+        "Ethernet0"
+      ]
     },
-
-"ACL_TABLE": {
-        "DATAACL": {
-                "policy_desc" : "data_acl",
-                "type": "l3",
-                "ports": [
-                        "Ethernet0",
-                        "Ethernet4",
-                        "Ethernet8",
-                        "Ethernet12"
-                ]
-        }
+    "l3_ACL_0_INGRESS": {
+      "policy_desc": "Description of l3_ACL_0_INGRESS",
+      "type": "l3",
+      "stage": "INGRESS",
+      "ports": [
+        "Ethernet4"
+      ]
+    },
+    "l3v6_ACL_0_INGRESS": {
+      "policy_desc": "Description of l3v6_ACL_0_INGRESS",
+      "type": "l3v6",
+      "stage": "INGRESS",
+      "ports": [
+        "Ethernet8"
+      ]
+    }    
+  },
+  "ACL_RULE": {
+    "l2_ACL_0_INGRESS|l2_ACL_0_RULE_0": {
+      "PRIORITY": "1",
+      "PACKET_ACTION": "DROP",
+      "SRC_MAC": "00-00-11-00-00-00",
+      "DST_MAC": "00-00-22-00-00-00"
+    },
+    "l2_ACL_0_INGRESS|l2_ACL_0_RULE_1": {
+      "PRIORITY": "2",
+      "PACKET_ACTION": "FORWARD",
+      "SRC_MAC": "00-00-11-00-00-01",
+      "DST_MAC": "00-00-22-00-00-01"
+    },
+    "l2_ACL_0_INGRESS|l2_ACL_0_RULE_2": {
+      "PRIORITY": "3",
+      "PACKET_ACTION": "DROP",
+      "SRC_MAC": "00-00-11-00-00-02",
+      "DST_MAC": "00-00-22-00-00-02"
+    },
+    "l2_ACL_0_INGRESS|l2_ACL_0_RULE_3": {
+      "PRIORITY": "4",
+      "PACKET_ACTION": "FORWARD",
+      "SRC_MAC": "00-00-11-00-00-03",
+      "DST_MAC": "00-00-22-00-00-03"
+    },
+    "l3_ACL_0_INGRESS|l3_ACL_0_RULE_0": {
+      "PRIORITY": "1",
+      "PACKET_ACTION": "FORWARD",
+      "SRC_IP": "10.0.0.0/32",
+      "DST_IP": "20.0.0.0/32"
+    },
+    "l3_ACL_0_INGRESS|l3_ACL_0_RULE_1": {
+      "PRIORITY": "2",
+      "PACKET_ACTION": "DROP",
+      "SRC_IP": "10.0.0.1/32",
+      "DST_IP": "20.0.0.1/32"
+    },
+    "l3_ACL_0_INGRESS|l3_ACL_0_RULE_2": {
+      "PRIORITY": "3",
+      "PACKET_ACTION": "FORWARD",
+      "SRC_IP": "10.0.0.2/32",
+      "DST_IP": "20.0.0.2/32"
+    },
+    "l3_ACL_0_INGRESS|l3_ACL_0_RULE_3": {
+      "PRIORITY": "4",
+      "PACKET_ACTION": "DROP",
+      "SRC_IP": "10.0.0.3/32",
+      "DST_IP": "20.0.0.3/32"
+    },
+    "l3v6_ACL_0_INGRESS|l3v6_ACL_0_RULE_0": {
+      "PRIORITY": "1",
+      "PACKET_ACTION": "FORWARD",
+      "SRC_IPV6": "1000::0000:0000/128",
+      "DST_IPV6": "2000::0000:0000/128",
+      "IP_PROTOCOL": "6",
+      "L4_SRC_PORT": "100",
+      "L4_DST_PORT": "10100"
+    },
+    "l3v6_ACL_0_INGRESS|l3v6_ACL_0_RULE_1": {
+      "PRIORITY": "2",
+      "PACKET_ACTION": "DROP",
+      "SRC_IPV6": "1000::0000:0001/128",
+      "DST_IPV6": "2000::0000:0001/128",
+      "IP_PROTOCOL": "6",
+      "L4_SRC_PORT": "200",
+      "L4_DST_PORT": "10200"
+    },
+    "l3v6_ACL_0_INGRESS|l3v6_ACL_0_RULE_2": {
+      "PRIORITY": "3",
+      "PACKET_ACTION": "FORWARD",
+      "SRC_IPV6": "1000::0000:0002/128",
+      "DST_IPV6": "2000::0000:0002/128",
+      "IP_PROTOCOL": "6",
+      "L4_SRC_PORT": "300",
+      "L4_DST_PORT": "10300"
+    },
+    "l3v6_ACL_0_INGRESS|l3v6_ACL_0_RULE_3": {
+      "PRIORITY": "4",
+      "PACKET_ACTION": "DROP",
+      "SRC_IPV6": "1000::0000:0003/128",
+      "DST_IPV6": "2000::0000:0003/128",
+      "IP_PROTOCOL": "6",
+      "L4_SRC_PORT": "400",
+      "L4_DST_PORT": "10400"
     }
-}
-```
-
-```
-{
-"ACL_TABLE": {
-        "aaa": {
-                "type": "L3",
-                "ports": "Ethernet0"
-        }
-   },
-"ACL_RULE": {
-        "aaa|rule_0": {
-        "PRIORITY": "55",
-        "PACKET_ACTION": "DROP",
-        "L4_SRC_PORT": "0"
-        },
-        "aaa|rule_1": {
-        "PRIORITY": "55",
-        "PACKET_ACTION": "DROP",
-        "L4_SRC_PORT": "1"
-        }
-   }
-}
-```
-
-***Below ACL table added by comparig minigraph.xml & config_db.json***
-
-Note below that REDIRECT clause requires {IP, Interface} instead of just {IP} as IP address alone is not sufficient to decide the egress interface in multi-VRF scenario.
-
-```
-{
-"ACL_TABLE": {
-		"EVERFLOW": {
-		"type": "MIRROR",
-		"policy_desc": "EVERFLOW",
-		"ports": [
-		  "PortChannel0001",
-		  "PortChannel0002",
-		  "PortChannel0003",
-		  "PortChannel0004"
-		]
-	  },
-		"EVERFLOWV6": {
-        "type": "MIRRORV6",
-        "policy_desc": "EVERFLOWV6",
-        "ports": [
-          "PortChannel0001",
-          "PortChannel0002",
-          "PortChannel0003",
-          "PortChannel0004"
-        ]
-      },
-        "SNMP_ACL": {
-          "services": [
-            "SNMP"
-        ],
-        "type": "CTRLPLANE",
-        "policy_desc": "SNMP_ACL"
-      },
-        "SSH_ONLY": {
-          "services": [
-            "SSH"
-          ],
-          "type": "CTRLPLANE",
-          "policy_desc": "SSH_ONLY"
-      }
-   },
-
-"ACL_RULE": {
-        "SNMP_ACL|DEFAULT_RULE": {
-            "PRIORITY": "1",
-            "PACKET_ACTION": "DROP",
-            "ETHER_TYPE": "2048"
-        },
-        "SNMP_ACL|RULE_1": {
-            "PRIORITY": "9999",
-            "PACKET_ACTION": "ACCEPT",
-            "SRC_IP": "1.1.1.1/32",
-            "IP_PROTOCOL": "17"
-        },
-        "SNMP_ACL|RULE_2": {
-            "PRIORITY": "9998",
-            "PACKET_ACTION": "REDIRECT:20.1.1.93|Ethernet10",
-            "SRC_IP": "2.2.2.2/32",
-            "IP_PROTOCOL": "17"
-        },
-        "SSH_ONLY|DEFAULT_RULE": {
-            "PRIORITY": "1",
-            "PACKET_ACTION": "DROP",
-            "ETHER_TYPE": "2048"
-        },
-        "SSH_ONLY|RULE_1": {
-            "PRIORITY": "9999",
-            "PACKET_ACTION": "REDIRECT:27.3.11.219|Ethernet92,65.31.46.161|Ethernet72",
-            "SRC_IP": "4.4.4.4/8",
-            "IP_PROTOCOL": "6"
-        }
-    }
+  }
 }
 
 ```
@@ -388,7 +534,7 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
 	}
 }
 ```
-	
+
 ### Bidirectional Forwarding Detection (BFD)
 
 To enable BFD for a BGP neighbor, it can be configured in BGP_NEIGHBOR table as below:
@@ -567,6 +713,93 @@ BFD_PEER_MULTI_HOP and BFD_PEER_SINGLE_HOP table can be used to configure BFD mu
 }
 
 ```
+
+### CLASSIFIER_TABLE
+
+A classifier is used to setup the match criterion to identify a traffic flow. A flow can be either identified by an ACL or part of L2-L4 header.
+
+```
+key           = CLASSIFIER_TABLE:name      ; name must be unique
+                                           ; name must be 1-63 chars long
+
+;field            = value
+DESCRIPTION       = 1*255VCHAR
+MATCH_TYPE        = "acl" / "fields"       ; Match on ACL or Match using individual
+                                           fields.
+ACL_NAME          = 1*255VCHAR             ; ACL name as present in ACL_TABLE
+                                           ; valid when match_type = "acl"
+SRC_MAC       = mac_addr ["/" mac_mask ]   ; Source MAC address
+DST_MAC       = mac_addr ["/" mac_mask ]   ; Destination MAC address
+ETHER_TYPE    = h16                        ; Ethernet type field
+IP_PROTOCOL   = h8                         ; options of the l3_protocol_type field
+SRC_IP        = ipv4_prefix                ; options of the source ipv4
+                                           ; address (and mask) field
+DST_IP        = ipv4_prefix                ; options of the destination ipv4
+                                           ; address (and mask) field
+SRC_IPV6      = ipv6_prefix                ; options of the source ipv4
+                                           ; address (and mask) field
+DST_IPV6      = ipv6_prefix                ; options of the destination ipv4
+L4_SRC_PORT   = port_num                   ; source L4 port. Valid if IP Protocol is TCP
+                                           ; or UDP 
+L4_SRC_PORT_RANGE = port_num_L-port_num_H  ; source ports range of L4 ports field
+L4_DST_PORT   = port_num                   ; destination L4 port. Valid if IP Protocol is
+                                           ; TCP or UDP 
+L4_DST_PORT_RANGE = port_num_L-port_num_H  ; destination ports range of L4 ports field
+TCP_FLAGS     = h8/h8                      ; TCP flags field and mask
+DSCP          = dscp_val[/dscp_val]        ; DSCP field. Valid range is 0-63
+                                           ; address (and mask) field
+
+;value annotations
+h16           = 1*4HEXDIG
+mac_addr      = 2HEXDIG "." 2HEXDIG "." 2HEXDIG "." 2HEXDIG "." 2HEXDIG "." 2HEXDIG 
+                / 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG ":" 2HEXDIG
+port_num      = 1*5DIGIT   ; a number between 0 and 65535
+port_num_L    = 1*5DIGIT   ; a number between 0 and 65535,
+                           ; port_num_L < port_num_H
+port_num_H    = 1*5DIGIT   ; a number between 0 and 65535,
+                           ; port_num_L < port_num_H
+dscp_val      = DIGIT / %x31-36 %x30-33
+ipv4_prefix = dec-octet "." dec-octet "." dec-octet "." dec-octet "/" %d1-32
+
+ipv6_prefix   =                               6( h16 ":" ) ls32
+                 /                       "::" 5( h16 ":" ) ls32
+                 / [               h16 ] "::" 4( h16 ":" ) ls32
+                 / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+                 / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+                 / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+                 / [ *4( h16 ":" ) h16 ] "::"              ls32
+                 / [ *5( h16 ":" ) h16 ] "::"              h16
+                 / [ *6( h16 ":" ) h16 ] "::"
+   
+dec-octet   = DIGIT                   ; 0-9
+              / 2DIGIT                ; 10-99
+              / "1" 2DIGIT            ; 100-199
+              / "2" %x30-34 DIGIT     ; 200-249
+h8          = 1*2HEXDIG
+h16         = 1*4HEXDIG
+ls32        = ( h16 ":" h16 ) / IPv4address
+```
+
+Example
+
+```
+{
+    "CLASSIFIER_TABLE": {
+        "class0": {
+            "ACL_NAME": "l3_ACL_0", 
+            "DESCRIPTION": "", 
+            "MATCH_TYPE": "acl"
+        }, 
+        "class1": {
+            "ACL_NAME": "l2_ACL_0", 
+            "DESCRIPTION": "", 
+            "MATCH_TYPE": "acl"
+        }
+    }
+}
+```
+
+
 
 ### COPP_TABLE
 
@@ -1117,6 +1350,36 @@ instead of data network.
 }
 ```
 
+### MIRROR_SESSION_TABLE
+
+Mirror session table Stores information about mirror sessions and their properties.
+
+```
+key       = MIRROR_SESSION_TABLE:mirror_session_name ; mirror_session_name is
+                                                     ; unique session
+                                                     ; identifier
+; field   = value
+status    = "active"/"inactive"   ; Session state.
+src_ip    = ipv4_address          ; Session souce IP address
+dst_ip    = ipv4_address          ; Session destination IP address
+gre_type  = h16                   ; Session GRE protocol type
+dscp      = h8                    ; Session DSCP
+ttl       = h8                    ; Session TTL
+queue     = h8                    ; Session output queue
+policer   = policer_name          ; Session policer name
+
+;value annotations
+mirror_session_name = 1*255VCHAR
+policer_name        = 1*255VCHAR
+h8                  = 1*2HEXDIG
+h16                 = 1*4HEXDIG
+ipv4_address        = dec-octet "." dec-octet "." dec-octet "." dec-octet “/” %d1-32
+dec-octet           = DIGIT                     ; 0-9
+                       / %x31-39 DIGIT         ; 10-99
+                       / "1" 2DIGIT            ; 100-199
+                       / "2" %x30-34 DIGIT     ; 200-249
+```
+
 ### NAT
 
 NAT configuration is defined in **NAT_GLOBAL**, **NAT_POOL**, **NAT_BINDINGS**, **STATIC_NAT**, **STATIC_NAPT** tables. The NAT zone configuration is part of **INTERFACE** table.
@@ -1204,6 +1467,111 @@ attributes in those objects.
     "10.0.0.5": {},
     "10.0.0.6": {},
     "10.11.150.5": {}
+    }
+}
+```
+
+### POLICY_TABLE
+
+Policy table is used to configure the policy parameters. 
+
+```
+key           = POLICY_TABLE:name            ; name must be unique
+                                             ; name must be 1-63 chars long
+
+;field      = value
+TYPE        = "qos"               ; Only QoS is supported now.
+DESCRIPTION = 1*255VCHAR          ; Policy Description
+
+;value annotations
+```
+
+Example
+
+```
+{
+	"POLICY_TABLE": {
+        "policy0": {
+            "DESCRIPTION": "", 
+            "TYPE": "qos"
+        }
+    }
+}
+```
+
+### POLICY_SECTIONS_TABLE
+
+Policy details table provides information on the classifiers to use and their corresponding actions. A policy can have up to 128 classifiers
+
+```
+key           = POLICY_SECTIONS_TABLE:policy_name:classifier_name ; name must be unique
+                                                       ; name must be 1-63 chars long
+
+;field            = value
+PRIORITY          = 1*3DIGIT            ; Valid Range is 0-999
+DESCRIPTION       = 1*255VCHAR          ; Policy Description
+SET_DSCP          = dscp_val            
+SET_PCP           = pcp_val
+SET_POLICER_CIR   = 1*12DIGIT
+SET_POLICER_CBS   = 1*12DIGIT
+SET_POLICER_PIR   = 1*12DIGIT
+SET_POLICER_PBS   = 1*12DIGIT
+
+;value annotations
+dscp_val      = DIGIT / %x31-36 %x30-33
+pcp_val       = %x30-37
+```
+
+Example
+
+```
+{
+    "POLICY_SECTIONS_TABLE": {
+        "policy0|class0": {
+            "PRIORITY": "200", 
+            "SET_DSCP": "15", 
+            "SET_PCP": "5"
+        }, 
+        "policy0|class1": {
+            "PRIORITY": "100", 
+            "SET_DSCP": "30", 
+            "SET_PCP": "2"
+        }
+    }
+}
+```
+
+### POLICY_BINDING_TABLE
+
+This table provides information on Policy application on ports
+
+```
+key           = POLICY_BINDING_TABLE:port_name   ; port_name is the name of the Port or
+                                                 ; LAG or VLAN or "switch"
+
+;field                     = value
+INGRESS_QOS_POLICY         = 1*63VCHAR
+INGRESS_MONITORING_POLICY  = 1*63VCHAR
+EGRESS_QOS_POLICY          = 1*63VCHAR
+EGRESS_MONITORING_POLICY   = 1*63VCHAR
+
+;value annotations
+```
+
+Example:
+
+```
+{
+    "POLICY_BINDING_TABLE": {
+        "Ethernet0": {
+            "INGRESS_QOS_POLICY": "policy0"
+        }, 
+        "Ethernet4": {
+            "INGRESS_QOS_POLICY": "policy0"
+        }, 
+        "Ethernet8": {
+            "EGRESS_QOS_POLICY": "policy0"
+        }
     }
 }
 ```
