@@ -240,6 +240,9 @@ Table of Contents
    * [Tail timestamping Configuration and Show Commands](#tail-timestamping-configuration-and-show-commands)
       * [Tail timestamping config commands](#tail-timestamping-config-commands)
       * [Tail timestamping show commands](#tail-timestamping-show-commands)
+   * [SNMP Configuration And Show Commands](#snmp-configuration-and-show-commands)
+      * [SNMP configuration commands](#snmp-configuration-commands)
+      * [SNMP show commands](#SNMP-show-commands)
    * [BroadView Configuration Commands](#broadview-configuration-commands)
       * [BroadView config commands](#broadview-config-commands)
    * [Industry Standard CLIs](#industry-standard-clis)
@@ -12247,6 +12250,44 @@ Example output:
     ------------------------------------------------------------------------------------------------
     TS_Flow        T1             R1             8              8000
     ---------------------------------------------------------
+
+# SNMP Configuration And Show Commands
+
+This section explains the SNMP commands supported in SONiC. The details of these commands are available in KLISH CLI reference guide.
+
+## SNMP configuration commands
+
+  snmp-server [ contact <contact> ] [ location <location> ] [ engine <octet-byte-string> ]
+
+  snmp-server agentaddress <ip address> [ port <udpPort> ] [interface <vrfname> ]
+
+  snmp-server enable trap
+
+  snmp-server community <community name>  [groupname  <group name>]
+
+  snmp-server group <group name> { any | v2c | v3 { auth | noauth | priv }} [ read <viewname> ] [ write <viewname> ] [ notify <viewname> ]
+
+  snmp-server host <ip-addr> community <community name> {[ traps v2c ] | informs [timeout seconds] [retries retries]}
+
+  snmp-server host <ip-addr> user <username> {[traps  {auth | noauth | priv}] | [informs {auth | noauth | priv} [timeout seconds] [retries retries]]}
+
+  snmp-server user <username> [ group <group-name> ] [ encrypted ] [ auth { md5 | sha | noauth } [ auth-password <password-string>  ] [ priv { DES | AES-128 } [ priv-password <password-string> ] ]
+
+  snmp-server view <view name> <oid-tree> {included | excluded}
+
+## SNMP show commands
+
+  show snmp-server
+
+  show snmp-server community
+
+  show snmp-server group
+
+  show snmp-server host
+
+  show snmp-server user
+
+  show snmp-server view
 
 # BroadView Configuration Commands
 
