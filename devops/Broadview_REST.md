@@ -47,7 +47,14 @@ BroadView REST APIs in SONiC.
     - [Table 2: IFA Rest Requests](#table-2-ifa-rest-requests)
   - [3.2 BST REST Requests](#32-bst-rest-requests)
     - [Table 3: BST Rest Requests](#table-3-bst-rest-requests)
-- [4 Packaging](#4-packaging)
+  - [3.3 PDM REST Requests](#32-pdm-rest-requests)
+    - [Table 4: PDM Rest Requests](#table-4-pdm-rest-requests)
+  - [3.4 TS REST Requests](#32-ts-rest-requests)
+    - [Table 5: TS Rest Requests](#table-5-ts-rest-requests)
+- [4 CLI](#4-cli)
+  - [4.1 Configuration Commands](#41-configuration-commands)
+- [5 Packaging](#5-packaging)
+
   
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -55,6 +62,10 @@ BroadView REST APIs in SONiC.
 [Table 2: IFA-Rest-Requests](#table-2-ifa-rest-requests)
 
 [Table 3: BST-Rest-Requests](#table-3-bst-rest-requests)
+
+[Table 4: PDM-Rest-Requests](#table-3-pdm-rest-requests)
+
+[Table 5: TS-Rest-Requests](#table-3-ts-rest-requests)
 
 # Revision
 | # |    Date    |   Document Version    | Details |
@@ -74,6 +85,9 @@ This document describes the high level implementation for supporting BroadView R
 | IFA      | Inband flow analyzer      |
 | BST      | Buffer statistics tracker |
 | BV       | BroadView                 |
+| PDM      | Packet Drop Monitor       |
+| TS       | Tail stamping             |
+
 
 # 1 BroadView Overview
 
@@ -121,6 +135,8 @@ Below is the diagram which explains how BroadView agent is integrated into provi
 ## 1.2 South-Bound Plugin Block changes
 
 New SB plug-in block has been implemented as SONiC-SB-plugin. New South-Bound (SB) plugin block including South-Bound-plugin re-director of BroadView agent has been changed as part of integration into SONiC. SONiC-SB-plugin block makes calls to configure the REDIS DB tables as needed for BST and IFA. For configuration related REST APIs, SONiC-SB-plugin block makes call to update CONFIG DB. For stats, SONiC-SB-plugin makes calls to fetch the data from COUNTER_DB.
+
+SONiC-SB-plugin listens for threshold breach events set by thresholdmgr in COUNTER_DB,once event receives trigger-report is prepared and sent to collector configured.
 
 ## 1.3 North-Bound Plugin Block changes
 
@@ -185,6 +201,7 @@ Below table is listing out REST requests for Threshold/BST feature supported in 
 | configure-bst-thresholds       | ingress-port-priority-group | um-headroom-threshold      | Yes           |
 | configure-bst-thresholds       | egress-uc-queue             | uc-threshold               | Yes           |
 | configure-bst-thresholds       | egress-uc-queue             | mc-threshold               | Yes           |
+| configure-bst-thresholds       | egress-cpu-queue            | cpu-threshold              | Yes           |
 | configure-bst-thresholds       | egress-mc-queue             | mc-queue-entries-threshold | **No**        |
 | configure-bst-multi-thresholds | ingress-port-priority-group | um-shared-threshold        | Yes           |
 | configure-bst-multi-thresholds | ingress-port-priority-group | um-headroom-threshold      | Yes           |
@@ -192,8 +209,61 @@ Below table is listing out REST requests for Threshold/BST feature supported in 
 | configure-bst-multi-thresholds | egress-mc-queue             | mc-threshold               | Yes           |
 | configure-bst-multi-thresholds | egress-mc-queue             | mc-queue-entries-threshold | **No**        |
 
+## 3.3 PDM REST Requests
+
+Below table is listing out REST requests for PDM feature supported in Buzznik release of SONiC.  
+
+### Table 4: PDM Rest Requests
+
+| **Request**                 | **Supported** |
+|-----------------------------|---------------|
+| configure-pdm-feature       |    Yes        |
+| create-pdm-collector        |    Yes        |
+| remove-pdm-collector        |    Yes        |
+| create-pdm-flow             |    Yes        |
+| remove-pdm-flow             |    Yes        |
+| create-pdm-session          |    Yes        |
+| remove-pdm-session          |    Yes        |
+| start-pdm-session           |    Yes        |
+| stop-pdm-session            |    Yes        |
+| get-pdm-session             |    Yes        |
+| get-pdm-flow                |    Yes        |
+| get-pdm-collector           |    Yes        |
+| get-pdm-status              |    Yes        |
+
+## 3.4 TS REST Requests
+
+Below table is listing out REST requests for TS feature supported in Buzznik release of SONiC.  
+
+### Table 5: TS Rest Requests
+
+| **Request**                 | **Supported** |
+|-----------------------------|---------------|
+| config-ifa-feature          |    Yes        |
+| create-ifa-collector        |    Yes        |
+| remove-ifa-collector        |    Yes        |
+| create-ifa-flow             |    Yes        |
+| remove-ifa-flow             |    Yes        |
+| create-ifa-session          |    Yes        |
+| remove-ifa-session          |    Yes        |
+| start-ifa-session           |    Yes        |
+| stop-ifa-session            |    Yes        |
+| get-ifa-session             |    Yes        |
+| get-ifa-flow                |    Yes        |
+| get-ifa-collector           |    Yes        |
+| get-ifa-status              |    Yes        |
 
 
-# 4 Packaging
+# 4 CLI
+
+Below are BroadView configuration commands of BroadView REST interface supported in SONiC.
+
+## 4.1 Configuration commands
+
+BroadView collector configuration command is below
+
+    config broadview collector <ip> <port>
+
+# 5 Packaging
 
 Inclusion of BroadView docker in SONiC source code packaging and compilation has been explicitly enabled using compilation and packaging flags. 
