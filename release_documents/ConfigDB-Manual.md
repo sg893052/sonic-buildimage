@@ -2361,7 +2361,7 @@ table allow to change properties of a VRF. Attributes:
 
 ### VRRP
 
-The VRRP table allows to insert or update a VRRP instance entry.
+The VRRP table allows to insert or update a VRRP instance entry. The VRRP instances supported are of IPv4 and IPv6 address family.
 The key of the entry is {<interface_name>, <vrid>}. Interface name could be any Layer-3 interface in systems, like Ethernet12, Vlan43, PortChannel37. The attributes in the
 table allow to change properties of a VRRP instance. Attributes:
 
@@ -2369,13 +2369,13 @@ table allow to change properties of a VRRP instance. Attributes:
 - 'priority' conatins an integer value between 1 and 254. Default is 100. This attribute control the election of Master VRRP node for an instance. Highest priority node becomes the master.
 - 'pre_empt' contains boolean value 'true' or 'false'. Default is 'true'. This attribute controls if a Master node can be premepted when a higher priority VRRP node comes online.
 - 'state' conatins a string to denote the current state of VRRP instance. Currently this is not used.
-- 'version' contains an integer value to denote the VRRP version. Currently only Version 2 is supported and hence this attribute is always 2.
+- 'version' contains an integer value to denote the VRRP version. By default IPv4 VRRP instance is version 2 and it can be changed to version 3. IPv6 VRRP instance is always version 3.
 - 'vip' contains a list of IP address in dotted decimal format. This attribute is virtual IP address for a given VRRP instance
 - 'vrid' is an integer and specifies the VRID of the associated VRRP instance.
 - 'track_interface' is a list of tuples {<interface_name>, weight, <weight>}. This attribute enables user to configure track interface for a VRRP instance.
 
 ```
-{    
+
     "VRRP": {
         "Vlan23|37": {
             "adv_interval": "1",
@@ -2393,11 +2393,35 @@ table allow to change properties of a VRRP instance. Attributes:
             "priority": "80",
             "state": "",
             "track_interface": "",
-            "version": "2",
+            "version": "3",
             "vip": "4.1.2.100,",
             "vrid": "64"
         },
 }
+
+    "VRRP6": {
+        "Vlan23|10": {
+            "adv_interval": "1",
+            "pre_empt": "True",
+            "priority": "140",
+            "state": "",
+            "track_interface": "Ethernet7|weight|10,PortChannel17|weight|10,",
+            "version": "2",
+            "vip": "4:1::100,",
+            "vrid": "37"
+        },
+        "PortChannel15|20": {
+            "adv_interval": "1",
+            "pre_empt": "True",
+            "priority": "80",
+            "state": "",
+            "track_interface": "",
+            "version": "3",
+            "vip": "4:2::100,",
+            "vrid": "64"
+        },
+}
+
 ```
 
 ### VXLAN_TUNNEL

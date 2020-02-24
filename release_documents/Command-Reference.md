@@ -1931,8 +1931,10 @@ Eg:
 
 # VRRP Configuration And Show Commands
 
-This section explains all the VRRP show commands and VRRP configuation commands that are supported in SONiC.
-Most of the VRRP show commands start with "show vrrp". Detailed show commands examples for VRRP are provided for each of the commands
+This section explains all the IPv4 and IPv6 VRRP show commands and VRRP configuation commands that are supported in SONiC. 
+Most of the VRRP show commands start with "show vrrp" for IPv4 and "show vrrp6" for IPv6. Detailed show commands examples for VRRP are provided for each of the commands.
+
+VRRP is supported on both default VRF interfaces and non-default VRF interfaces.
 
 ## VRRP show commands  
 
@@ -1943,11 +1945,13 @@ This command displays the summary of all VRRP instances for all the VRRP enabled
 - Usage:   
   show vrrp
 
+  show vrrp6
+  
 - Example:
   ```
   admin@sonic:~$ show vrrp
   Interface_Name  VRID   State             VIP  Cfg_Prio  Curr_Prio
-           Vlan1     1  Backup       4.1.1.100       100        120
+           Vlan1     1  Backup       4.1.1.100       100        130
            Vlan2     2  Backup       4.1.2.100       100        100
          Vlan100     1  Master  125.125.125.50       100        100
          Vlan100     2  Master  126.126.126.50       100        100
@@ -1956,12 +1960,20 @@ This command displays the summary of all VRRP instances for all the VRRP enabled
         Vlan1000     1  Backup     40.10.1.101       100        100
         Vlan1000     2  Backup     40.10.2.101       100        100
         Vlan1000     3  Backup     40.10.3.101       100        100
+        
+  admin@sonic:~$ show vrrp6
+  Interface_Name  VRID   State             VIP  Cfg_Prio  Curr_Prio
+           Vlan1     1  Backup        4:1::100       100        130
+           Vlan2     2  Backup        4:2::100       100        100
+         Vlan100     3  Master          5::100       100        100
+         Vlan100     4  Master          5::100       100        120     
   ```
-
 
 **show vrrp <interface_name> <vrid>**
 
-This command displays all the details of a particular VRRP instance on an VRRP enabled interface. The above command "show vrrp" displays the summary of all the VRRP instances in the system whereas this command displays a particular VRRP instance in verbose mode with full configuration and state details. <interface_name> and <vr_id> both are mandatory parameter. <interface_name> is name of an interface where VRRP is enabled, example Ethernet40 or PortChannel003 or Vlan349. <vrid> is an integer between 1 and 255 and represents the instance ID of VRRP on an interface.
+**show vrrp6 <interface_name> <vrid>**
+
+This command displays all the details of a particular VRRP instance on an VRRP enabled interface. The above command "show vrrp" & "show vrrp6" displays the summary of all the VRRP instances in the system whereas this command displays a particular VRRP instance in verbose mode with full configuration and state details. <interface_name> and <vr_id> both are mandatory parameter. <interface_name> is name of an interface where VRRP is enabled, example Ethernet40 or PortChannel003 or Vlan349. <vrid> is an integer between 1 and 255 and represents the instance ID of VRRP on an interface.
 
 This command also display the list of interfaces that are being tracked by this VRRP instance along with their state (Up or Down) and their configured priority.
 
@@ -1969,6 +1981,8 @@ This command also display the list of interfaces that are being tracked by this 
 - Usage:  
   show vrrp <interface_name> <vr_id>   
 
+  show vrrp6 <interface_name> <vr_id>   
+  
 - Example:
   ```
   admin@sonic:~$ show vrrp Vlan1 1
@@ -1989,13 +2003,30 @@ This command also display the list of interfaces that are being tracked by this 
   Configured Priority is 100, Current Priority is 130
   Advertisement interval is 1 sec
   Preemption is enabled
+  
+admin@sonic:~$ show vrrp6 Vlan1 1
+  Vlan1, VRID 1
+  Version is 3
+  State is Backup
+  Virtual IP address:
+    4:1::100
+  Virtual MAC address is 0000.5e00.0201
+  Track interface:
+    Intfname       State  Priority
+    Ethernet7      Up     10
+    PortChannel001 Up     10
+    Vlan100        Up     10
+    Vlan200        Down   20
+  Configured Priority is 100, Current Priority is 130
+  Advertisement interval is 1 sec
+  Preemption is enabled
   ```
-
+  
   
 
 ## VRRP config commands  
 
-This sub-section explains the various configuration commands available for VRRP module for both IPv4 address family.
+This sub-section explains the various configuration commands available for VRRP module for both IPv4 and IPv6 address family.
 
 The list of possible VRRP config commands are given below.
 
@@ -2008,6 +2039,7 @@ The list of possible VRRP config commands are given below.
 	            remove <interface_name> <vrid> <virtual_ip_address>
 	        priority <interface_name> <vrid> <priority>
 	        adv_interval <interface_name> <vrid> <interval>
+	        version <version_number>
 	        pre_empt
 	            enable <interface_name> <vrid>
 	            disable <interface_name> <vrid>
@@ -2017,12 +2049,16 @@ The list of possible VRRP config commands are given below.
 
 **config interface vrrp add <interface_name> <vrid>** **  
 
+**config interface vrrp6 add <interface_name> <vrid>** **  
+
 This command enables user to create a new VRRP instance on an interface. This is an indirect way to enabling or configuring VRRP on an interface. Interface name can be any available L3 interface like Ethernet4 or Vlan206 or PortChannel003. <vrid> is a one byte integer between 1 and 255 whose scope is only for an interface. 
 
   - Usage:  
     sudo config interface vrrp add <interface_name> <vrid>
 
-- Examples:
+  - sudo config interface vrrp6 add <interface_name> <vrid>
+    
+- Examples for IPv4 VRRP:
   ```
   admin@sonic:~$ sudo config interface vrrp add Vlan206 13
   ```
@@ -2031,14 +2067,30 @@ This command enables user to create a new VRRP instance on an interface. This is
   admin@sonic:~$ sudo config interface vrrp add PortChannel007 34
   ```
 
+- Examples for IPv6 VRRP
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 add Vlan106 13
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 add PortChannel15 34
+  ```
+
+
+
 **config interface vrrp remove <interface_name> <vrid>**  
+
+**config interface vrrp6 remove <interface_name> <vrid>**  
 
 This command deletes a VRRP instance from an interface
 
   - Usage:  
     sudo config vrrp remove <interface_name> <vrid>
 
-- Examples:  
+  - sudo config vrrp6 remove <interface_name> <vrid>
+    
+- Examples for IPv4 VRRP:  
   ```
   admin@sonic:~$ sudo config interface vrrp remove Vlan206 13
   ```
@@ -2047,15 +2099,28 @@ This command deletes a VRRP instance from an interface
   admin@sonic:~$ sudo config interface vrrp remove PortChannel007 34
   ```
 
+- Examples for IPv6 VRRP:  
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 remove Vlan106 13
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 remove PortChannel15 34
+  ```
+
 **config interface vrrp vip add <interface_name> <vrid> <virtual_ip_address>**  
+
+**config interface vrrp6 vip add <interface_name> <vrid> <virtual_ip_address>** 
 
 This command enables users to add one or more virtual IP address for a VRRP instance on an interface. Virtual IP address must be in interface's IP subnet. The command will be rejected of IP address doesn't belong to the interface's IP subnet.
 
   - Usage:     
     sudo config interface vrrp vip add <interface_name> <vrid> <virtual_ip_address>`
 
-- Examples:  
-  ``` 
+  - sudo config interface vrrp6 vip add <interface_name> <vrid> <virtual_ip_address>`
+    
+- Examples of IPv4 VRRP:  
+  ```
   admin@sonic:~$ sudo config interface vrrp vip add Vlan206 13 72.41.61.101
   ```
 
@@ -2063,13 +2128,26 @@ This command enables users to add one or more virtual IP address for a VRRP inst
   admin@sonic:~$ sudo config interface vrrp vip add PortChannel007 34 206.52.72.201
   ```
 
+- Examples of IPv6 VRRP:  
+  ``` 
+  admin@sonic:~$ sudo config interface vrrp6 vip add Vlan106 13 100::101
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 vip add PortChannel15 34 206::201
+  ```
+
 **config interface vrrp vip remove <interface_name> <vrid> <virtual_ip_address>**  
+
+**config interface vrrp6 vip remove <interface_name> <vrid> <virtual_ip_address>**  
 
 This command allows user to delete an existing VIP from a VRRP instance on an interface.
 
   - Usage:  
     sudo config interface vrrp vip remove <interface_name> <vrid> <virtual_ip_address>
 
+  - sudo config interface vrrp6 vip remove <interface_name> <vrid> <virtual_ip_address>
+    
 - Examples:
   ```
   admin@sonic:~$ sudo config interface vrrp vip remove Vlan206 13 72.41.61.101
@@ -2079,13 +2157,26 @@ This command allows user to delete an existing VIP from a VRRP instance on an in
   admin@sonic:~$ sudo config interface vrrp vip remove PortChannel007 34 206.52.72.201
   ```
 
+- Examples:
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 vip remove Vlan106 13 100::101
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp6 vip remove PortChannel15 34 206::201
+  ```
+
 **config interface vrrp priority <interface_name> <vrid> <priority>**  
+
+**config interface vrrp6 priority <interface_name> <vrid> <priority>** 
 
 This command allows user to configure priority for a VRRP instance on an interface. Priority should be in the range 1 to 254. Default priority is 100. Priority value decides the election of a Master VRRP node for a VRRP instance.
 
 - Usage:  
   sudo config interface vrrp priority <interface_name> <vrid> <priority>
 
+  sudo config interface vrrp6 priority <interface_name> <vrid> <priority>
+  
 - Examples:
 
   ```
@@ -2093,16 +2184,20 @@ This command allows user to configure priority for a VRRP instance on an interfa
   ```
 
   ```
-  admin@sonic:~$ sudo config interface vrrp priority PortChannel007 34 80
+  admin@sonic:~$ sudo config interface vrrp6 priority PortChannel15 34 80
   ```
 
 **config interface vrrp adv_interval <interface_name> <vrid> <interval>**  
+
+**config interface vrrp6 adv_interval <interface_name> <vrid> <interval>**  
 
 This command allows user to configure advertisement interval in seconds for a VRRP instance on an interface. Advertisement interval should be in the range 1 to 255 sec. Default advertisement interval is 1sec. Advertisement interval dictates the periodicity of VRRP hello advertisement for a VRRP instance.
 
 - Usage:  
   sudo config interface vrrp adv_interval <interface_name> <vrid> <interval>
 
+  sudo config interface vrrp6 adv_interval <interface_name> <vrid> <interval>
+  
 - Examples:
 
   ```
@@ -2110,16 +2205,20 @@ This command allows user to configure advertisement interval in seconds for a VR
   ```
 
   ```
-  admin@sonic:~$ sudo config interface vrrp adv_interval PortChannel007 34 5
+  admin@sonic:~$ sudo config interface vrrp6 adv_interval PortChannel15 34 5
   ```
 
 **config interface vrrp pre_empt enable <interface_name> <vrid>**  
+
+**config interface vrrp6 pre_empt enable <interface_name> <vrid>**  
 
 This command allows user to configure whether a Master VRRP role can be preempted by a new high priority VRRP node for a VRRP instance on an interface. By default, preemption of VRRP Master node is enabled. 
 
 - Usage:  
   sudo config interface vrrp pre_empt enable <interface_name> <vrid>
 
+  sudo config interface vrrp6 pre_empt enable <interface_name> <vrid>
+  
 - Examples:
 
   ```
@@ -2127,7 +2226,7 @@ This command allows user to configure whether a Master VRRP role can be preempte
   ```
 
   ```
-  admin@sonic:~$ sudo config interface vrrp pre_empt enable PortChannel007 34
+  admin@sonic:~$ sudo config interface vrrp6 pre_empt enable PortChannel15 34
   ```
 
 **config interface vrrp pre_empt disable <interface_name> <vrid>**  
@@ -2149,11 +2248,15 @@ This command allows user to disable premeption of a Master VRRP role by a new hi
 
 **config interface vrrp track_interface add <interface_name> <vrid> <track_interface> <weight>**  
 
+**config interface vrrp6 track_interface add <interface_name> <vrid> <track_interface> <weight>**  
+
 This command allows user to add a track interface for a VRRP instance on an interface. The operational status of track interface determines the effective priority of VRR instance. When track interface is up, the effective priority of VRRP instance is <priority>+<weight>. When track interface goes down, the effective priority becomes <priority>-<weight>. This change in effective priority triggers election of a new master. Any interface L2 or L3 can be tracked using VRRP. <weight> is an integer in the range 1 to 254. A maximum of eight track interfaces can be added per VRRP instance.
 
 - Usage:  
   sudo config interface vrrp track_interface add <interface_name> <vrid> <track_interface> <weight>
 
+  sudo config interface vrrp track_interface add <interface_name> <vrid> <track_interface> <weight>
+  
 - Examples:
 
   ```
@@ -2161,16 +2264,20 @@ This command allows user to add a track interface for a VRRP instance on an inte
   ```
 
   ```
-  admin@sonic:~$ sudo config interface vrrp track_interface add PortChannel007 34 Vlan1 20
+  admin@sonic:~$ sudo config interface vrrp6 track_interface add PortChannel15 34 Vlan1 20
   ```
 
 **config interface vrrp track_interface remove <interface_name> <vrid> <track_interface> <weight>**  
+
+**config interface vrrp6 track_interface remove <interface_name> <vrid> <track_interface> <weight>**  
 
 This command enables user to delete a track interface for a VRRP instance on an interface. 
 
 - Usage:  
   sudo config interface vrrp track_interface remove <interface_name> <vrid> <track_interface>
 
+- sudo config interface vrrp6 track_interface remove <interface_name> <vrid> <track_interface>
+  
 - Examples:
 
   ```
@@ -2178,7 +2285,24 @@ This command enables user to delete a track interface for a VRRP instance on an 
   ```
 
   ```
-  admin@sonic:~$ sudo config interface vrrp track_interface remove PortChannel007 34 Vlan1
+  admin@sonic:~$ sudo config interface vrrp6 track_interface remove PortChannel15 34 Vlan1
+  ```
+
+**config interface vrrp version <interface_name> <vrid> <version-number>**  
+
+This command allows user to configure version for a IPv4 VRRP instance on an interface. By default IPv4 VRRP instances are version 2. IPv6 VRRP instance always run version 3.
+
+- Usage:  
+  sudo config interface vrrp version <interface_name> <vrid> <version-number>
+
+- Examples:
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp verison Vlan206 13 3
+  ```
+
+  ```
+  admin@sonic:~$ sudo config interface vrrp version PortChannel15 34 2
   ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#BGP-Configuration-And-Show-Commands)
@@ -3349,35 +3473,36 @@ These commands display currently USED and AVAILABLE number of entries for a crit
   EGRESS   RIF           acl_table                   0                  2
   EGRESS   SWITCH        acl_group                   0               1024
   EGRESS   SWITCH        acl_table                   0                  2
+  ```
 
 
   admin@sonic:$ crm show resources fdb
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   fdb_entry                   2              40957
 
 
   admin@sonic:$ crm show resources ipv4 route
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   ipv4_route                  1              49151
 
 
   admin@sonic:$ crm show resources ipv6 neighbor
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   ipv6_neighbor               0              10240
 
 
   admin@sonic:$ crm show resources nexthop group object
   Resource Name      Used Count    Available Count
-  ---------------  ------------  -----------------
+---------------  ------------  -----------------
   nexthop_group               0                128
 
 
   admin@sonic:$ crm show resources nexthop group member
   Resource Name           Used Count    Available Count
-  --------------------  ------------  -----------------
+--------------------  ------------  -----------------
   nexthop_group_member             0              16384
 
   ```
@@ -3418,19 +3543,19 @@ These commands display threshold type, low and high thresholds configured for a 
   ```
   admin@sonic:$ crm show thresholds acl group
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   acl_group        used                           30                90
 
 
   admin@sonic:$ crm show thresholds acl table
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   acl_table        used                           30                90
 
 
   admin@sonic:$ crm show thresholds all
   Resource Name         Threshold Type      Low Threshold    High Threshold
-  --------------------  ----------------  ---------------  ----------------
+--------------------  ----------------  ---------------  ----------------
   ipv4_route            used                           30                90
   ipv6_route            used                           30                90
   ipv4_nexthop          used                           30                90
@@ -3445,34 +3570,34 @@ These commands display threshold type, low and high thresholds configured for a 
   acl_counter           used                           30                90
   fdb_entry             used                           30                90
 
-  
+
   admin@sonic:$ crm show thresholds fdb
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   fdb_entry        used                           30                90
 
 
   admin@sonic:$ crm show thresholds ipv4 nexthop
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   ipv4_nexthop     used                           30                90
 
 
   admin@sonic:$ crm show thresholds ipv6 neighbor
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   ipv6_neighbor    used                           30                90
 
 
   admin@sonic:$ crm show thresholds nexthop group object
   Resource Name    Threshold Type      Low Threshold    High Threshold
-  ---------------  ----------------  ---------------  ----------------
+---------------  ----------------  ---------------  ----------------
   nexthop_group    used                           30                90
 
 
   admin@sonic:$ crm show thresholds nexthop group member
   Resource Name         Threshold Type      Low Threshold    High Threshold
-  --------------------  ----------------  ---------------  ----------------
+--------------------  ----------------  ---------------  ----------------
   nexthop_group_member  used                           30                90
   ```
 
@@ -3571,9 +3696,9 @@ This command displays the IPv4 DHCP Relay statistics on the interface.
     
     - sudo show ip dhcp-relay statistics <interface_name>
   - Sample Output:
-    ```
+  ```
     show ip dhcp-relay statistics Vlan10
-
+    
     Packets relayed from client to server:     2
     Packets relayed from server to client:     0
     Errors relaying packets from clients:      0
@@ -4722,6 +4847,7 @@ This command displays either all the IPv6 route entries from the routing table o
          v - VNC, V - VNC-Direct, A - Babel, D - SHARP, F - PBR,
          f - OpenFabric,
          > - selected route, * - FIB route # - not installed in hardware
+  ```
 
 
   VRF Vrf-Core:
@@ -4745,7 +4871,7 @@ The type of interfaces include the following.
 
 
 - Example:
-    ```
+  ```
     admin@sonic:~$ show ipv6 interfaces
     Interface       IPv6 address/mask                         Master     Admin/Oper
     --------------  ----------------------------------------  ---------  ------------
@@ -6376,6 +6502,7 @@ sonic(config-mclag-domain)#[no] session-timeout <keepalive interval in secs>
   sonic(config-mclag-domain-10)# session-timeout 20
   ```
   
+
 **MCLAG Interface add/delete **
 
 To add or delete MCLAG interface use following command. MCLAG interfaces can only be portchannels. Configure MCLAG interface under the portchannel interface configuration mode.
@@ -7261,7 +7388,7 @@ This command shows the SDK sniffer status
 ```
   admin@arc-switch1004:~$ show platform mlnx sniffer
   sdk sniffer is disabled
-  ```
+```
 
 **show platform mlnx sniffer**  
 
@@ -7287,7 +7414,7 @@ Example:
 admin@arc-switch1038:~$ sudo warm-reboot
 ISSU is not enabled on this HWSKU
 Warm reboot is not supported
-```
+  ```
 
 **config platform mlnx**  
 This command is valid only on mellanox devices. The sub-commands for "config platform" gets populated only on mellanox platforms.
@@ -7315,7 +7442,7 @@ In order to avoid that confirmation the -y / --yes option should be used.
   admin@arc-switch1038:~$ config platform mlnx sniffer sdk
   To change SDK sniffer status, swss service will be restarted, continue? [y/N]: y
   NOTE: In order to avoid that confirmation the -y / --yes option should be used.
-  ```
+```
 
 # PFC Configuration And Show Commands
 This section explains Priority Flow Control configuation and show options that are supported in SONiC.
@@ -7344,10 +7471,11 @@ This command displays the configured PFC mode on an interface or all interfaces.
 
   ```
   admin@sonic:~$ sudo pfc show asymmetric Ethernet9
+  ```
 
 
   Interface    Asymmetric
-  -----------  ------------
+-----------  ------------
   Ethernet9    on
 
 
@@ -7355,7 +7483,7 @@ This command displays the configured PFC mode on an interface or all interfaces.
 
 
   Interface    Asymmetric
-  -----------  ------------
+-----------  ------------
   Ethernet0    N/A
   Ethernet4    on
   Ethernet5    N/A
@@ -7406,7 +7534,7 @@ This command displays/removes the Pause Frames statistics for Rx and Tx priority
 
 - Example:  
 
-```
+  ```
     admin@sonic:~$ sudo pfcstat 
       Port Rx    PFC0    PFC1    PFC2    PFC3    PFC4    PFC5    PFC6    PFC7
 -----------  ------  ------  ------  ------  ------  ------  ------  ------
@@ -7507,7 +7635,7 @@ This command enables/disables the PFC watchdog counter monitoring.
 
 - Example:  
 
-  ```
+```
   admin@sonic:~$ sudo pfcwd counter_poll disable
   admin@sonic:~$ sudo pfcwd counter_poll enable
   ```
@@ -7574,13 +7702,13 @@ This command displays the PFC watchdog configuration like action, detection time
   admin@sonic:~$ sudo pfcwd show config Ethernet8
   Changed polling interval to 100ms
        PORT    ACTION    DETECTION TIME    RESTORATION TIME
-  ---------  --------  ----------------  ------------------
+---------  --------  ----------------  ------------------
   Ethernet8      drop               400                3000
 
   admin@sonic:~$ sudo pfcwd show config 
   Changed polling interval to 100ms
          PORT    ACTION    DETECTION TIME    RESTORATION TIME
-  -----------  --------  ----------------  ------------------
+-----------  --------  ----------------  ------------------
     Ethernet0      drop               400                3000
     Ethernet4      drop               400                3000
     Ethernet5      drop               400                3000
@@ -7642,7 +7770,7 @@ Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [
 # PIM Source Specific Multicast
 
 PIM source specific multicast (PIM-SSM) is supported in this SONiC release. PIM sparse mode functionality is not available yet. The following multicast features are supported in this SONiC release:
-```
+  ```
  1. PIM-SSM,
  2. IGMP versions v2 and v3.
 ```
@@ -8489,7 +8617,7 @@ This command can be used to clear the counters for all queues of all ports or on
 
   admin@sonic:~$ show queue counters CPU
      Port    TxQ    Counter/pkts    Counter/bytes    Drop/pkts    Drop/bytes
-  ------  -----  --------------  ---------------  -----------  ------------
+------  -----  --------------  ---------------  -----------  ------------
       CPU    MC0               0                0            0             0
       CPU    MC1               0                0            0             0
       CPU    MC2               0                0            0             0
@@ -8514,7 +8642,7 @@ This command displays the user watermark for the queues (Egress shared pool occu
   admin@sonic:~$ show queue  watermark unicast
   Egress shared pool occupancy per unicast queue:
          Port    UC0    UC1    UC2    UC3    UC4    UC5    UC6    UC7
-  -----------  -----  -----  -----  -----  -----  -----  -----  -----
+-----------  -----  -----  -----  -----  -----  -----  -----  -----
     Ethernet0      0      0      0      0      0      0      0      0
     Ethernet4      0      0      0      0      0      0      0      0
     Ethernet8      0      0      0      0      0      0      0      0
@@ -8535,7 +8663,7 @@ This command displays the user watermark or persistent-watermark for the Ingress
   admin@sonic:~$ show priority-group  watermark shared
   Ingress shared pool occupancy per PG:
          Port    PG0    PG1    PG2    PG3    PG4    PG5    PG6    PG7
-  -----------  -----  -----  -----  -----  -----  -----  -----  -----
+-----------  -----  -----  -----  -----  -----  -----  -----  -----
     Ethernet0      0      0      0      0      0      0      0      0
     Ethernet4      0      0      0      0      0      0      0      0
     Ethernet8      0      0      0      0      0      0      0      0
@@ -8559,7 +8687,7 @@ This command displays the user persistet-watermark for the queues (Egress shared
   admin@sonic:~$ show queue persistent-watermark unicast
   Egress shared pool occupancy per unicast queue:
          Port    UC0    UC1    UC2    UC3    UC4    UC5    UC6    UC7
-  -----------  -----  -----  -----  -----  -----  -----  -----  -----
+-----------  -----  -----  -----  -----  -----  -----  -----  -----
     Ethernet0    N/A    N/A    N/A    N/A    N/A    N/A    N/A    N/A
     Ethernet4    N/A    N/A    N/A    N/A    N/A    N/A    N/A    N/A
     Ethernet8    N/A    N/A    N/A    N/A    N/A    N/A    N/A    N/A
@@ -8709,7 +8837,7 @@ This command allows configuring a root guard timeout value. Once superior BPDUs 
   config spanning_tree root_guard_timeout <value\>
 - Example:
 
-```
+  ```
   admin@sonic:~$ sudo config spanning_tree root_guard_timeout 40
 ```
 
@@ -8951,7 +9079,7 @@ This command shows information about spanning tree state information.
   Ethernet13  128  4    Y    N        FORWARDING 0           8000002438eefbc3 8000002438eefbc3 
 ```
 
-  ```
+```
   admin@sonic:~$ show spanning_tree
   Spanning-tree Mode: RPVST
   VLAN 100 - STP instance 3
@@ -8982,7 +9110,7 @@ This command displays the interfaces which are BPDU guard enabled and also the s
   show spanning_tree bpdu_guard
 - Example: 
 
-```
+  ```
 admin@sonic:~$ show spanning_tree bpdu_guard
 PortNum            Shutdown      Port shut
                    Configured    due to BPDU guard
@@ -9393,7 +9521,7 @@ This command displays virtual address to the physical address translation status
 
 
 - Example:
-```
+  ```
   admin@T1-2:~$ show mmu
   Pool: ingress_lossless_pool
 ----  --------
@@ -9482,7 +9610,7 @@ NOTE: This command is not working. It crashes as follows. A bug ticket is opened
 
 - Example:   
 
-  ```
+```
   admin@T1-2:~$ show line
 
   ```
@@ -9530,7 +9658,7 @@ This command displays all the vlan configuration.
   ```
   admin@sonic:~$ show vlan config 
   Name       VID  Member     Mode
-  -------  -----  ---------  ------
+-------  -----  ---------  ------
   Vlan100    100  Ethernet0  tagged
   Vlan100    100  Ethernet4  tagged
 
@@ -9710,7 +9838,7 @@ This command displays the MAC (FDB) entries either in full or partial as given b
   ```
   admin@sonic:~$ show mac
   No.    Vlan  MacAddress         Port
-  -----  ------  -----------------  -----------
+-----  ------  -----------------  -----------
     1    1000  E2:8C:56:85:4A:CD  Ethernet192
     2    1000  A0:1B:5E:47:C9:76  Ethernet192
     3    1000  AA:54:EF:2C:EE:30  Ethernet192
@@ -9738,7 +9866,7 @@ This command displays the MAC (FDB) entries either in full or partial as given b
   ```
   admin@sonic:~$ show mac -v 1000
   No.    Vlan  MacAddress         Port
-  -----  ------  -----------------  -----------
+-----  ------  -----------------  -----------
     1    1000  E2:8C:56:85:4A:CD  Ethernet192
     2    1000  A0:1B:5E:47:C9:76  Ethernet192
     3    1000  AA:54:EF:2C:EE:30  Ethernet192
@@ -9761,7 +9889,7 @@ This command displays the MAC (FDB) entries either in full or partial as given b
 
   admin@sonic:~$ show mac -p Ethernet192
   No.    Vlan  MacAddress         Port
-  -----  ------  -----------------  -----------
+-----  ------  -----------------  -----------
     1    1000  E2:8C:56:85:4A:CD  Ethernet192
     2    1000  A0:1B:5E:47:C9:76  Ethernet192
     3    1000  AA:54:EF:2C:EE:30  Ethernet192
@@ -9808,7 +9936,7 @@ Command and options to clear MAC entries from FDB. When port or vlan is used, it
 
 - Example:
 
-```
+  ```
 admin@sonic:~$ sonic-clear fdb all
 All MAC entries are cleared from FDB
 
@@ -10144,7 +10272,7 @@ This command displays all the configuration related to warm_restart.
 ```
   admin@sonic:~$ show warm_restart config
   name    enable    timer_name        timer_duration
-  ------  --------  ----------------  ----------------
+------  --------  ----------------  ----------------
   bgp     true      bgp_timer         100
   teamd   false     teamsyncd_timer   300
   swss    false     neighsyncd_timer  200
@@ -10162,7 +10290,7 @@ This command displays the warm_restart state.
 - Example:
 ```
   name          restore_count  state
-  ----------  ---------------  ----------
+----------  ---------------  ----------
   orchagent                 0
   vlanmgrd                  0
   bgp                       1  reconciled
@@ -10209,7 +10337,7 @@ Supported range: 1-3600.
 
 
 - Example:
-  ```
+```
   admin@sonic:~$ sudo config warm_restart bgp_timer 1000
   ```
 
@@ -10507,10 +10635,10 @@ Once if users go to "vtysh", they can use the routing stack specific commands as
   - Example: Quagga Routing Stack
   ```
 	admin@T1-2:~$ vtysh
-
+	
 	Hello, this is Quagga (version 0.99.24.1).
 	Copyright 1996-2005 Kunihiro Ishiguro, et al.
-
+	
 	T1-2# show route-map (This command displays the route-map that is configured for the routing protocol.)
 	ZEBRA:
 	route-map RM_SET_SRC, permit, sequence 10
@@ -10734,7 +10862,7 @@ This command displays the failure entries logged in the error database.
 show error_database [tablename]
 
 - Example:
-```
+  ```
 admin@sonic:/home/admin# show error_database
 Prefix         Nexthop    Interface    Error Code      Operation
 -------------  ---------  -----------  --------------  -----------
@@ -11461,7 +11589,7 @@ This command enables user to disable use-link-local-only configuration on an int
     sudo config interface ipv6 disable use-link-local-only <interface_name>
 
 - Examples:
-  ```
+```
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Vlan206
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only PortChannel007
   admin@sonic:~$ sudo config interface ipv6 disable use-link-local-only Ethernet52
@@ -11529,7 +11657,7 @@ Use this command to configure an TAM device identifier.
 
 - Example:
 
-```
+  ```
 root@sonic:/home/admin# config tam device-id 2345
 ```
 
@@ -12003,7 +12131,7 @@ Globally, sFlow is disabled by default. This command enables global sFlow.
 
 - Example:
   
-  ```
+```
   sonic(config)# sflow enable
   ```
 
@@ -12135,7 +12263,7 @@ Use this command to configure sampling-rate for a specific interface.
 
 
 - Example:
-```
+  ```
   sonic(config)# interface Ethernet 4
   sonic(conf-if-Ethernet4)# sflow sampling-rate 10000
 ```
@@ -12148,7 +12276,7 @@ Use this command to reset sampling-rate to default for a specific interface.
   no sflow sampling-rate
 
 - Example:
-  ```
+```
   sonic(config)# interface Ethernet 4
   sonic(conf-if-Ethernet4)# no sflow sampling-rate
   ```
@@ -12213,7 +12341,7 @@ This command displays the current running configuration of sflow on interfaces
 - Example:
   ```
     sonic# show sflow interface
-  -----------------------------------------------------------
+-----------------------------------------------------------
     sFlow interface configurations
     Interface		Admin State		Sampling Rate
     Ethernet0            up                      10000
@@ -12435,7 +12563,7 @@ This command displays the current running configuration of sflow on interfaces
   show sflow interface
 
 - Example:
-```
+  ```
 root@sonic:/home/admin# show sflow interface
 
 sFlow interface configurations
@@ -12533,7 +12661,7 @@ Use this command to enable BUM Storm Control on interface.
 
 - Example:
 
-  ```
+```
   root@sonic:/home/admin# config interface storm-control broadcast add Ethernet0 10000
   add broadcast storm-control
   root@sonic:/home/admin# config interface storm-control unknown-unicast add Ethernet0 20000
@@ -13076,9 +13204,11 @@ As part of SONiC 3.0, a new management framework has been introduced. The new ma
 The Industry Standard CLIs are executed in a SONiC shell which the new management framework provides. The SONiC shell can be accessed from host of the SONiC system as shown below
 <br>
 
-```
+  ```
 admin@sonic:~$ sonic-cli
 
 sonic#
 ```
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)
+
+```
