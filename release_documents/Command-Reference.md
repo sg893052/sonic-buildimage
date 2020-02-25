@@ -68,9 +68,18 @@ Table of Contents
         * [Configuration Commands](#bgp-error-handling-config-commands) 
         * [Show Commands](#bgp-error-handling-show-commands) 
         * [Clear Commands](#bgp-error-handling-clear-commands) 
-      * [BGP EVPN Control Plane for Spine](#bgp-evpn-control-plane-for-spine)
-        * [Configuration Commands](#bgp-evpn-control-plane-config-commands)
-        * [Show Commands](#bgp-evpn-control-plane-show-commands)
+   * [EVPN Configuration And Show Commands](#evpn-configuration-and-show-commands)
+      * [Enable EVPN between BGP Neighbors](#enable-evpn-between-bgp-neighbors)
+      * [EVPN Configuration Commands](#evpn-configuration-commands)
+      * [Advertise All VNIs](#advertise-all-vnis)
+      * [Define RDs and RTs](#define-rds-and-rts)
+      * [Advertise SVI IP Addresses](#advertise-svi-ip-addresses)
+      * [Duplicate Address Detection](#duplicate-address-detection)
+      * [Multi-VRF for BGP EVPN](#multi-vrf-for-bgp-evpn)lti-VRF for BGP EVPN](#multi-vrf-for-bgp-evpn)
+      * [VRF Define RDs and RTs](#vrf-define-rds-and-rts)
+      * [Advertise IP Prefix in EVPN](#advertise-ip-prefix-in-evpn)
+      * [Configuration for EVPN Warm reboot](#configuration-for-evpn-warm-reboot)
+      * [EVPN Show Commands](#evpn-show-commands)
    * [COPP Configuration And Show Commands](#copp-configuration-and-show-commands)
       * [COPP Show Commands](#copp-show-commands)
       * [COPP Config Commands](#copp-config-commands)
@@ -2689,21 +2698,17 @@ To retry installation of failed routes from Zebra, a clear command has been prov
   root@sonic:~# clear ip route not-installed
   ```
 
+# EVPN Configuration And Show Commands
 
-## BGP EVPN Control Plane for Spine
+The following sections provide the basic configuration needed to use EVPN as the control plane for VXLAN. 
 
-BGP EVPN control plane for spine nodes is supported in this SONiC release. EVPN VxLAN route termination and origination functionalities are not available yet. Reflection/propagation of following EVPN route types is supported:
- 1 (Auto-discovery),
- 2 (MAC/MACIP),
- 3 (Inclusive Multicast Ethernet),
- 4 (Ethernet Segment), and
- 5 (IP Prefix).
+### Enable EVPN between BGP Neighbors
 
+To enable EVPN between BGP neighbors, add the address family l2vpn evpn and activate the existing neighbor.
 
+For a non-VTEP device such as a spine switch where the network deployment uses hop-by-hop eBGP or the switch is acting as an iBGP route reflector, 
 
-BGP EVPN configuration and show commands are available only via FRR vtysh shell. FRR split mode configuration (config routing_config_mode split) is required in SONiC. And FRR configuration is required to be saved (write memory) from vtysh in order to retain across reloads.
-
-### Configuration Commands
+### EVPN Configuration Commands
 
 BGP EVPN configuration example for e-BGP and i-BGP neighbors is provided below.
 
@@ -2712,7 +2717,7 @@ router bgp 65535
  neighbor Ethernet48 interface remote-as external
  neighbor 169.100.0.1 remote-as 65535
  neighbor 169.200.0.1 remote-as 65535
- neighbor 1690:100::1 remote-as 65550
+ neighbor 169:100::1 remote-as 65550
  !
  address-family ipv4 unicast
   neighbor 169.100.0.1 route-reflector-client
@@ -2725,16 +2730,155 @@ router bgp 65535
   neighbor 169.100.0.1 route-reflector-client
   neighbor 169.200.0.1 activate
   neighbor 169.200.0.1 route-reflector-client
-  neighbor 1690:100::1 activate
+  neighbor 169:100::1 activate
  exit-address-family
 !
 ```
 
-IPv4, IPv6, and BGP unnumbered can be used as underlay for EVPN. In the above example configuration, BGP unnumbered session is established on Ethernet48. Neighbors 169.100.0.1 and 169.200.0.1 are i-BGP neighbors and are configured as route-reflector-client. Whereas, 1690:100::1 is an e-BGP neighbor.
+IPv4, IPv6, and BGP unnumbered can be used as underlay for EVPN. In the above example configuration, BGP unnumbered session is established on Ethernet48. Neighbors 169.100.0.1 and 169.200.0.1 are i-BGP neighbors and are configured as route-reflector-client. Whereas, 169:100::1 is an e-BGP neighbor.
+
+### Advertise All VNIs
+
+FRR is not aware of any local VNIs and MACs, or hosts (neighbors) associated with those VNIs until user enable the BGP control plane for all VNIs configured on the switch by setting the advertise-all-vni option.
+
+```
+router bgp 65535
+  address-family l2vpn evpn
+  neighbor 169.100.0.1 activate
+  advertise-all-vni
+```
+
+### Define RDs and RTs
+
+If user do not want RDs and RTs to be derived automatically, user can define them manually. The following example commands are per VNI. User must specify these commands under address-family l2vpn evpn in BGP.
+
+```
+address-family l2vpn evpn
+  advertise-all-vni
+  vni 10200
+   rd 172.16.100.1:20
+   route-target import 65100:20
+   route-target export 65100:20
+```
+
+Note: In the absence of explicit configuration for that VNI in FRR, the route distinguisher (RD), and import and export route targets (RTs) for this VNI are automatically derived. The RD uses RouterId:VLAN and the import and export RTs use AS:VNI. In the RT, the AS is always encoded as a 2-byte value to allow room for a large VNI. If the router has a 4-byte AS, only the lower 2 bytes are used. For eBGP EVPN peering, the peers are in a different AS so using an automatic RT of AS:VNI does not work for route import. Therefore, the import RT is treated as *:VNI to determine which received routes are applicable to a particular VNI. 
+
+### Advertise SVI IP Addresses
+
+In a typical EVPN deployment, user reuses SVI IP addresses on VTEPs across multiple racks. However, if user use unique SVI IP addresses across multiple racks and user want the local SVI IP address to be reachable via remote VTEPs, user can enable the advertise-svi-ip option. This option advertises the SVI IP/MAC address as a type-2 route and eliminates the need for any flooding over VXLAN to reach the IP from a remote VTEP.
+
+```
+address-family l2vpn evpn
+  advertise-svi-ip
+exit-address-family
+```
+
+### Duplicate Address Detection
+
+EVPN considers a host MAC or MACIP address to be duplicate if the address moves across the network more than a certain number of times within a certain number of seconds (5 moves within 180 seconds by default).
+
+Duplicate address detection is enabled by default and triggers when:
+
+- Two hosts have the same MAC address (the host IP addresses might be the same or different)
+- Two hosts have the same IP address but different MAC addresses
+
+User can change the threshold for detecting the duplicate mac by specify max-moves in between 2 and 1000 and time in between 2 and 1800 seconds.
+
+```
+address-family l2vpn evpn
+  dup-addr-detection max-moves 10 time 1200
+exit-address-family
+```
+
+The VTEP that sees an address move from remote to local begins the detection process by starting a timer. Each VTEP runs duplicate address detection independently. Detection always starts with the first mobility event from remote to local. If the address is initially remote, the detection count can start with the very first move for the address. If the address is initially local, the detection count starts only with the second or higher move for the address. If an address is undergoing a mobility event between remote VTEPs, duplicate detection is not started.
+
+EVPN provides a freeze option that takes action on a detected duplicate address. You can freeze the address permanently (until user intervene) or for a defined amount of time, after which it is cleared automatically.
+
+```
+address-family l2vpn evpn
+  dup-addr-detection freeze 1000
+exit-address-family
+```
+
+command freezes duplicate addresses permanently (until user issue the clear command):
+
+```
+address-family l2vpn evpn
+  dup-addr-detection freeze permanent
+exit-address-family
+```
+
+clear command to un-freezes duplicate addresses
+
+```
+switch# clear evpn dup-addr vni all
+```
+
+When freeze option is enabled and a duplicate address is detected: 
+
+If the MAC or MACIP address is learned from a remote VTEP at the time it is frozen, the forwarding information in the kernel and hardware is not updated, leaving it in the prior state. 
+
+If the MAC or MACIP address is locally learned on this VTEP at the time it is frozen, the address is not advertised to remote VTEPs. Future local updates are processed but are not advertised to remote VTEPs. If EVPN receives a local entry delete event, the frozen entry is removed from the EVPN database. 
 
 
+### Multi-VRF for BGP EVPN
 
-### Show Commands
+Multi-VRF can be configured for an IP Fabric using asymmetric routing or symmetric routing. For
+asymmetric routing, all VLANs are configured on every leaf switch and enabled for IP routing and
+forwarding. Traffic flows through different routes in different directions. This severely affects scaling
+with each switch carrying the MAC and MAC-IP routes for hosts that are not necessarily locally
+connected.
+
+For symmetric routing, a VLAN is only configured at the leaf switch where a local host exists. A unique, common L3 VNI number is provisioned by operator for all leaf nodes for the VRF instance using the vni command. The ingress leaf switch performs a L3 lookup and routes the packets towards the remote leaf switch over the common L3 VNI. The inner MAC destination address (DA) of the packet is set to that of router MAC address of the egress VTEP and the packet is then encapsulated in a VXLAN tunnel and sent to the remote leaf switch. The remote leaf switch then terminates the VXLAN tunnel. Because the MAC DA of the inner packet is router MAC address advertised by the leaf switch, it performs L3 lookup and the packet is routed to the locally attached host.
+
+L3 VNI can be added and removed for a VRF instance using the vni command.
+
+```
+vrf Vrf1
+  vni 104001
+```
+
+Note: There is a one-to-one mapping between a layer 3 VNI and a tenant (VRF). The VRF to layer 3 VNI mapping has to be consistent across all VTEPs. A layer 3 VNI and a layer 2 VNI cannot have the same ID. If the VNI IDs are the same, the layer 2 VNI does not get created.
+
+### VRF Define RDs and RTs
+
+If user do not want the RD and RTs (layer 3 RTs) for the tenant VRF to be derived automatically, user can configure them manually by specifying them under the address-family l2vpn evpn address family for that specific VRF.
+
+```
+ router bgp 401 vrf Vrf1
+ address-family l2vpn evpn
+  rd 172.16.100.1:20
+  route-target import 10:100
+  route-target export 10:100
+ exit-address-family
+```
+
+### Advertise IP Prefix in EVPN
+
+The following configuration is required in the tenant VRF to announce IP prefixes in the BGP RIB as EVPN type-5 routes.
+
+```
+router bgp 401 vrf Vrf1
+ address-family l2vpn evpn
+  advertise ipv4 unicast
+ exit-address-family
+```
+
+### Configuration for EVPN Warm reboot
+
+System warm-reboot is supported for EVPN. For EVPN Warm reboot to function, system warm reboot must be enabled and BGP-GR must be configured for BGP on all the BGP peer nodes participating in EVPN.
+
+The BGP GR restart and stale-path timers have a default value of 240 seconds and 720 seconds respectively. To scale the system higher, these values may need to be tuned . The restart timer should be long enough for the system to warm reboot , the ip connectivity to be re-established in the control plane and the data replay of the subsystems to the kernel to be complete.
+
+```
+router bgp 401
+ bgp graceful-restart
+ bgp graceful-restart preserve-fw-state
+ bgp graceful-restart stalepath-time 720  ( default 720)
+ bgp graceful-restart restart-time 240    ( default 240)
+```
+
+### EVPN Show Commands
 
 EVPN show commands listed below are available only from FRR vtysh shell.
 
@@ -2802,6 +2946,53 @@ Paths: (3 available, best #3)
       Last update: Mon Oct 28 07:02:22 2019
       PMSI Tunnel Type: Ingress Replication, label: 999
 ...
+```
+
+In order to see vni information in EVPN and BGP.
+
+```
+leaf1# show bgp l2vpn evpn vni
+Advertise Gateway Macip: Enabled
+Advertise SVI Macip: Enabled
+Advertise All VNI flag: Enabled
+BUM flooding: Head-end replication
+Number of L2 VNIs: 3
+Number of L3 VNIs: 1
+Flags: * - Kernel
+  VNI        Type RD                    Import RT                 Export RT                 Tenant VRF
+* 450        L2   200.0.0.1:450         400:450                   400:450                  Vrf1
+* 1000       L2   200.0.0.1:1000        400:1000                  400:1000                 Vrf1
+* 2000       L2   200.0.0.1:200         400:2000                  400:2000                 default
+* 500        L3   145.1.1.10:5096       10:100                    10:100                   Vrf1
+leaf1# show evpn vni
+VNI        Type VxLAN IF              # MACs   # ARPs   # Remote VTEPs  Tenant VRF
+450        L2   Vxlan-450             2        3        0               Vrf1
+1000       L2   Vxlan-1000            1        1        0               Vrf1
+2000       L2   Vxlan-200             1        1        0               default
+500        L3   Vxlan-500             0        0        n/a             Vrf1
+```
+
+Useful show command for duplicate address detection.
+
+```
+leaf1# show evpn mac vni 2000 mac 00:02:55:00:00:01
+MAC: 00:02:55:00:00:01
+ Intf: Ethernet45(66) VLAN: 200
+ Local Seq: 0 Remote Seq: 0
+ Neighbors:
+    No Neighbors
+
+Leaf2# show evpn mac vni 2000 mac 00:02:55:00:00:01
+MAC: 00:02:55:00:00:01
+ Remote VTEP: 4.4.4.44
+ Local Seq: 0 Remote Seq: 0
+ Neighbors:
+    No Neighbors
+
+Leaf2# show evpn mac vni 2000 duplicate
+Number of MACs (local and remote) known for this VNI: 1
+MAC               Type   Intf/Remote VTEP      VLAN
+00:02:55:00:00:01 local  Ethernet45            200   5/4 
 ```
 
 
