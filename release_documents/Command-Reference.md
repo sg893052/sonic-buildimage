@@ -266,6 +266,9 @@ Table of Contents
    * [BroadView Configuration Commands](#broadview-configuration-commands)
       * [BroadView config commands](#broadview-config-commands)
    * [Industry Standard CLIs](#industry-standard-clis)
+   * [Snapshot Configuration Commands](#snapshot-configuration-commands)
+      * [Snapshot config commands](#snapshot-config-commands)
+      * [Snapshot clear commands](#snapshot-clear-commands)
 
 # Document History
 
@@ -13081,4 +13084,22 @@ admin@sonic:~$ sonic-cli
 
 sonic#
 ```
+
+# Snapshot configuration Commands
+
+This section explains snapshot feature configuration commands in SONiC 3.0.
+
+## Snapshot config commands
+
+**config watermark interval <interval>**
+This command configures the periodicity of snapshot reports. 
+
+Default: 10s
+
+## Snapshot clear commands
+
+**sonic-clear watermark interval**
+This command clears any existing snapshot interval configuration.
+
+
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE)

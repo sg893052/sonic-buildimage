@@ -88,6 +88,7 @@ Table of Contents
          * [IGMP Snooping](#igmp-snooping)  
          * [Drop Monitor](#drop-monitor)  
          * [Tail Timestamping](#tail-timestamping)  
+         * [Snapshot](#snapshot)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -2837,6 +2838,20 @@ The tail timestamping feature configuration is defined in **TAM_DEVICE_TABLE**, 
             "IP_PROTOCOL": "17",
             "TAM_INT_TYPE" : "IFA",
             "PACKET_ACTION" : "int_insert"
+        }
+    }
+}
+```
+
+### SNAPSHOT
+
+The snapshot interval configuration is defined in **SNAPSHOT_TABLE**.
+
+```
+{
+    "SNAPSHOT_TABLE": {
+        "SNAPSHOT_INTERVAL": {
+            "interval": "100"
         }
     }
 }
