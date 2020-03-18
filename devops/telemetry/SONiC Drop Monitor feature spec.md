@@ -248,6 +248,10 @@ The drop reasons supported are silicon specific. The drop reasons supported on B
         }
     }
 
+    ***Example REST configuration***
+
+    curl -X POST "https://10.59.143.180/restconf/data/sonic-acl:sonic-acl" -H "accept: application/yang-data+json" -H "authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{ \"sonic-acl:ACL_TABLE\": { \"ACL_TABLE_LIST\": [ { \"aclname\": \"A1\", \"policy_desc\": \"Drop monitor policy\", \"ports\": [ \"Ethernet20\" ], \"stage\": \"INGRESS\", \"type\": \"TAM\" } ] }, \"sonic-acl:ACL_RULE\": { \"ACL_RULE_LIST\": [ { \"IP_PROTOCOL\": 17,\t\t \"IP_TYPE\": \"IPV4ANY\",\t\t \"SRC_IP\": \"10.10.0.26/32\", \"DST_IP\": \"10.10.1.26/32\", \"PACKET_ACTION\": \"MONITOR_DROPS\", \"PRIORITY\": 55, \"aclname\": \"A1\", \"rulename\": \"R1\" } ] }}"
+
 
 # 3 Design
 ## 3.1 Overview

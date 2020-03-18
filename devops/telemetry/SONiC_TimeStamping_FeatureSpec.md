@@ -258,6 +258,10 @@ IFA - Tail Timestamping feature allows user to enable tail-time-stamping through
         }
     }
 
+***Sample REST configuration***
+
+    curl -X POST "https://10.59.143.180/restconf/data/sonic-acl:sonic-acl" -H "accept: application/yang-data+json" -H "authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{ \"sonic-acl:ACL_TABLE\": { \"ACL_TABLE_LIST\": [ { \"aclname\": \"TS\", \"policy_desc\": \"IFA - Tail Timestamping Policy - Mach IFA packets\", \"ports\": [ \"Ethernet20\" ], \"stage\": \"INGRESS\", \"type\": \"TAM\" } ] }, \"sonic-acl:ACL_RULE\": { \"ACL_RULE_LIST\": [ { \"IP_PROTOCOL\": 17, \"TAM_INT_TYPE\" : \"IFA\",\t\"PACKET_ACTION\": \"INT_INSERT\", \"PRIORITY\": 55, \"aclname\": \"TS\", \"rulename\": \"Rule2\" } ] }}"
+
 # 3 Design
 ## 3.1 Overview
 

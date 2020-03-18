@@ -261,6 +261,10 @@ At all other non-IFA nodes, IFA sampled packet is forwarded as a normal packet i
         }
     }
 
+    ***Example REST configuration***
+
+    curl -X POST "https://10.59.143.180/restconf/data/sonic-acl:sonic-acl" -H "accept: application/yang-data+json" -H "authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: applica    tion/yang-data+json" -d "{ \"sonic-acl:ACL_TABLE\": { \"ACL_TABLE_LIST\": [ { \"aclname\": \"IFA\", \"policy_desc\": \"IFA Egress Device Policy\", \"ports\": [ \"Ethernet20\" ], \"st     age\": \"INGRESS\", \"type\": \"TAM\" } ] }, \"sonic-acl:ACL_RULE\": { \"ACL_RULE_LIST\": [ { \"IP_PROTOCOL\": 17,\t\t \"IP_TYPE\": \"IPV4ANY\",\t\t \"SRC_IP\": \"10.10.0.26/32\", \"D    ST_IP\": \"10.10.1.26/32\", \"PACKET_ACTION\": \"INT_DELETE\", \"PRIORITY\": 55, \"aclname\": \"IFA\", \"rulename\": \"Flow1\" } ] }}"
+
 # 3 Design
 ## 3.1 Overview
 
