@@ -301,7 +301,7 @@ between watermark values.
 
 New script and alias should be implemented to provide watermark values:
 
-$ show priority-group \[watermark|persistent-watermark\] headroom
+$ show priority-group \[watermark|persistent-watermark\] headroom \[-p\]
 
     Ingress headroom per PG:
     Interface                    PG0   PG1   PG2   PG3   PG4   PG5   PG6   PG7
@@ -309,7 +309,7 @@ $ show priority-group \[watermark|persistent-watermark\] headroom
     …
     Ethernet128                   0     0     0     0     0     0     0     0
 
-$ show priority-group \[watermark|persistent-watermark\] shared
+$ show priority-group \[watermark|persistent-watermark\] shared \[-p\]
 
     Ingress shared pool occupancy per PG:
     Interface                   PG0   PG1   PG2   PG3   PG4   PG5   PG6   PG7
@@ -317,7 +317,7 @@ $ show priority-group \[watermark|persistent-watermark\] shared
     …
     Ethernet128                 0     0     0     0     0     0     0     0
 
-$ show queue \[watermark|persistent-watermark\] unicast
+$ show queue \[watermark|persistent-watermark\] unicast \[-p\]
 
     Egress shared pool occupancy per unicast queue:
     Interface                    UC0   UC1   UC2   UC3   UC4   UC5   UC6   UC7
@@ -325,13 +325,54 @@ $ show queue \[watermark|persistent-watermark\] unicast
     …
     Ethernet128                    0     0     0     0     0     0     0     0
 
-$ show queue \[watermark|persistent-watermark\] multicast
+$ show queue \[watermark|persistent-watermark\] multicast \[-p\]
 
     Egress shared pool occupancy per multicast queue:
     Interface                    MC0   MC1   MC2   MC3   MC4   MC5   MC6   MC7
     Ethernet0                      0     3     0     0     0     0     0     0
     …
     Ethernet128                    0     0     0     0     0     0     0     0
+
+$ show queue \[watermark|persistent-watermark\] cpu
+
+    Egress shared pool occupancy per CPU queue
+      Queue    Bytes
+    -------  -------
+      CPU:0       20
+      CPU:1        0
+      …
+      CPU:47       0
+
+$ show queue \[watermark|persistent-watermark\] cpu \[-p\]
+
+    Egress shared pool occupancy per CPU queue
+      Queue  Percentage
+    -------  ----------
+      CPU:0          20
+      CPU:1           0
+      …
+      CPU:47          0
+
+$ show buffer_pool \[watermark|persistent-watermark\] \[-p\]
+
+    Shared pool maximum occupancy:
+                     Pool    Bytes
+    ---------------------  -------
+     egress_lossless_pool      745
+        egress_lossy_pool        0
+    ingress_lossless_pool      316
+
+$ show buffer_pool \[watermark|persistent-watermark\] \[-p\]
+
+    Shared pool maximum occupancy:
+                     Pool   Percentage
+    ---------------------  -----------
+     egress_lossless_pool           45
+        egress_lossy_pool            0
+    ingress_lossless_pool           16
+
+Note: [-p] option is to display value in percentages
+
 
 #### 3.1.2.2 CLI clear
 
@@ -344,6 +385,8 @@ In addition clear functionality will be added:
     # clear queue [watermark|persistent-watermark] unicast
     
     # clear queue [watermark|persistent-watermark] mutlicast
+
+    # clear buffer_pool [watermark|persistent-watermark]
 
 The user can clear the persistent watermark, and the "user" watermark.
 The user can not clear the periodic(telemetry) watermark. The clear
