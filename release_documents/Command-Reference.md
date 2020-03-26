@@ -2888,7 +2888,7 @@ address-family l2vpn evpn
    route-target export 65100:20
 ```
 
-Note: In the absence of explicit configuration for that VNI in FRR, the route distinguisher (RD), and import and export route targets (RTs) for this VNI are automatically derived. The RD uses RouterId:VLAN and the import and export RTs use AS:VNI. In the RT, the AS is always encoded as a 2-byte value to allow room for a large VNI. If the router has a 4-byte AS, only the lower 2 bytes are used. For eBGP EVPN peering, the peers are in a different AS so using an automatic RT of AS:VNI does not work for route import. Therefore, the import RT is treated as *:VNI to determine which received routes are applicable to a particular VNI. 
+Note: In the absence of explicit configuration for the VNI in FRR, the route distinguisher (RD), and import and export route targets (RTs) for this VNI are automatically derived. The RD uses RouterId:VLAN for L2VNI and RouterId:MAX-VLAN + vrf-table-id for L3VNI. The auto import and export RTs use AS:VNI for both L2VNI and L3VNI. For RT, the AS is always encoded as a 2-byte value to allow room for a large VNI. If the router has a 4-byte AS, only the lower 2 bytes are used. For eBGP EVPN peering, the peers are in a different AS so using an automatic RT of AS:VNI does not work for route import. Therefore, the import RT is treated as *:VNI to determine which received routes are applicable to a particular VNI. 
 
 ### Advertise SVI IP Addresses
 
@@ -2979,6 +2979,8 @@ If user do not want the RD and RTs (layer 3 RTs) for the tenant VRF to be derive
   route-target export 10:100
  exit-address-family
 ```
+
+Note: Care must be taken while configuring RT manually for L2VNI so that the value field does not overlap with auto calcualted L3VNI RT and vice-versa. The RT for a VNI, when not manually configured, is auto calculated as AS:vni. Hence the manually configured value of RT for L2VNI or L3VNI should not overlap with this auto calculated RT for L3VNI or L2VNI respectively, else it will result in incorrect import/export of the routes. In general it is recomendated to use auto RT for both L2VNI and L3VNI. More details on calculation of RT are dicussed in the "Define RDs and RTs" section above. 
 
 ### Advertise IP Prefix in EVPN
 
