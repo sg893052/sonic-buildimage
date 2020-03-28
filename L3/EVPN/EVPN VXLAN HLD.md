@@ -759,7 +759,9 @@ ip link set up vxlan-100
 
 
 
-Note that in case of L3VNI, FRR requires VRF to be configured with corresponding L3VNI, and also L3VNI is bound to VRF in Linux. Below Linux operation is performed by intfmgr when interface is bound to VRF.
+Note that in case of L3VNI, FRR requires VRF to be configured with corresponding L3VNI, and also L3VNI is bound to VRF in Linux. FRR VRF to VNI configuration is automatically updated by bgpcfgd service when VRF to VNI mapping is configured using "config vrf add_vrf_vni_map " command.
+
+Below Linux operation is performed by intfmgr when interface is bound to VRF.
 
 ```
 ip link set dev Vlan100 master <vrf>
@@ -768,6 +770,8 @@ ip link set dev Vlan100 master <vrf>
 vni netdev creation will trigger the IMET route generation. 
 
 Since this programming is dependent on VLAN to be present a check is being added as part of the CLI to ensure that VLAN is present before the map is configured.
+
+Also note that since IPv6 addressing is by default disabled for VLAN interfaces, "use-link-local-only" configuration will be required on IRB VLAN interface if there is no IPv6 address configured on it.
 
 The existing kernel programming sequence in VxlanMgr for tunnels triggered by CFG_VNET_TABLE entries is not altered.
 
