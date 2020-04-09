@@ -5875,42 +5875,43 @@ Usage: config linktrack add [OPTIONS] <name>
 
 Options:
   -u, --upstream <upstream>      Set upstream interfaces
-  -d, --downstream <downstream>  Set downstream ports
+  -d, --downstream <downstream>  Set downstream ports. Use port/lag names or 
+                                 all-mclag
   -t, --timeout <timeout>        Set timeout value in seconds
   --description <description>    Set group description
   -?, -h, --help                 Show this message and exit.
 ```
 
-**config linktrack add del**
+**config linktrack del**
 
 ```
 admin@sonic:~$ sudo config linktrack add del --help
-Usage: config linktrack add [OPTIONS] <name>
+Usage: config linktrack del [OPTIONS] <name>
 
-  Add Interface tracking group
+  Delete Interface tracking group
 
 Options:
-  -u, --upstream <upstream>      Set upstream interfaces
-  -d, --downstream <downstream>  Set downstream ports
-  -t, --timeout <timeout>        Set timeout value in seconds
-  --description <description>    Set group description
-  -?, -h, --help                 Show this message and exit.
+  -?, -h, --help  Show this message and exit.
 ```
 
 **sudo config linktrack add update**
 
 ```
 admin@sonic:~$ sudo config linktrack add update --help
-Usage: config linktrack add [OPTIONS] <name>
+Usage: config linktrack update [OPTIONS] <name>
 
-  Add Interface tracking group
+  Update Interface tracking group
 
 Options:
-  -u, --upstream <upstream>      Set upstream interfaces
-  -d, --downstream <downstream>  Set downstream ports
-  -t, --timeout <timeout>        Set timeout value in seconds
-  --description <description>    Set group description
-  -?, -h, --help                 Show this message and exit
+  -u, --upstream <upstream>       Set upstream interfaces
+  -nu, --no-upstream <upstream>   Remove upstream interfaces
+  -d, --downstream <downstream>   Set downstream ports. Use port/lag names or
+                                  all-mclag
+  -nd, --no-downstream <downstream>
+                                  Remove downstream ports
+  -t, --timeout <timeout>         Set timeout value in seconds
+  --description <description>     Set group description
+  -?, -h, --help                  Show this message and exit.
 ```
 
 Go Back To [Beginning of the document](#SONiC-COMMAND-LINE-INTERFACE-GUIDE) or [Beginning of this section](#Link-state-tracking)
