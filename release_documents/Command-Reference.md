@@ -4429,6 +4429,22 @@ This command displays information regarding port-channel interfaces
   ```
   
 
+**show interfaces portchannel <portchannel_name> fallback**
+
+This command displays portchannel fallback information
+
+  - Usage:
+    show interfaces portchannel <portchannel_name> fallback
+
+- Example:
+  ```
+  admin@sonic:~$ show interfaces portchannel PortChannel30 fallback
+  Port Channel                :  PortChannel30
+  Fallback Configured Value   :  Enabled
+  Fallback Operational Status :  Enabled
+  ```
+
+
 **show interface status**  
 
 This command displays some more fields such as Lanes, Speed, MTU, Type, Asymmetric PFC status and also the operational and administrative status of the interfaces 
