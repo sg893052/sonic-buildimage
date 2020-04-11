@@ -3,7 +3,7 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC 3.0.0 
+# Broadcom SONiC 3.0.1 
 ### Command Line Interface Guide
 <br>
 <br>
@@ -9019,6 +9019,30 @@ PVST+ allows for running multiple instances of spanning tree on per VLAN basis.
 RPVST+ allows for running multiple instances of rapid spanning tree on per VLAN basis. 
 
 Following sections explain PVST and RPVST configuration and show commands. The details of the equivalent PVST and RPVST KLISH CLI commands commands are available in KLISH CLI reference guide.
+
+
+## STP(PVST/RPVST) MC-LAG support
+SONiC MC-LAG implementation uses the Inter Chassis Communication Protocol (ICCP) for establishing and running a MultiChassis LAG (MC-LAG) across two MC-LAG capable peer devices.
+SONIC supports STP over MC-LAG peer devices by implementing STP extensions for ICCP protocol as described in RFC 7275. 
+
+When STP is enabled on MC-LAG peer devices, 
+- Both MC-LAG peer devices are virtualized to acts as a single bridge
+- The virtualized Bridge Identifier i.e. MAC address of the Active MC-LAG device is used for STP communications. 
+- When STP-ICCP is operational, MC-LAG peer link will not participate in STP topology
+- When STP-ICCP is not operational, peer link will participate in STP topology and both MCLAG peers will run STP independently i.e. use their own Bridge Identifier instead of virtualized Bridge Identifier.
+- STP needs to be configured on both MC-LAG peers and same STP configuration should be used. For example, bridge priority value configured on both MC-LAG peers must be same.
+- It is recommended to use either RPVST or PVST (but not mix of both) in STP network. 
+
+#### Limitations with RPVST MC-LAG in Buzznik MR1 (3.0.1) release:
+- It is supported with one-tier MC-LAG deployment only. 
+- MC-LAG peers must be deployed as Root Bridge by configuring bridge priority in each VLAN, both MC-LAG peers should use same bridge priority value.
+	This configuration needs to be done on both MC-LAG peer nodes.
+- Root guard should be enabled on orphan ports and MC-LAG client ports to prevent other bridges in the network to claim root bridge role. 
+	This configuration needs to be done on both MC-LAG peer nodes.  
+	Root guard configuration is not needed on MC-LAG peer link ports. 
+- All devices in the STP domain should run RPVST (Mix of PVST & RPVST should not be used)
+- RPVST is supported with maximum of 64 VLANs.
+
 
 ### Configuration commands 
 
