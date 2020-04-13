@@ -193,7 +193,7 @@ Warm reboot is intended to be supported for the following cases:
 
 2. ICCP does not provide synchronization of L3 prefix routes between MLAG peers.
 
-3. When dynamic routing is configured in VRFs on MCLAG devices, BGP VRF session is required between the MCLAG peers to synchronize VRF's L3 prefix routes.
+3. In the cases of asymmetric ip address configurations, orphan L3 ports, or dynamic routing confiugred in VRF on a given MCLAG pair, BGP VRF session is required between the MCLAG peers to synchronize VRF's L3 prefix routes.
 
    
 
