@@ -56,6 +56,9 @@ DHCP Relay Enhancements.
         * [3.6.2.5 IS-CLI Compliance](#3624-is-cli-compliance)
       * [3.6.3 REST API Support](#363-rest-api-support)
       * [3.6.4 KLISH CLI](#364-klish)
+        * [3.6.4.1 Configuration Commands](#3641-configuration-commands)
+        * [3.6.4.2 Show Commands](#3642-show-commands)
+        * [3.6.4.3 Clear Commands](#3643-clear-commands)
   * [4 Flow Diagrams](#4-flow-diagrams)
   * [5 Error Handling](#5-error-handling)
   * [6 Serviceability and Debug](#6-serviceability-and-debug)
@@ -72,7 +75,7 @@ DHCP Relay Enhancements.
 |:---:|:-----------:|:-------------------------:|-----------------------------------|
 | 0.1 | 10/21/2019  |   Abhimanyu Devarapalli   | Initial version                   |
 | 0.2 | 12/2/2019   |   Abhimanyu Devarapalli   | Addressed few review comments.    |
-| 0.3 | 2/13/2020   |   Abhimanyu Devarapalli   | Added link-selection option, source interface selection, max hops, OC-Yang, KLISH CLI.      |
+| 0.3 | 2/13/2020   |   Abhimanyu Devarapalli   | Added link-selection option, source interface selection, max hops, OC-Yang, KLISH CLI. |
 
 # About this Manual
 This document provides general information about the DHCP Relay Enhancements implemented in SONiC.
@@ -213,12 +216,14 @@ The IPv4 DHCP relay process is spawned with the below options supported by ISC-D
 |----------------------|-----------------|
 |-id *ifname* | Specifies a downstream network interface: an interface from which requests from clients and other relay agents will be accepted. Multiple interfaces may be specified by using more than one -id option. This argument is intended to be used in conjunction with one or more -i or -iu arguments. |
 |-iu *ifname* | Specifies an upstream network interface: an interface from which replies from servers and other relay agents will be accepted. Multiple interfaces may be specified by using more than one -iu option. This argument is intended to be used in conjunction with one or more -i or -id arguments. |
-|-a | Append an agent option field to each request before forwarding it to the server. Agent option fields in responses sent from servers to clients will be stripped before forwarding such responses back to the client. The agent option field contains two IDs: the Circuit ID sub-option and the Remote ID sub-option. The Circuit ID is set to the printable name of the interface on which the client request was received. The Remote ID is set to the MAC address of the interface.  |
+|-a | Append an agent option field to each request before forwarding it to the server. Agent option fields in responses sent from servers to clients will be stripped before forwarding such responses back to the client. The agent option field contains two IDs: the Circuit ID sub-option and the Remote ID sub-option. The Circuit ID is set to the printable name of the interface on which the client request was received. The Remote ID is set to the MAC address of the interface. |
+|-U *ifname* | Enables the addition of a RFC 3527 compliant link selection suboption for clients directly connected to the relay. This RFC allows a relay to specify two different IP addresses: one for the server to use when communicating with the relay (giaddr) the other for choosing the subnet for the client (the suboption). This can be useful if the server is unable to send packets to the relay via the address used for the subnet. |
+|-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
 
 Below is a sample IPv4 DHCP Relay process command:
 ```
 /usr/sbin/dhcrelay -d -m discard -a %%p %%P --name-alias-map-file /tmp/port-name-alias-map.txt -id Vlan10
- -iu Ethernet64 -iu Vlan56 -iu PortChannel60 2.0.1.1
+ -iu Ethernet64 -iu Vlan56 -iu PortChannel60 2.0.1.1 -c 12 -U Loopback1
 ```
 
 Below is a sample IPv4 DHCP relayed packet with option 82:
@@ -240,10 +245,11 @@ The IPv6 DHCP relay process is spawned with the below options supported by ISC-D
 |-6 | Run dhcrelay as a DHCPv6 relay agent.|
 |-l [*address%*]*ifname*[#*index*] | Specifies the "lower" network interface for DHCPv6 relay mode: the interface on which queries will be received from clients or from other relay agents. At least one -l option must be included in the command line when running in DHCPv6 mode. The interface name "ifname" is a mandatory parameter. The link address can be specified by address%; if it is not, dhcrelay will use the first non-link-local address configured on the interface. The optional #index parameter specifies the interface index. |
 |-u [*address%*]*ifname* | Specifies the "upper" network interface for DHCPv6 relay mode: the interface to which queries from clients and other relay agents should be forwarded. At least one -u option must be included in the command line when running in DHCPv6 mode. The interface name ifname is a mandatory parameter. The destination unicast or multicast address can be specified by address%; if not specified, the relay agent will forward to the DHCPv6 All_DHCP_Relay_Agents_and_Servers multicast address. |
+|-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
 
 Below is a sample IPv6 DHCP Relay process command:
 ```
-/usr/sbin/dhcrelay -6 -d --name-alias-map-file /tmp/port-name-alias-map.txt -l Vlan10 -u Ethernet64 -u Vlan56 -u PortChannel60
+/usr/sbin/dhcrelay -6 -d --name-alias-map-file /tmp/port-name-alias-map.txt -l Vlan10 -u Ethernet64 -u Vlan56 -u PortChannel60 -c 15
 ```
 
 Please refer the [manual pages](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcrelay) of ISC-DHCP for more information.
@@ -293,10 +299,10 @@ Clients typically set the hop count field in the DHCP packet to 0. When forwardi
 config interface ip dhcp-relay max-hop-count add Vlan100 3
 ```
 
-Note that in case of IPv4, the relay discards any incoming DHCP packet recieved with relay agent option 82. The hop limit for IPv4 is applicable only for packets with out relay agent option.
+Note that in case of IPv4, the relay discards any incoming DHCP packet received with relay agent option 82. The hop limit for IPv4 is applicable only for packets without relay agent option.
 
 ### 3.1.3 Source interface selection
-DHCP relay provides a source interface configuration option which specifies the source address to be used for relayed packets. If the source interface is not specified, the source IP address in the relayed packet is automatically determined by the routing stack based on the outgoing interface. The Linux kernel chooses the first address configured on the interface which falls in the same network as the destination address or nexthop router. 
+DHCP relay provides a source interface configuration option which specifies the source address to be used for relayed packets. If the source interface is not specified, the source IP address in the relayed packet is automatically determined by the routing stack based on the outgoing interface. The Linux kernel chooses the first address configured on the interface which falls in the same network as the destination address or nexthop router.
 
 The source interface configuration option is per-interface (client facing) and applies to both DHCPv4 and DHCPv6 packets. For relaying DHCPv4 packets, the first IPv4 address of the source interface is used. For relaying DHCPv6 packets, the first IPv6 address of the source interface is used. If the configured source interface does not have any IP address, the source IP address in the relayed packet is determined by the routing stack based on the outgoing interface. If the address on the source interface is modified, then the relay agent picks up the updated IP address for relaying packets.
 
@@ -315,7 +321,7 @@ In Datacenter network deployments, shown below, the DHCP server is reachable via
 &nbsp;
 ![Figure4](./dhcp_bgp_unnumbered.png "Figure4: DHCP Relay over IPv6 link-local nexthops")
 __Figure3: DHCP Relay over IPv6 nexthops__
-1. DHCP client generates request. 
+1. DHCP client generates request.
 2. Relay agent on Leaf1 is configured to use source interface as Loopback0. Relay agent sets the `giaddr` and source IPv4 address to 103.103.103.103, and forwards the request to DHCP server (172.16.0.2) as per the BGP RFC 5549 route.  
 3. Leaf2 receives the relayed DHCP request from Spine1 and forwards it to the DHCP server which is directly connected. 
 4. DHCP Server receives the relayed DHCP request, generates the offer packet and sends it to  the IP address specified in the `giaddr`, which is the Leaf1 loopback address 103.103.103.103.
@@ -350,7 +356,7 @@ B>*  172.16.0.0/16 [200/0] via fe80::dac4:97ff:fe71:deb, Vlan400
 
 ### 3.1.5 VRFs and route leaking
 
-DHCP relay agent supports forwarding of client requests to servers located in a different VRFs. For example, the client can be connected to an interface bound to default/global VRF, but the server is reachable via non-default/user VRF. To ensure reachability to server, a leaked route needs to be configured/learned in the default VRF.  The leaking of routes helps reach the destinations that are part of another VRF. A leaked route typically points to a next hop that is reachable over an interface that is part of another VRF. Likewise, to ensure reachability to client, a leaked route needs to be configured/learned in the non-default/user VRF. Route leaking can be achieved using static routes or via BGP route target import/export commands. 
+DHCP relay agent supports forwarding of client requests to servers located in a different VRFs. For example, the client can be connected to an interface bound to default/global VRF, but the server is reachable via non-default/user VRF. To ensure reachability to server, a leaked route needs to be configured/learned in the default VRF.  The leaking of routes helps reach the destinations that are part of another VRF. A leaked route typically points to a next hop that is reachable over an interface that is part of another VRF. Likewise, to ensure reachability to client, a leaked route needs to be configured/learned in the non-default/user VRF. Route leaking can be achieved using static routes or via BGP route target import/export commands.
 
 For packets relayed from client to server, the leaked route is used to send the packet in server VRF. Due to Linux kernel limitation, the response from server must be sent to the one of the interfaces in the server VRF else the packet gets discarded. To work around that, link-selection option must be enabled with a source interface that belongs to server VRF, so that the response from server is received by the application.
 
@@ -374,14 +380,14 @@ config interface ip dhcp-relay add Ethernet0 172.16.0.2 -src-intf=Ethernet1 -lin
 
 In some VRF deployments, there is a need for the DHCP server to know the client's VRF, so that the address allocation can be done based on that VRF. In such scenarios, DHCP relay needs to include the sub-option 151 as defined in RFC 6607 to convey VRF information.
 
-The format of the sub-option 151 (Virtual subnet selection sub-option) added by the relay agent is shown below. The VRF name of the ingress interface on which DHCP request was received is inserted as sub-option 151. 
+The format of the sub-option 151 (Virtual subnet selection sub-option) added by the relay agent is shown below. The VRF name of the ingress interface on which DHCP request was received is inserted as sub-option 151.
 
 ```
- Suboption      Length     Type      Value 
+ Suboption      Length     Type      Value
     151           7         0        ASCII VPN identifier (VRFNAME)
 ```
 
-To ensure interoperability, the sub-option 151 must be enabled only when DHCP server supports address allocation based on VRF. 
+To ensure interoperability, the sub-option 151 must be enabled only when DHCP server supports address allocation based on VRF.
 
 ### 3.1.6 Relay and VTEP
 
@@ -392,7 +398,7 @@ DHCP relay can be configured in VXLAN BGP EVPN deployments to provide DHCP servi
 &nbsp;
 
 * DHCP client is attached to VTEP1 on VLAN 10, which is bound to VrfRed.
-* DHCP relay is enabled on VTEP1 for VLAN 10. 
+* DHCP relay is enabled on VTEP1 for VLAN 10.
 * DHCP server is on VTEP2 and is connected to VLAN 20, which is bound to VrfRed.
 * VTEP1 has BGP EVPN type-5 route to DHCP server 172.16.0.1 that points to VXLAN tunnel nexthop.
 * DHCP relay forwards the incoming packet to 172.16.0.1 with `giaddr` set to 192.168.0.1. Note that relay is unaware of the VxLAN tunnels.
@@ -529,14 +535,14 @@ In the above sample configuration for Leaf switch, the SAG gateway '192.168.0.1'
 
 ### 3.1.8 Rate limiting
 
-The switch default forwarding behavior for DHCPv4 and DHCPv6 packets is to trap them to CPU. This is irrespective of whether DHCP relay is enabled. As part of switch initialization, the COPP rules are installed by SWSS. These COPP rules are part of SWSS docker and contain traps for DHCPv4 and DHCPv6 packets. 
+The switch default forwarding behavior for DHCPv4 and DHCPv6 packets is to trap them to CPU. This is irrespective of whether DHCP relay is enabled. As part of switch initialization, the COPP rules are installed by SWSS. These COPP rules are part of SWSS docker and contain traps for DHCPv4 and DHCPv6 packets.
 
 Below is the default COPP configuration for DHCP packets. The default priority queue is COS Queue 2. The default rate limit is 6000 packets per second - packets exceeding these limit are dropped in hardware. Any changes to the COPP rules require restart of SWSS docker.
 
 ```
 # /etc/swss/config.d/00-copp.config.json
 
- "COPP_TABLE:trap.group.ip2me.dhcp": {   
+ "COPP_TABLE:trap.group.ip2me.dhcp": {
    "trap_ids": "ip2me,dhcp,dhcpv6",
    "trap_action":"trap",
    "trap_priority":"2",
@@ -559,15 +565,15 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
         "dhcpv6_servers": ["2001::2", "3366::1"]
     }
 
-"VLAN": {                                          
-        "Vlan10": {                                    
-            "dhcp_relay_link_select": "enable",        
-            "dhcp_relay_max_hop_count": "10",          
-            "dhcp_relay_src_intf": "Loopback0",        
-            "dhcp_servers": ["1.2.0.1"],                                         
-            "members": [                               
-                "Ethernet8"                            
-            ],                                         
+"VLAN": {
+        "Vlan10": {
+            "dhcp_relay_link_select": "enable",
+            "dhcp_relay_max_hop_count": "10",
+            "dhcp_relay_src_intf": "Loopback0",
+            "dhcp_servers": ["1.2.0.1"],
+            "members": [
+                "Ethernet8"
+            ],
             "vlanid": "10"
         },
     }
@@ -820,9 +826,20 @@ Sample output:
 ```
 Sample output:
 # show ip dhcp-relay statistics Vlan100
-
-Packets relayed from client to server: 4
-Packets relayed from server to client: 0
+BOOTREQUEST messages received by the relay agent: 4
+BOOTREQUEST messages forwarded by the relay agent: 2
+BOOTREPLY messages forwarded by the relay agent: 0
+DHCP DISCOVER messages received by the relay agent: 1
+DHCP OFFER messages sent by the relay agent: 0
+DHCP REQUEST messages received by the relay agent: 1
+DHCP ACK messages sent by the relay agent: 0
+DHCP RELEASE messages received by the relay agent: 0
+DHCP DECLINE messages received by the relay agent: 0
+DHCP INFORM messages received by the relay agent: 0
+DHCP NACK messages sent by the relay agent: 0
+Total number of DHCP packets dropped by the relay agent: 2
+Number of DHCP packets dropped due to an invalid opcode: 0
+Number of DHCP packets dropped due to an invalid option: 0
 Errors relaying packets from clients: 0
 Errors relaying packets from servers: 0
 Packets dropped with bogus GIADDR: 0
@@ -831,23 +848,14 @@ Packets dropped due to missing relay info: 0
 Packets dropped due to invalid hdr length: 0
 Packets dropped on interface with no IP: 0
 Replies dropped on downstream interface: 0
-Requests dropped on upstream interface: 0
-Packets dropped due to invalid opcode: 0
-Packets dropped due to invalid options: 0
-Packets dropped on exceeding the max hop count: 0
-Total number of DHCPv4 packets dropped: 0
-BOOTP packets received from client: 4
-DHCPv4 DISCOVER packets received from client: 4
-DHCPv4 REQUEST packets received from client: 0
-DHCPv4 INFORM packets received from client: 0
-DHCPv4 RELEASE packets received from client: 0
-DHCPv4 DECLINE packets received from client: 0
+Requests dropped on upstream interface: 2
 DHCPv4 OFFER packets received from server: 0
 DHCPv4 ACK packets received from server: 0
 DHCPv4 NACK packets received from server: 0
-DHCPv4 OFFER packets relayed to client: 0
-DHCPv4 ACK packets relayed to client: 0
-DHCPv4 NACK packets relayed to client: 0
+Packets dropped on exceeding the max hop count: 0
+DHCPv4 OFFER packets relayed to client on other downstream interface: 0
+DHCPv4 ACK packets relayed to client on other downstream interface: 0
+DHCPv4 NACK packets relayed to client on other downstream interface: 0
 
 # show ip dhcp statistics Vlan200
 Usage: show ip dhcp statistics [OPTIONS] <interface_name>
@@ -856,34 +864,38 @@ Error: Invalid interface. DHCP servers are not configured on the interface Vlan2
 
 Sample output:
 # show ipv6 dhcp-relay statistics Vlan100
-
-Packets relayed from client to server: 9
-Packets relayed from server to client: 0
+DHCPv6 SOLICIT messages received by the relay agent: 1
+DHCPv6 ADVERTISEMENT messages sent by the relay agent: 1
+DHCPv6 REQUEST messages received by the relay agent: 1
+DHCPv6 REPLY messages sent by the relay agent: 1
+DHCPv6 CONFIRM messages received by the relay agent: 0
+DHCPv6 RELEASE messages received by the relay agent: 0
+DHCPv6 DECLINE messages received by the relay agent: 0
+DHCPv6 REBIND messages received by the relay agent: 0
+DHCPv6 RECONFIGURE messages sent by the relay agent: 0
+DHCPv6 INFO-REQUEST messages received by the relay agent: 0
+DHCPv6 RELAY-REPLY messages received by the relay agent: 2
+DHCPv6 RELAY-FORWARD messages sent by the relay agent: 2
+Total number of DHCPv6 packets dropped by the relay agent: 0
+Number of DHCPv6 packets dropped due to an invalid opcode: 0
+Number of DHCPv6 packets dropped due to an invalid option: 0
+Packets relayed from server to client: 2
 Errors relaying packets from servers: 0
 Errors relaying packets from clients: 0
-Packets with wrong message type dropped on downstream interface:: 0
-Packets with wrong message type dropped on upstream interface:: 0
-Packets dropped due to invalid opcode: 0
-Packets dropped due to invalid options: 0
+Packets with wrong message type dropped on downstream interface: 0
+Packets with wrong message type dropped on upstream interface: 0
+DHCPv6 RENEW packets received from client: 0
+DHCPv6 LEASE-QUERY packets received from client: 0
+DHCPv6 DHCPV4-QUERY packets received from client: 0
+DHCPv6 INFORM-REQUEST packets received from downstream: 0
+DHCPv6 LEASE QUERY packets sent to client: 0
+DHCPv6 DHCPV4 RESPONSE packets sent to client: 0
 Packets dropped on exceeding the max hop count: 0
-Total number of DHCPv6 packets dropped: 0
-DHCPv6 SOLICIT packets received from client.: 9
-DHCPv6 REQUEST packets received from client.: 0
-DHCPv6 CONFIRM packets received from client.: 0
-DHCPv6 RENEW packets received from client.: 0
-DHCPv6 REBIND packets received from client.: 0
-DHCPv6 RELEASE packets received from client.: 0
-DHCPv6 DECLINE packets received from client.: 0
-DHCPv6 INFORM-REQUEST packets received from client.: 0
-DHCPv6 LEASE-QUERY packets received from client.: 0
-DHCPv6 DHCPV4-QUERY packets received from client.: 0
-DHCPv6 INFORM-REQUEST packets received from downstream.: 0
-DHCPv6 Relay Reply packets received from server.: 0
-DHCPv6 ADVERTISE packets sent to client.: 0
-DHCPv6 REPLY packets sent to client.: 0
-DHCPv6 RECONFIGURE packets sent to client.: 0
-DHCPv6 LEASE QUERY packets sent to client.: 0
-DHCPv6 DHCPV4 RESPONSE packets sent to client.: 0
+DHCPv6 ADVERTISE packets sent to client on other downstream interface: 0
+DHCPv6 REPLY packets sent to client on other downstream interface: 0
+DHCPv6 RECONFIGURE packets sent to client on other downstream interface: 0
+DHCPv6 LEASE QUERY packets sent to client on other downstream interface: 0
+DHCPv6 DHCPV4 RESPONSE packets sent to client on other downstream interface: 0
 
 # show ipv6 dhcp staitistics Vlan200
 Usage: show ipv6 dhcp stat [OPTIONS] <interface_name>
@@ -897,7 +909,6 @@ Error: Invalid interface. DHCP servers are not configured on the interface Vlan2
 ```
 Sample output:
 # show ip dhcp-relay detailed Vlan200
-
 Server Address: 114.0.0.2
 Source Interface: Vlan100
 Link Select: enable
@@ -913,6 +924,12 @@ Max Hop Count: 10
 Usage: show ip dhcp detailed [OPTIONS] <interface_name>
 
 Error: Invalid interface. DHCP servers are not configured on the interface Vlan100
+
+# show ipv6 dhcp-relay detailed Vlan200
+Server Address: 1122::1
+Source Interface: Not Configured
+Max Hop Count: 10
+
 ```
 
 #### 3.6.2.3 Clear Commands
@@ -1211,7 +1228,7 @@ sonic(conf-if-Vlan100)# no ipv6 dhcp-relay src-intf
 The below command set/reset maximum hop limit on the given interface.
 
 ```
-# Set the max hop count to 10 on VLAN100 
+# Set the max hop count to 10 on VLAN100
 sonic(conf-if-Vlan100)# ipv6 dhcp-relay max-hop-count 10
 
 # Reset the max hop count value to default on VLAN100
@@ -1224,7 +1241,9 @@ sonic(conf-if-Vlan100)# no ipv6 dhcp-relay max-hop-count
 ```
 sonic# show ip dhcp-relay
   brief       Show IP DHCP relay information
+  detailed    Show IP DHCP relay information
   statistics  Show IP DHCP relay statistics
+
 
 sonic# show ip dhcp-relay brief
 ---------------------------------------
@@ -1238,24 +1257,28 @@ sonic# show ip dhcp-relay statistics
   String  Interface name
 
 sonic# show ip dhcp-relay statistics Vlan100
-BOOTREPLY messages forwarded by the relay agent : 0
-BOOTREQUEST messages forwarded by the relay agent : 0
-BOOTREQUEST messages received by the relay agent : 0
-DHCP ACK messages sent by the relay agent : 0
-DHCP DECLINE messages received by the relay agent : 0
-DHCP DISCOVER messages received by the relay agent : 0
-DHCP INFORM messages received by the relay agent : 0
-DHCP NACK messages sent by the relay agent : 0
-DHCP OFFER messages sent by the relay agent : 0
-DHCP REQUEST messages received by the relay agent : 0
+BOOTREQUEST messages received by the relay agent        : 4
+BOOTREQUEST messages forwarded by the relay agent       : 2
+BOOTREPLY messages forwarded by the relay agent         : 0
+DHCP DISCOVER messages received by the relay agent      : 1
+DHCP OFFER messages sent by the relay agent             : 0
+DHCP REQUEST messages received by the relay agent       : 1
+DHCP ACK messages sent by the relay agent               : 0
+DHCP RELEASE messages received by the relay agent       : 0
+DHCP DECLINE messages received by the relay agent       : 0
+DHCP INFORM messages received by the relay agent        : 0
+DHCP NACK messages sent by the relay agent              : 0
+Total number of DHCP packets dropped by the relay agent : 2
 Number of DHCP packets dropped due to an invalid opcode : 0
 Number of DHCP packets dropped due to an invalid option : 0
-Total number of DHCP packets dropped by the relay agent : 0
 
 sonic# show ip dhcp-relay detailed Vlan100
 
 Relay Interface: Vlan100
 Server Address: 112.0.0.2
+Source Interface: Loopback1
+Link Select: enable
+Max Hop Count: 10
 
 ```
 **IPv6 commands:**
@@ -1279,27 +1302,53 @@ sonic# show ipv6 dhcp-relay statistics
   String  Interface name
 
 sonic# show ipv6 dhcp-relay statistics Vlan100
-DHCPv6 SOLICIT messages received by the relay agent : 0
-DHCPv6 DECLINE messages received by the relay agent : 0
-DHCPv6 REQUEST messages received by the relay agent : 0
-DHCPv6 RELEASE messages received by the relay agent : 0
-DHCPv6 CONFIRM messages received by the relay agent : 0
-DHCPv6 REBIND messages received by the relay agent : 0
-DHCPv6 INFO-REQUEST messages received by the relay agent : 0
-DHCPv6 RELAY-REPLY messages received by the relay agent : 0
-DHCPv6 ADVERTISEMENT messages sent by the relay agent : 0
-DHCPv6 REPLY messages sent by the relay agent : 0
-DHCPv6 RECONFIGURE messages sent by the relay agent : 0
-DHCPv6 RELAY-FORWARD messages sent by the relay agent : 0
+DHCPv6 SOLICIT messages received by the relay agent       : 1
+DHCPv6 ADVERTISEMENT messages sent by the relay agent     : 1
+DHCPv6 REQUEST messages received by the relay agent       : 1
+DHCPv6 REPLY messages sent by the relay agent             : 1
+DHCPv6 CONFIRM messages received by the relay agent       : 0
+DHCPv6 RELEASE messages received by the relay agent       : 0
+DHCPv6 DECLINE messages received by the relay agent       : 0
+DHCPv6 REBIND messages received by the relay agent        : 0
+DHCPv6 RECONFIGURE messages sent by the relay agent       : 0
+DHCPv6 INFO-REQUEST messages received by the relay agent  : 0
+DHCPv6 RELAY-REPLY messages received by the relay agent   : 2
+DHCPv6 RELAY-FORWARD messages sent by the relay agent     : 2
+Total number of DHCPv6 packets dropped by the relay agent : 0
 Number of DHCPv6 packets dropped due to an invalid opcode : 0
 Number of DHCPv6 packets dropped due to an invalid option : 0
-Total number of DHCPv6 packets dropped by the relay agent : 0
 
 sonic# show ipv6 dhcp-relay detailed Vlan100
 
 Relay Interface: Vlan100
 Server Address: 2000::2
+Source Interface: Not Configured
+Max Hop Count: 10
 
+```
+
+#### 3.6.4.3 Clear Commands
+
+**IPv4 Commands:**
+```
+sonic# clear ip dhcp-relay
+  statistics  clear ip dhcp-relay statistics
+
+sonic# clear ip dhcp-relay statistics
+  String(Max: 32 characters)  Interface name
+
+sonic# clear ip dhcp-relay statistics Vlan100
+```
+
+**IPv6 Commands:**
+```
+sonic# clear ipv6 dhcp-relay
+  statistics  clear ip dhcp-relay statistics
+
+sonic# clear ipv6 dhcp-relay statistics
+  String(Max: 32 characters)  Interface name
+
+sonic# clear ipv6 dhcp-relay statistics Vlan100
 ```
 
 # 4 Flow Diagrams
@@ -1350,6 +1399,4 @@ Up to 4 DHCP relay addresses can be configured on each routing interface in the 
 # 10 Future enhancements
 
 1. Support DHCP relay over IPv4 unnumbered interfaces
-
-
 

@@ -1121,21 +1121,36 @@ instance is supported in SONiC.
 "INTERFACE": {
     "Ethernet24": {
         "dhcp_servers": ["31.1.0.2", "2.2.2.3", "11.19.0.144"],
-        "dhcpv6_servers": ["2001::2", "3366::1"]
+        "dhcpv6_servers": ["2001::2", "3366::1"],
+        "dhcp_relay_link_select": "enable",
+        "dhcp_relay_max_hop_count": "10",
+        "dhcp_relay_src_intf": "Loopback1",
+        "dhcpv6_relay_max_hop_count": "10",
+        "dhcpv6_relay_src_intf": "Loopback2"
     }
 }
 
 "VLAN": {
     "Vlan10": {
         "dhcp_servers": ["1.2.0.1"],
-        "dhcpv6_servers": ["2001::2", "3366::1"]
+        "dhcpv6_servers": ["2001::2", "3366::1"],
+        "dhcp_relay_link_select": "enable",
+        "dhcp_relay_max_hop_count": "10",
+        "dhcp_relay_src_intf": "Loopback1",
+        "dhcpv6_relay_max_hop_count": "10",
+        "dhcpv6_relay_src_intf": "Loopback2"
     }
 }
 
 "PORTCHANNEL_INTERFACE": {
     "PortChannel10": {
         "dhcp_servers": ["31.1.0.2", "2.2.2.3", "11.19.0.144"],
-        "dhcpv6_servers": ["2001::2", "3366::1"]
+        "dhcpv6_servers": ["2001::2", "3366::1"],
+        "dhcp_relay_link_select": "enable",
+        "dhcp_relay_max_hop_count": "10",
+        "dhcp_relay_src_intf": "Loopback1",
+        "dhcpv6_relay_max_hop_count": "10",
+        "dhcpv6_relay_src_intf": "Loopback2"
     }
 }
 
