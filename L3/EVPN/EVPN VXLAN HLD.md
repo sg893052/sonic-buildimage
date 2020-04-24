@@ -62,6 +62,7 @@
 | 0.5  | 07/03/2019 | Karthikeyan A | ARP and ND suppression |
 | 0.6  | 07/16/2019 | Kishore Kunal | Added Fdbsycnd details |
 | 0.7  | 10/03/2019 | Rajesh Sankaran | Click and SONiC CLI added |
+| 0.8  | 24/04/2020 | Nikhil Kelapure | Updated Warm-reboot section |
 
 # Definition/Abbreviation
 
