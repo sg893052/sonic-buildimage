@@ -43,6 +43,9 @@ Threshold feature.
 		  * [3.6.4 Clear Commands](#3_6_4-clear-commands)
 		  * [3.6.5 Debug Commands](#3_6_5-debug-commands)
 		  * [3.6.6 REST API Support](#3_6_6-rest-api-support)  
+	  * [3.7.1 KLISH config mode commands](#3_7_1-klish-config)
+	  * [3.7.2 KLISH show commands](#3_7_2-klish-show)
+	  * [3.7.3 KLISH clear commands](#3_7_3-klish-clear)
   * [4 Flow Diagrams](#4-flow-diagrams)
 	  * [4.1 Config Call Flow](#4_1-config-call-flow)
 	  * [4.2 Breach Event Call Flow](#4_2-breach-event-call-flow)
@@ -479,6 +482,60 @@ Debug commands will be available once the debug framework is available. The debu
 
 ### 3.6.6 REST API Support
 N/A
+
+### 3.7.1 KLISH config mode commands
+
+1) threshold priority-group {PGindex} {headroom \| shared} {threshold_value}
+
+   Example : sonic(conf-if-Ethernet0)# threshold priority-group 7 headroom 7
+
+This command is used to configure a threshold for a specific priority-group shared/headroom buffer of a port. The threshold value is provided in %. Valid values are 1-100.
+
+2) threshold queue {queueindex} {unicast \| multicast} {threshold_value}
+
+   Example : sonic(conf-if-Ethernet0)# threshold queue 5 multicast 5
+
+This command is used to configure a threshold for a specific unicast/multicast queue of a port. The threshold value is provided in %. Valid values are 1-100.
+
+3) threshold queue {queueindex} {multicast} {threshold_value}
+
+   Example : sonic(conf-if-CPU)# threshold queue 47 multicast 47
+
+This command is used to configure a threshold for a specific multicast queue of a CPU port. The threshold value is provided in %. Valid values are 1-100.
+
+### 3.7.2 KLISH show commands
+
+1) show threshold priority-group {headroom \| shared}
+
+   Example : show threshold priority-group headroom
+
+This show command shows the threshold configuration for the shared/headroom priority-group buffers of all ports.
+
+2) show threshold queue {unicast \| multicast \| CPU}
+
+   Example : show threshold queue CPU
+
+This show command shows the threshold configuration for the unicast/multicast queue buffers of all ports or multicast queue buffers of CPU ports.
+
+### 3.7.3 KLISH clear commands
+
+1) no threshold priority-group {PGindex} {headroom \| shared}
+
+   Example : sonic(conf-if-Ethernet0)# no threshold priority-group 7 headroom
+
+This command can be used to clear a previously configured threshold on shared/headroom priority-group buffer of a port.
+
+2) no threshold queue {queueindex} {unicast \| multicast}
+
+  Example : sonic(conf-if-Ethernet0)# no threshold queue 5 multicast
+
+This command can be used to clear a previously configured threshold on unicast/multicast queue buffer of a port.
+
+3) no threshold queue {queueindex} multicast
+
+  Example : sonic(conf-if-CPU)# no threshold queue 0 multicast
+
+This command can be used to clear previously configured threshold on multicast queue buffer of a CPU port.
 
 # 4 Flow Diagrams
 ## 4.1 Config call flow 
