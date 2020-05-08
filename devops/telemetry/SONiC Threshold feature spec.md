@@ -439,6 +439,10 @@ This command is used to configure a threshold for a specific priority-group shar
 
 This command is used to configure a threshold for a specific unicast/multicast queue of a port. The threshold value is provided in %. Valid values are 1-100.
 
+3) config buffer-pool threshold {pool_name} {threshold_value}
+
+This command is used to configure buffer-pool threshold on ingress and egress buffers. The threshold value is provided in %. Valid values are 1-100.
+
 ### 3.6.3 Show Commands
 1) show priority-group threshold {shared \| headroom}
 
@@ -503,6 +507,12 @@ This command is used to configure a threshold for a specific unicast/multicast q
 
 This command is used to configure a threshold for a specific multicast queue of a CPU port. The threshold value is provided in %. Valid values are 1-100.
 
+4) buffer-pool threshold {bufferpoolname} {threshold_value}
+
+   Example : sonic(config)# buffer-pool threshold ingress_lossless_pool 77
+
+This command is used to configure buffer-pool threshold on ingress and egress buffers. The threshold value is provided in %. Valid values are 1-100.
+
 ### 3.7.2 KLISH show commands
 
 1) show threshold priority-group {headroom \| shared}
@@ -516,6 +526,12 @@ This show command shows the threshold configuration for the shared/headroom prio
    Example : show threshold queue CPU
 
 This show command shows the threshold configuration for the unicast/multicast queue buffers of all ports or multicast queue buffers of CPU ports.
+
+3) show threshold buffer-pool
+
+   Example : sonic# show threshold buffer-pool
+
+This show command shows the threshold configuration of buffer-pools. Buffer pools will have ingress/egress buffer pools-lossy/lossless.
 
 ### 3.7.3 KLISH clear commands
 
