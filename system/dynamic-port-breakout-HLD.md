@@ -25,11 +25,12 @@ Dynamic Port Breakout (DPB)
 
 # Revision
 
-| Rev | Date | Author | Change Description |
-
+|  Rev  |  Date      |  Author     | Change Description |
+| ----- | ---------- | ----------- | ------------------ |
 | 0.1 | 03/27/2020 | Vishnu Shetty | Initial version |
 | 0.2 | 04/09/2020 | Vishnu Shetty | Update review comments |
 | 0.3 | 04/21/2020 | Vishnu Shetty | Update review comments |
+| 0.4 | 05/11/2020 | Vishnu Shetty | Update QoS config comments |
 
 # About this Manual
 
@@ -43,13 +44,14 @@ This document captures dynamic port break-out requirements and provides design o
 
 ### Table 1: Abbreviations
   
-|Term|Meaning  |
-|--|--|
-| DPB | Dynamic Port Breakout |
+| Term | Meaning |
+| ---- | ---- |
 | CONFIG_DB | SONiC configuration database in Redis |
+| CVL | Config Validation |
+| DPB | Dynamic Port Breakout |
 
 # 1 Feature Overview
-  
+
 Ports can be broken out to different sub-ports and speeds with subset of lanes in most HW today. Currently in SONiC, the port breakouts are only made possible by hard-coding the HW profiles that are loaded at boot-up time. If a different port breakout config is desired, a new image must be loaded, or at least services need to be restarted which impacts the traffic on the box (and on irrelevant ports). The DPB will address these issues, ie
 
 - No system or config reload required,
@@ -420,8 +422,20 @@ Dependent configuration should be specified through leafref in sonic YANG. The "
 
 ### 3.2.1 CONFIG DB
 
-  
+#### 3.2.1.1 QoS handling multiple interface limitation
+ 
+-   QoS config via mgmt interfaces (REST/KLISH/gNMI)
+        -   Modified sonic-yang model to prevent multiple interfaces
+-   Loading QoS configs in config_db.json at init time or during "config reload"
+	-   Added handling in db_migrator.py to break up multiple interfaces in QUEUE and PORT_QOS_MAP tables
+	-   Allows backward compatibility with old config_db.json upgrading to Buzznik+ with DPB support
 
+-   "config qos reload" to load platform specific buffer and qos defaults
+
+	-   Common buffer and qos jinja2 templates were modified back in early Buzznik time frame by Microsoft
+-   "config load" json file (sonic-cfggen)
+	-   CVL yang model to prevent multiple interfaces can reject "config load". CVL for sonic-cfggen is not available today (future enhancement).
+	-   Incremental config load will not be supported. Use "db_migrator.py" use case as an upgrade path for DPB support.   
   
 
 ### 3.2.2 APP DB
