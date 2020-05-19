@@ -478,6 +478,10 @@ This command can be used to clear all currently configured priority-group thresh
 
 This command can be used to clear all/particular threshold breaches recorded by the system. The event-id when provided specifies the breach event index (index is indicated in the output of show threshold breaches).
 
+6) sonic-clear buffer-pool threshold
+
+This command can be used to remove buffer-pool threshold configured on ingress and egress buffers.
+
 ### 3.6.5 Debug Commands
 Debug commands will be available once the debug framework is available. The debug commands are needed to dump:
 
@@ -552,6 +556,18 @@ This command can be used to clear a previously configured threshold on unicast/m
   Example : sonic(conf-if-CPU)# no threshold queue 0 multicast
 
 This command can be used to clear previously configured threshold on multicast queue buffer of a CPU port.
+
+4) no buffer-pool threshold
+
+  Example : sonic(config)# no buffer-pool threshold
+
+This command can be used to remove buffer-pool threshold configured on ingress and egress buffers.
+
+5) clear threshold breach {all/eventid}
+
+  Example : clear threshold breach all/evendid
+
+This command can be used to clear all/particular threshold breaches recorded by the system. The event-id when provided specifies the breach event index (index is indicated in the output of show threshold breaches).
 
 # 4 Flow Diagrams
 ## 4.1 Config call flow 
