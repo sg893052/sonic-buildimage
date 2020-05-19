@@ -247,10 +247,11 @@ The following show command display all the mirror sessions that are configured.
     # Delete specific mirror session
     # curl -X DELETE "https://<switch_ip>/restconf/data/sonic-mirror-session:sonic-mirror-session/MIRROR_SESSION/MIRROR_SESSION_LIST=mirr3" -H "accept: application/yang-data+json"
 
-### 3.5.6 GNMI Support
+### 3.5.7 GNMI Support
 
 - Following GNMI set and get commands are supported.
 
+```
     # Get all mirror sessions
     # gnmi_get -xpath /sonic-mirror-session:sonic-mirror-session -target_addr 127.0.0.1:8080 -insecure
 
@@ -262,7 +263,65 @@ The following show command display all the mirror sessions that are configured.
 
     # Delete specific mirror session
     # gnmi_set -delete /sonic-mirror-session:sonic-mirror-session/MIRROR_SESSION/MIRROR_SESSION_LIST[name=Mirror1] -target_addr 127.0.0.1:8080 -insecure
+```
 
+### 3.5.8 OpenCofig Support
+
+- Following REST SET and GET APIs will be supported
+
+```
+    # Get all mirror sessions
+    # curl -X GET "https://<switch_ip>/restconf/data/openconfig-mirror-elements:mirror/sessions" -H "accept: application/yang-data+json"
+
+    # Create SPAN session. mirror.json includes json payload same as rest-api above.
+    # curl -X PUT "https://<switch_ip>/restconf/data/openconfig-mirror-elements:mirror/sessions" -H "accept: application/yang-data+json" -H "Content-Type: application/yang-data+json" -d "{ \"openconfig-mirror:name\": [ \"Mirror1\" ], \"openconfig-mirror:dst_port\": [ \"Ethernet0\" ]}"
+
+    # Delete all mirror sessions
+    # curl -X DELETE "https://<switch_ip>/restconf/data/openconfig-mirror-elements:mirror/sessions" -H "accept: application/yang-data+json"
+```
+
+```
+
+    sonic-mgmt-framework
+    |-models
+    |--yang                                  /* Standard YANGs  */
+    |  --extensions                          /* Extension YANGs */
+    |    --openconfig-mirror*.yang           /* Deviations      */
+```
+
+## openconfig-mirror-elements.yang
+```
+module: openconfig-mirror
+  +--rw mirror
+     +--rw config
+     +--ro state
+     +--rw interfaces
+     |  +--rw interface* [interface-id]
+     |     +--rw interface-id     -> ../config/interface-id
+     |     +--rw config
+     |     |  +--rw interface-id?   string
+     |     +--ro state
+
+     |              +--rw config
+     |              |  +--rw mirror_session?   string
+     |              +--ro state
+     |                 +--ro mirror_session?   strin       +--rw section* [name]
+     +--rw sessions
+           +--rw name      -> ../config/name
+           +--rw config
+           |  +--rw name?        string
+           |  +--rw dst_port?    oc-if:base-interface-ref
+           |  +--rw src_port?    oc-if:base-interface-ref
+           |  +--rw direction?   mirror-session-direction
+           |  +--rw src_ip?      oc-inet:ip-address
+           |  +--rw dst_ip?      oc-inet:ip-address
+           |  +--rw dscp?        uint8
+           |  +--rw gre?         oc-inet:port-number
+           |  +--rw ttl?         uint8
+           |  +--rw queue?       uint8
+           +--rw state
+              +--rw name?   string`
+```
 # 4 Flow Diagrams
 
 # 5 Error Handling
