@@ -1035,6 +1035,13 @@ These will be stored in the counters DB for each tunnel.
 3. show vxlan vrfvnimap 
    - Displays all the VRF VNI mappings.
 
+   +-------+-------+
+   | VRF   |   VNI |
+   +=======+=======+
+   | Vrf-1 |   104 |
+   +-------+-------+
+   Total count : 1
+
 4. show vxlan tunnel
    - lists all the discovered tunnels.  
    - SIP, DIP, Creation Source, OperStatus are the columns.
@@ -1146,6 +1153,8 @@ These will be stored in the counters DB for each tunnel.
 2. show mac /show mac -v will be enhanced for EVPN MACs.
    - Port column will display DIP. (ASIC DB view)
    - Type column will display EVPN_static/EVPN_dynamic
+
+3. show NeighbourSuppressStatus to display Neighbor suppression status.
 ```
 
 #### 5.2.3 Validations 
