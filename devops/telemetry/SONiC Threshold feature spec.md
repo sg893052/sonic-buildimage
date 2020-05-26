@@ -251,6 +251,24 @@ Once the dynamic port breakout feature is available, ThresholdMgr needs to be en
 	127.0.0.1:6379[4]> hgetall THRESHOLD_TABLE|priority-group|shared|Ethernet40|6
 	1) "threshold"
 	2) "20"
+
+#### THRESHOLD\_BUFFERPOOL\_TABLE
+
+    ; New table
+    ; Defines buffer pool threshold configuration.
+
+    key                      = pool_name; pool_name can be buffer pool profiles configured in the system.
+    threshold                = 1*3DIGIT                ; Threshold in % (1-100)
+
+    Example:
+
+    Buffer pool threshold configuration:
+    127.0.0.1:6379[4]> keys *THRESHOLD_BUFFERPOOL_TABLE*
+    1) "THRESHOLD_BUFFERPOOL_TABLE|ingress_lossless_pool"
+
+	127.0.0.1:6379[4]> HGETALL "THRESHOLD_BUFFERPOOL_TABLE|ingress_lossless_pool"
+	1) "threshold"
+	2) "80"
 	
 
 ### 3.2.2 APP DB
