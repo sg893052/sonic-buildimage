@@ -1,4 +1,3 @@
-
 # Feature Name
 
 Dynamic Port Breakout (DPB)
@@ -31,6 +30,7 @@ Dynamic Port Breakout (DPB)
 | 0.2 | 04/09/2020 | Vishnu Shetty | Update review comments |
 | 0.3 | 04/21/2020 | Vishnu Shetty | Update review comments |
 | 0.4 | 05/11/2020 | Vishnu Shetty | Update QoS config comments |
+| 0.5 | 05/29/2020 | Vishnu Shetty | Update CLI and review comments |
 
 # About this Manual
 
@@ -47,7 +47,7 @@ This document captures dynamic port break-out requirements and provides design o
 | Term | Meaning |
 | ---- | ---- |
 | CONFIG_DB | SONiC configuration database in Redis |
-| CVL | Config Validation |
+| CVL | Config VaLidation |
 | DPB | Dynamic Port Breakout |
 
 # 1 Feature Overview
@@ -105,13 +105,13 @@ The management framework generates port configuration dependencies and automatic
 - No custom MMU setting is applied as part of DPB. 
 - When upgrading from a prior image into the new image supporting DPB:
  1. All HW SKUs that are defined in prior images must be supported in the new image.
- 2. All HW SKUs are upgraded into the same exact HW SKU after upgrade into the new image.
- 3. No modifications allowed to ports that are already broken out by the virtue of HW SKU. For example, in case of DellEMC-Z9332f-C64O16SH (16 x (4x100G) + 16 x 400G), lower 64 ports remain to be 100G. The upper 16 ports are 400G, but the user may use DPB to break-out any of the upper 16 ports to 100G. The user may later undo breakout on these upper 16 ports. But the lower 16 front-panel ports will remain static at 16 x (4x100G).
+ 2. All HW SKUs are upgraded into the same exact HW SKU after upgrade into the new image. It is advised to migrate to **base** HW SKU to make use of seamless DPB capabilities. 
+ 3. No modifications allowed to ports that are already broken out by the virtue of HW SKU. For example, in case of DellEMC-Z9332f-C64O16SH (16 x (4x100G) + 16 x 400G), lower 64 ports remain to be 100G. The upper 16 ports are 400G, but the user may use DPB to break-out any of the upper 16 ports to 100G. The user may later undo breakout on these upper 16 ports. But the lower 16 front-panel ports will remain static at 16 x (4x100G). To overcome above restriction,  DB migration along with DPB specific changes required during release upgrade. Later this SKU can be switched to base SKU.
  4. Customers can (but don't have to) change HW SKU before upgrade, if deployment plans have changed. (Requires customers to change configuration - a maintenance activity)
- 5. Warm reboot may be used for software upgrade (assuming no other underlying issue)
-- When downgrading from an image supporting DPB to an older image that DPB is not supported:
-	 1. User needs to remove all "new" configuration (features not supported in the old image) including DPB, before initiating a downgrade.
-	 2. The configuration must match the contents of the port-config.ini file that will be used by the downgrade image.
+
+5.  When downgrading from an image supporting DPB to an older image that DPB is not supported:
+	 - User needs to remove all "new" configuration (features not supported in the old image) including DPB, before initiating a downgrade.
+	 - The configuration must match the contents of the port-config.ini file that will be used by the downgrade image.
 
 ### 1.1.2 Scalability Requirements
 
@@ -332,62 +332,40 @@ Dependent configuration should be specified through leafref in sonic YANG. The "
 
 ### 1.2.1.2 Basic Approach
 
-**TBD
-  
+Basic Flow 
+ - Platform module within management infrastructure processes DPB request from user
+ - Management infrastructure application gets all port dependent configuration and updates the CONFIG_DB for cleanup.
+ - Back end applications receives config clean up triggers.
+ - SWSS (portmgd) receives DPB requests and updates APP_DB.
+ - SWSS (orchagent) updates ASIC_DB for port delete/create request after port dependent resource cleanup (e.g. MAC, VLAN etc).
+ - Syncd (syncd) calls SAI api to carry the port operation.
 
   
-
 ### 1.2.2 Container
 
-**TBD. 
-**Which container(s) will the code go into? Will there be new container(s)?
-**Identify the dependencies on other containers in terms of starting order, restart dependencies, etc.
-
-  
-
-  
-
+Front End - mgmt-framework
+Back End - swss and syncd
+Configuration  Cleanup -  application containers e.g BGP, LLDP etc  
   
 
 ### 1.2.3 SAI Overview
 
-  
-**TBD. 
-**Do we expect to need a new SAI API specification? If so, provide rough semantics (information flow across the API)?
-**If using existing SAI APIs, then which area?
-**For non-hardware features this section will be N/A
+sai_port_api_t create_port and  remove_port.
 
 # 2 Functionality
 
   
 
-  
-
 ## 2.1 Target Deployment Use Cases
 
-  
+Allows user to have different port speed connectivity without service disruption on already deployed ports. User is allowed to create and destroy port objects. 
 
   
 
-**TBD. 
-**Wordy description, with diagrams if possible
+## 2.2 Functional Description  
 
   
-
-  
-
-## 2.2 Functional Description
-
-  
-
-  
-**TBD.
-**Wordy description
-
-  
-
-  
-
+Based on hardware platform various port speeds are supported. As part of DPB operation the port configuration will be cleaned up. The services on DPB involved ports will be down. Newly created ports will be ready for configuration after DPB operation is complete. New ports created will be in default state (admin down). The port speed change command is unchanged. The port and dependent configuration is unchanged in speed command where as in DPB port configuration will be deleted. In DPB port get deleted and created.
   
 
 # 3 Design
@@ -399,30 +377,67 @@ Dependent configuration should be specified through leafref in sonic YANG. The "
 ## 3.1 Overview
 
   In community version,  DPB is supported only through CLICK management infrastructure. The SONiC YANG configuration dependency generation and cleanup are done through Python YANG (libYANG, pyang) tools. The dependency cleanup is directly applied to CONFIG_DB in controlled way.
-
   
-**TBD
-**big picture view of the actors involved.
+In current release (Buzznik+) DPB is supported through KLISH management infrastructure only.  Due to some device restriction (master port to be deleted last) and DB update ordering challenges DPB being staged in back end.  To achieve synchronization between back and front end there are some additional CONFIG_DB tables and STATE_DB checks.  
 
   
 
-  
-
-## 3.2 DB Changes
+## 3.2 DB Changes 
 
   
-
-  
-**TBD
-**Describe changes to existing DBs or any new DB being added.
-
-  
-
+CONFIG_DB and STATE_DB being updated as part of DPB. Below is an example when default 100G port being broken into 4x25G. Here Ethernet0 is master port.
   
 
 ### 3.2.1 CONFIG DB
 
-#### 3.2.1.1 QoS handling multiple interface limitation
+**BREAKOUT_CFG:**
+
+127.0.0.1:6379[4]> HGETALL BREAKOUT_CFG|Ethernet0
+"brkout_mode"
+"4x10G"
+"lanes"
+"73,74,75,76"
+
+**BREAKOUT_PORTS:**
+
+127.0.0.1:6379[4]> HGETALL "BREAKOUT_PORTS|Ethernet0"
+1) "master"
+2) "Ethernet0"
+127.0.0.1:6379[4]> HGETALL "BREAKOUT_PORTS|Ethernet1"
+1) "master"
+2) "Ethernet0"
+127.0.0.1:6379[4]> HGETALL "BREAKOUT_PORTS|Ethernet2"
+1) "master"
+2) "Ethernet0"
+127.0.0.1:6379[4]> HGETALL "BREAKOUT_PORTS|Ethernet3"
+1) "master"
+2) "Ethernet0" 
+
+### 3.2.2 APP DB 
+
+  None
+
+### 3.2.3 STATE DB
+
+**PORT_BREAKOUT:**
+
+127.0.0.1:6379[6]> KEYS PORT_BREAKOUT|Ethernet0
+1) "PORT_BREAKOUT|Ethernet0"
+127.0.0.1:6379[6]> HGETALL PORT_BREAKOUT|Ethernet0
+1) "status"
+2) "Completed"
+127.0.0.1:6379[6]>  
+  
+
+### 3.2.4 ASIC DB
+None
+  
+
+### 3.2.5 COUNTER DB 
+
+  None
+
+ ### 3.2.6 QoS handling multiple interface limitation
  
 -   QoS config via mgmt interfaces (REST/KLISH/gNMI)
         -   Modified sonic-yang model to prevent multiple interfaces
@@ -435,86 +450,27 @@ Dependent configuration should be specified through leafref in sonic YANG. The "
 	-   Common buffer and qos jinja2 templates were modified back in early Buzznik time frame by Microsoft
 -   "config load" json file (sonic-cfggen)
 	-   CVL yang model to prevent multiple interfaces can reject "config load". CVL for sonic-cfggen is not available today (future enhancement).
-	-   Incremental config load will not be supported. Use "db_migrator.py" use case as an upgrade path for DPB support.   
-  
-
-### 3.2.2 APP DB
-
-  
-
-  
-
-### 3.2.3 STATE DB
-
-  
-
-  
-
-### 3.2.4 ASIC DB
-
-  
-
-  
-
-### 3.2.5 COUNTER DB
-
-  
-
-  
-
-  
+	-   Incremental config load will not be supported. Use "db_migrator.py" use case as an upgrade path for DPB support.    
 
 ## 3.3 Switch State Service Design
 
   
 
-  
-
 ### 3.3.1 Orchestration Agent
 
-  
-
-  
+  From DPB perspective orchagent handles new port creation and deletion based on lane map and maintains reference count for SAI port object. The reference count zero indicates resources are cleaned up.  
 
 ### 3.3.2 Other Process
-
   
-
-  
-**TBD
-**Describe changes to other process within SwSS if applicable.
-
-  
-
-  
-
-  
+Portmgr consumes CONFIG_DB port table, port break out table and produces APP_DB to carry out DPB operation. After DPB operation is successful updates STATE_DB port breakout table with completion status.   
 
 ## 3.4 SyncD
 
-  
-
-  
-**TBD
-**Describe changes to syncd if applicable.
-
-  
-
-  
-
-  
+Refer community HLD.  
 
 ## 3.5 SAI
-
   
-
-  
-**TBD
-**Describe [new/existing] SAI APIs used by this feature.
-
-  
-
-  
+Added port create and delete API for all supported devices.  
 
   
 
@@ -524,348 +480,133 @@ Dependent configuration should be specified through leafref in sonic YANG. The "
 
   
 
-### 3.6.1 Data Models
+### 3.6.1 Data Models 
 
   
 
-  
-
-**TBD
-**Can be reference to YANG if applicable. Also cover gNMI here.
-
-  
-
-  
+sonic-mgmt-common/models/yang/openconfig-platform.yang
 
   
 
 ### 3.6.2 CLI
 
-
-
 #### 3.6.2.1 Configuration Commands
 
-After break-out, new ports get created with consecutive number. The original port is termed as the base port.
+**interface breakout port <slot/port> mode \<option\>**
+**no interface breakout port <slot/port>**
+
+slot - for future use (fixed to 1 now for pizza box)
+port - Front panel port number (cage number)
 
 To breakout to 4x10G:
 
 ```
-
 sonic-cli# configure terminal
-sonic-cli(config)# interface Ethernet 8
-sonic-cli(conf-if-Ethernet8)# breakout 4x10G
-Breakout mode change will result into dependent configuration clean-up and causes traffic disruption. Continue? [y/N]:N 
-
+sonic-cli(config)# interface breakout port 1/1 mode 4x10G
 ```
 
-To breakout to 4x25G:
+To undo breakout 4x25G (back to default mode, e.g. 1x100G):
 
 ```
-
 sonic-cli# configure terminal
-sonic-cli(config)# interface Ethernet 20
-sonic-cli(conf-if-Ethernet20)# breakout 4x25G
-Breakout mode change will result into dependent configuration clean-up and causes traffic disruption. Continue? [y/N]:N 
-
-```
- 
-
-To revert back the breakout mode:
-
-```
-
-sonic-cli(conf-if-Ethernet20)# no breakout
-Breakout mode change will result into dependent configuration clean-up and causes traffic disruption. Continue? [y/N]:y 
-
-```
-
-More configuration commands:
-
-```
-
-sonic-cli(conf-if-Ethernet32)# breakout 2x50G 
-Breakout mode change will result into dependent configuration clean-up and causes traffic disruption. Continue? [y/N]:y
-%Error: operation failed 
-
-sonic-cli(conf-if-Ethernet32)# interface Ethernet 33 
-%Error: Interface Ethernet33 cannot be configured.
-
+sonic-cli(config)# no interface breakout port 1/1
 ```
 
 #### 3.6.2.2 Show Commands
 
-To display port dependencies
+To display broken out ports and status.
 
+**show interface breakout port <slot/port>**
 ```
- show interface breakout dependencies Ethernet 0
-```
-
-To display port speeds (port Ethernet52 is breakout to 4x10G, ports Ethernet56, Ethernet60, etc remain as 100G).
-
+ show interface breakout port 1/1
 ```
 
-sonic-cli(config)# interface breakout Ethernet 52 4x10G
-sonic-cli(config)# do show interface status
-------------------------------------------------------------------------------------------
-Name                Description         Admin          Oper           Speed          MTU            
-------------------------------------------------------------------------------------------
-<snip>
-Ethernet52          -                   down           down           10000          9100          
-Ethernet53          -                   down           down           10000          9100          
-Ethernet54          -                   down           down           10000          9100          
-Ethernet55          -                   down           down           10000          9100          
-Ethernet56          -                   down           down           100000         9100          
-Ethernet60          -                   down           down           100000         9100          
-Ethernet64          -                   down           down           100000         9100          
-Ethernet68          -                   down           down           100000         9100          
-<snip>
+To display port dependent configurations.
 
+**show interface breakout dependencies port <slot/port>**
+
+```
+ show interface breakout dependencies port 1/1
 ```
 
 #### 3.6.2.3 Debug Commands
 
   
-
+No specific debug commands available.
   
 
 #### 3.6.2.4 IS-CLI Compliance
 
   
-
-**TBD
-
-The following table maps SONIC CLI commands to corresponding IS-CLI commands. The compliance column identifies how the command comply to the IS-CLI syntax:
-
-  
-
-  
-
-  
-
-- **IS-CLI drop-in replace** ? meaning that it follows exactly the format of a pre-existing IS-CLI command.
-
-  
-
-  
-
-- **IS-CLI-like** ? meaning that the exact format of the IS-CLI command could not be followed, but the command is similar to other commands for IS-CLI (e.g. IS-CLI may not offer the exact option, but the command can be positioned is a similar manner as others for the related feature).
-
-  
-
-  
-
-- **SONIC** - meaning that no IS-CLI-like command could be found, so the command is derived specifically for SONIC.
-
-  
-
-  
-
-  
-
-|CLI Command|Compliance|IS-CLI Command (if applicable)| Link to the web site identifying the IS-CLI command (if applicable)|
-
-  
-
-  
-
-|:---:|:-----------:|:------------------:|-----------------------------------|
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-| | | | |
-
-  
-
-  
-
-  
-
-**Deviations from IS-CLI:** If there is a deviation from IS-CLI, Please state the reason(s).
-
-  
-
-  
-
+NA
   
 
 ### 3.6.3 REST API Support
 
-REST request to breakout Ethernet20 to 4x25G:
+REST request to breakout port 1/1 to 4x25G:
 
 ```
 
-PATCH /restconf/data/openconfig-platform:components/component=Ethernet20/port/openconfig-platform-port:breakout-mode/config
+PATCH /restconf/data/openconfig-platform:components/component=1/1/port/openconfig-platform-port:breakout-mode/config
 data={"openconfig-platform-port:config": {"num-channels": 4, "channel-speed": "SPEED_25GB"}}
 
 ``` 
 
-REST request to undo breakout Ethernet20:
+REST request to undo breakout port 1/1:
 
 ```
 
-DELETE /restconf/data/openconfig-platform:components/component=Ethernet20/port/openconfig-platform-port:breakout-mode/config
+DELETE /restconf/data/openconfig-platform:components/component=1/1/port/openconfig-platform-port:breakout-mode/config
 
 ```
 
 ### 3.6.4 Service and Docker Management
 
+  NA
   
+# 4 Flow Diagrams 
 
-  
-
-**TBD
-
-
-If a new service and/or a new docker is introduced, please follow the guidelines below:
-
-  
-
-  
-
-- Identify the dependencies on other services. This includes the starting order, restart dependencies on other services, etc. Please take the multiple images into consideration where this feature can be included/excluded.
-
-  
-
-  
-
-- If a new docker is introduced, identify all the processes in this docker and their starting order, and specify restartability needs and dependencies.
-
-  
-
-  
-
-  
-
-# 4 Flow Diagrams
-
-  
-
-  
-**TBD
-
-**Provide flow diagrams for inter-container and intra-container interactions.
-
-  
-
-  
+ 
+mgmt-framework - front end processing 
+swss - back end processing
+syncd - device level handling 
 
   
 
 # 5 Error Handling
 
-  
-
-**TBD 
-
-**Provide details about incorporating error handling feature into the design and functionality of this feature.
-
-  
-
-  
-
+In DPB there is no easy way to handle the error cases.  For now, in case of error need to recover using reboot. Use DPB show command to check the progress. We will update this section when error handling being added. 
   
 
 # 6 Serviceability and Debug
 
-  
+  The extensive logging and DB state is provides information to debug DPB issues.  The following logs need to looked into to debug DPB issues.
 
-  
-
-**TBD
-**Logging, counters, stats, trace considerations. Please make sure you have incorporated the debugging framework feature. e.g., ensure your code registers with the debugging framework and add your dump routines for any debug info you want to be collected.
-
-  
-
-  
-
+mgmt-framework - DB update and user requests
+DB - CONFIG_DB, APP_DB and STATE_DB port break out tables
+portmgrd - DPB operations
+orchagent - dependency removal,  look for reference count
+syncd - SDK and SAI level operation status 
   
 
 # 7 Warm Boot Support
 
   
+There is no direct impact on warm-reboot. As port increases in the system, the dependencies and resources scales up. This will have impact on overall warm-boot time.
 
-  
-**TBD
-Describe expected behavior and any limitation.
-
-  
-
-  
-
-  
 
 # 8 Scalability
 
-  
-
-  
-**TBD
-Describe key scaling factor and considerations.
-
-  
-
-  
+ DPB allows to scale up total number of ports in the system.
 
   
 
 # 9 Unit Test
 
-  
+  Tests can be performed on any platform.  The script will execute all possible break-out combination and provides result. 
 
-  
-**TBD
-List unit test cases added for this feature including warm boot.
-
-  
-
-  
-
-  
+  tests/ut/dpb/test_ut_dpb_infra.py
 
 # 10 Internal Design Information
 
-  
-
-  
-**TBD
-Internal BRCM information to be removed before sharing with the community.
-
-
+ None
