@@ -307,17 +307,12 @@ Below list of OSPF router mode config commands shall the considered for this rel
 	[no] max-metric router-lsa on-shutdown (5-100)
 	[no] max-metric router-lsa on-startup (5-86400)
 	
-	[no] neighbor A.B.C.D [priority (0-255) [poll-interval (1-65535)]]
-	[no] neighbor A.B.C.D poll-interval (1-65535) [priority (0-255)]
-	
 	[no] network A.B.C.D/M area <A.B.C.D|(0-4294967295)>
 	
 	[no] ospf router-id [A.B.C.D]
 	[no] passive-interface <IFNAME [A.B.C.D]|default>
 	
-	
 	[no] redistribute <kernel|connected|static|bgp> [{metric (0-16777214)|metric-type (1-2)|route-map WORD}]
-	[no] redistribute <ospf|table> (1-65535)[{metric (0-16777214)|metric-type (1-2)|route-map WORD}]
 	[no] refresh timer [(10-1800)]
 	[no] timers lsa min-arrival [(0-600000)]
 	[no] timers throttle lsa all [(0-5000)]
@@ -326,7 +321,7 @@ Below list of OSPF router mode config commands shall the considered for this rel
 	
 Below list of OSPF interface config commands shall be considered for this release
 
-	[no] ip ospf [(1-65535)] area <A.B.C.D|(0-4294967295)> [A.B.C.D]
+	[no] ip ospf area <A.B.C.D|(0-4294967295)> [A.B.C.D]
 	[no] ip ospf authentication <null|message-digest> [A.B.C.D]
 	[no] ip ospf authentication [A.B.C.D]
 	[no] ip ospf authentication-key AUTH_KEY [A.B.C.D]
@@ -336,7 +331,7 @@ Below list of OSPF interface config commands shall be considered for this releas
 	[no] ip ospf dead-interval minimal hello-multiplier (1-10) [A.B.C.D]
 	[no] ip ospf hello-interval (1-65535) [A.B.C.D]
 	[no] ip ospf message-digest-key (1-255) md5 KEY [A.B.C.D]
-	[no] ip ospf network <broadcast|non-broadcast|point-to-multipoint|point-to-point>
+	[no] ip ospf network <broadcast|point-to-point>
 	[no] ip ospf priority (0-255) [A.B.C.D]
 	[no] ip ospf retransmit-interval (3-65535) [A.B.C.D]
 	[no] ip ospf transmit-delay (1-65535) [A.B.C.D]
