@@ -2,7 +2,7 @@
 
 # EVPN VXLAN HLD
 
-#### Rev 0.4
+#### Rev 1.2
 
 # Table of Contents
 
@@ -38,15 +38,23 @@
     - [4.3.9 IP Prefix Route Handling](#439-ip-prefix-(type-5)-route-handling)
     - [4.3.10 ARP and ND Suppression](#4310-arp-and-nd-suppression)
     - [4.3.11 Tunnel Statistics](#4311-support-for-tunnel-statistics)
+    - [4.3.12 VXLAN QoS mode](#4312-support-for-vxlan-qos-mode)
+    - [4.3.13 Linux Kernel ](#4313-linux-kernel)
 - [5 CLI](#5-cli)
   - [5.1 Click CLI](#51-click-based-cli)
     - [5.1.1 Configuration Commands](#511-configuration-commands)
     - [5.1.2 Show Commands](#512-show-commands)
-  - [5.2 SONiC CLI](52-#sonic-cli)
-    - [5.2.1 Configuration Commands](521-#configuration-commands)
+  - [5.2 SONiC CLI](#52-sonic-cli)
+    - [5.2.1 Configuration Commands](#521-configuration-commands)
     - [5.2.2 Show Commands](#522-show-commands)
+  - [5.3 Openconfig URI](#53-openconfig-uri)
 - [6 Serviceability and Debug](#6-serviceability-and-debug)
 - [7 Warm reboot Support](#7-warm-reboot-support)
+- [8 Broadcom Internal Design](#8-broadcom-internal-design)
+  - [8.1 Platforms supported ](#81-platforms-supported)
+  - [8.2 Underlays supported](#82-underlays-supported)
+  - [8.3 VxLAN QoS Mode](#83-vxlan-qos-mode)
+  - [8.4 Unit Test Plans](#84-unit-test-plans)
 
 # List of Tables
 
@@ -63,6 +71,8 @@
 | 0.6  | 07/16/2019 | Kishore Kunal | Added Fdbsycnd details |
 | 0.7  | 10/03/2019 | Rajesh Sankaran | Click and SONiC CLI added |
 | 0.8  | 24/04/2020 | Nikhil Kelapure | Updated Warm-reboot section |
+| 1.1  | 04/14/2020 | Mohanarajan Selvaraj | VXLAN QoS Changes |
+| 1.2  | 04/24/2020 | Rajesh Sankaran | VLAN interface underlay support |
 
 # Definition/Abbreviation
 
@@ -114,6 +124,7 @@ This feature adds the following enhancements.
 - Routing of L3 (IPv4 and IPv6) traffic in and out of the VXLAN tunnel.
 - Overlay ECMP support.
 - EVPN ARP and ND suppression.
+- VXLAN QoS mode - Support for Uniform and Pipe modes.
 
 The following item will be added in the future. 
 - Basic OAM support for tunnels -  tunnel operational status and statistics.
@@ -154,6 +165,7 @@ Following requirements are addressed by the design presented in this document:
 10. Support ARP/ND suppression.
 11. Support Tunnel ECMP and underlay path failovers.
 12. Support a common VLAN-VNI map for all the EVPN tunnels.
+13. Support Uniform and Pipe VXLAN QoS models.
 
 
 
@@ -170,8 +182,9 @@ This feature will support CLI and other management interfaces supported
 in SONiC.
 
 1. Support configuration of Source IP address of the VTEP. 
-2. Support configuration of a global VLAN-VNI map.
-3. Support configuration of L3VNI association with VRF. 
+2. Support configuration of QoS mode (Uniform / Pipe) of the VTEP.
+3. Support configuration of a global VLAN-VNI map.
+4. Support configuration of L3VNI association with VRF. 
 
 
 
@@ -264,7 +277,41 @@ Both asymmetric and symmetric IRB models will be supported in SONiC.
 EVPN Type-2 routes make remote MAC-IP binding available on local device. This allows any ARP/ND request originated by local hosts for the remote IP to be serviced locally using the MAC-IP binding. This reduces ARP flooding in the network.
 
 
+#### VXLAN QoS mode
 
+The following VXLAN QoS modes are supported. 
+
+- Uniform - uniform mode views IP tunnels as artifacts of the end to end path from a traffic conditioning standpoint. Implementations of this model copy the DSCP value to the outer IP header at encapsulation. Additionally they may copy the outer header DSCP value to the inner IP header at decapsulation.  The exact implementation is platform dependent and is described in the platform specific sections.
+
+- Pipe - pipe mode implementations assign a user defined DSCP value to the outer IP header at encapsulation and the the inner IP header DSCP value remains intact at decapsulation.
+
+The default mode is Pipe.
+
+Following is the traffic forwarding behavior for different types of traffic with Uniform and Pipe modes. 
+
+- Uniform mode
+  - L2 forwarded traffic without VLAN Tag without L3 header 
+    - On Tunnel encapsulation (origination), outer header DSCP value is set to 0.
+  - L2 forwarded traffic with VLAN Tag without L3 header 
+    - On Tunnel encapsulation, outer header DSCP value is set to 0.
+    - Queuing is based on payload PCP value.
+  - L2 / L3 forwarded Traffic with L3 header 
+    - On Tunnel encapsulation, outer header DSCP value is copied from the payload header DSCP value. 
+      - For L2 forwarded traffic, queuing is based on the payload PCP value. 
+      - For L3 forwarded traffic, queuing is based on the payload DSCP value.
+    - On Transit, queuing is based on the outer header DSCP value.
+    - On Tunnel termination, 
+      - Outer header DSCP value is copied over to the inner IP header DSCP. Implementation is platform dependent.
+      - Queuing is based on outer header DSCP value. 
+
+- Pipe mode 
+  - On Tunnel encapsulation, outer header DSCP value is based on the configured DSCP value. 
+    - For L2 forwarded traffic, queuing is based on the payload PCP value.
+    - For L3 forwarded traffic, queuing is based on the payload DSCP value.
+  - On Transit, queuing is based on the outer header DSCP value.
+  - On Tunnel termination, inner IP header DSCP value is retained.
+    - Queuing is based on outer header DSCP value.
+  
 
 # 4 Feature Design
 
@@ -285,14 +332,11 @@ No new container is added. The changes are added to existing containers such as 
 
 ### 4.1.3 SAI Overview
 
-To support this feature, SAI will be extended as below:
+To support this feature, SAI will be extended as described in the SAI PRs below:
 
-- **sai_fdb_entry_type_t** - will be enhanced to have a new enum. 
-  - SAI_FDB_ENTRY_TYPE_STATIC_MACMOVE - This will be used when a MAC should not be aged out but a MAC move should be allowed. An example is remote MAC learnt by EVPN procedures which can be subjected to a MAC move from remote to local.
-- **sai_tunnel_attr_t** - It will be enhanced to have one new attribute
-  - SAI_TUNNEL_ATTR_ENCAP_DEST_IP - New tunnel attribute will be added to specify the tunnel destination IP address. This will be used to support warm reboot. Currently only the SIP is part of the tunnel attributes which does not allow for unique set of attributes when there are multiple tunnels with same SIP and different DIPs. The unique set of attributes is required for reconcilation during a warm reboot.  bridgeport associated with a tunnel also requires the tunnel id to be reconcilable post warm restart. Hence, it is required as part of the sai_tunnel_attr_t list.
-- **sai_vlan_attr_t** - It will be enhanced to have one new attribute
-  - SAI_VLAN_ATTR_NEIGH_SUPP_MODE - By default this value will be FALSE. Reason for this new attribute is due to recent changes in ARP behaviour. Microsoft has modified the default arp behavior in copp file from trap to copy(as part of commit -5e4b71d4). But for ARP Suppression, we need Pkt to get trapped instead of copy to avoid flooding of packets over vxlan tunnel.So a differentiated tcam rule for these arp suppressed vlans will redirect the ARP pkts to cpu instead of copy.
+- [Support for MAC Move](https://github.com/opencomputeproject/SAI/pull/1024)
+- [Support for L2VXLAN](https://github.com/opencomputeproject/SAI/pull/1025)
+- [Support for ARP/ND Suppression](https://github.com/opencomputeproject/SAI/pull/1056)
 
 ## 4.2 DB Changes
 
@@ -562,7 +606,9 @@ The corresponding CONFIG_DB entries are as follows.
 
 ```
 VXLAN_TABLE|{{source_vtep_name}}
-    "src_ip" : {{ipv4_address}}
+    "src_ip"      : {{ipv4_address}}
+    "qos-mode"    : {{"uniform"/"pipe"}}
+    "tunnel_dscp" : {{header_dscp_value}}
     
 EVPN_NVO_TABLE|{{nvo_name}}
     "source_vtep" : {{source_vtep_name}}
@@ -688,6 +734,8 @@ A new table STATE_VXLAN_TUNNEL_TABLE is used for the above purposes.
 A new field "tunnel source" - EVPN or CLI will be added to indicate the source of tunnel creation. 
 
 The tunnel source (EVPN, CLI), SIP, DIP can be filled in during creation time. 
+
+The field "qos-mode" is used to identify VXLAN QoS mode (uniform / pipe). The field "dscp" is filled when VXLAN qos-mode is pipe.
 
 The operstatus of a tunnel  will be updated based on notification from SAI through a notification channel similar to port oper status. 
 
@@ -974,6 +1022,63 @@ These will be stored in the counters DB for each tunnel.
 - Flex counter and Flex group counter processing to also include tunnels. 
 - Include Tunnel counters as part of FlexCounter::collectCounters call. 
 
+### 4.3.12 VXLAN QoS mode
+
+VXLAN QoS mode supported are Uniform and Pipe. Default mode is Pipe.
+By default, when the tunnel is created, qos-mode is set to Pipe with outer header DSCP value as 0.
+The SAI attribute SAI_TUNNEL_ATTR_ENCAP_DSCP_MODE indicates the qos-mode.
+ - SAI_TUNNEL_DSCP_MODE_PIPE_MODEL is the value for Pipe mode 
+ - SAI_TUNNEL_DSCP_MODE_UNIFORM_MODEL is the value for Uniform mode. 
+
+For Pipe mode, SAI_TUNNEL_ATTR_ENCAP_DSCP_VAL is used to encode DSCP value to be set in the tunnel header.
+
+Whenever there is a change in qos-mode or when the Pipe mode DSCP value is modified, it is reflected in the hardware on the fly.
+
+### 4.3.13 Linux Kernel
+
+VxLAN netdevice is created in Linux kernel by vxlanmgr for each of the configured VNI with "<vxlan-tunnel-name>-<vlan-id>" name format. Sample dump of VxLAN netdevice (VLAN-VNI 100-1000) properties is pasted below.
+
+```
+ip -d link show dev vtep1-100
+
+1535: vtep1-100: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master Bridge state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 3c:2c:99:8b:35:bc brd ff:ff:ff:ff:ff:ff promiscuity 1
+    vxlan id 1000 local 10.0.0.10 srcport 0 0 dstport 4789 nolearning ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx
+    bridge_slave state forwarding priority 4 cost 100 hairpin off guard off root_block off fastleave off learning off flood on port_id 0x81c9 port_no 0x1c9 designated_port 33225 designated_cost 0 designated_bridge 8000.3c:2c:99:8b:35:bc designated_root 8000.3c:2c:99:8b:35:bc hold_timer    0.00 message_age_timer    0.00 forward_delay_timer    0.00 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535
+```
+
+Each vxlan netdevice is member of the default "Bridge", and fdb learning is disabled for them.
+
+
+Typical remote client MAC dynamically learnt and synced by BGP is shown below (bridge fdb show):
+
+```
+00:00:11:22:33:44 dev vtep1-100 vlan 100 offload master Bridge
+00:00:11:22:33:44 dev vtep1-100 dst 10.0.0.11 self offload
+```
+
+Remote SVI MAC is installed by FRR as static entry if "advertise-default-gw" is configured (bridge fdb show):
+
+```
+b8:6a:97:e2:6f:9c dev vtep1-100 vlan 100 master Bridge static
+b8:6a:97:e2:6f:9c dev vtep1-100 dst 10.0.0.11 self static
+```
+
+Remote IMET routes are installed by FRR with null mac and one entry exists for each of the remote VTEPs against the VxLAN/VNI netdevice (bridge fdb show):
+
+```
+00:00:00:00:00:00 dev vtep1-100 dst 10.0.0.11 self permanent
+00:00:00:00:00:00 dev vtep1-100 dst 10.0.0.12 self permanent
+```
+
+
+Linux kernel version 4.9.x used in SONiC requires backport of a few patches to support EVPN. Some of them are listed below:
+
+1. NTF_EXT_LEARNED (control plane) entries handling required in bridge and neighbor modules.
+2. L3VNI IPv6 route installation with IPv4 mapped IPv6 address as next-hop requires backport.
+3. Default max bridge ports in Linux is set to 1K. Port bitmap increase required.
+4. Neighbor (arp/nd) move to a different MAC requires fix.
+5. Other misc. fixes
 
 ## 5 CLI
 
@@ -983,10 +1088,12 @@ These will be stored in the counters DB for each tunnel.
 
 ```
 1. VTEP Source IP configuration
-   - config vxlan add <vtepname> <src_ipv4>
+   - config vxlan add <vtepname> <src_ipv4> [qos-mode {uniform | pipe {dscp <dscp_val>}}]
    - config vxlan del <vtepname>
    - vtepname is a string. 
    - src_ipv4 is an IPV4 address in dotted notation A.B.C.D
+   - qos-mode configuration is optional. 
+   - dscp_val can have valid values for dscp between 0 - 63.
 2. EVPN NVO configuration 
    - config vxlan evpn_nvo add <nvoname> <vtepname>
    - config vxlan evpn_nvo del <nvoname>
@@ -1012,12 +1119,14 @@ These will be stored in the counters DB for each tunnel.
 1. show vxlan interface 
    - Displays the name, SIP, associated NVO name. 
    - Displays the loopback interface configured with the VTEP SIP. 
+   - Displays the configured qos-mode (uniform / pipe) per VTEP. In case of pipe mode, displays the configured DSCP value as well. 
 
    VTEP Information:
 
            VTEP Name : VTEP1, SIP  : 4.4.4.4
            NVO Name  : nvo1,  VTEP : VTEP1
            Source interface  : Loopback33
+           QoS Mode : Pipe (dscp:50)
 
 2. show vxlan vlanvnimap 
    - Displays all the VLAN VNI mappings.
@@ -1123,6 +1232,8 @@ These will be stored in the counters DB for each tunnel.
    - switch(config-if-vtep1) [no] vxlan source-ip  <src_ipv4>
    - <vtepname> is a string. 
    - <src_ipv4> is an IPV4 address in dotted notation A.B.C.D
+   - switch(config-if-vtep1) qos-mode {uniform | pipe {dscp <dscp_val>}}
+   - <dscp_val> can have valid values for dscp between 0 - 63.
 2. EVPN NVO configuration 
    - switch(config) evpn <nvo_name>
    - switch(config-evpn) nvo <vtepname>
@@ -1171,9 +1282,89 @@ These will be stored in the counters DB for each tunnel.
 
 ```
 
+### 5.3 Openconfig URI
+
+
+```
+
+To create vxlan interface without src ip 
+----------------------------------------
+
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X POST https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" } } ] }" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X PATCH https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" } } ] }" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X PUT https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" } } ] }" -k
+
+Note: vxlan interface cannot be replaced, or updated if exist- only we can create using POST,PUT,PATCH
+
+
+To create vxlan interface with src ip 
+-------------------------------------
+
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X POST https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" }, \"openconfig-vxlan:vxlan-if\": { \"config\": { \"source-vtep-ip\": \"4.5.6.7\" }    }     } ] }" -k
+
+
+To create src ip address for an existing vxlan interface 
+---------------------------------------------------------
+
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X PATCH https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/source-vtep-ip -k -d "{ \"source-vtep-ip\": \"4.5.6.7\" }" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X PUT https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/source-vtep-ip -k -d "{ \"source-vtep-ip\": \"4.5.6.7\" }" -k
+
+Note: src ip (source-vtep-ip) address cannot be replaced, or updated if exist
+
+
+To delete the src ip address for an existing vxlan interface
+-------------------------------------------------------------
+
+curl -v -u admin:YourPaSsWoRd -X DELETE -H "Content-type: application/yang-data+json" https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/source-vtep-ip -k
+
+Note: This will work, if there is no tunnel map (vni) exist for this vxlan interface, otherwise src ip address cannot deleted
+
+To delete the vxlan interface
+------------------------------
+
+curl -v -u admin:YourPaSsWoRd -X DELETE -H "Content-type: application/yang-data+json" https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1 -k
+
+Note: This will delete the vxlan interface including its related tunnel mapping entries
+
+
+To create a vlan-vni mapping
+-----------------------------
+
+curl -v -u admin:YourPaSsWoRd -X POST -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-network-instance:network-instances/network-instance=Vlan5/openconfig-vxlan:vxlan-vni-instances -H "accept: application/yang-data+json" -H "Content-Type: application/yang-data+json" -d "{   \"openconfig-vxlan:vni-instance\": [     {       \"vni-id\": 100,       \"source-nve\": \"vtep1\",       \"config\": {         \"vni-id\": 100,         \"source-nve\": \"vtep1\"       }     }   ]  }" -k
+curl -v -u admin:YourPaSsWoRd -X PATCH -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-network-instance:network-instances/network-instance=Vlan5/openconfig-vxlan:vxlan-vni-instances/vni-instance -H "accept: application/yang-data+json" -H "Content-Type: application/yang-data+json" -d "{   \"openconfig-vxlan:vni-instance\": [     {       \"vni-id\": 100,       \"source-nve\": \"vtep1\",       \"config\": {         \"vni-id\": 100,         \"source-nve\": \"vtep1\"  }  }   ]  }" -k
+
+Note: Vxlan interface should exist
+
+
+To Delete a specific vlan-vni mapping
+-------------------------------------
+
+curl -v -u admin:YourPaSsWoRd -X DELETE -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-network-instance:network-instances/network-instance=Vlan5/openconfig-vxlan:vxlan-vni-instances/vni-instance=100,vtep1 -k
+
+To Delete all the vlan-vni mappings
+-----------------------------------
+
+curl -v -u admin:YourPaSsWoRd -X DELETE -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-network-instance:network-instances/network-instance=Vlan5/openconfig-vxlan:vxlan-vni-instances/vni-instance -k
+
+GET support - config
+---------------------
+
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1 -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/source-vtep-ip -k
+curl -v -u admin:YourPaSsWoRd -X GET -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-network-instance:network-instances/network-instance=Vlan5/openconfig-vxlan:vxlan-vni-instances -H "accept: application/yang-data+json" -k
+
+GET support - state
+-------------------
+
+curl -v -X GET -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-vxlan:vxlan/state/vxlan-vni-peer-infos -k
+curl -v -X GET -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-vxlan:vxlan/state/vxlan-tunnel-infos/vxlan-tunnel-info -k
+
+```
+
 ## 6 Serviceability and Debug
 
-The existing logging mechanisms shall be used. Proposed debug framework shall be used for internal state dump.
+The existing logging mechanisms shall be used.
 
 ## 7 Warm Reboot Support
 
@@ -1252,3 +1443,145 @@ router bgp <AS-NUM>
    __Figure 19: SWSS Docker warm reboot sequence__
 
 To support warm boot, all the sai_objects must be uniquely identifiable based on the corresponding attribute list. New attributes will be added to sai objects if the existing attributes cannot uniquely identify corresponding sai object. SAI_TUNNEL_ATTR_DST_IP is added to sai_tunnel_attr_t to identify multiple evpn discovered tunnels.
+
+## 8 Broadcom Internal Design
+
+### 8.1 Platforms supported
+
+Trident3 based platforms supported.
+
+### 8.2 Underlays supported
+
+The following types of IP interfaces are supported for VXLAN till Buzznik MR. 
+- IPv4 Physical Port and LAG
+- Unnumbered interface over Physical port and LAG
+- RFC 5549 over physical port and LAG
+
+Buzznik+ adds support for the following underlay types. 
+- VLAN interface over physical port.
+- VLAN interface over LAG.
+
+#### 8.2.1 Datapath behavior for VXLAN over a VLAN Interface
+
+The control plane aspects for the VLAN interface underlay is outside the scope of this document. It
+could be setup using BGP or other supported IGPs. 
+
+The datapath behavior for VXLAN traffic over a VLAN interface is as follows. 
+
+- VXLAN traffic (L2 unicast, L2 BUM, L3) carries the VID corresponding to the VLAN interface on the outer L2 header. 
+- The VLAN can be either tagged or untagged.
+- Behaviour for L2 unicast and L3 VXLAN traffic is as follows.
+  - In the case of multiple VLAN interfaces over a physical port or LAG, Egress traffic is forwarded only on one of them. This is chosen by the system. This choice is across all the tunnels having their NH on the physical port/LAG.
+  - The VXLAN Rx traffic can be over a different VLAN(s) chosen by the neighbor.
+  - Tunnels which do not have the chosen VLAN interface as one of the next hops will not 
+  be able to forward traffic over this physical port or LAG.
+  - If the chosen VLAN interface is operationally down due to different actions then another 
+  VLAN interface over the physical port or LAG, which is operationally up, is chosen and 
+  VXLAN traffic is forwarded over that VLAN. 
+  - Tunnel ECMP groups can have a mix of different underlay interface types.
+  - Multiple VLAN interfaces can be part of the same Tunnel ECMP group with the restriction 
+    that each of the VLAN interface goes over a different physical port or LAG. 
+  - The chosen VLAN will be displayed only as part of the debugsh.
+- Behaviour for L2 BUM traffic is as follows.
+  - The behavior is similar to other underlay types.
+  - One NH per tunnel is chosen as the BUM forwarder. The chosen NH can be of type VLAN interface.
+  - The VLAN interface chosen can be different from the one chosen for L2 unicast and L3 VXLAN traffic.
+
+For a BGP EVPN IP Fabric, the recommended underlays are unnumbered interfaces. 
+
+The following are factors to be kept in mind while using VLAN interface as an underlay. 
+
+- underlay loops could be formed and there must be a loop prevention mechanism.
+- IP addresses are consumed per interface. 
+
+There are niche use cases which require a VLAN interface as an underlay. 
+
+One such customer use case is described briefly as follows.
+
+![VLAN Interface use case](images/VeUseCase.PNG "Figure 16: VLAN interface use case")
+
+__Figure 16: VLAN interface as underlay use case__
+
+The above figure shows Leaf1 and Leaf2 as part of LVTEP. The Leaf1 is connected to one group of spine nodes. The Leaf2 is connected to a different group of spine nodes. Leaf1 and Leaf2 have a VXLAN tunnel established with Leaf3. 
+
+A single LAG with multiple VLANs is used as the ICL. 
+
+When Leaf1 loses connectivity to its spine group then the VXLAN tunnel from Leaf1 to Leaf3 uses the VLAN interfaces (Ve 1 or Ve 2) to reach Spine2 and Leaf3.
+
+A dedicated router port/unnumbered interface is not preferred here because the spine group failure is a rare event.
+
+### 8.3 VxLAN QoS Mode
+
+Following is the qos-mode behavior on Trident3 based platforms.
+- Uniform - Uniform mode is supported only at encapsulation. i.e. payload DSCP value is copied to outer header DSCP value. At decapsulation, outer header DSCP is not copied to inner header DSCP. The original inner header DSCP value is retained.
+- Pipe - The behavior is as mentioned in section 3.2 above.
+
+### 8.4 Unit Test Plans
+
+#### 8.4.1 VxlanMgr and Orchagent 
+
+1. Add VXLAN_TUNNEL table in CFG_DB. Verify that the VXLAN_TUNNEL_TABLE in App DB is added.
+2. Add VXLAN_TUNNEL_MAP  table in CFG_DB. Verify the following tables.
+   - VXLAN_TUNNEL_MAP table in APP_DB. 
+   - verify kernel device created corresponding to the VNI. 
+   - The following ASIC DB entries are created.
+   - SAI_OBJECT_TYPE_TUNNEL_MAP entries for VLAN-VNI, VNI-VLAN, VRF-VNI, VNI-VRF are created.
+   - SAI_OBJECT_TYPE_TUNNEL_MAP_ENTRY created corresponding to the first vlan vni map entry.
+   - SAI_OBJECT_TYPE_TUNNEL with peer mode P2MP.
+   - SAI_OBJECT_TYPE_TUNNEL_TERM_TABLE_ENTRY of type P2MP is created.
+   - SAI_OBJECT_TYPE_BRIDGE_PORT pointing to the above created P2MP tunnel.
+3. Add more VLAN-VNI mapping entries in addition to the first entry.
+   - SAI_OBJECT_TYPE_TUNNEL_MAP_ENTRY created corresponding to the above entries.
+   - verify kernel devices created corresponding to the VNI. 
+4. Remove VLAN-VNI mapping entries except the last one. 
+   - Verify that the SAI object and the kernel entry created in the above step are deleted.
+5. Remove last mapping entry and VXLAN_TUNNEL table entry in the CFG_DB.
+   - Verify that kernel device corresponding to this mapping entry is deleted.
+   - Verify that the APP DB entries created in the above steps are deleted.
+   - Verify that the ASIC DB entries created in the above steps are deleted.
+6. Repeat creation of the VXLAN_TUNNEL and VXLAN_TUNNEL_MAP entries in the config db. In addition create the EVPN_NVO table entry in the config db and REMOTE_VNI table entry corresponding to the create map entries. 
+   - Verify that the above mentioned kernel, APP DB, ASIC DB entries are created.
+   - Verify that there is a SAI_OBJECT_TYPE_TUNNEL entry with peer mode P2P.
+   - Verify that there is a SAI_OBJECT_TYPE_BRIDGE_PORT pointing to the above created P2P tunnel.
+   - Verify that there is a SAI_OBJECT_TYPE_VLAN_MEMBER entry for the vlan corresponding to the VNI created and pointing to the above bridge port.
+7. Add more REMOTE_VNI table entries to different Remote IP.
+   - Verify that additional SAI_OBJECT_TYPE_TUNNEL, BRIDGEPORT and VLAN_MEMBER objects are created.
+8. Add more REMOTE_VNI table entries to the same Remote IP.
+   - Verify that additional SAI_OBJECT_TYPE_VLAN_MEMBER entries are created pointing to the already created BRIDGEPORT object per remote ip.
+9. Remove the additional entries created above and verify that the created VLAN_MEMBER entries are deleted.
+10. Remove the last REMOTE_VNI entry for a DIP and verify that the created VLAN_MEMBER, TUNNEL, BRIDGEPORT ports are deleted.
+
+#### 8.4.2 FdbOrch
+
+1. Create a VXLAN_REMOTE_VNI entry to a remote destination IP.
+2. Add VXLAN_REMOTE_MAC entry to the above remote IP and VLAN.
+   
+   - Verify ASIC DB table fdb entry is created with remote_ip and bridgeport information.
+3. Remove the above MAC entry and verify that the corresponding ASIC DB entry is removed.
+4. Repeat above steps for remote static MACs.
+5. Add MAC in the ASIC DB and verify that the STATE_DB MAC_TABLE is updated.
+6. Repeat above for configured static MAC.
+7. MAC Move from Local to Remote. 
+   - Create a Local MAC by adding an entry in the ASIC DB.
+   - Add an entry in the VXLAN_REMOTE_MAC table with MAC address as in the above step.
+   - Verify that the ASIC DB is now populated with the MAC pointing to the remote ip and the bridgeport corresponding to the tunnel.
+   - Verify that the state DB does not have the entry corresponding to this MAC. 
+8. MAC Move from Remote to Local
+   - Create an entry in the VXLAN_REMOTE_MAC table.
+   - Create an entry in the ASIC DB for the MAC entry.
+   - Verify that the STATE DB has the MAC table entry added.
+9. MAC Move from Remote to Remote 
+   
+   - Verify that the ASIC DB is updated with the new bridge port and remote IP.
+     
+#### 8.4.3 Fdbsyncd
+
+1. Install local MAC entry in STATE_FDB_TABLE and verify MAC is installed in Linux and present in FRR
+2. Move STATE_FDB_TABLE entry to another port and verify MAC is updated in Linux and present in FRR
+3. Install static MAC entry in STATE_FDB_TABLE and verify MAC is installed as static in Linux and present in FRR.
+4. Install remote IMET route entry in Linux kernel and verify entry is present in VXLAN_REMOTE_VNI_TABLE
+5. Add/remove remote VTEPs for IMET route in Linux and verify VXLAN_REMOTE_VNI_TABLE is updated accordingly.
+6. Install remote MAC entry in Linux kernel and verify MAC is present in VXLAN_FDB_TABLE
+7. Move remote MAC to local by programming same entry in STATE_FDB_TABLE and verify Linux and FRR are updated
+8. Move local MAC entry to remote by replacing fdb entry in Linux and verify VXLAN_FDB_TABLE and STATE_FDB_TABLE are updated.
+
