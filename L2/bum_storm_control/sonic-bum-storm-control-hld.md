@@ -41,10 +41,11 @@
           * [3.5.3 Show Commands](#353-show-commands)
           * [3.5.4 Clear Commands](#354-clear-commands)
           * [3.5.5 Debug Commands](#355-debug-commands)
+          * [3.5.6 Openconfig URI](#355-openconfig-uri)
   * [4 Flow Diagrams](#4-flow-diagrams)
-      * [4.1 Enable storm control on physical interface](#41-enable-storm-control-on-phy)
-      * [4.2 Disable storm Control on physical interface](#42-disable-storm-control-on-phy)
-      * [4.3 Update storm Control on physical interface](#43-update-storm-control-on-phy)
+      * [4.1 Enable storm-control on physical interface](#41-enable-storm-control-on-phy)
+      * [4.2 Disable storm-control on physical interface](#42-disable-storm-control-on-phy)
+      * [4.3 Update storm-control on physical interface](#43-update-storm-control-on-phy)
   * [5 Error Handling](#5-error-handling)
   * [6 Serviceability and Debug](#6-serviceability-and-debug)
   * [7 Warm Boot Support](#7-warm-boot-support)
@@ -65,13 +66,14 @@
 # Revision
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
-| 0.1 | 06/24/2019  |  Mohanarajan Selvaraj| Initial version                   |
+| 0.1 | 06/24/2019  |  Mohanarajan Selvaraj| Initial version                 |
+| 1.0 | 05/02/2019  |  Mohanarajan Selvaraj| Updated KLISH support details   |
 
 
 # About this Manual
-This document provides general information about Broadcast, Unknown-unicast and unknown-Multicast storm-control feature implementation in SONiC.
+This document provides general information about broadcast, unknown-unicast and unknown-multicast storm-control feature implementation in SONiC.
 # Scope
-This document describes the functionality and high level design of Broadcast, Unknown-unicast and unknown-Multicast storm-control feature in SONiC. 
+This document describes the functionality and high level design of broadcast, unknown-unicast and unknown-multicast storm-control feature in SONiC. 
 
 
 
@@ -80,12 +82,12 @@ This document describes the functionality and high level design of Broadcast, Un
 ### Table 1: Abbreviations
 | Term   | Meaning                                                |
 |--------|--------------------------------------------------------|
-| BUM   | Broadcast Unknown-unicast and unknown-Multicast         |
+| BUM   | broadcast unknown-unicast and unknown-multicast         |
 
 
 # 1 Feature Overview
-A traffic storm occurs when packets flood the LAN, creating excessive traffic and degrading network performance. The type of traffic can be Broadcast, Unknown-unicast or unknown-Multicast (BUM). 
-The storm-control feature allows the user to limit the amount of BUM traffic admitted to the system. This can be achieved by configuring the type of storm (Broadcast or Unknown-unicast or unknown-Multicast) and the corresponding kilo bits per second (kbps) parameter on a given physical interface. Traffic that exceeds the configured rate will be dropped. 
+A traffic storm occurs when packets flood the LAN, creating excessive traffic and degrading network performance. The type of traffic can be broadcast, unknown-unicast or unknown-multicast (BUM). 
+The storm-control feature allows the user to limit the amount of BUM traffic admitted to the system. This can be achieved by configuring the type of storm (broadcast or unknown-unicast or unknown-multicast) and the corresponding kilo bits per second (kbps) parameter on a given physical interface. Traffic that exceeds the configured rate will be dropped. 
 Unknown-multicast traffic consists of all multicast traffic which donot match any of the statically configured or dynamically learned multicast groups. 
 
 
@@ -94,11 +96,11 @@ Unknown-multicast traffic consists of all multicast traffic which donot match an
 
 
 ### 1.1.1 Functional Requirements
- 1. Support configuration of Broadcast, Unknown-unicast and unknown-Multicast storm-control independently on physical interfaces.
+ 1. Support configuration of broadcast, unknown-unicast and unknown-multicast storm-control independently on physical interfaces.
  2. Support threshold rate configuration in kilo bits per second (kbps) in the range of 0 kbps to 100,000,000 kbps (100Gbps). 
 
 ### 1.1.2 Configuration and Management Requirements
-This feature will support Click CLI.
+This feature will support KLISH CLI.
  1. Support a CLI to add or delete broadcast, unknown-unicast and unknown-multicast storm-control on a physical interface as described in "Configuration Commands" section below. 
  2. Support show commands to display the storm-control configuration as described in "Show Commands" section below. 
  3. Support debug commands as described in "Debug Commands" section below.
@@ -145,7 +147,7 @@ Refer to section 1.1
 BUM storm control 
 - Configuration is not supported on VLAN and port-channel interfaces. User can configure on physical port which is part of a VLAN / port-channel.
 - Statistics is not supported. 
-- REST, gNMI and Klish CLI are not supported. 
+- REST, gNMI and Klish CLI are supported. 
  
 
 
@@ -175,10 +177,10 @@ A new table CFG_PORT_STORM_CONTROL_TABLE is introduced in the configuration data
 
     ;Store Storm Control configuration per physical port
     ;Status: work in progress
-    ;storm control type - broadcast / unknown-unicast / unknown-multicast
-    key     = CFG_PORT_STORM_CONTROL_TABLE:port:storm_control_type ; Ethernet Interface Name and storm control type
+    ;storm-control type - broadcast / unknown-unicast / unknown-multicast
+    key     = CFG_PORT_STORM_CONTROL_TABLE:port:storm_control_type ; Ethernet Interface Name and storm-control type
     ;field  = value
-    enabled = BIT          ; Is the storm control enabled (1) or disabled (0) on the interface 
+    enabled = BIT          ; Is the storm-control enabled (1) or disabled (0) on the interface 
     kbps     = 1*13 DIGIT   ; CIR value in kilo bits per second
          
 ### 3.2.2 APP_DB
@@ -213,7 +215,7 @@ Storm-control SAI interface APIs are already defined. The table below represents
 | CIR (bps)                | SAI_POLICER_ATTR_CIR                                   |
 | Unknown-unicast policer  | SAI_PORT_ATTR_FLOOD_STORM_CONTROL_POLICER_ID           |
 | Broadcast policer        | SAI_PORT_ATTR_BROADCAST_STORM_CONTROL_POLICER_ID       |
-| Unknown-Multicast policer| SAI_PORT_ATTR_MULTICAST_STORM_CONTROL_POLICER_ID       |
+| Unknown-multicast policer| SAI_PORT_ATTR_MULTICAST_STORM_CONTROL_POLICER_ID       |
 
 
 The BUM storm-control feature can be enabled on a physical port. 
@@ -230,94 +232,148 @@ The **set_port_attribute** SAI API is used to set the policer on an interface.
 
 ## 3.5 CLI
 ### 3.5.1 Data Models
-Configuration is supported using Click CLI commands.
+Configuration is supported using KLISH CLI commands.
 
 
 ### 3.5.2 Configuration Commands
 BUM storm-control can be configured only on physical interfaces.  
-**switch# config interface storm-control {broadcast | unknown-unicast | unknown-multicast} {add|del} \<interface_name\> {\<kilo_bits_per_second\>}**
+**sonic(conf-if-EthernetX)# storm-control {broadcast | unknown-unicast | unknown-multicast} {\<kbps-value\>}**
 
 
-#### 3.5.2.1 Enable Broadcast storm control on a physical interface
+#### 3.5.2.1 Enable broadcast storm-control on a physical interface
 This command configures broadcast storm-control on a physical interface. <br>
-**switch# config interface storm-control broadcast add \<interface_name\> {\<kilo_bits_per_second\>}**
+**sonic(conf-if-Ethernet0)# storm-control broadcast {\<kbps-value\>}**
 
 
-#### 3.5.2.1 Enable Unknown-unicast storm control on a physical interface
+#### 3.5.2.1 Enable unknown-unicast storm-control on a physical interface
 This command configures unknown-unicast storm-control on a physical interface. <br>
-**switch# config interface storm-control unknown-unicast add \<interface_name\> {\<kilo_bits_per_second\>}**
+**sonic(conf-if-Ethernet0)# storm-control unknown-unicast {\<kbps-value\>}**
 
 
-#### 3.5.2.1 Enable Multicast storm control on a physical interface
+#### 3.5.2.1 Enable multicast storm-control on a physical interface
 This command configures unknown-multicast storm-control on physical interface. <br>
-**switch# config interface storm-control unknown-multicast add \<interface_name\> {\<kilo_bits_per_second\>}**
+**sonic(conf-if-Ethernet0)# storm-control unknown-multicast {\<kbps-value\>}**
 
 
 ### 3.5.3 Show Commands
 The following show command displays storm-control configurations. 
 
-**show storm-control {all | interface \<interface_name\>}**
+**show storm-control [interface \<interface_name\>]**
 
 Following is a sample output
 
-**show storm-control all** <br>
+**show storm-control** <br>
 
-###### Table 3: show storm-control
-+------------------+-----------------+---------------+
-| Interface Name   | Storm Type      |   Rate (kbps) |
-+==================+=================+===============+
-| Ethernet0        | broadcast       |          1000 |
-+------------------+-----------------+---------------+
-| Ethernet0        | unknown-unicast |          2000 |
-+------------------+-----------------+---------------+
-| Ethernet2        | unknown-unicast |          5000 |
-+------------------+-----------------+---------------+
+```
+-----------------------------------------------------
+Interface Name      Storm-type          Rate (kbps)
+-----------------------------------------------------
+Ethernet0           broadcast           1000
+Ethernet0           unknown-unicast     2000
+Ethernet2           unknown-multicast   5000
 
+```
 
-**show storm-control interface Ethernet2** <br>
+**show storm-control interface Ethernet 2** <br>
 
-###### Table 4: show storm-control interface
-+------------------+-----------------+---------------+
-| Interface Name   | Storm Type      |   Rate (kbps) |
-+==================+=================+===============+
-| Ethernet2        | unknown-unicast |          5000 |
-+------------------+-----------------+---------------+
+```
+-----------------------------------------------------
+Interface Name      Storm-type          Rate (kbps)
+-----------------------------------------------------
+Ethernet2           unknown-multicast   5000
 
+```
 
 ###  3.5.4 Clear Commands
 Not applicable
 ### 3.5.5 Debug Commands
 Not applicable
- 
+
+### 3.5.6 Openconfig URI
+
+
+```
+
+To configure broadcast storm-control on Ethernet interface
+----------------------------------------------------------
+
+curl -X POST "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=BROADCAST/config" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-if-ethernet-ext:ifname\":\"Ethernet16\",\"openconfig-if-ethernet-ext:kbps\":1200}"
+
+To configure unknown-unicast storm-control on Ethernet interface
+----------------------------------------------------------------
+curl -X POST "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_UNICAST/config" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-if-ethernet-ext:ifname\":\"Ethernet20\",\"openconfig-if-ethernet-ext:kbps\":1200}"
+
+To configure unknown-multicast storm-control on Ethernet interface
+------------------------------------------------------------------
+curl -X POST "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_MULTICAST/config" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-if-ethernet-ext:ifname\":\"Ethernet20\",\"openconfig-if-ethernet-ext:kbps\":1200}"
+
+To modify broadcast storm-control on Ethernet interface
+-------------------------------------------------------
+curl -X PATCH "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=BROADCAST/config/kbps" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-if-ethernet-ext:kbps\":2000}"
+
+To modify unknown-unicast storm-control on Ethernet interface
+-------------------------------------------------------------
+curl -X PATCH "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_UNICAST/config/kbps" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-if-ethernet-ext:kbps\":2000}"
+
+To modify unknown-multicast storm-control on Ethernet interface
+---------------------------------------------------------------
+curl -X PATCH "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_MULTICAST/config/kbps" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-if-ethernet-ext:kbps\":2000}"
+
+To delete broadcast storm-control on Ethernet interface
+-------------------------------------------------------
+curl -X DELETE "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=BROADCAST/config/kbps" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+To delete unknown-unicast storm-control on Ethernet interface
+-------------------------------------------------------------
+curl -X DELETE "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_UNICAST/config/kbps" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+To delete unknown-multicast storm-control on Ethernet interface
+---------------------------------------------------------------
+curl -X DELETE "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet20/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_MULTICAST/config/kbps" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+To get broadcast storm-control on Ethernet interface
+----------------------------------------------------
+curl -X GET "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet16/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=BROADCAST/config/kbps" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+To get unknown-unicast storm-control on Ethernet interface
+----------------------------------------------------------
+curl -X GET "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet28/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_UNICAST/config/kbps" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+To get unknown-multicast storm-control on Ethernet interface
+----------------------------------------------------------
+curl -X GET "https://10.175.125.99:9090/restconf/data/openconfig-interfaces:interfaces/interface=Ethernet12/openconfig-if-ethernet:ethernet/openconfig-if-ethernet-ext:storm-control/storm-control-list=UNKNOWN_MULTICAST/config/kbps" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+```
+
 # 4 Flow Diagrams
-## 4.1 Enable storm control on physical interface
+## 4.1 Enable storm-control on physical interface
 
-![Storm Control](images/storm_control_enable_on_port.png "Figure 2: Enable storm control on physical interface")
-
-
-__Figure 2: Enable storm control on physical interface__
+![Storm Control](images/storm_control_enable_on_port.png "Figure 2: Enable storm-control on physical interface")
 
 
+__Figure 2: Enable storm-control on physical interface__
 
 
 
 
-## 4.2 Disable storm control on physical interface
 
 
-![Storm Control](images/storm_control_disable_on_port.png "Figure 3: Disable storm control on physical interface")
+## 4.2 Disable storm-control on physical interface
 
 
-__Figure 3: Disable storm control on physical interface__
+![Storm Control](images/storm_control_disable_on_port.png "Figure 3: Disable storm-control on physical interface")
 
 
-## 4.3 Update storm control on physical interface
+__Figure 3: Disable storm-control on physical interface__
 
 
-![Storm Control](images/storm_control_update_on_port.png "Figure 4: Update storm control on physical interface")
+## 4.3 Update storm-control on physical interface
 
 
-__Figure 4: Update storm control on physical interface__
+![Storm Control](images/storm_control_update_on_port.png "Figure 4: Update storm-control on physical interface")
+
+
+__Figure 4: Update storm-control on physical interface__
 
 
 # 5 Error Handling
@@ -394,24 +450,4 @@ Storm-control is a physical port parameter. Testing would be done by enabling st
         additional / invalid parameter error is displayed. 
     27. Verify that invalid parameter error is displayed when value of kbps is out of range or invalid.
     28. Verify that invalid parameter / input error is displayed when invalid input is provided for storm-control type.
-
-
-# 10 BRCM Internal Design Information
-Internal BRCM information to be removed before sharing with the community
-
-## 10.1 Chip support
-Functionality cannot be supported on Tomahawk 3 platform unless FP entry based approach is used. 
-when rate is configured as 0 kbps, traffic doesnot get rate-limited. Instead it gets forwarded at line rate. This behavior is ASIC specific.
-Minimum rate at which traffic gets forwarded is ~64kbps and is ASIC specific. 
-On Trident-3 platform, in VFI mode, when BUM storm-control is enabled on a port which is part of port-channel, traffic doesnot get rate-limited.
-
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE5Mjc1MzY4MzgsLTIwMzM1NDc2OTksMT
-E1MzAwMjgyMSwtMjc0MjE0MzkwLDEzNDcwNDAyOTIsMzk3Mjc0
-NTE4LDE1NDU0MTI4OTgsNjc5MzA2NzI2LC0xNTYwMzUxMzkyLD
-M0ODgxNjQwMywtNTcxMzQ2OTY5LC0zNjkzNDg4NTksMTQ4MDI5
-Mjg3MywtOTIxNjQ2ODQ3LC0xNjM3MDI3NDcxLC0xNzE0ODEzNT
-AxLC0zNDQxMjAxMDUsMTUwMTM4MzM2OCwtMTc4OTk5NzMxNiwx
-MDYyMDcwMjgyXX0=
--->
 
