@@ -2,7 +2,7 @@
 # Core file manager
 
 ## High Level Design Document
-**Rev 2.0**
+**Rev 2.1**
 
 ## Table of Contents
 
@@ -20,7 +20,12 @@
   * [Design](#design)
   *   [ Core-dump generation service](#core-dump-generation-service)
   *   [ Tech-support export service](#tech-support-export-service)
-* [CLI commands](#cli-commands)
+* [User Interface](#user-interface)
+  * [Data Models](#data-models)
+  * [Show Commands](#show-commands)
+  * [Configuration Commands](#configuration-commands)
+  * [REST API Support](#rest-api-support)
+* [Techsupport Export Services CLI commands](#techsupport-export-services-cli-commands)
 * [Serviceability and DEBUG](#serviceability-and-debug)
 * [Warm Boot Support](#warm-boot-support)
 * [Unit Test](#unit-test)
@@ -34,7 +39,8 @@
 Rev   |   Date   |  Author   | Change Description
 :---: | :-----:  | :------:  | :---------
 1.0   | 05/07/19 | Kalimuthu | Initial version
-2.0   | 03/08/19 | Rajendra  | Review Comments 
+2.0   | 08/03/19 | Rajendra  | Review Comments 
+2.1   | 05/17/20 | Rajendra  | Defined an openconfig yang model for systemd-coredump. Added KLISH CLI commands for coredump configuration
 
 
 # About this Manual
@@ -88,14 +94,14 @@ This document describes new mechanisms to manage the core files that are generat
 
 To configure the core dump and tech-support data, export to an external server and to view the core details the following config and show commands shall be supported. It is to be noted that the tech-support data always includes the core dumps generated on the system.
 
-### Config commands
+### Config commands requirements
 
 >1. Config command to enable/disable the coredump generation of processes.
 >2.  Config command to store the details of exporting tech-support data to an external server which includes remote server name, path, transfer protocol type and the user credentials.
 >2. Config command to enable/disable the tech-support export
 >3. Config command  to configure the tech-support export periodic interval.
 
-### Show commands
+### Show commands requirements
 > 1. Show commands to display the core file information
 > 2. show commands to display the tech-support export information.
  
@@ -111,15 +117,15 @@ There should be a limit on the size of the core file generated and the space occ
 
 The corefile management functionality is divided into two main services. 
 
-	1. Core-dump generation service.
-	2.  Tech-support data export service.
+1. Core-Dump Generation Service.
+2. Tech-support data export service.
 
 
-## Core-dump generation service
+## Core-Dump Generation Service
 
-1.  Core files are usually generated when process terminates unexpectedly. Typical conditions are access violations, termination signals (except SIGKILL), etc.,
-2.  ulimit configuration might prevent generation of core due to size configurations. We need to ensure this is not the case.
-3.  Service restart functions - will not generate the core dump as it handle the graceful stop and start. This includes docker service restart as well.
+1. Core files are usually generated when process terminates unexpectedly. Typical conditions are access violations, termination signals (except SIGKILL), etc.,
+2. ulimit configuration might prevent generation of core due to size configurations. We need to ensure this is not the case.
+3. Service restart functions - will not generate the core dump as it handle the graceful stop and start. This includes docker service restart as well.
 
 ## systemd-coredump
 
@@ -154,25 +160,7 @@ Current SONiC code has some basic support for generation and compression of core
 >-   Setting of “kernel/core_pattern” in “build_debian.sh” is removed as systemd-coredump sets this parameter.
 >-   A symlink /var/core is created to point to the systemd-coredump standard core file destination “var/lib/systemd/coredump”
 >-   “show techsupport” command is modified to capture the core files from the symlink “/var/core”. It is also modified to consider that core files are lz4 compressed instead of gz files.
- 
-## Configuration commands:
 
-For SONiC switches following CLI commands will be provided to manage core files
-
-#### show core [ config | info | list ]
-
->######  **\<config>** Show coredump configuration
->######  **\<info>** Show information about one or more coredumps
->######	 **\<list>** List available coredumps
-
-Display list of current core files available and their information. This is a wrapper command for the coredumpctl utility provided by systemd-coredump package.
-
-#### config core <enable|disable>
-
-Enable or disable coredump functionality. This configuration entry will be part of Config DB and thus can be stored as part of startup-configuration.
-
-When disabled, this command will set ProcessSizeMax=0 in the /etc/systemd/coredump.conf file. The configuration variable ProcessSizeMax specifies maximum size in bytes of a core which will be processed. By setting it to 0 core dump generation can be disabled. When enabled this command will set ProcessSizeMax to be the same value as ExternalSizeMax. The configuration variable ExternalSizeMax indicates the maximum (uncompressed) size in bytes of a core to be saved.
- 
 ## Core Dump Event Logging
 
 Report of available core files can be obtained using the coredumpctl utility.
@@ -224,8 +212,15 @@ When core file is generated for the same process multiple times, the framework s
 
 The archived core file is generated in a pre-defined format by the systemd-coredump tool.
 
-Format: core.<program-name>.<uid>.<boot-id>.<PID>.<timestamp>
-Examples:
+**Format:**
+
+```
+core.<program-name>.<uid>.<boot-id>.<PID>.<timestamp>
+```
+
+**Examples:**
+
+```
 	core.orchagent.0.8bc64adf67544e9e8b897cc5c1c9fde7.10618.1479890855000000000000.lz4  
 	core.orchagent.0.8bc64adf67544e9e8b897cc5c1c9fde7.11686.1479886973000000000000.lz4  
 	core.orchagent.0.8bc64adf67544e9e8b897cc5c1c9fde7.1748.1479887528000000000000.lz4  
@@ -235,6 +230,7 @@ Examples:
 	core.orchagent.0.8bc64adf67544e9e8b897cc5c1c9fde7.26069.1479889746000000000000.lz4  
 	core.orchagent.0.8bc64adf67544e9e8b897cc5c1c9fde7.31104.1479891410000000000000.lz4  
 	core.orchagent.0.8bc64adf67544e9e8b897cc5c1c9fde7.5952.1479889193000000000000.lz4
+```
   
 # Tech-support export service 
 
@@ -251,9 +247,23 @@ The export service is configured to monitors the coredump path for any new core 
 
 ### Config DB Schema
 
+#### Coredump Configuration
+
+The coredump administrative mode can be stored in the Config DB as defined below. By default, coredump is enabled and if the COREDUMP Config DB table entry is missing, coredump is
+assumed to be administratively enabled.
+
+```
+    "COREDUMP": {
+        "config": {
+            "enabled": "true"
+        }
+    }
+```
+
+#### Tech Support Services
 In order to export the tech support data, remote server details have to be configured on the device. Through CLI interface, external storage server can be configured which includes server IP, path and access information like user credentials and transport protocol. This information is stored as part of config DB.
 ,
->>
+```
     "EXPORT": {
         "export": {
             "config": "<enable/disable>",
@@ -266,10 +276,193 @@ In order to export the tech support data, remote server details have to be confi
            
         }
     },
+```
 
 While configuring the export service, the remote server password is encrypted with device universally unique identifier (UUID) and stored into the config DB, so that the password can be decrypted only on the device. The protocol fields specifies the one of the file transfer protocol either SCP or SFTP.  The interval field specifies the duration in which it captures the tech-support data and export it.
 
-## CLI commands
+## User Interface
+### Data Models
+
+Coredump configuration and status parameters are defined in the openconfig-systemd-coredump yang model. The openconfig-systemd-coredump yang model is included as an extension to the openconfig-system yang model.
+
+```
+     +--rw oc-sys-ext:systemd-coredump
+        +--rw oc-sys-ext:config
+        |  +--rw oc-sys-ext:enable?   boolean
+        +--ro oc-sys-ext:state
+        |  +--ro oc-sys-ext:enable?   boolean
+        +--ro oc-sys-ext:core-file-records
+           +--ro oc-sys-ext:core-file-record* [timestamp]
+              +--ro oc-sys-ext:timestamp    -> ../state/timestamp
+              +--ro oc-sys-ext:state
+                 +--ro oc-sys-ext:timestamp?            oc-types:timeticks64
+                 +--ro oc-sys-ext:executable?           string
+                 +--ro oc-sys-ext:core-file?            string
+                 +--ro oc-sys-ext:pid?                  uint64
+                 +--ro oc-sys-ext:uid?                  uint32
+                 +--ro oc-sys-ext:gid?                  uint32
+                 +--ro oc-sys-ext:signal?               uint32
+                 +--ro oc-sys-ext:command-line?         string
+                 +--ro oc-sys-ext:boot-identifier?      string
+                 +--ro oc-sys-ext:machine-identifier?   string
+                 +--ro oc-sys-ext:crash-message?        string
+                 +--ro oc-sys-ext:core-file-present?    boolean
+```
+
+
+### Show Commands
+
+The following CLI commands provide the ability to view the core files generated on the SONiC switch.
+
+#### show core config 
+**Description**
+
+Display the coredump configuration. Use this command to display if the coredump feature
+is administratively enabled or disabled.
+
+**Usage**
+
+```
+show core config
+```
+
+**Example**
+
+```
+sonic# show core config
+Coredump : Enabled
+```
+
+#####  show core list
+**Description**
+
+Use this command to list a summary of the core files generated by the kernel. The following information
+about each core file is also displayed.
+ - TIME The time of the crash, as reported by the kernel in UTC
+ - PID: The identifier of the process that crashed
+ - SIG: The signal that caused the process to crash, when applicable
+ - COREFILE: Indicates whether the captured core file exists on local disk or has been removed
+ - EXE: The application executable that has crashed
+
+**Usage**
+
+```
+show core list
+```
+
+**Example**
+
+```
+sonic# show core list
+        TIME               PID SIG COREFILE EXE
+2020-05-16 11:54:33      26480  11 present  clish
+2020-05-15 01:25:16       6195  11 present  crashme
+2020-05-15 00:45:28      13604  11 present  crashme
+2020-05-14 02:11:11       3197  11 present  crashme
+2020-05-13 01:10:56      17844  11 missing  crashme
+2020-05-13 01:10:55      17728  11 present  crashme
+```
+
+#####  show core info
+**Description**
+
+Use this command to display detailed information about a crash that has occured in the system. This command
+takes processid or executable name as input to search and display the corresponding crash information. If multiple
+core files are found which satisfy the match condition, information of all core files is displayed.
+
+The following information about matching core files is displayed:
+ - Time: The time of the crash, as reported by the kernel in UTC
+ - Executable: The full path to the application executable that has crashed"
+ - Core File: The file name of the application core dump of the executable that has crashed
+ - PID: The identifier of the process that crashed
+ - User ID: The user identifier of the process that crashed
+ - Group ID: The group identifier of the process that crashed
+ - Signal: The signal that caused the process to crash, when applicable
+ - Command Line: The command line arguments of the process that crashed
+ - Boot ID: The unique identifier of the local system that is generated and set on each system boot up event
+ - Machine ID: The unique machine identifier of the local system that is set during installation
+ - Core File Found: Indicates whether the captured core file exists on local disk or has been removed
+ - Crash Message: A copy of the application stack trace information of the process crashed
+
+
+**Usage**
+
+```
+show core info <pid | exe>
+```
+
+**Example**
+
+```
+sonic# show core info clish
+Time            : 2020-05-16 11:54:33
+Executable      : /usr/sbin/cli/clish
+Core File       : /var/lib/systemd/coredump/core.clish.1000.8f1cad11c59840318a6df3aa6ed3633e.26480.1589630073000000000000.lz4
+PID             : 26480
+User ID         : 1000
+Group ID        : 1000
+Signal          : 11
+Command Line    : /usr/sbin/cli/clish
+Boot ID         : 8f1cad11c59840318a6df3aa6ed3633e
+Machine ID      : fc0a437952314ee5a585a94ceaa480af
+Core File Found : present
+Crash Message   :
+Process 26480 (clish) of user 1000 dumped core.
+Stack trace of thread 152:
+#0  0x00007f30f516357a PyEval_EvalFrameEx (libpython2.7.so.1.0)
+#1  0x00007f30f52cc29c PyEval_EvalCodeEx (libpython2.7.so.1.0)
+#2  0x00007f30f5220670 n/a (libpython2.7.so.1.0)
+#3  0x00007f30f51b85c3 PyObject_Call (libpython2.7.so.1.0)
+#4  0x00007f30f52cb6c7 PyEval_CallObjectWithKeywords (libpython2.7.so.1.0)
+#5  0x00007f30ebb2f43a n/a (/usr/sbin/cli/.libs/clish_plugin_clish.so)
+```
+
+### Configuration commands:
+
+The following CLI commands provide the ability to confgure the systemd-coredump feature.
+
+#### config core <enable|disable>
+**Description**
+
+This command can be used to enable or disable the cability to generate a core file when an application crash is detected by the kernel.
+
+When disabled, this command will set ProcessSizeMax=0 in the /etc/systemd/coredump.conf file. The configuration variable ProcessSizeMax
+specifies maximum size in bytes of a core which will be processed. By setting it to 0 core dump generation can be disabled. When enabled
+this command will set ProcessSizeMax to be the same value as ExternalSizeMax.
+The configuration variable ExternalSizeMax indicates the maximum (uncompressed) size in bytes of a core to be saved.
+
+
+**Usage**
+
+```
+[no] core enable
+```
+
+**Example**
+```
+sonic# configure terminal
+sonic(config)# no core
+
+sonic(config)# core enable
+```
+
+### REST API Support
+
+The following REST URIs are supported to configure coredump and view the core file information.
+
+```
+PATCH "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:systemd-coredump/config" -d "{  \"openconfig-system-ext:config\": {\"enable\": true}}"
+
+PATCH "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:systemd-coredump/config" -d "{  \"openconfig-system-ext:config\": {\"enable\": false}}"
+
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:systemd-coredump/core-file-records"
+
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:systemd-coredump/config"
+
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:systemd-coredump/state"
+```
+
+## Techsupport Export Services CLI commands
     
 To enable the export feature:
     
