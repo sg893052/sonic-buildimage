@@ -1,4 +1,4 @@
-# CLI Guidelines
+# CLI guidelines
 This page includes the guidelines for creating CLI command pages.
 
 ## Command structure
@@ -8,7 +8,7 @@ All CLI commands should follow these guidelines:
 - Optional parameters must be preceeded by the word (Optional) in descriptions
 - Commands must include ranges and the default value (0 to 128; default 10)
 - Maximum parameters values are stated as (up to 32 characters; 9 characters minimum)
-- Underscores cannot be used for commands as they are reserved for command parameters, such as interface_name
+- Underscores cannot be used for commands as they are reserved for command parameters, such as `interface_name`
 - All command descriptions to follow sentence case (only capitalize the first word)
 - Always write in the first person (you can configure...)
 
