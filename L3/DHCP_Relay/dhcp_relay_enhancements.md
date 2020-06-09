@@ -1,7 +1,7 @@
 # Feature Name
 DHCP Relay Enhancements.
 # High Level Design Document
-#### Rev 0.3
+#### Rev 0.4
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -32,11 +32,13 @@ DHCP Relay Enhancements.
       * [3.1.2 Hop limit](#312-hop-limit)
       * [3.1.3 Source interface selection](#313-source-interface-sel)
       * [3.1.4 Relay over IPv6 next hops](#314-relay-over-ipv6-nexthop)
-      * [3.1.5 VRFs and route leaking](#315-vrf-route-leaking)  
+      * [3.1.5 VRF support](#315-vrf-support)  
         * [3.1.5.1 Sub-option 151](#3151-vrf-suboption-151)  
       * [3.1.6 Relay and VTEP](#316-relay-and-vtep)
       * [3.1.7 Relay and SAG](#317-relay-and-sag)
       * [3.1.8 Rate limiting](#318-rate-limiting)
+      * [3.1.9 IPv4 unnumbered support](#319-ipv4-unnumbered)
+      * [3.1.10 Handling DHCPv4 packets with relay agent options](#3110-handling-agent-options)
     * [3.2 DB Changes](#32-db-changes)
       * [3.2.1 CONFIG DB](#321-config-db)
       * [3.2.2 APP DB](#322-app-db)
@@ -76,6 +78,7 @@ DHCP Relay Enhancements.
 | 0.1 | 10/21/2019  |   Abhimanyu Devarapalli   | Initial version                   |
 | 0.2 | 12/2/2019   |   Abhimanyu Devarapalli   | Addressed few review comments.    |
 | 0.3 | 2/13/2020   |   Abhimanyu Devarapalli   | Added link-selection option, source interface selection, max hops, OC-Yang, KLISH CLI. |
+| 0.4 | 4/29/2020   |   Abhimanyu Devarapalli   | Added IPv4 unnumbered support, VRF support, options handling. |
 
 # About this Manual
 This document provides general information about the DHCP Relay Enhancements implemented in SONiC.
@@ -97,12 +100,10 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 ## 1.1 Requirements
 ### 1.1.1 Functional Requirements
 #### 1.1.1.1 New Functional Requirements
-1. Support DHCP Relay Option 82 Link selection sub-option - RFC 3527
-2. Support configuration of source interface for relayed packets.
-3. Support DHCP relay over RFC 5549 routes learned via BGP IPv6 link-local neighbors (BGP Unnumbered).
-4. Support DHCP clients and DHCP servers in different VRF domains.
-5. Support DHCP relay over VxLAN overlay tunnels.
-6. Support configuration of maximum number of relay hops.  
+1. Support relaying of DHCPv4 packets over IPv4 unnumbered interfaces.
+2. Support Virtual subnet selection (VSS) options 151/152 as per RFC 6607.
+3. Support relaying of DHCPv4/DHCPv6 packets when client and server are in different VRFs.
+
 
 #### 1.1.1.2 Existing Functional Requirements
 1. Support relaying of IPv4 DHCP packets.
@@ -113,17 +114,26 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 6. Support configuration of up to 4 relay addresses per L3 interface.
 7. Support configuration of relay addresses on Physical, VLAN, Port channel interfaces and Port channel interfaces in L3 MCLAG.
 8. Support DHCP Relay Statistics per interface.
+9. Support DHCP Relay Option 82 Link selection sub-option - RFC 3527
+10. Support configuration of source interface for relayed packets.
+11. Support DHCP relay over RFC 5549 routes learned via BGP IPv6 link-local neighbors (BGP Unnumbered).
+12. Support DHCP clients and DHCP servers in different VRF domains.
+13. Support DHCP relay over VxLAN overlay tunnels.
+14. Support configuration of maximum number of relay hops. 
 
 ### 1.1.2 Configuration and Management Requirements
 #### 1.1.2.1 New Configuration Requirements
-1. Support for OpenConfig YANG model - see [relay-agent.yang](https://github.com/openconfig/public/blob/master/release/models/relay-agent/openconfig-relay-agent.yang) for more details.
-2. Support for KLISH CLI commands using management framework.
+1. Provide configuration option to specify VRF in which the server resides.
+2. Provide configuration option to specify forwarding behavior  of DHCPv4 packets that already contain relay agent options.
+3. All configuration changes must be applied with out restarting the DHCP relay docker.
 
 #### 1.1.2.2 Existing Configuration Requirements
 1. Provide configuration and management commands using python Click module based framework.
 2. Provide per interface configuration command to add/delete DHCP relay addresses.
 3. Provide per interface show command to display the DHCP relay statistics.
 4. Provide a show command to display the configured relay addresses.
+5. Support for OpenConfig YANG model - see [relay-agent.yang](https://github.com/openconfig/public/blob/master/release/models/relay-agent/openconfig-relay-agent.yang) for more details.
+6. Support for KLISH CLI commands using management framework.
 
 ### 1.1.3 Scalability Requirements
 The maximum number of Relay addresses configurable per interface are 4. DHCP relay is qualified to handle up to 2000 DHCP clients.
@@ -202,7 +212,7 @@ config interface ip add Vlan100 10.1.1.1/24
 config interface ip dhcp_relay add Vlan100 55.55.55.1 -link-select=enable -src-intf=Loopback0
 ```
 
-For more details on MC-LAG configuration, please refer to [HLD](https://github.com/Azure/SONiC/blob/master/doc/mclag/Sonic-mclag-hld.md) document.
+For more details on MC-LAG configuration, refer to [HLD](https://github.com/Azure/SONiC/blob/master/doc/mclag/Sonic-mclag-hld.md) document.
 
 ## 2.2 Functional Description
 Generally, the DHCP packets are broadcast. These broadcast packets cannot be exchanged between DHCP server and client that are not in the same subnet. The DHCP Relay enables DHCP packets to be exchanged between the server and client that are not in the same subnet. The DHCP relay converts the broadcast packets to unicast and forwards them to DHCP server.
@@ -219,6 +229,7 @@ The IPv4 DHCP relay process is spawned with the below options supported by ISC-D
 |-a | Append an agent option field to each request before forwarding it to the server. Agent option fields in responses sent from servers to clients will be stripped before forwarding such responses back to the client. The agent option field contains two IDs: the Circuit ID sub-option and the Remote ID sub-option. The Circuit ID is set to the printable name of the interface on which the client request was received. The Remote ID is set to the MAC address of the interface. |
 |-U *ifname* | Enables the addition of a RFC 3527 compliant link selection suboption for clients directly connected to the relay. This RFC allows a relay to specify two different IP addresses: one for the server to use when communicating with the relay (giaddr) the other for choosing the subnet for the client (the suboption). This can be useful if the server is unable to send packets to the relay via the address used for the subnet. |
 |-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
+
 
 Below is a sample IPv4 DHCP Relay process command:
 ```
@@ -258,7 +269,7 @@ Please refer the [manual pages](https://kb.isc.org/docs/isc-dhcp-44-manual-pages
 ### 3.1.1 Option 82 Link-selection sub-option
 Typically, DHCP deployment involves a single routing domain between the client and server.  In such deployments, the 'giaddr' in relayed packet is used to identify the client subnet and also to communicate with the relay agent. In some networks, the client and server could be in different domains and may not be able to communicate directly. This is done to isolate the server from client attacks. In such scenarios, there is a need to differentiate the client subnet and the relay agent address ('giaddr').
 
-The link selection suboption provides a mechanism to explicitly specify the subnet on which the DHCP client resides, which is different from 'giaddr'. The relay agent adds the suboption to specify the client subnet and the DHCP server uses the sub-option value (instead of giaddr) to assign the DHCP lease. The relay agent also sets the 'giaddr' value to its own IP address which is reachable from DHCP server. Refer to RFC 3527 for more details. Note that the link-selection sub-option is intended for DHCPv4 clients only and is not applicable for DHCPv6 clients.
+The link selection suboption provides a mechanism to explicitly specify the subnet on which the DHCP client resides, which is different from 'giaddr'. The relay agent adds the suboption to specify the client subnet and the DHCP server uses the sub-option value (instead of giaddr) to assign the DHCP lease. The relay agent also sets the 'giaddr' value to its own IP address which is reachable from DHCP server. Refer to RFC 3527 for more details.  The link-selection sub-option is only added by the first relay agent, which implies 'giaddr' of incoming packet has to be NULL, else the sub-option is not added. Note that the link-selection sub-option is intended for DHCPv4 clients only and is not applicable for DHCPv6 clients.
 
 &nbsp;
 ![Figure3](./dhcp_link_selection.png "Figure3: DHCP Relay Option 82 Link selection sub-option")
@@ -299,8 +310,6 @@ Clients typically set the hop count field in the DHCP packet to 0. When forwardi
 config interface ip dhcp-relay max-hop-count add Vlan100 3
 ```
 
-Note that in case of IPv4, the relay discards any incoming DHCP packet received with relay agent option 82. The hop limit for IPv4 is applicable only for packets without relay agent option.
-
 ### 3.1.3 Source interface selection
 DHCP relay provides a source interface configuration option which specifies the source address to be used for relayed packets. If the source interface is not specified, the source IP address in the relayed packet is automatically determined by the routing stack based on the outgoing interface. The Linux kernel chooses the first address configured on the interface which falls in the same network as the destination address or nexthop router.
 
@@ -320,7 +329,7 @@ In Datacenter network deployments, shown below, the DHCP server is reachable via
 
 &nbsp;
 ![Figure4](./dhcp_bgp_unnumbered.png "Figure4: DHCP Relay over IPv6 link-local nexthops")
-__Figure3: DHCP Relay over IPv6 nexthops__
+__Figure4: DHCP Relay over IPv6 nexthops__
 1. DHCP client generates request.
 2. Relay agent on Leaf1 is configured to use source interface as Loopback0. Relay agent sets the `giaddr` and source IPv4 address to 103.103.103.103, and forwards the request to DHCP server (172.16.0.2) as per the BGP RFC 5549 route.  
 3. Leaf2 receives the relayed DHCP request from Spine1 and forwards it to the DHCP server which is directly connected. 
@@ -354,48 +363,66 @@ router bgp 100
 B>*  172.16.0.0/16 [200/0] via fe80::dac4:97ff:fe71:deb, Vlan400
 ```
 
-### 3.1.5 VRFs and route leaking
+### 3.1.5 VRF support
 
-DHCP relay agent supports forwarding of client requests to servers located in a different VRFs. For example, the client can be connected to an interface bound to default/global VRF, but the server is reachable via non-default/user VRF. To ensure reachability to server, a leaked route needs to be configured/learned in the default VRF.  The leaking of routes helps reach the destinations that are part of another VRF. A leaked route typically points to a next hop that is reachable over an interface that is part of another VRF. Likewise, to ensure reachability to client, a leaked route needs to be configured/learned in the non-default/user VRF. Route leaking can be achieved using static routes or via BGP route target import/export commands.
+DHCP relay agent supports forwarding of client requests to a server located in a different VRF. For example, the client can be connected to an interface bound to default/global VRF, and the server can reside in user VRF. Likewise, the client can reside in user VRF, and the server can reside in default VRF.
 
-For packets relayed from client to server, the leaked route is used to send the packet in server VRF. Due to Linux kernel limitation, the response from server must be sent to the one of the interfaces in the server VRF else the packet gets discarded. To work around that, link-selection option must be enabled with a source interface that belongs to server VRF, so that the response from server is received by the application.
+To support such deployments, DHCP relay provides a configuration option to specify the VRF name in which the DHCP server resides. If the VRF name is not specified, it is assumed that the DHCP server resides in default VRF. DHCP relay supports configuring multiple DHCP servers for a given client interface, and all these DHCP servers must reside in the same VRF. There can be only one server VRF specified per client/downstream interface. 
+
+Note that the client VRF is derived from the interface on which relay is configured.
 
 &nbsp;
 ![Figure5](./dhcp_relay_across_vrf.png "Figure5: DHCP Relay across VRFs")
 &nbsp;
-__Figure4: DHCP Relay with VRF route leaking__
+__Figure5: DHCP Relay with VRF__
 
 ```
-#Static leaked route in default VRF:
+#Configure Relay with server VRF
 
-sonic(config)# ip route 172.16.0.0/16 Ethernet1 nexthop-vrf VrfRed
-
-#Configure Relay with link-selection and source interface enabled
-
-# The source interface must belong to the server VRF
-config interface ip dhcp-relay add Ethernet0 172.16.0.2 -src-intf=Ethernet1 -link-select=enable
+config interface ip dhcp-relay add Ethernet0 172.16.0.1 -vrf-name=VrfRed
 ```
 
-#### 3.1.5.1 Sub-option 151
+As an alternate configuration, route leaking can be enabled in client VRF to ensure reachability to DHCP server residing in different VRF. This approach is not preferred/recommended due to overhead of adding leaked routes in each of the client VRFs and server VRF.
 
-In some VRF deployments, there is a need for the DHCP server to know the client's VRF, so that the address allocation can be done based on that VRF. In such scenarios, DHCP relay needs to include the sub-option 151 as defined in RFC 6607 to convey VRF information.
+#### 3.1.5.1 Sub-option 151/152
 
-The format of the sub-option 151 (Virtual subnet selection sub-option) added by the relay agent is shown below. The VRF name of the ingress interface on which DHCP request was received is inserted as sub-option 151.
+DHCP relay supports multiple clients on different VRFs, and these clients can also share the same/overlapping IP addresses. In such VRF deployments, there is a need for the DHCP server to know the client's VRF, so that the address allocation can be done based on that VRF. To convey VRF information, DHCP relay includes the sub-option 151 as defined in RFC 6607.
+
+The suboption 151 (Virtual subnet selection sub-option, type 0) carries the ASCII VRFNAME configured on the incoming interface to which the client is connected. If the incoming interface is in default VRF, the sub option is not added to the relayed packet. The format of the sub-option 151 added by the relay agent is shown below - only type 0 identifier is supported. This option is supported for both DHCPv4 and DHCPv6 clients.
 
 ```
  Suboption      Length     Type      Value
     151           7         0        ASCII VPN identifier (VRFNAME)
 ```
 
-To ensure interoperability, the sub-option 151 must be enabled only when DHCP server supports address allocation based on VRF.
+ The sub-option 152 is a control sub-option that is added along with 151, to check if the DHCP server supports these sub-options. If the DHCP server strips out sub-option 152 when sending the response to the relay, it indicates that the DHCP server has used the VRFNAME to allocate IP address. If the DHCP server returns sub-option 152 back, it indicates the DHCP server did not understand the sub-options sent by the relay.
+
+ To ensure interoperability, the sub-option 151 must be enabled only when DHCP server supports address allocation based on VRF. Some server may not recognize sub-option 151 and would still allocate lease in global/default VRF space. DHCP relay does not discard those replies from server.
+
+&nbsp;
+![Figure6](./dhcp_suboption_151.png "Figure6: DHCP Relay with suboption 151")
+&nbsp;
+__Figure6: DHCP Relay with suboption 151__
+
+```
+# Sample configuration for enabling suboption 151
+# Note that in the above setup, client subnets are identical on Vlan100 and Vlan200
+# Server uses the 151-VRFNAME to associate the request to different pools
+# Clients on Vlan100 and Vlan200 could get identical IP address leased out.
+
+config interface ip dhcp-relay add Vlan100 172.16.0.1 -vrf-name=VrfGreen -vrf-select=enable
+config interface ip dhcp-relay add Vlan200 172.16.0.1 -vrf-name=VrfGreen -vrf-select=enable
+```
 
 ### 3.1.6 Relay and VTEP
 
 DHCP relay can be configured in VXLAN BGP EVPN deployments to provide DHCP service to EVPN clients (VMs). Below diagram shows a typical deployment in VXLAN networks. Note that the client and server can be in same or different VRF domains.
 
 &nbsp;
-![Figure6](./dhcp_relay_vxlan.png "Figure6: DHCP Relay over VXLAN")
+![Figure7](./dhcp_relay_vxlan.png "Figure7: DHCP Relay over VXLAN")
 &nbsp;
+__Figure7: DHCP Relay with VXLAN overlay__
+
 
 * DHCP client is attached to VTEP1 on VLAN 10, which is bound to VrfRed.
 * DHCP relay is enabled on VTEP1 for VLAN 10.
@@ -501,8 +528,11 @@ Static Anycast Gateway (SAG) allows multiple switches to simultaneously route pa
 DHCP relay requires an IP address to identify the subnet of downstream/client-facing interface. If the client interface is enabled for SAG, the DHCP relay uses the SAG IPv4 address as the `giaddr`. If the associated SAG interface does not have any IP address assigned, the relay discards the packet.  Since identical SAG IP address is configured on Leaf switches, the response from server may land on a different leaf switch, and may not reach the leaf switch that relayed the DHCP packet. To avoid this, it is recommended to use link-selection option with source interface.
 
 &nbsp;
-![Figure7](./dhcp_relay_sag.png "Figure7: DHCP Relay with SAG")
+![Figure8](./dhcp_relay_sag.png "Figure8: DHCP Relay with SAG")
 &nbsp;
+
+__Figure8: DHCP Relay with SAG configuration__
+
 
 ```
 # Configure a virtual MAC address for SAG
@@ -537,23 +567,88 @@ In the above sample configuration for Leaf switch, the SAG gateway '192.168.0.1'
 
 The switch default forwarding behavior for DHCPv4 and DHCPv6 packets is to trap them to CPU. This is irrespective of whether DHCP relay is enabled. As part of switch initialization, the COPP rules are installed by SWSS. These COPP rules are part of SWSS docker and contain traps for DHCPv4 and DHCPv6 packets.
 
-Below is the default COPP configuration for DHCP packets. The default priority queue is COS Queue 2. The default rate limit is 6000 packets per second - packets exceeding these limit are dropped in hardware. Any changes to the COPP rules require restart of SWSS docker.
+The 'show copp config' command can be used to check the COS queue assignment for DHCP packets and associated rate limiting. Packets exceeding the rate limit are dropped. Please refer to SONIC Control Plane Policing HLD for more details.
 
 ```
-# /etc/swss/config.d/00-copp.config.json
+Below is the sample output of the 'show copp config' command displaying the DHCP trap actions and rate limting parameters.
 
- "COPP_TABLE:trap.group.ip2me.dhcp": {
-   "trap_ids": "ip2me,dhcp,dhcpv6",
-   "trap_action":"trap",
-   "trap_priority":"2",
-   "queue": "2",
-   "meter_type":"packets",
-   "mode":"sr_tcm",
-   "cir":"6000",
-   "cbs":"6000",
-   "red_action":"drop"
- }  
+root@sonic:/home/admin# show copp config
+{
+  "COPP_TABLE:trap.group.dhcp.icmp": {
+    "value": {
+      "cbs": "5000",
+      "cir": "5000",
+      "meter_type": "packets",
+      "mode": "sr_tcm",
+      "queue": "9",
+      "red_action": "drop",
+      "trap_action": "trap",
+      "trap_ids": "dhcp,dhcpv6,icmp,icmpv6",
+      "trap_priority": "3"
+    }
+  }
 ```
+
+### 3.1.9 IPv4 unnumbered support
+
+For point-to-point links, IPv4 unnumbered configuration enables L3 processing without assigning an explicit IPv4 address. The unnumbered interface borrows the IPv4 address of a "donor" interface that is already configured on the router. This approach saves network address space and simplifies the switch configuration. For more details on IPv4 unnumbered support and limitations, refer to HLD (L3/IPv4_Unnumbered/IPv4_Unnumbered_Interface.md).
+
+DHCP relay supports forwarding packets to server via an IPv4 Unnumbered interface with following limitations:
+
+* Only loopback interfaces are supported as donor interfaces
+* IPv4 unnumbered configuration is supported only on Ethernet and Portchannel interfaces.
+* IPv4 unnumbered configuration is supported only default VRF.
+
+Note that both ends of the link must be configured as unnumbered interfaces. Also note that the client facing dowstream interface MUST have an IPv4 address associated, it cannot be an IPv4 unnumbered interface, as the server needs to know the client subnet to assign the lease.
+
+
+![Figure9](./dhcp_ipv4_unnumbered.png "Figure9: DHCP Relay - IPv4 unnumbered")
+
+__Figure9: DHCP Relay with IPv4 unnumbered__
+
+In the above setup, IPv4 unnumbered is configured on Ethernet4 interface, which is a point-to-point link between relay and server. OSPFv2 is enabled on relay switch and server switch, and the loopback network addresses are advertised. The client subnet is also advertised via OSPFv2, so that the server can reply back to the relay switch. The 'giaddr' in the relayed packet is set to '192.168.0.1'. The source IPv4 address in the relayed packet is determined by the routing stack. 
+
+Link-selection can also be enabled in IPv4 unnumbered scenario - if the client subnet is not reachable from server. In that case, the 'giaddr' is set to the Loopback1 address '103.103.103.103'.
+
+```
+# Sample relay switch configuration
+
+# Configure IPv4 address on downstream client interface
+config interface ip add Ethernet0 192.168.0.1/24
+
+# Configure loopback interface and assign IPv4 address
+config loopback add Loopback1
+config interface ip add Loopback1 103.103.103.103/32
+
+# Configure IPv4 unnumbered on upstream server interface
+config interface ip unnumbered add Ethernet4 Loopback1
+
+# Enable DHCP relay on client interface
+config interface ip dhcp-relay add Ethernet0 55.55.55.55
+
+# FRR OSPF configuration on relay switch
+# Enable point-to-point OSPF on upstream interface
+# Advertise the loopback and client subnet
+# Similar configuration needed on server switch
+
+interface Ethernet4
+  ip ospf network point-to-point
+!
+router ospf
+  ospf router-id 103.103.103.103
+  network 192.168.0.0/24 area 0
+  network 103.103.103.103/32 area 0
+!
+```
+
+### 3.1.10 Handling DHCPv4 packets with relay agent options
+
+To support different network configurations, like cascading relays for example, the relay agent provides 3 different options to handle incoming DHCPv4 packets that already have relay agent options. 
+
+* `discard` - relay agent discards the incoming packet. This is the default behavior. 
+* `append` - relay agent appends its own set of relay options to the packet, leaving the incoming options intact. If the length of relay agent information exceeds the max limit of 255 bytes, the packet is discarded.
+* `replace` - relay agent removes the incoming options and adds its own set of options to the packet.
+
 
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
@@ -562,7 +657,11 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
 "INTERFACE": {
     "Ethernet24": {
         "dhcp_servers": ["31.1.0.2", "2.2.2.3", "11.19.0.144"],
-        "dhcpv6_servers": ["2001::2", "3366::1"]
+        "dhcp_server_vrf": "VrfRed",
+        "dhcp_relay_policy_action: "append",
+        "dhcpv6_servers": ["2001::2", "3366::1"],
+        "dhcpv6_server_vrf": "VrfBlue",
+        "dhcpv6_relay_vrf_select": "enable"
     }
 
 "VLAN": {
@@ -571,6 +670,9 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
             "dhcp_relay_max_hop_count": "10",
             "dhcp_relay_src_intf": "Loopback0",
             "dhcp_servers": ["1.2.0.1"],
+            "dhcp_server_vrf": "VrfRed",
+            "dhcp_relay_vrf_select": "enable",
+            "dhcp_relay_policy_action: "replace",
             "members": [
                 "Ethernet8"
             ],
@@ -597,6 +699,8 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
 10) "1.2.0.1"
 11) "dhcp_relay_src_intf"
 12) "Loopback0"
+13) "dhcp_relay_policy_action"
+14) "append"
 
 Schema looks like this:
 ; key                      = INTERFACE|interface
@@ -650,7 +754,7 @@ N/A
 ### 3.6.2 Click CLI
 #### 3.6.2.1 Configuration Commands
 
-**config interface ip dhcp-relay [add|remove] <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>  <-src-intf=> <-link-select=> <-max-hop-count=>**
+**config interface ip dhcp-relay [add|remove] <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>  <-vrf-name=> <-src-intf=> <-link-select=> <-vrf-select=> <-max-hop-count=>**
 - The above command adds or removes IPv4 DHCP Relay addresses on the given interface, and configures options on the interface.
 ```
 Usage:
@@ -659,8 +763,10 @@ config interface ip dhcp-relay [OPTIONS] COMMAND [ARGS]...
   Add or remove DHCP relay on an interface
 
 Options:
+  -vrf-name <VRFNAME>             VRF name in which server resides
   -src-intf <src_intf>            Set the source IP address to be used for relaying the DHCP packets
   -link-select <link_select>      Enable/Disable link selection option
+  -vrf-select <vrf_select>        Enable/Disable VRF selection option
   -max-hop-count <max_hop_count>  Set the maximum hop count for the DHCP packet
   -?, -h, --help                  Show this message and exit.
 
@@ -745,7 +851,45 @@ Options:
 
 ```
 
-**config interface ipv6 dhcp-relay [add|remove] <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4>**
+**config interface [ip|ipv6] dhcp-relay vrf-select [add|remove] <interface_name>**
+
+- The above command enables or disables VRF selection sub option 151/152 on the given interface. The sub option is disabled by default. If the interface belongs to default/global VRF, the sub option is not added to the relayed packet.
+
+```
+Usage: config interface ip dhcp-relay vrf-select add [OPTIONS]
+                                                      <interface_name>
+
+  Enable DHCP relay VRF selection suboption 151
+
+Options:
+  -?, -h, --help  Show this message and exit.
+
+Usage: config interface ip dhcp-relay vrf-select remove [OPTIONS]
+                                                         <interface_name>
+
+  Disable DHCP relay VRF selection suboption 151
+
+
+Options:
+  -?, -h, --help  Show this message and exit.
+
+```
+
+**config interface ip dhcp-relay policy-action [discard|append|replace] <interface_name>**
+
+- The above command controls handling of relay agent options on the given interface. The default is to discard incoming packet with agent options. This command is applicable for DHCPv4 packets only.
+
+```
+Usage: config interface ip dhcp-relay policy-action [discard|append|replace]                                                     <interface_name>
+
+  Configure the policy for handling of DHCPv4 relay options
+
+Options:
+  -?, -h, --help  Show this message and exit.
+
+```
+
+**config interface ipv6 dhcp-relay [add|remove] <interface_name> <ip_addr1> <ip_addr2> <ip_addr3> <ip_addr4> <-vrf-name=> <-vrf-select=>**
 - The above command adds or removes IPv6 DHCP Relay addresses on the given interface.
 ```
 Usage:
@@ -909,16 +1053,22 @@ Error: Invalid interface. DHCP servers are not configured on the interface Vlan2
 ```
 Sample output:
 # show ip dhcp-relay detailed Vlan200
-Server Address: 114.0.0.2
+Server Address: 114.0.0.2 
+Server VRF: VrfRed
 Source Interface: Vlan100
 Link Select: enable
+VRF Select: enable
 Max Hop Count: 12
+Policy Action: discard
 
 # show ip dhcp-relay detailed Vlan400
 Server Address: 114.0.0.2
+Server VRF: default
 Source Interface: Not Configured
 Link Select: disable
+VRF Select: disable
 Max Hop Count: 10
+Policy Action: append
 
 # show ip dhcp detailed Vlan100
 Usage: show ip dhcp detailed [OPTIONS] <interface_name>
@@ -927,7 +1077,9 @@ Error: Invalid interface. DHCP servers are not configured on the interface Vlan1
 
 # show ipv6 dhcp-relay detailed Vlan200
 Server Address: 1122::1
+Server VRF: VrfRed
 Source Interface: Not Configured
+VRF Select: disable
 Max Hop Count: 10
 
 ```
@@ -1016,7 +1168,7 @@ Get DHCP relay statistics on the given interface:
 
 For list of all REST APIS, go to "https://<switch_ip>/ui". The webserver provides information about all the REST URLs, REST Data, return codes and interactive support to execute REST queries.
 
-The following REST APIs are not supported.  For the detailed list of deviations and unsupported objects, please refer to extensions YANG model for DHCP relay. 
+The following REST APIs are not supported.  For the detailed list of deviations and unsupported objects, refer to extensions YANG model for DHCP relay. 
 
   * Enabling/Disabling relay agent globally for all interfaces
   * Configuration of Circuit ID and Remote ID
@@ -1029,7 +1181,6 @@ The following REST APIs are not supported.  For the detailed list of deviations 
     |  --extensions                          /* Extension YANGs */
     |    --openconfig-relay-agent-ext.yang   /* Deviations      */
 ```
-
 ## openconfig-relay-agent
 ```diff
   +--rw relay-agent
@@ -1047,9 +1198,15 @@ The following REST APIs are not supported.  For the detailed list of deviations 
      |     +--rw interface* [id]
      |        +--rw id                          -> ../config/id
      |        +--rw config
-     |        |  +--rw id?               oc-if:interface-id
-     |        |  +--rw helper-address*   inet:ip-address
--    |        |  +--rw enable?           boolean
+     |        |  +--rw id?                                 oc-if:interface-id
+     |        |  +--rw helper-address*                     inet:ip-address
++    |        |  +--rw oc-relay-ext:link-select?           enumeration
++    |        |  +--rw oc-relay-ext:src-intf?              string
++    |        |  +--rw oc-relay-ext:max-hop-count?         uint32
++    |        |  +--rw oc-relay-ext:server-vrf?            string
++    |        |  +--rw oc-relay-ext:relay-vrf-select?      enumeration
++    |        |  +--rw oc-relay-ext:relay-policy-action?   enumeration
+-    |        |  +--rw enable?                             boolean
      |        +--ro state
      |        |  +--ro id?               oc-if:interface-id
      |        |  +--ro helper-address*   inet:ip-address
@@ -1103,9 +1260,13 @@ The following REST APIs are not supported.  For the detailed list of deviations 
            +--rw interface* [id]
               +--rw id               -> ../config/id
               +--rw config
-              |  +--rw id?               oc-if:interface-id
-              |  +--rw helper-address*   inet:ipv6-address
--             |  +--rw enable?           boolean
+              |  +--rw id?                              oc-if:interface-id
+              |  +--rw helper-address*                  inet:ipv6-address
++             |  +--rw oc-relay-ext:src-intf?           string
++             |  +--rw oc-relay-ext:max-hop-count?      uint32
++             |  +--rw oc-relay-ext:server-vrf?         string
++             |  +--rw oc-relay-ext:relay-vrf-select?   enumeration
+-             |  +--rw enable?                          boolean
               +--ro state
               |  +--ro id?               oc-if:interface-id
               |  +--ro helper-address*   inet:ipv6-address
@@ -1128,21 +1289,21 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 -             |  +--ro enable?           boolean
               +--rw interface-ref
               |  +--rw config
-              |  |  +--rw interface?      -> /oc-if:interfaces/interface/name
+-             |  |  +--rw interface?      -> /oc-if:interfaces/interface/name
 -             |  |  +--rw subinterface?   -> /oc-if:interfaces/interface[oc-if:name=current()/../interface]/subinterfaces/subinterface/index
               |  +--ro state
-              |     +--ro interface?      -> /oc-if:interfaces/interface/name
 -             |     +--ro subinterface?   -> /oc-if:interfaces/interface[oc-if:name=current()/../interface]/subinterfaces/subinterface/index
+-             |     +--ro interface?      -> /oc-if:interfaces/interface/name
               +--rw options
                  +--rw config
-                 |  +--rw interface-id?          string
+-                |  +--rw interface-id?          string
 -                |  +--rw enable-interface-id?   boolean
 -                |  +--rw enable-remote-id?      boolean
 -                |  +--rw remote-id?             string
                  +--ro state
-                    +--ro interface-id?          string
 -                   +--ro sent-interface-id?     string
 -                   +--ro sent-remote-id?        string
+-                   +--ro interface-id?          string
 -                   +--ro enable-interface-id?   boolean
 -                   +--ro enable-remote-id?      boolean
 -                   +--ro remote-id?             string
@@ -1167,6 +1328,9 @@ sonic(conf-if-Ethernet0)# no ip dhcp-relay 11.0.0.1 12.0.0.1
 
 # If IP address is not specified, delete all helper addresses
 sonic(conf-if-Ethernet0)# no ip dhcp-relay
+
+# Specify server VRF optionally
+sonic(conf-if-Ethernet0)# ip dhcp-relay 11.0.0.1 vrf VrfRed
 ```
 
 The below command enables/disables source interface selection on the given interface.
@@ -1186,6 +1350,15 @@ sonic(conf-if-Vlan100)# ip dhcp-relay link-select
 sonic(conf-if-Vlan100)# no ip dhcp-relay link-select
 ```
 
+The below command enables/disables IPv4/IPv6 VRF-selection sub-option 151 on the given interface.
+
+```
+sonic(conf-if-Vlan100)# ip dhcp-relay vrf-select
+sonic(conf-if-Vlan100)# ipv6 dhcp-relay vrf-select
+sonic(conf-if-Vlan100)# no ip dhcp-relay vrf-select
+sonic(conf-if-Vlan100)# no ipv6 dhcp-relay vrf-select
+```
+
 The below command set/reset maximum hop limit on the given interface.
 
 ```
@@ -1194,6 +1367,13 @@ sonic(conf-if-Vlan100)# ip dhcp-relay max-hop-count 10
 
 # Reset the max hop count value to default on VLAN100
 sonic(conf-if-Vlan100)# no ip dhcp-relay max-hop-count
+```
+
+The below command controls handling of relay agent options on the given interface. The default is to discard incoming packet with agent options. This command is applicable for DHCPv4 packets only.
+
+```
+# Set the policy action for packets with relay agent option 
+sonic(conf-if-Vlan100)# ip dhcp-relay policy-action [discard|append|replace]
 ```
 
 **IPv6 commands:**
@@ -1213,6 +1393,9 @@ sonic(conf-if-Ethernet0)# no ipv6 dhcp-relay 1111::1 2222::2
 
 # If IP address is not specified, delete all helper addresses
 sonic(conf-if-Ethernet0)# no ipv6 dhcp-relay
+
+# Specify server VRF optionally
+sonic(conf-if-Ethernet0)# ipv6 dhcp-relay 1111::1 vrf VrfRed
 ```
 
 The below command enables/disables source interface selection on the given interface.
@@ -1276,10 +1459,12 @@ sonic# show ip dhcp-relay detailed Vlan100
 
 Relay Interface: Vlan100
 Server Address: 112.0.0.2
+Server VRF: VrfRed
 Source Interface: Loopback1
 Link Select: enable
+VRF Select: enable
 Max Hop Count: 10
-
+Policy Action: Discard
 ```
 **IPv6 commands:**
 
@@ -1322,7 +1507,9 @@ sonic# show ipv6 dhcp-relay detailed Vlan100
 
 Relay Interface: Vlan100
 Server Address: 2000::2
+Server VRF: VrfRed
 Source Interface: Not Configured
+VRF Select: enable
 Max Hop Count: 10
 
 ```
@@ -1353,9 +1540,15 @@ sonic# clear ipv6 dhcp-relay statistics Vlan100
 
 # 4 Flow Diagrams
 
-![Figure8](./dhcp_relay_flow_diagram.png "Figure8: DHCP Relay configuration Flow Diagram")
+The below flow diagram indicates the sequence of events involved when relay configuration is applied or when the DHCP relay docker is started/restarted.
 
-__Figure8: DHCP Relay configuration Flow Diagram__
+DHCP configuration manager (dhcpcfgmgr) monitors the CONFIG_DB for any changes to relay configuration. For incremental configuration changes, like max-hop-count, the manager sends a signal to corresponding DHCP relay process to apply the configuration. If the DHCP server address is added/modified/removed, the supervisor configuration is regenerated and the associated relay process is started/restarted/stopped accordingly. 
+
+In older implementation with out dhcpcfgmgr, some of the configuration changes would require DHCP docker restart to take affect. In current implementation, the dhcpcfgmgr handles the  process management using supervisorctl and applies incremental configuration using signal mechanism (avoiding the need to restart the entire docker). 
+
+![Figure10](./dhcp_relay_flow_diagram.png "Figure10: DHCP Relay configuration Flow Diagram")
+
+__Figure10: DHCP Relay configuration Flow Diagram__
 
 # 5 Error Handling
 N/A
@@ -1395,8 +1588,16 @@ Up to 4 DHCP relay addresses can be configured on each routing interface in the 
 23. Configure static IPv4 route to DHCP server address with IPv6 link-local nexthop. Verify that the agent relays the incoming packet to the DHCP server over the IPv6 underlay.
 24. Configure/Unconfigure IPv4/IPv6 DHCP relay address via REST API.
 25. Get IPv4/IPv6 DHCP relay address and statistics via REST API.
+26. Configure IPv4 DHCP relay with server reachable via IPv4 unnumbered interface. Verify that client requests are relayed to the DHCP server. 
+27. Verify DHCP relay with IPv4 unnumbered configuration on both Ethernet interfaces and Portchannel interfaces.
+28. Verify out of order configuration sequence, where DHCP relay is enabled first and then IPv4 unnumbered is configured.
+29. Enable link selection with IPv4 unnumbered configuration, and verify that relayed packet includes sub-option 5.
+30. With IPv4 unnumbered configuration, verify the relay forwards client requests after save/reload, config reload operations.
+31. Configure IPv4/IPv6 DHCP relay with server and client residing in different VRFs. Ensure client gets the DHCP lease.
+32. Enable option 151, and ensure the relay is appending client VRF name in the relayed packet to server.
+33. Verify that adding/modifying/deleting of DHCP server address on the interface does not restart the docker. Check 'uptime' of the docker using 'docker ps' command.
+34. Verify that the packets with agent option 82 are handled as per the configured policy action (discard/append/replace).
 
 # 10 Future enhancements
 
-1. Support DHCP relay over IPv4 unnumbered interfaces
 
