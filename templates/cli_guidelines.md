@@ -106,3 +106,4 @@ You must hyphenate these words in CLI commands and command descriptions.
 ## Non-hypenations
 These words are never hyphenated.
 - preempt
+- multicast
