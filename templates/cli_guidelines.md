@@ -6,42 +6,57 @@ All CLI commands should follow these guidelines:
 - Cisco NX-OS 8000 Series CLI structure
 - Command help descriptions must be parallel and start with a plural action such as configures, imports, clears, and so on
 - Command help text must follow acronym usage (below)
-- Optional parameters must be preceeded by the work (Optional) in descriptions
-- Commands must include ranges, for example, 0 to 128; default 10
+- Optional parameters must be preceeded by the word (Optional) in descriptions
+- Commands must include ranges and the default value (0 to 128; default 10)
+- Maximum parameters values are stated as (up to xyz characters)
+- Underscores cannot be used for commands as they are reserved for command parameters, such as interface_name
+- All command descriptions to follow sentence case (only capitalize the first word)
 
-### Acronyms
-These acronyms are used throughout the Enterprise SONiC Distributed by Dell Technologies documentation.
+### Acronym usage
+All acronyms must be spelled out on the first use, then used as the acronym moving forward. For example, access-control list (ACL). 
+
 |Acronym|Description|
 |-------|-----------|
-|AAA|Authentication, authorization, and accounting|
-|ACL|Access-control list|
-|BGP|Border gateway protocol|
+|AAA|authentication, authorization, and accounting|
+|ACL|access-control list|
+|BGP|border gateway protocol|
 |DDL|Dell digital locker|
-|DHCP|Dynamic host configuration protocol|
-|DNS|Domain name server|
-|FEC|Forward error detection|
-|FEFD| Far-end failure detection|
-|L2|Layer 2|
-|L3|Layer 3|
-|LACP|Link aggregation control protocol|
-|LLDP|Link layer discovery protocol|
-|MAC|Media access control|
-|MTU|Maximum transmission unit|
-|NOS|Network operating system|
-|NTP|Network time protocol|
-|OOB|Out-of-band|
-|POST|Power-on self-test|
-|PTP|Precision time protocol|
-|RMA|Return material authorization|
-|SNMP|Simple network management protocol|
-|STP|Spanning-tree protocol|
-|USB|Universal serial bus|
-|VLAN|Virtual local area network|
-|VxLAN|Virtual extensible local area network|
-|ZTD|Zero-touch deployment|
+|DHCP|dynamic host configuration protocol|
+|DNS|domain name server|
+|FEC|forward error detection|
+|FEFD|far-end failure detection|
+|L2|layer 2|
+|L3|layer 3|
+|LACP|link aggregation control protocol|
+|LLDP|link layer discovery protocol|
+|MAC|media access control|
+|MTU|maximum transmission unit|
+|NOS|network operating system|
+|NTP|network time protocol|
+|OOB|out-of-band|
+|POST|power-on self-test|
+|PMTU|path maximum transmission unit|
+|PTP|precision time protocol|
+|RMA|return material authorization|
+|RTT|round-trip time|
+|SNMP|simple network management protocol|
+|STP|spanning-tree protocol|
+|TTL|time-to-live
+|USB|universal serial bus|
+|VLAN|virtual local area network|
+|VRF|virtual routing and forwarding|
+|VxLAN|virtual extensible local area network|
+|ZTD|zero-touch deployment|
 
 ### Terminology
 |Usage|Description|
 |-------|-----------|
-|A.B.C.D|IPv4 dotted-decimal format|
 |`x:x:x:x::x`|IPv6 format|
+|A.B.C.D|IPv4 dotted-decimal format|
+
+### Hyphenation
+These words are always hyphenated.
+- access-control
+- next-hop
+- prefix-list
+
