@@ -1,7 +1,7 @@
-## CLI Guidelines
+# CLI Guidelines
 This page includes the guidelines for creating CLI command pages.
 
-### Command structure
+## Command structure
 All CLI commands should follow these guidelines:
 - Command help descriptions must be parallel and start with a plural action such as configures, imports, clears, and so on
 - Command help text must follow acronym usage (below)
@@ -12,7 +12,7 @@ All CLI commands should follow these guidelines:
 - All command descriptions to follow sentence case (only capitalize the first word)
 - Always write in the first person (you can configure...)
 
-### Acronym usage
+## Acronym usage
 All acronyms must be spelled out on the first use, then used as the acronym moving forward. For example, access-control list (ACL). 
 
 |Acronym|Description|
@@ -53,13 +53,13 @@ All acronyms must be spelled out on the first use, then used as the acronym movi
 |VxLAN|virtual extensible local area network|
 |ZTD|zero-touch deployment|
 
-### Terminology
+## Terminology
 |Usage|Description|
 |-------|-----------|
 |`x:x:x:x::x`|IPv6 format|
 |A.B.C.D|IPv4 dotted-decimal format|
 
-### Hyphenation
+## Hyphenation
 You must hyphenate these words in CLI commands and command descriptions.
 - access-control
 - access-list
