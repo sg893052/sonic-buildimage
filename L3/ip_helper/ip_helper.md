@@ -1,7 +1,7 @@
 # IP Helper in SONiC
 
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -60,6 +60,7 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:---------------------:|-----------------------------------|
 | 0.1 | 10/23/2019  | Kiran Kumar Kella     | Initial version                   |
+| 0.2 | 06/04/2020  | Sayed Saquib          | Add KliSH support information     |
 
 # About this Manual
 This document provides details on achieving IP Helper functionality in SONiC.
@@ -97,7 +98,7 @@ This document describes the high level design of IP Helper functionality.
 16. Support rate limiting of incoming UDP broadcast traffic.
 
 ### 1.1.2 Configuration and Management Requirements
-1. Provide configuration and management commands using Python Click framework CLI.
+1. Provide configuration and management commands using Python Click framework CLI and Unified KliSH framework CLI and REST URIs.
 2. Provide per interface configuration command to add/delete relay addresses.
 3. Provide global command to specify the UDP protocols to be relayed.
 4. Provide global command to specify the UDP broadcast trap rate to CPU.
@@ -270,7 +271,7 @@ No changes needed in SAI for this feature.
 N/A
 
 ### 3.4.2 Configuration Commands
-
+#### Using Python Click framework
 ```
 1. config interface ip helper_address add <interface-name> <ip-address> [-vrf <vrf-name]
 Add IP helper address on an interface.
@@ -292,6 +293,50 @@ Remove UDP port from the list of forwarding ports.
 
 7. config ip forward_protocol udp rate_limit <value-in-pps>
 Configure the UDP broadcast packet rate limiting value in the range 600 - 10000 pps. The default value is 600 pps.
+```
+#### Using unified KliSH framework
+```
+1. Add/Remove IP helper address on an interface.
+
+[no] ip helper-address [ vrf <vrf-name> ] <ip-address>
+
+example:
+sonic-cli(conf-if-Ethernet0)# ip address 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# ip address vrf Vrf-1 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# no ip address 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# no ip address vrf Vrf-1 192.168.1.254
+
+2. Enable/Disable UDP broadcast forwarding.
+
+[no] ip forward_protocol udp enable
+
+example:
+sonic-cli(config)# ip forward_protocol udp enable
+sonic-cli(config)# no ip forward_protocol udp enable
+
+3. Add UDP port to the list of forwarding ports.
+
+ip forward_protocol udp include {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | <port>}
+
+example:
+sonic-cli(config)# ip forward_protocol udp include ntp 
+sonic-cli(config)# ip forward_protocol udp include 540
+
+4. Remove UDP port from the list of forwarding ports.
+
+ip forward_protocol udp exclude {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | <port>}
+
+example:
+sonic-cli(config)# ip forward_protocol udp exclude dns
+sonic-cli(config)# ip forward_protocol udp exclude 541
+
+5. Configure the UDP broadcast packet rate limiting value in the range 600 - 10000 pps. The default value is 600 pps.
+
+[no] ip forwarding udp rate_limit <value-in-pps>
+
+example:
+sonic-cli(config)# ip forwarding udp rate_limit 1000
+sonic-cli(config)# no ip forwarding udp rate_limit
 ```
 
 ### 3.4.3 Show Commands
@@ -368,7 +413,7 @@ Ethernet28
   All ones broadcast packets received           : 50
   Net directed broadcast packets received       : 50
 ```
-```
+
 ### 3.4.4 Clear Commands
 
 ```
@@ -379,6 +424,88 @@ Use this command to clear the relay statistics on an interface.
 Use this command to clear the relay statistics on all the interfaces.
 ```
 
+### 3.4.5 REST APIs
+
+#### Global Parameters
+The REST URI for global parameters will available under the following subtree
+```
+/restconf/data/openconfig-ip-helper:ip-helper
+```
+#### IP Helper address
+The REST data model fo IP Helper addresses under interface will be available under following subtree
+```
+/restconf/data/openconfig-interfaces:interfaces/interface={name}/subinterfaces/subinterface={index}/openconfig-if-ip:ipv4/openconfig-interfaces-ext:ip-helper
+```
+#### Global Parameters data model
+```
+"openconfig-ip-helper:ip-helper":  {  
+	"config":  {  
+		"enable":  true,  
+		"incoming-rate-limit":  0,  
+		"include-ports":  [  0  ],
+		"exclude-default-ports": [ 0 ]  
+	},  
+	"state":  {  
+		"enable":  true,  
+		"incoming-rate-limit":  0,  
+		"include-ports":  [  0  ],  
+		"exclude-default-ports":  [  0  ], 
+		"default-ports":  [  0  ] 
+	}  
+}  
+```
+Note: read-only "default-ports" will contain the ports for which relay is active by default, as Openconfig does not support yang 1.1 which has support for default values for leaf-list.
+#### IP Helper address data model
+```
+"openconfig-interfaces-ext:ip-helper":  {  
+	"config":  {  
+		"helper-address":  [  "string"  ],  
+		"servers":  {  
+			"server":  [  
+				{  
+					"vrf":  "string",  
+					"ip":  "string"  
+				}  
+			]  
+		}  
+	},  
+	"state":  {  
+		"helper-address":  [  "string"  ],  
+		"servers":  {  
+			"server":  [  
+				{  
+					"vrf":  "string",  
+					"ip":  "string"  
+				}  
+			]  
+		},  
+		"counters":  {  
+			"received-packets":  0,  
+			"relayed-packets":  0,  
+			"dropped-packets":  0,  
+			"packets-with-invalid-ttl":  0,  
+			"broadcast-packets":  0,  
+			"net-broadcast-packets":  0  
+		}  
+	}  
+} 
+```
+#### Clear RPC
+```
+/restconf/operations/openconfig-ip-helper:clear-ip-helper-statistics
+```
+Input model:
+```
+"openconfig-ip-helper:input":  {  
+	"interface":  "string"  
+}
+```
+Output model:
+```
+"openconfig-ip-helper:output":  {  
+	"result":  "string"  
+}
+```
 # 4 Error Handling
 
 As there is no programming related to the IP Helper feature in the hardware, no hardware error handling is needed for this feature. Any error conditions while relaying the packets can be monitored from the statistics and the logs.
@@ -403,9 +530,18 @@ Up to 15 UDP ports (including default and custom ports) are allowed to be config
 4. Verify that the IP Helper addresses can be configured in a VRF routing domain.
 5. Verify that the clear statistics command is working as expected.
 6. Verify that all show commands are correctly formatted and show the correct information.
+7. Verify #1 to #6 with corresponding KLiSH command
    
 ## 8.2 Rest API Test Cases
-N/A
+1. Verify global parameters config/unconfig using REST
+2. Verify default ports configured correctly in backend with changes to config
+3. Verify helper address config/unconfig 
+4. Verify GET for global parameters
+5. Verify GET for interface helper address
+6. Verify GET for interface helper statistics
+7. Verify RPC for clear statistics
+8. Verify GET at all levels for all URIs
+9. Verify GET for corner cases; ie empty config etc
 
 ## 8.3 Functional Test Cases
 1. Enable global UDP forwarding and configure IP Helper address on an interface and verify relaying is working.
@@ -429,4 +565,4 @@ N/A
 
 # 9 Future support
 1. Support for per interface per helper address statistics.
-2. Support for REST/gNMI/IS-CLI UI interfaces.
+
