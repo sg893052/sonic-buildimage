@@ -303,10 +303,10 @@ No SAI changes required
 
 ## 3.6 User Interface
 ### 3.6.1 Data Models
-Openconfig YANG model is not available for UDLD, we are proposing the following openconfig extension for UDLD [OC-UDLD-EXT-YANG](openconfig-udld-ext.yang).
+OpenConfig YANG model is not available for UDLD, we are proposing the following openconfig extension for UDLD [OC-UDLD-EXT-YANG](openconfig-udld-ext.yang).
 KLISH CLIs continue to use SONIC YANG.[SONIC-UDLD-YANG](sonic-udld.yang)
 
-UDLD Openconfig YANG tree:
+UDLD OpenConfig YANG tree:
 ```
 module: openconfig-udld-ext
   +--rw udld
