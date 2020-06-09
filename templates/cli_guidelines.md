@@ -24,14 +24,17 @@ All acronyms must be spelled out on the first use, then used as the acronym movi
 |DF|don't fragment|
 |DHCP|dynamic host configuration protocol|
 |DNS|domain name server|
+|EEE|energy-efficient Ethernet|
 |FEC|forward error detection|
 |FEFD|far-end failure detection|
 |IGMP|Internet group management protocol|
+|L1|layer 1|
 |L2|layer 2|
 |L3|layer 3|
 |LACP|link aggregation control protocol|
 |LAG|link aggregation group|
 |LLDP|link layer discovery protocol|
+|LPI|low power idle|
 |MAC|media access control|
 |MTU|maximum transmission unit|
 |MLDP|multicast listener discovery protocol|
@@ -64,10 +67,17 @@ You must hyphenate these words in CLI commands and command descriptions.
 - access-control
 - access-list
 - as-path
+- auto-configuration
+- auto-negotiation
 - community-list
 - control-plane
+- destination-ip
+- destination-mac
+- destination-port
 - extcommunity-list
+- ingress-port
 - link-aggregation
+- load-balance/load-balancing
 - management-route
 - next-hop
 - node-id
@@ -80,6 +90,7 @@ You must hyphenate these words in CLI commands and command descriptions.
 - route-map
 - running-configuration
 - scale-profile
+- source-ip
 - spanning-tree
 - startup-configuration
 - system-qos
@@ -87,6 +98,7 @@ You must hyphenate these words in CLI commands and command descriptions.
 - trust-map
 - uplink-state-group
 - virtual-network
+- vlan-id
 - vrf-name
 - wred-profile
 
