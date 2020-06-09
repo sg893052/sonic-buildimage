@@ -5,7 +5,7 @@ This page includes the guidelines for creating CLI command pages.
 All CLI commands should follow these guidelines:
 - Cisco NX-OS 8000 Series CLI structure
 - Command help descriptions must be parallel and start with a plural action such as configures, imports, clears, and so on
-- Command help text must use acronyms (see
+- Command help text must use follow acronym usage (below)
 
 ### Acronyms
 These acronyms are used throughout the Enterprise SONiC Distributed by Dell Technologies documentation.
@@ -13,3 +13,5 @@ These acronyms are used throughout the Enterprise SONiC Distributed by Dell Tech
 |-------|-----------|
 |AAA|Authentication, authorization, and accounting|
 |ACL|Access-control list|
+
+### Hypenation
