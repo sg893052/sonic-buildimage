@@ -11,6 +11,7 @@ All CLI commands should follow these guidelines:
 - Underscores cannot be used for commands as they are reserved for command parameters, such as `interface_name`
 - All command descriptions to follow sentence case (only capitalize the first word)
 - Always write in the first person (you can configure...)
+- Show command descriptions always starts with the word displays (Displays the startup configuration)
 
 ## Acronym usage
 All acronyms must be spelled out on the first use, then used as the acronym moving forward. For example, access-control list (ACL). 
