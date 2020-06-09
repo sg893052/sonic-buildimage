@@ -44,4 +44,4 @@ These acronyms are used throughout the Enterprise SONiC Distributed by Dell Tech
 |Usage|Description|
 |-------|-----------|
 |A.B.C.D|IPv4 dotted-decimal format|
-|x:x:x:x::x|IPv6 format|
+|`x:x:x:x::x`|IPv6 format|
