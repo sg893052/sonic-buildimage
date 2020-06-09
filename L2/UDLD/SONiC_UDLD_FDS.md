@@ -23,11 +23,13 @@ UDLD - Uni-directional Link Detection Protocol
       * [Switch State Service Design](#switch-state-service-design)
           * [Orchestration Agent](#orchestration-agent)
       * [SAI](#sai)
-      * [CLI](#cli)
-          * [Configuration Commands](#configuration-commands)
-          * [Show Commands](#show-commands)
-          * [Debug Commands](#debug-commands)
-          * [Clear Commands](#clear-commands)
+      * [User Interface](#user-interface)
+          * [Data Models](#data-models)
+          * [CLI](#cli)
+              * [Configuration Commands](#configuration-commands)
+              * [Show Commands](#show-commands)
+              * [Debug Commands](#debug-commands)
+              * [Clear Commands](#clear-commands)
   * [Flow Diagrams](#flow-diagrams)
   * [Error Handling](#error-handling)
   * [Serviceability and Debug](#serviceability-and-debug)
@@ -301,7 +303,53 @@ No SAI changes required
 
 ## 3.6 User Interface
 ### 3.6.1 Data Models
-Openconfig YANG model is not available for UDLD, so custom SONIC YANG will be supported. YANG file is available here [UDLD-YANG](sonic-udld.yang)
+Openconfig YANG model is not available for UDLD, we are proposing the following openconfig extension for UDLD [OC-UDLD-EXT-YANG](openconfig-udld-ext.yang).
+KLISH CLIs continue to use SONIC YANG.[SONIC-UDLD-YANG](sonic-udld.yang)
+
+UDLD Openconfig YANG tree:
+```
+module: openconfig-udld-ext
+  +--rw udld
+     +--rw config
+     |  +--rw admin-enable?   boolean
+     |  +--rw aggressive?     boolean
+     |  +--rw msg-time?       uint8
+     |  +--rw multiplier?     uint8
+     +--ro state
+     |  +--ro admin-enable?   boolean
+     |  +--ro aggressive?     boolean
+     |  +--ro msg-time?       uint8
+     |  +--ro multiplier?     uint8
+     +--rw interfaces
+        +--rw interface* [name]
+           +--rw name      -> ../config/name
+           +--rw config
+           |  +--rw name?           oc-if:base-interface-ref
+           |  +--rw admin-enable?   boolean
+           |  +--rw aggressive?     boolean
+           +--ro state
+              +--ro name?             oc-if:base-interface-ref
+              +--ro admin-enable?     boolean
+              +--ro aggressive?       boolean
+              +--ro local-info
+              |  +--ro device-id?     string
+              |  +--ro device-name?   string
+              |  +--ro status?        identityref
+              +--ro neighbors-info
+              |  +--ro neighbor* [ifname index]
+              |     +--ro ifname         oc-if:base-interface-ref
+              |     +--ro index          uint16
+              |     +--ro device-id?     string
+              |     +--ro device-name?   string
+              |     +--ro status?        identityref
+              |     +--ro port-id?            string
+              |     +--ro msg-time?           uint8
+              |     +--ro timeout-interval?   uint8
+              +--ro counters
+                 +--ro frame-out?        yang:counter64
+                 +--ro frame-in?         yang:counter64
+                 +--ro frame-error-in?   yang:counter64
+```
 
 ### 3.6.2 CLI
 
@@ -518,7 +566,17 @@ Note: This command is available as part of CLICK CLI only
 
 ### 3.6.3 REST API Support
 
-REST APIs is supported in this release
+All REST operations are supported.
+Below listed are some of the supported REST URI's.
+
+```
+<REST-SERVER:PORT>/restconf/data/openconfig-udld-ext:udld
+<REST-SERVER:PORT>/restconf/data/openconfig-udld-ext:udld/config/admin-enable
+<REST-SERVER:PORT>/restconf/data/openconfig-udld-ext:udld/config/aggressive
+<REST-SERVER:PORT>/restconf/data/openconfig-udld-ext:udld/interfaces/interface=Ethernet0
+<REST-SERVER:PORT>/restconf/data/openconfig-udld-ext:udld/interfaces/interface=Ethernet0/config/admin-enable
+<REST-SERVER:PORT>/restconf/data/openconfig-udld-ext:udld/interfaces/interface=Ethernet0/config/aggressive
+```
 
 # 4 Flow Diagrams
 
