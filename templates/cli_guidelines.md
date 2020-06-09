@@ -10,6 +10,7 @@ All CLI commands should follow these guidelines:
 - Maximum parameters values are stated as (up to 32 characters; 9 characters minimum)
 - Underscores cannot be used for commands as they are reserved for command parameters, such as interface_name
 - All command descriptions to follow sentence case (only capitalize the first word)
+- Always write in the first person (you can configure...)
 
 ### Acronym usage
 All acronyms must be spelled out on the first use, then used as the acronym moving forward. For example, access-control list (ACL). 
@@ -25,13 +26,15 @@ All acronyms must be spelled out on the first use, then used as the acronym movi
 |DNS|domain name server|
 |FEC|forward error detection|
 |FEFD|far-end failure detection|
-|IGMP|
+|IGMP|Internet group management protocol|
 |L2|layer 2|
 |L3|layer 3|
 |LACP|link aggregation control protocol|
+|LAG|link aggregation group|
 |LLDP|link layer discovery protocol|
 |MAC|media access control|
 |MTU|maximum transmission unit|
+|MLDP|multicast listener discovery protocol|
 |NOS|network operating system|
 |NTP|network time protocol|
 |OOB|out-of-band|
@@ -64,16 +67,19 @@ You must hyphenate these words in CLI commands and command descriptions.
 - community-list
 - control-plane
 - extcommunity-list
+- link-aggregation
 - management-route
 - next-hop
 - node-id
 - password-attributes
 - policy-map
+- port-channel
 - prefix-list
 - qos-map
 - radius-server
 - route-map
 - running-configuration
+- scale-profile
 - spanning-tree
 - startup-configuration
 - system-qos
@@ -83,3 +89,7 @@ You must hyphenate these words in CLI commands and command descriptions.
 - virtual-network
 - vrf-name
 - wred-profile
+
+## Non-hypenations
+These words are never hyphenated.
+- preempt
