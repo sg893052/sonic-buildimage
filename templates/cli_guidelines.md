@@ -13,6 +13,121 @@ All CLI commands should follow these guidelines:
 - Always write in the first person (you can configure...)
 - Show command descriptions always starts with the word displays (Displays the startup configuration)
 
+## Hyphenation usage
+You must hyphenate these words in CLI commands and command descriptions.
+- access-control
+- access-list
+- access-path
+- agent-id
+- aging-interval
+- announce-timeout
+- anycast-gateway
+- as-path
+- auth-type
+- auto-breakout
+- auto-configuration
+- auto-negotiation
+- community-list
+- control-plane
+- dhcp-relay
+- dial-in
+- edge-port
+- egress-port
+- equal-cost
+- extcommunity-list
+- forward-protocol
+- helper-address
+- high-power
+- import-check
+- in-band
+- ingress-port
+- interface-level
+- keepalive-interval
+- link-aggregation
+- link-bundle
+- link-type
+- load-balance/load-balancing
+- local-preference
+- low-power
+- mac-address
+- management-route
+- master-table
+- max-age
+- maximum-paths
+- maximum-prefix
+- message-time
+- mirror-session
+- multi-chassis
+- multi-path
+- network-transport
+- next-hop
+- num-dumps
+- override-capability
+- password-attributes
+- persistent-watermark
+- policy-based
+- policy-map
+- polling-interval
+- port-channel
+- port-priority
+- prefix-list
+- priority-group
+- qos-map
+- radius-server
+- rate-limit
+- read-quanta
+- remote-as
+- round-trip
+- route-map
+- route-reflector
+- running-configuration
+- sample-rate
+- scale-profile
+- self-originate
+- service-policy
+- source-ip
+- source-protocol
+- spanning-tree
+- startup-configuration
+- system-level
+- system-qos
+- tacacs-server
+- tcp-timeout
+- trust-map
+- udp-timeout
+- unsuppress-map
+- update-delay
+- update-source
+- uplink-state-group
+- virtual-network
+- vlan-id
+- vrf-name
+- warm-restart
+- wred-profile
+- write-quanta
+- zero-touch
+
+## Non-hypenated usage
+These words are never hyphenated.
+- multicast
+- preempt
+- unidirectional
+
+## Parameter usage
+Parameters to indicate if the option is required or optional, and appear in italics. Underscores are reserved for command parameters.
+- _destination_ip_
+- _destination_mac_
+- _destination_port_
+- _domain_id_
+- _interface_name_
+- _loopback_id_
+- _portchannel_id_
+- _rx_power_
+- _source_ip_
+- _tx_power_
+- _vlan_id_
+- _vrf_name_
+
 ## Acronym usage
 All acronyms must be spelled out on the first use, then used as the acronym moving forward. For example, access-control list (ACL). 
 
@@ -71,81 +186,3 @@ All acronyms must be spelled out on the first use, then used as the acronym movi
 |VRRP|virtual router redundancy protocol|
 |VxLAN|virtual extensible local area network|
 |ZTD|zero-touch deployment|
-
-## Terminology
-|Usage|Description|
-|-------|-----------|
-|`x:x:x:x::x`|IPv6 format|
-|`A.B.C.D`|IPv4 dotted-decimal format|
-
-## Hyphenation
-You must hyphenate these words in CLI commands and command descriptions.
-- access-control
-- access-list
-- as-path
-- auto-breakout
-- auto-configuration
-- auto-negotiation
-- community-list
-- control-plane
-- dial-in
-- egress-port
-- equal-cost
-- extcommunity-list
-- high-power
-- in-band
-- ingress-port
-- interface-level
-- link-aggregation
-- link-bundle
-- load-balance/load-balancing
-- low-power
-- management-route
-- multi-chassis
-- multi-path
-- next-hop
-- password-attributes
-- policy-based
-- policy-map
-- port-channel
-- prefix-list
-- qos-map
-- radius-server
-- round-trip
-- route-map
-- running-configuration
-- scale-profile
-- source-ip
-- spanning-tree
-- startup-configuration
-- system-level
-- system-qos
-- tacacs-server
-- trust-map
-- uplink-state-group
-- virtual-network
-- vlan-id
-- vrf-name
-- wred-profile
-- zero-touch
-
-## Non-hypenations
-These words are never hyphenated.
-- multicast
-- preempt
-- unidirectional
-
-## Parameter usage
-Underscores are reserved for command parameters.
-- destination_ip
-- destination_mac
-- destination_port
-- domain_id
-- interface_name
-- loopback_id
-- portchannel_id
-- rx_power
-- source_ip
-- tx_power
-- vlan_id
-- vrf_name
