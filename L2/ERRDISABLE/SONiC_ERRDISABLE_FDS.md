@@ -198,6 +198,7 @@ Use the no form of this command to reset the recovery time to default value.
 
 **Command Mode**: Global Config
 
+**Example**: errdisable recovery interval 120
 
 ### 3.6.2.1.1.2 ERRDISABLE Recovery Cause
 This command allows to enable ERRDISABLE recovery for a specific cause.
@@ -210,13 +211,15 @@ Use the no form of this command to disable ERRDISABLE recovery for a specific ca
 
 **Syntax Description:**
 
-| Keyword                                           | Description             |
-| ------------------------------------------------- | ----------------------- |
-| errdisable recovery cause {udld}                  | Enable aggressive UDLD mode |
+| Keyword                       | Description             |
+| ----------------------------- | ----------------------- |
+| cause {udld/bpduguard}        | Configure ERRDISABLE recovery for UDLD/BPDUGUARD |
 
 **Default**: Disabled
 
 **Command Mode**: Global Config
+
+**Example**: errdisable recovery cause udld
 
 ### 3.6.2.2 Show Commands
 
