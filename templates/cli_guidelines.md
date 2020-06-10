@@ -20,40 +20,55 @@ All acronyms must be spelled out on the first use, then used as the acronym movi
 |-------|-----------|
 |AAA|authentication, authorization, and accounting|
 |ACL|access-control list|
+|ARP|address resolution protocol|
+|BFD|bidirectional forwarding detection|
 |BGP|border gateway protocol|
-|DDL|Dell digital locker|
-|DF|don't fragment|
+|CoPP|control plane policing|
 |DHCP|dynamic host configuration protocol|
 |DNS|domain name server|
+|DOM|digital optical monitoring|
+|ECMP|equal-cost multi-path
+|ECN|explicit congestion notification|
 |EEE|energy-efficient Ethernet|
+|FCoE|fibre channel over Ethernet|
 |FEC|forward error detection|
 |FEFD|far-end failure detection|
+|FIPS|FCoE initialization protocol snooping|
+|IFA|in-band flow analyzer|
 |IGMP|Internet group management protocol|
-|L1|layer 1|
-|L2|layer 2|
-|L3|layer 3|
 |LACP|link aggregation control protocol|
 |LAG|link aggregation group|
 |LLDP|link layer discovery protocol|
-|LPI|low power idle|
+|LPI|low-power idle|
 |MAC|media access control|
-|MTU|maximum transmission unit|
+|MCLAG|multi-chassis link aggregation group|
 |MLDP|multicast listener discovery protocol|
+|MTU|maximum transmission unit|
+|NAT|network address translation|
+|NDP|network discovery protocol|
 |NOS|network operating system|
 |NTP|network time protocol|
 |OOB|out-of-band|
-|POST|power-on self-test|
+|OSPF|open shortest path first|
+|OTM|object tracking manager|
+|PBR|policy-based routing|
+|PIM|protocol independent multicast|
 |PMTU|path maximum transmission unit|
 |PTP|precision time protocol|
 |QoS|quality of service|
-|RMA|return material authorization|
+|RADIUS|remote authentication dial-in user service|
 |RTT|round-trip time|
 |SNMP|simple network management protocol|
 |STP|spanning-tree protocol|
-|TTL|time-to-live
+|TACACS|terminal access controller access-control system|
+|TTL|time-to-live|
+|UDLD|unidirectional link detection|
+|UFD|uplink failure detection|
+|UFT|unified forwarding table|
 |USB|universal serial bus|
 |VLAN|virtual local area network|
 |VRF|virtual routing and forwarding|
+|VRRP|virtual router redundancy protocol|
 |VxLAN|virtual extensible local area network|
 |ZTD|zero-touch deployment|
 
@@ -61,39 +76,49 @@ All acronyms must be spelled out on the first use, then used as the acronym movi
 |Usage|Description|
 |-------|-----------|
 |`x:x:x:x::x`|IPv6 format|
-|A.B.C.D|IPv4 dotted-decimal format|
+|`A.B.C.D`|IPv4 dotted-decimal format|
 
 ## Hyphenation
 You must hyphenate these words in CLI commands and command descriptions.
 - access-control
 - access-list
 - as-path
+- auto-breakout
 - auto-configuration
 - auto-negotiation
 - community-list
 - control-plane
-- destination-ip
-- destination-mac
-- destination-port
+- dial-in
+- egress-port
+- equal-cost
 - extcommunity-list
+- high-power
+- in-band
 - ingress-port
+- interface-level
 - link-aggregation
+- link-bundle
 - load-balance/load-balancing
+- low-power
 - management-route
+- multi-chassis
+- multi-path
 - next-hop
-- node-id
 - password-attributes
+- policy-based
 - policy-map
 - port-channel
 - prefix-list
 - qos-map
 - radius-server
+- round-trip
 - route-map
 - running-configuration
 - scale-profile
 - source-ip
 - spanning-tree
 - startup-configuration
+- system-level
 - system-qos
 - tacacs-server
 - trust-map
@@ -102,8 +127,25 @@ You must hyphenate these words in CLI commands and command descriptions.
 - vlan-id
 - vrf-name
 - wred-profile
+- zero-touch
 
 ## Non-hypenations
 These words are never hyphenated.
-- preempt
 - multicast
+- preempt
+- unidirectional
+
+## Parameter usage
+Underscores are reserved for command parameters.
+- destination_ip
+- destination_mac
+- destination_port
+- domain_id
+- interface_name
+- loopback_id
+- portchannel_id
+- rx_power
+- source_ip
+- tx_power
+- vlan_id
+- vrf_name
