@@ -3,6 +3,7 @@ This page includes the guidelines for creating CLI command pages.
 
 ## Command structure
 All CLI commands should follow these guidelines:
+- Commands including parameters (options) must be in lowercase
 - Command help descriptions must be parallel and start with a plural action such as configures, imports, clears, and so on
 - Command help text must follow acronym usage (below)
 - Optional parameters must be preceeded by the word (Optional) in descriptions
@@ -18,6 +19,7 @@ You must hyphenate these words in CLI commands and command descriptions.
 - access-control
 - access-list
 - access-path
+- advertised-routes
 - agent-id
 - aging-interval
 - announce-timeout
@@ -35,6 +37,7 @@ You must hyphenate these words in CLI commands and command descriptions.
 - egress-port
 - equal-cost
 - extcommunity-list
+- fiber-optic
 - forward-protocol
 - helper-address
 - high-power
@@ -53,12 +56,14 @@ You must hyphenate these words in CLI commands and command descriptions.
 - management-route
 - master-table
 - max-age
+- max-hop
 - maximum-paths
 - maximum-prefix
 - message-time
 - mirror-session
 - multi-chassis
 - multi-path
+- naming-mode
 - network-transport
 - next-hop
 - num-dumps
@@ -115,17 +120,42 @@ These words are never hyphenated.
 
 ## Parameter usage
 Parameters to indicate if the option is required or optional, and appear in italics. Underscores are reserved for command parameters.
-- _destination_ip_
-- _destination_mac_
-- _destination_port_
+- _acl_name_
+- _dest_ip_
+- _dest_mac_
+- _dest_name_
+- _dest_port_
+- _dev_name_
 - _domain_id_
+- _ether_type
 - _interface_name_
+- _ip_address_
+- _ipv4_address_
+- _ipv6_address_
+- _interval_
 - _loopback_id_
+- _next-hop_ip_
+- _pass_key_
 - _portchannel_id_
+- _portchannel_name_
+- _port_number_
+- _prefix/mask_
+- _priority_value_
+- _rule_name_
 - _rx_power_
+- _session_name_
 - _source_ip_
+- _source_mac_
+- _table_name_
+- _tcp_flag_
+- _threshold_min_
+- _threshold_max_
+- _threshold_value_
+- _timeout_value_
+- _track_interface_
 - _tx_power_
 - _vlan_id_
+- _vr_id_
 - _vrf_name_
 
 ## Acronym usage
