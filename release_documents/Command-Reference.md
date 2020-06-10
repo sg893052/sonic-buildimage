@@ -5067,13 +5067,15 @@ This command displays portgroup information of current platform. It displays eac
   For platform does have portgroup
   ```
   admin@sonic:~$ show portgroup
-    portgroup          ports      valid speeds
-  -----------  -------------  ----------------
-            1   Ethernet0-11  25000,10000,1000
-            2  Ethernet12-23  25000,10000,1000
-            3  Ethernet24-35  25000,10000,1000
-            4  Ethernet36-47  25000,10000,1000
+    portgroup          ports          valid speeds
+  -----------  -------------  --------------------
+            1   Ethernet0-11  25000, [10000, 1000]
+            2  Ethernet12-23  25000, [10000, 1000]
+            3  Ethernet24-35  25000, [10000, 1000]
+            4  Ethernet36-47  25000, [10000, 1000]
   ```
+  25000, [10000, 1000] means that port group support 25000, 10000 and 1000 speeds.
+  [10000, 1000] means individual ports within that portgroup can change speed between 10000/1000 using 'config interface speed' command.
 
 **portgroup config commands
 This command configures portgroup speed.
