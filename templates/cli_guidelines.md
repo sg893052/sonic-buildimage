@@ -3,9 +3,11 @@ This page includes the guidelines for creating CLI command pages.
 
 ## Command structure
 All CLI commands should follow these guidelines:
+- Commands to follow NX-OS standards when possible
 - Commands including parameters (options) must be in lowercase
 - Command help descriptions must be parallel and start with a plural action such as configures, imports, clears, and so on
-- Command help text must follow acronym usage (below)
+- Acronyms within command help must be in all uppercase (see below)
+- Avoid using hence, notwithstanding, therefore, and in order to (write simply and concise)
 - Optional parameters must be preceeded by the word (Optional) in descriptions
 - Commands must include ranges and the default value (0 to 128; default 10)
 - Maximum parameters values are stated as (up to 32 characters; 9 characters minimum)
