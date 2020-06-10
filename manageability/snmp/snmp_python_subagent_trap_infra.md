@@ -34,6 +34,7 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 |    10/30/2019         | Mohammed Faraaz/Suresh Babu      | Initial version                   |
+| 0.2 |    10/06/2020         | Suresh Babu                      | Updated config change trap        |
 
 # About this Manual
 This document provides general information about the design of the SNMP Python based Subagent's trap Infrastructure implementations in SONiC.
@@ -176,8 +177,16 @@ After executing above CLI, please  stop/start snmp docker to reflect config chan
 ## 5.1 Using Python Subagent
 * LinkUp
 * LinkDown
+* brcmSonicConfigChange (1.3.6.1.4.1.4413.1.2.2.1.2.0.1)
+  "This notification is generated when running configuration was changed.
+   Snmpd does not generate this notification immediately. It waits for 30 secs
+   for another config change to avoid multiple notifications in case config
+   is changed within 30 sec. If there is no config change within 30 sec then
+   trap is generated. **NOTE: config changes from vtyssh shell does not generate
+   this trap.**"
+
 ## 5.2 Using FRR Subagent
 * ospfNbrStateChange
 * ospfIfStateChange
-* bgpEstablishedNotification
-* bgpBackwardTransNotification
+* bgpEstablished
+* bgpBackwardTransition
