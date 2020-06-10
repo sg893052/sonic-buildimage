@@ -7,14 +7,15 @@ All CLI commands should follow these guidelines:
 - Commands including parameters (options) must be in lowercase
 - Command help descriptions must be parallel and start with a plural action such as configures, imports, clears, and so on
 - Acronyms within command help must be in all uppercase (see below)
-- Avoid using hence, notwithstanding, therefore, and in order to (write simply and concise)
-- Optional parameters must be preceeded by the word (Optional) in descriptions
+- Avoid using hence, notwithstanding, therefore, refer, and in order to (write simply and concise)
+- Optional parameters must be preceded by the word (Optional) in descriptions
 - Commands must include ranges and the default value (0 to 128; default 10)
 - Maximum parameters values are stated as (up to 32 characters; 9 characters minimum)
 - Underscores cannot be used for commands as they are reserved for command parameters, such as `interface_name`
 - All command descriptions to follow sentence case (only capitalize the first word)
 - Always write in the first person (you can configure...)
 - Show command descriptions always starts with the word displays (Displays the startup configuration)
+- Cross-references should be (see interface PortChannel)
 
 ## Hyphenation usage
 You must hyphenate these words in CLI commands and command descriptions.
