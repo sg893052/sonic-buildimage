@@ -129,7 +129,7 @@ Parameters to indicate if the option is required or optional, and appear in ital
 - _dest_port_
 - _dev_name_
 - _domain_id_
-- _ether_type
+- _ether_type_
 - _interface_name_
 - _ip_address_
 - _ipv4_address_
