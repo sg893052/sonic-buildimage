@@ -147,22 +147,22 @@ module: openconfig-lldp
 
 #### 3.3.2.1 Global Commands
 
-LLDP is enabled by default. User can use below command to disable LLDP globally.
+This command can be used to enable LLDP globally. LLDP is enabled by default.
 
-**[no] lldp disable**
+**[no] lldp enable**
 
-Use no command to re-enable LLDP globally
+Use no command to disable LLDP globally
 
 Eg:
 
 ```
-sonic(config)# lldp disable
+sonic(config)# lldp enable
 ```
 
 Configuring other Global parameters:
 
 **System Name**
-The global system name for LLDP is useful for differentiating between devices. By default, the host name is used. By specifying a descriptive system name using the below command, user may find it easier to distinguish the device with LLDP. 
+The global system name for LLDP is useful for differentiating between devices. By default, the host name is used. By specifying a descriptive system name using this command, user may find it easier to distinguish the device with LLDP. 
 
 **[no] lldp system-name <system_name>**
 
@@ -173,7 +173,7 @@ sonic(config)# lldp system-name Leaf1
 ```
 
 **System description**
-The default system description can be overriden by configuring system description using the below command.
+The default system description can be overriden by configuring system description using this command.
 
 **[no] lldp system-description <system_description>**
 
@@ -183,32 +183,32 @@ Use no command to use default system description
 sonic(config)# lldp system-description "Broadcom Sonic"
 ```
 
-**Mode**
-By default both transmit and receive for LLDP frames is enabled. Mode command can be used to configure either in receive only or transmit only modes.
+**LLDP frame Receiption and Transmission**
+By default both transmit and receive of LLDP frames is enabled. This command can be used to configure either in receive only or transmit only mode.
 
-**[no] lldp mode <receive | transmit>**
+**[no] lldp <receive | transmit>**
 
-Use no command to set mode to default
+Use no command to set to default
 
 ```
-sonic(config)# lldp mode receive
+sonic(config)# lldp receive
 
-sonic(config)# lldp mode transmit
+sonic(config)# lldp transmit
 ```
 
 **Hello-Time**
-Default transmit frequency of LLDP frames is 30 seconds. User can use below command to configure hello timer from a range of 5 to 254 seconds.
+Default transmit frequency of LLDP frames is 30 seconds. This command can be used to configure hello timer from a range of 5 to 254 seconds.
 
 **[no] lldp timer <hello_time>**
 
 Use no command to set hello timer to default
 
 ```
-sonic(config)# lldp hello-time 10
+sonic(config)# lldp timer 10
 ```
 
 **Multiplier**
-Multiplier value is used to determine the timeout interval (i.e. hello-time x multiplier value) after which LLDP neighbor entry is deleted. By default, four consecutive LLDP hello packets can be missed before removing the neighbor information. User can use below command to set multiplier value from a range of 1 to 10.
+Multiplier value is used to determine the timeout interval (i.e. hello-time x multiplier value) after which LLDP neighbor entry is deleted. By default, four consecutive LLDP hello packets can be missed before removing the neighbor information. This command can be used to set multiplier value from a range of 1 to 10.
 
 **[no] lldp multiplier <multiplier>**
 
@@ -219,45 +219,45 @@ sonic(config)# lldp multiplier 5
 ```
 
 **Optional LLDP TLVs**
-By default, management address and system capabilities TLV are advertised in LLDP frames. User can use below commands to suppress these TLVs from sending to the Peer.
+By default, management address and system capabilities TLV are advertised in LLDP frames. This command can be used to enable sending of these TLVs to the Peer.
 
-**[no] lldp suppress-tlv < system-capabilities | management-address >**
+**[no] lldp tlv-select < system-capabilities | management-address >**
 
-Use no command to advertise the corresponding TLV
+Use no command to disable sending of TLVs in LLDP frames to the Peer 
 
 ```
-sonic(config)# lldp suppress-tlv system-capabilities
+sonic(config)# lldp tlv-select system-capabilities
 
-sonic(config)# lldp suppress-tlv management-address
+sonic(config)# no lldp tlv-select management-address
 ```
 
 
 
 #### 3.3.2.1 Interface Level Commands
 
-LLDP is enabled by default for all the interfaces. User can use below command to disable LLDP for a particular interface.
+This command can be used to enable LLDP for a particular interface. LLDP is enabled by default for all the interfaces.
 
-**[no] lldp disable**
+**[no] lldp enable**
 
-Use no command to re-enable LLDP for that interface
+Use no command to disable LLDP for that interface
 
 Eg:
 
 ```
 sonic(config)# interface Ethernet 0
-sonic(conf-if-Ethernet0)# lldp disable
+sonic(conf-if-Ethernet0)# lldp enable
 ```
 
-**Mode**
-By default both transmit and receive for LLDP frames is enabled for all interfaces. User can use below command to configure either in receive only or transmit only modes for a particular interface. If Global Mode is set, then Interface level mode doesnt take effect.
+**LLDP frame Receiption and Transmission**
+By default both transmit and receive of LLDP frames is enabled for all interfaces. This command can be used to configure either in receive only or transmit only mode for a particular interface. If Global Mode is set, then Interface level mode doesnt take effect.
 
-**[no] lldp mode <receive | transmit>**
+**[no] lldp <receive | transmit>**
 
 Use no command to set mode to default
 
 ```
 sonic(config)# interface Ethernet 0
-sonic(conf-if-Ethernet0)# lldp mode receive
+sonic(conf-if-Ethernet0)# lldp receive
 ```
 
 
