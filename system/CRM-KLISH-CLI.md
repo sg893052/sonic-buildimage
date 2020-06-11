@@ -1,6 +1,6 @@
-# CRM OC Yang and KLISH CLI Config Support
+# Critical Resource Management OC YANG and Management Framework CLI Support
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 # Contents
   * [List of Tables](#list-of-tables)
@@ -24,27 +24,34 @@
 | Rev  |   Date   |   Author   | Change Description |
 | :--: | :------: | :--------: | :----------------: |
 | 0.1  | 6/3/2020 | David Sips |  Initial version   |
-|      |          |            |                    |
-|      |          |            |                    |
+| 0.2  | 6/11/2020 | David Sips |  Update based on review comments.   |
 
 # About this Manual
-This document provides OpenConfig Yang and KLISH Config CLI implementation for CRM feature in SONiC. CRM monitors utilization of ASIC resources by polling SAI attributes.
+This document provides OpenConfig YANG and Management Framework Config CLI implementation for CRM feature in SONiC. <u>CRM monitors utilization of ASIC resources by polling SAI attributes.</u>
+
+# References
+### Table 1: References
+| **Document** | **Location** |
+| ------------ | -------------- |
+| Critical Resource Monitoring HLD | https://github.com/Azure/SONiC/wiki/Critical-Resource-Monitoring-High-Level-Design |
 
 # Scope
-This document covers the "configuration" commands supported for CRM based on OpenConfig YANG.
+This document covers:
+
+- MF CLI config, show commands
+- REST access
 
 # Definition/Abbreviation
-### Table 1: Abbreviations
-| **Term** | ***Meaning***                                                |
-| -------- | ------------------------------------------------------------ |
-| CRM      | Critical Resource Monitoring (https://github.com/Azure/SONiC/wiki/Critical-Resource-Monitoring-High-Level-Design) |
-| KLISH    | Kommand Line Interface Shell (http://libcode.org/projects/klish/) |
-
+### Table 2: Abbreviations
+| **Term** | **Meaning**                        |
+| -------- | ------------------------------------ |
+| CRM      | Critical Resource Monitoring         |
+| MF       | Management Framework                 |
 
 # 1 Overview
 ## 1.1 Functional Requirements
 ## 1.2 Configuration and Management Requirements
-Support OpenConfig based Config KLISH CLIs to CRM protocol
+Support OpenConfig based Config Management Framework CLIs to CRM protocol
 
 ## 1.3 Scalability Requirements
 
@@ -66,7 +73,7 @@ CRM.
 
 ## 3.2 Database
 
-No  configuration entries are added or modified for any SONiC database for the OC Yang and KLISH CLI support. For reference, this section describes the format of Config DB entries already present in SONiC for CRM.
+No  configuration entries are added or modified for any SONiC database for the OC YANG and Management Framework CLI support. For reference, this section describes the format of Config DB entries already present in SONiC for CRM.
 
 ### 3.2.1 CONFIG DB
 ```
@@ -136,7 +143,7 @@ module: openconfig-system
      +--rw oc-sys-ext:crm
         +--rw oc-sys-ext:config
         |  +--rw oc-sys-ext:polling-interval?   uint32
-        |  +--rw oc-sys-ext:thresholds
+        |  +--rw oc-sys-ext:threshold
         |     +--rw oc-sys-ext:ipv4
         |     |  +--rw oc-sys-ext:neighbor
         |     |  |  +--rw oc-sys-ext:type?   threshold
@@ -208,7 +215,7 @@ module: openconfig-system
         |              +--rw oc-sys-ext:low?    uint32
         +--ro oc-sys-ext:state
            +--ro oc-sys-ext:polling-interval?      uint32
-           +--ro oc-sys-ext:thresholds
+           +--ro oc-sys-ext:threshold
            |  +--ro oc-sys-ext:ipv4
            |  |  +--ro oc-sys-ext:neighbor
            |  |  |  +--ro oc-sys-ext:type?   threshold
@@ -278,7 +285,7 @@ module: openconfig-system
            |           +--ro oc-sys-ext:type?   threshold
            |           +--ro oc-sys-ext:high?   uint32
            |           +--ro oc-sys-ext:low?    uint32
-           +--ro oc-sys-ext:resources
+           +--ro oc-sys-ext:resource
            |  +--ro oc-sys-ext:dnat-entries-used?                 uint32
            |  +--ro oc-sys-ext:dnat-entries-available?            uint32
            |  +--ro oc-sys-ext:snat-entries-used?                 uint32
@@ -303,7 +310,7 @@ module: openconfig-system
            |  +--ro oc-sys-ext:nexthop-groups-available?          uint32
            |  +--ro oc-sys-ext:nexthop-group-members-used?        uint32
            |  +--ro oc-sys-ext:nexthop-group-members-available?   uint32
-           +--ro oc-sys-ext:acl-resources
+           +--ro oc-sys-ext:acl-resource
            |  +--ro oc-sys-ext:ingress
            |  |  +--ro oc-sys-ext:switch
            |  |  |  +--ro oc-sys-ext:groups-used?        uint32
@@ -356,11 +363,6 @@ module: openconfig-system
            |        +--ro oc-sys-ext:groups-available?   uint32
            |        +--ro oc-sys-ext:tables-used?        uint32
            |        +--ro oc-sys-ext:tables-available?   uint32
-           +--ro oc-sys-ext:acl-table-resources
-              +--ro oc-sys-ext:entries* []
-                 +--ro oc-sys-ext:index?               uint64
-                 +--ro oc-sys-ext:entries-used?        uint32
-                 +--ro oc-sys-ext:entries-available?   uint32
 ```
 
 
@@ -373,7 +375,7 @@ The below CLI configuration mode commands are supported. CRM is not configured b
 
 **Polling Interval** The polling interval for CRM. This is the interval the monitoring process will periodically poll SAI counters to determine resource usage.
 
-**[no]  crm  polling  interval  < time-interval >**
+**[no]  crm  polling  interval  < *time-interval* >**
 
 Use no form of the command to reset the default value to 300s.
 
@@ -384,7 +386,7 @@ Use no form of the command to reset the default value to 300s.
 
 **Threshold type** for FDB entries, IP Multicast entries, Network Address Translation resources may be configured. The **all** qualifier for **< resource >** allows all attributes to be set (or cleared) in bulk.
 
-**[no]  crm  thresholds  < resource >  type  < percentage |used | free > **
+**[no]  crm  threshold  < *resource* >  type  { percentage |used | free } **
 
 **resource** is one of the following:
 
@@ -396,7 +398,7 @@ Use no form of the command to reset the default value to 300s.
   snat     CRM configuration for Source NAT resource
 ```
 
-Use no form of the command to reset the thresholds to the default of percentage.
+Use no form of the command to reset the threshold to the default of percentage.
 
     sonic-cli(config)# crm threshold all type percentage
     sonic-cli(config)# crm threshold ipmc type used
@@ -407,7 +409,7 @@ Use no form of the command to reset the thresholds to the default of percentage.
 
 **Threshold high and low values** for FDB entries, IP Multicast entries, Network Address Translation resources may be configured. The **all** qualifier for **< resource >** allows all attributes to be set (or cleared) in bulk. Resource is one of the following:
 
-**[no]  crm  thresholds  < resource >  < high | low >  < value > **
+**[no]  crm  threshold  < *resource* >  { high | low }  < *value* > **
 
 ```
   all      CRM configuration for all resources
@@ -417,7 +419,7 @@ Use no form of the command to reset the thresholds to the default of percentage.
   snat     CRM configuration for Source NAT resource
 ```
 
-Use no form of the command to reset the thresholds to remove the value.
+Use no form of the command to reset the threshold to remove the value.
 
     sonic-cli(config)# crm threshold all high 90
     sonic-cli(config)# crm threshold ipmc low 65
@@ -428,11 +430,11 @@ Use no form of the command to reset the thresholds to remove the value.
 
 Threshold type and high and low values for **ACL Group Counters or Entries** may be configured.
 
-**[no]  crm  thresholds  acl  group  < counter | entry >  type  < percentage | used | free >**
+**[no]  crm  threshold  acl  group  { counter | entry }  type  { percentage | used | free }**
 
-**[no]  crm  thresholds  acl  group  < counter | entry >  < high | low >  < value >**
+**[no]  crm  threshold  acl  group  { counter | entry }  { high | low }  < *value* >**
 
-Use no form of the command to reset the thresholds to remove the value or to revert the type to default percentage..
+Use no form of the command to reset the threshold to remove the value or to revert the type to default percentage..
 
     sonic-cli(config)# crm threshold acl group counter type used
     sonic-cli(config)# crm threshold acl group counter high 42
@@ -444,11 +446,11 @@ Use no form of the command to reset the thresholds to remove the value or to rev
 
 Threshold type and high and low values for **ACL Groups** may be configured.
 
-**[no]  crm  thresholds  acl  group  type  < percentage | used | free >**
+**[no]  crm  threshold  acl  group  type  { percentage | used | free }**
 
-**[no]  crm  thresholds  acl  group  < high | low >  < value >**
+**[no]  crm  threshold  acl  group  { high | low }  < *value* >**
 
-Use no form of the command to reset the thresholds to remove the value or to revert the type to default percentage..
+Use no form of the command to reset the threshold to remove the value or to revert the type to default percentage..
 
     sonic-cli(config)# crm threshold acl group type free
     sonic-cli(config)# crm threshold acl group high 24
@@ -459,11 +461,11 @@ Use no form of the command to reset the thresholds to remove the value or to rev
 
 Threshold type and high and low values for **ACL Tables** may be configured.
 
-**[no]  crm  thresholds  acl  table  type  < percentage | used | free >**
+**[no]  crm  threshold  acl  table  type  { percentage | used | free }**
 
-**[no]  crm  thresholds  acl  table< high | low >  < value >**
+**[no]  crm  threshold  acl  table { high | low }  < *value* >**
 
-Use no form of the command to reset the thresholds to remove the value or to revert the type to default percentage..
+Use no form of the command to reset the threshold to remove the value or to revert the type to default percentage..
 
     sonic-cli(config)# crm threshold acl table type free
     sonic-cli(config)# crm threshold acl table low 128
@@ -474,11 +476,11 @@ Use no form of the command to reset the thresholds to remove the value or to rev
 
 Threshold type and high and low values for **IPv4 and IPv6 Entries** may be configured.
 
-**[no]  crm  thresholds  < ipv4 | ipv6 >  < neighbor | nexthop | route >  type  < percentage | used | free >**
+**[no]  crm  threshold  { ipv4 | ipv6 }  { neighbor | nexthop | route }  type  { percentage | used | free }**
 
-**[no]  crm  thresholds  < ipv4 | ipv6 >  < neighbor | nexthop | route >  < high | low >  < value >**
+**[no]  crm  threshold  { ipv4 | ipv6 }  { neighbor | nexthop | route }  { high | low }  < *value* >**
 
-Use no form of the command to reset the thresholds to remove the value or to revert the type to default percentage..
+Use no form of the command to reset the threshold to remove the value or to revert the type to default percentage..
 
     sonic-cli(config)# crm threshold ipv4 neighbor type used
     sonic-cli(config)# crm threshold ipv6 nexthop high 42
@@ -490,17 +492,17 @@ Use no form of the command to reset the thresholds to remove the value or to rev
 
 Threshold type and high and low values for **Nexthop Group Members or Objects** may be configured.
 
-**[no]  crm  thresholds  nexthop group  < member | object >  type  < percentage | used | free >**
+**[no]  crm  threshold  nexthop group  { neighbor | nexthop | route }  type  { percentage | used | free }**
 
-**[no]  crm  thresholds  nexthop group  < member | object >  < high | low >  < value >**
+**[no]  crm  threshold  nexthop group  { neighbor | nexthop | route }  { high | low }  < *value* >**
 
-Use no form of the command to reset the thresholds to remove the value or to revert the type to default percentage..
+Use no form of the command to reset the threshold to remove the value or to revert the type to default percentage..
 
-    sonic-cli(config)# crm thresholds nexthop group member type percentage
-    sonic-cli(config)# crm thresholds nexthop group member high 50
-    sonic-cli(config)# crm thresholds nexthop group object low 60
-    sonic-cli(config)# no crm thresholds nexthop group object type
-    sonic-cli(config)# no crm thresholds nexthop group member high
+    sonic-cli(config)# crm threshold nexthop group member type percentage
+    sonic-cli(config)# crm threshold nexthop group member high 50
+    sonic-cli(config)# crm threshold nexthop group object low 60
+    sonic-cli(config)# no crm threshold nexthop group object type
+    sonic-cli(config)# no crm threshold nexthop group member high
 
 
 
@@ -512,18 +514,18 @@ The below CLI show commands are supported.
 
 Show **summary** information for CRM. 
 
-**show  crm  < summary >**
+**show  crm  [ summary ]**
 
 **summary** is an optional parameter
 
 ```
-sonic-cli(config)# show crm summary
+sonic-cli# show crm summary
 
 CRM Summary
 -----------
 Polling Interval: 300 second(s)
 
-sonic-cli(config)# show crm
+sonic-cli# show crm
 
 CRM Summary
 -----------
@@ -535,25 +537,25 @@ Polling Interval: 300 second(s)
 
 Show **resource** information for the system as related to CRM. 
 
-**show  crm  resources < dnat | fdb | ipmc | ipv4 | ipv6 | nexthop >**
+**show  crm  resource { dnat | fdb | ipmc | ipv4 | ipv6 | nexthop }**
 
 Specification of a resource type (dnat, fdb, etc.) is an optional. If omitted, all resources are shown.
 
 ```
-sonic-cli(config)# show crm resources nexthop
+sonic-cli# show crm resource nexthop
 
 Resource Name           Used Count    Available Count
 --------------------  ------------  -----------------
 nexthop_group                    0                256
 nexthop_group_member             0              32768
 
-sonic-cli(config)# show crm resources ipmc
+sonic-cli# show crm resource ipmc
 
 Resource Name           Used Count    Available Count
 --------------------  ------------  -----------------
 ipmc_entry                       0              24576
 
-sonic-cli(config)# show crm resources ipv4
+sonic-cli# show crm resource ipv4
 
 Resource Name           Used Count    Available Count
 --------------------  ------------  -----------------
@@ -567,11 +569,11 @@ ipv4_route                       1              32751
 
 Show **ACL resource** information for the system as related to CRM.
 
-**show  crm  resources acl < group | table  >**
+**show  crm  resource acl { group | table  }**
 
 Specification of a ACl resource type (group or table) is an optional. If omitted, all resources are shown (group, then table).
 
-    sonic-cli(config)# show crm resources acl group
+    sonic-cli# show crm resource acl group
     
     Stage    Bind Point    Resource Name      Used Count    Available Count
     -------  ------------  ---------------  ------------  -----------------
@@ -596,7 +598,7 @@ Specification of a ACl resource type (group or table) is an optional. If omitted
     EGRESS   SWITCH        acl_group                   0                256
     EGRESS   SWITCH        acl_table                   0                  2
     
-    sonic-cli(config)# show crm resources acl table
+    sonic-cli# show crm resource acl table
     
     Table ID    Resource Name    Used Count    Available Count
     ----------  ---------------  ------------  -----------------
@@ -606,10 +608,10 @@ Specification of a ACl resource type (group or table) is an optional. If omitted
 
 Show **resource** information for the system as related to CRM. 
 
-**show  crm  resources < all >**
+**show  crm  resource  [ all ]**
 
 ```
-sonic-cli(config)# show crm resources
+sonic-cli# show crm resource
 
 Resource Name           Used Count    Available Count
 --------------------  ------------  -----------------
@@ -662,7 +664,7 @@ Show **threshold** information for CRM.
 **show  crm  thresholds**
 
 ```
-sonic-cli(config)# show crm resources thresholds
+sonic-cli# show crm resource thresholds
 
 Resource Name         Threshold Type      Low Threshold    High Threshold
 --------------------  ----------------  ---------------  ----------------
@@ -691,129 +693,125 @@ Below REST URIs are supported
 
 ```
 /restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/oc-sys-ext:polling-interval
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/counter/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/counter/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/counter/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/entry/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/entry/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/entry/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/group/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/table/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/table/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/acl/table/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/dnat/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/dnat/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/dnat/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/fdb/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/fdb/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/fdb/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipmc/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipmc/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipmc/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/neighbor/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/neighbor/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/neighbor/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/nexthop/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/nexthop/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/nexthop/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/route/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/route/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv4/route/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/neighbor/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/neighbor/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/neighbor/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/nexthop/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/nexthop/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/nexthop/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/route/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/route/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/ipv6/route/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/nexthop/group/member/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/nexthop/group/member/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/nexthop/group/member/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/nexthop/group/object/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/nexthop/group/object/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/nexthop/group/object/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/snat/high
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/snat/low
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/thresholds/snat/type
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/lag/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/lag/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/lag/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/lag/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/port/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/port/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/port/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/port/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/rif/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/rif/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/rif/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/rif/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/switch/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/switch/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/switch/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/switch/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/vlan/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/vlan/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/vlan/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/egress/vlan/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/lag/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/lag/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/lag/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/lag/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/port/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/port/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/port/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/port/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/rif/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/rif/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/rif/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/rif/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/switch/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/switch/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/switch/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/switch/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/vlan/groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/vlan/groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/vlan/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resources/ingress/vlan/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-table-resources/entries{index}/tables-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-table-resources/entries{index}/tables-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/dnat-entries-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/dnat-entries-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/fdb-entries-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/fdb-entries-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipmc-entries-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipmc-entries-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv4-neighbors-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv4-neighbors-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv4-nexthops-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv4-nexthops-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv4-routes-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv4-routes-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv6-neighbors-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv6-neighbors-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv6-nexthops-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv6-nexthops-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv6-routes-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/ipv6-routes-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/nexthop-group-members-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/nexthop-group-members-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/nexthop-groups-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/nexthop-groups-used
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/snat-entries-available
-/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resources/snat-entries-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/counter/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/counter/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/counter/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/entry/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/entry/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/entry/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/group/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/table/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/table/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/acl/table/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/dnat/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/dnat/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/dnat/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/fdb/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/fdb/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/fdb/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipmc/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipmc/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipmc/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/neighbor/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/neighbor/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/neighbor/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/nexthop/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/nexthop/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/nexthop/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/route/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/route/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv4/route/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/neighbor/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/neighbor/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/neighbor/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/nexthop/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/nexthop/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/nexthop/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/route/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/route/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/ipv6/route/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/nexthop/group/member/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/nexthop/group/member/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/nexthop/group/member/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/nexthop/group/object/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/nexthop/group/object/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/nexthop/group/object/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/snat/high
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/snat/low
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:config/threshold/snat/type
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/lag/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/lag/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/lag/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/lag/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/port/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/port/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/port/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/port/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/rif/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/rif/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/rif/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/rif/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/switch/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/switch/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/switch/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/switch/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/vlan/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/vlan/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/vlan/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/egress/vlan/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/lag/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/lag/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/lag/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/lag/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/port/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/port/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/port/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/port/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/rif/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/rif/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/rif/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/rif/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/switch/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/switch/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/switch/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/switch/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/vlan/groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/vlan/groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/vlan/tables-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/acl-resource/ingress/vlan/tables-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/dnat-entries-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/dnat-entries-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/fdb-entries-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/fdb-entries-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipmc-entries-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipmc-entries-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv4-neighbors-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv4-neighbors-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv4-nexthops-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv4-nexthops-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv4-routes-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv4-routes-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv6-neighbors-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv6-neighbors-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv6-nexthops-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv6-nexthops-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv6-routes-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/ipv6-routes-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/nexthop-group-members-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/nexthop-group-members-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/nexthop-groups-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/nexthop-groups-used
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/snat-entries-available
+/restconf/data/openconfig-system:system/oc-sys-ext:crm/oc-sys-ext:state/resource/snat-entries-used
 
 ```
 
 # 4 Flow Diagrams
-
 None
 
 # 5 Serviceability and Debug
-
 None
 
 # 6 Warm Boot Support
@@ -823,8 +821,101 @@ None
 None
 
 # 8 Unit Test
-1. Verify all Global Commands via KLISH
+1. Verify all Global Commands via Management Framework
 2. Verify Config DB is updated
 3. Verify Show Commands
 4. Verify all REST URIs
 
+## 8.1 One-line test description
+
+```
+Verify 'show crm summary' when none of CRM configuration is available in the redis db
+Verify 'show crm summary', see if it matches the CRM configuration in the redis db
+Verify 'show crm resource all', see if it matches the counters in the redis db
+Verify 'show crm resource acl group', see if it matches the counters in the redis db
+Verify 'show crm resource acl table', see if it matches the counters in the redis db
+Verify 'show crm resource fdb', see if it matches the counters in the redis db
+Verify 'show crm resource dnat', see if it matches the counters in the redis db
+Verify 'show crm resource snat', see if it matches the counters in the redis db
+Verify 'show crm resource ipmc', see if it matches the counters in the redis db
+Verify 'show crm resource ipv4 neighbor', see if it matches the counters in the redis db
+Verify 'show crm resource ipv4 nexthop', see if it matches the counters in the redis db
+Verify 'show crm resource ipv4 route', see if it matches the counters in the redis db
+Verify 'show crm resource ipv6 neighbor', see if it matches the counters in the redis db
+Verify 'show crm resource ipv6 nexthop', see if it matches the counters in the redis db
+Verify 'show crm resource ipv6 route', see if it matches the counters in the redis db
+Verify 'show crm resource nexthop group member', see if it matches the counters in the redis db
+Verify 'show crm resource nexthop group object', see if it matches the counters in the redis db
+Verify 'show crm threshold all', see if it matches the configurations in the redis db
+Verify 'show crm threshold acl group', see if it matches the configurations in the redis db
+Verify 'show crm threshold acl table', see if it matches the configurations in the redis db
+Verify 'show crm threshold fdb', see if it matches the configurations in the redis db
+Verify 'show crm threshold dnat', see if it matches the configurations in the redis db
+Verify 'show crm threshold snat', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipmc', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipv4 neighbor', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipv4 nexthop', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipv4 route', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipv6 neighbor', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipv6 nexthop', see if it matches the configurations in the redis db
+Verify 'show crm threshold ipv6 route', see if it matches the configurations in the redis db
+Verify 'show crm threshold nexthop group member', see if it matches the configurations in the redis db
+Verify 'show crm threshold nexthop group object', see if it matches the configurations in the redis db
+Verify 'show crm threshold all', when none of the configuration is in the redis db
+Verify 'show crm threshold acl group', when none of the configuration is in the redis db
+Verify 'show crm threshold acl table', when none of the configuration is in the redis db
+Verify 'show crm threshold fdb', when none of the configuration is in the redis db
+Verify 'show crm threshold dnat', when none of the configuration is in the redis db
+Verify 'show crm threshold snat', when none of the configuration is in the redis db
+Verify 'show crm threshold ipmc', when none of the configuration is in the redis db
+Verify 'show crm threshold ipv4 neighbor', when none of the configuration is in the redis db
+Verify 'show crm threshold ipv4 nexthop', when none of the configuration is in the redis db
+Verify 'show crm threshold ipv4 route', when none of the configuration is in the redis db
+Verify 'show crm threshold ipv6 neighbor', when none of the configuration is in the redis db
+Verify 'show crm threshold ipv6 nexthop', when none of the configuration is in the redis db
+Verify 'show crm threshold ipv6 route', when none of the configuration is in the redis db
+Verify 'show crm threshold nexthop group member', when none of the configuration is in the redis db
+Verify 'show crm threshold nexthop group object', when none of the configuration is in the redis db
+In configure mode, issue 'crm clear' and check if it's observed in the redis db
+In configure mode, issue 'crm polling interval <sec>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold all type <type>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold all low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold all high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group entry type <type>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group entry low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group entry high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group counter type <type>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group counter low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group counter high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl group high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl table type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl table low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold acl table high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold dnat type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold dnat low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold dnat high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold fdb type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold fdb low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold fdb high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipmc type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipmc low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipmc high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipv4 neighbor type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipv4 nexthop low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipv4 route high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipv6 neighbor type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipv6 nexthop low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold ipv6 route high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold nexthop group member type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold nexthop group member low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold nexthop group member high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold nexthop group object type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold nexthop group object low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold nexthop group object high <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold snat type <percentage|used|free>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold snat low <value>' and check if it's observed in the redis db
+In configure mode, issue 'crm threshold snat high <value>' and check if it's observed in the redis db
+In configure mode, issue 'no crm' and check if all the CRM configuration are wiped out from the redis db
+```
