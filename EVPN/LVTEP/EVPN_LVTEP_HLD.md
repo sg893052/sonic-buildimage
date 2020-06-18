@@ -774,9 +774,9 @@ The feature will be tested with the following scaling numbers:
 ## 9.4 Startup Delay Restore Test Cases
 
 1. Verify default delay restore timer works in all startup scenarios
-2. Verify user can change the delay restore timer value
+2. Verify user can change the delay restore timer value via CLI or REST
 3. Verify user-configured timer take effect in all startup scenarios
-4. Verfiy delay restore timer is shown correctly
+4. Verfiy delay restore timer is shown correctly via CLI or retrieve correctly via REST
 5. Verify user can manully bring the interface up while it is in holddown state by using interface shutdown and startup commands 
 
 # 10 Configuration Example
