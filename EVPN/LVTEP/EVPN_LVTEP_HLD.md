@@ -3,76 +3,76 @@
 Rev 1.0
 
 # Table of Contents
-
-- [EVPN Logical VXLAN Tunnel End Point](#EVPN-Logical-VXLAN-Tunnel-End-Point)
-- [High Level Design Document](#High-Level-Design-Document)
-- [List of Tables](#List-of-Tables)
-- [Revision](#Revision)
-- [About this Manual](#About-this-Manual)
-- [Scope](#Scope)
-- [Definition/Abbreviation](#Definition/Abbreviation)
-    - [Table 1: Abbreviations](#Table-1:-Abbreviations)
-- [1 Feature Overview](#1-Feature-Overview)
-    - [1.1 Requirements](#1_1-Requirements)
-        - [1.1.1 Functional Requirements](#1_1_1-Functional-Requirements)
-        - [1.1.2 Configuration and Management Requirements](#1_1_2-Configuration-and-Management-Requirements)
-        - [1.1.3 Scalability Requirements](#1_1_3-Scalability-Requirements)
-        - [1.1.4 Warm Boot Requirements](#1_1_4-Warm-Boot-Requirements)
-        - [1.1.5 Notes:](#1_1_5-Notes:)
-    - [1.2 Design Overview](#1_2-Design-Overview)
-        - [1.2.1 Basic Approach](#1_2_1-Basic-Approach)
-        - [1.2.2 Container](#1_2_2-Container)
-        - [1.2.3 SAI Overview](#1_2_3-SAI-Overview)
-- [2 Functionality](#2-Functionality)
-    - [2.1 Target Deployment Use Cases](#2_1-Target-Deployment-Use-Cases)
-    - [2.2 Functional Description](#2_2-Functional-Description)
-        - [2.2.1 Traffic Forwarding Behavior](#2_2_1-Traffic-Forwarding-Behavior)
-        - [2.2.2 MAC Management](#2_2_2-MAC-Management)
-        - [2.2.3 Uplink Interface Tracking](#2_2_3-Uplink-Interface-Tracking)
-- [3 Design](#3-Design)
-    - [3.1 Overview](#3_1-Overview)
-    - [3.2 DB Changes](#3_2-DB-Changes)
-        - [3.2.1 CONFIG DB](#3_2_1-CONFIG-DB)
-            - [3.2.1.1 Interface Tracking Table](#3_2_1_1-Interface-Tracking-Table)
-        - [3.2.2 APP DB](#3_2_2-APP-DB)
-        - [3.2.3 STATE DB](#3_2_3-STATE-DB)
-        - [3.2.4 ASIC DB](#3_2_4-ASIC-DB)
-        - [3.2.5 COUNTER DB](#3_2_5-COUNTER-DB)
-    - [3.3 Switch State Service Design](#3_3-Switch-State-Service-Design)
-        - [3.3.1 VxlanOrch Changes](#3_3_1-VxlanOrch-Changes)
-        - [3.3.2 FdbOrch Changes](#3_3_2-FdbOrch-Changes)
-        - [3.3.3 IntfTrackOrch](#3_3_3-IntfTrackOrch)
-            - [3.3.3.1 IntfTrackOrch class](#3_3_3_1-IntfTrackOrch-class)
-            - [3.3.3.2 IntfTrackGroup class](#3_3_3_2-IntfTrackGroup-class)
-        - [3.3.4 PortsOrch changes](#3_3_4-PortsOrch-changes)
-        - [3.3.5 FdbSyncD](#3_3_5-FdbSyncD)
-    - [3.4 SAI](#3_4-SAI)
-    - [3.5 CLI](#3_5-CLI)
-        - [3.5.1 IS-CLI Compliance](#3_5_1-IS-CLI-Compliance)
-        - [3.5.2 Data Models](#3_5_2-Data-Models)
-        - [3.5.3 Configuration Commands](#3_5_3-Configuration-Commands)
-        - [3.5.4 Show Commands](#3_5_4-Show-Commands)
-            - [3.5.4.1 show interface enhancements](#3_5_4_1-show-interface-enhancements)
-            - [3.5.4.2 show interface tracking ](#3_5_4_2-show-interface-tracking-)
-        - [3.5.5 Debug Commands](#3_5_5-Debug-Commands)
-        - [3.5.6 REST API Support](#3_5_6-REST-API-Support)
-- [4 Flow Diagrams](#4-Flow-Diagrams)
-    - [4.1.1 LVTEP Tunnel Add](#4_1_1-LVTEP-Tunnel-Add)
-        - [4.1.2 LVTEP Tunnel Delete](#4_1_2-LVTEP-Tunnel-Delete)
-        - [4.1.3 MAC Addition from EVPN and ICCP](#4_1_3-MAC-Addition-from-EVPN-and-ICCP)
-        - [4.1.4 MAC Deletion from BGP EVPN and ICCP](#4_1_4-MAC-Deletion-from-BGP-EVPN-and-ICCP)
-    - [4.2 Interface tracking group create](#4_2-Interface-tracking-group-create)
-    - [4.3 Handling upstream interface operational status](#4_3-Handling-upstream-interface-operational-status)
-- [5 Error Handling](#5-Error-Handling)
-- [6 Serviceability and Debug](#6-Serviceability-and-Debug)
-- [7 Warm Boot Support](#7-Warm-Boot-Support)
-- [8 Scalability](#8-Scalability)
-- [9 Unit Test](#9-Unit-Test)
-    - [9.1 Functional Test Cases](#9_1-Functional-Test-Cases)
-    - [9.2 Negative Test Cases](#9_2-Negative-Test-Cases)
-    - [9.3 Warm boot Test Cases](#9_3-Warm-boot-Test-Cases)
-- [10 Configuration Example](#10-Configuration-Example)
-
+- **[List of Tables](#list-of-tables)**
+- **[Revision](#revision)**
+- **[About this Manual](#about-this-manual)**
+- **[Scope](#scope)**
+- **[Definition/Abbreviation](#definition_abbreviation)**
+	- [Table 1: Abbreviations](#table-1-abbreviations)
+- **[1 Feature Overview](#1-feature-overview)**
+	- [1.1 Requirements](#11-requirements)
+		- [1.1.1 Functional Requirements](#111-functional-requirements)
+		- [1.1.2 Configuration and Management Requirements](#112-configuration-and-management-requirements)
+		- [1.1.3 Scalability Requirements](#113-scalability-requirements)
+		- [1.1.4 Warm Boot Requirements](#114-warm-boot-requirements)
+		- [1.1.5 Notes:](#115-notes)
+	- [1.2 Design Overview](#12-design-overview)
+		- [1.2.1 Basic Approach](#121-basic-approach)
+		- [1.2.2 Container](#122-container)
+		- [1.2.3 SAI Overview](#123-sai-overview)
+- **[2 Functionality](#2-functionality)**
+	- [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
+	- [2.2 Functional Description](#22-functional-description)
+		- [2.2.1 Traffic Forwarding Behavior](#221-traffic-forwarding-behavior)
+		- [2.2.2 MAC Management](#222-mac-management)
+		- [2.2.3 Uplink Interface Tracking](#223-uplink-interface-tracking)
+		- [2.2.4 Startup Delay Restore](#224-startup-delay-restore)
+- **[3 Design](#3-design)**
+	- [3.1 Overview](#31-overview)
+	- [3.2 DB Changes](#32-db-changes)
+		- [3.2.1 CONFIG DB](#321-config-db)
+			- *[3.2.1.1 Interface Tracking Table](#3211-interface-tracking-table)*
+		- [3.2.2 APP DB](#322-app-db)
+		- [3.2.3 STATE DB](#323-state-db)
+		- [3.2.4 ASIC DB](#324-asic-db)
+		- [3.2.5 COUNTER DB](#325-counter-db)
+	- [3.3 Switch State Service Design](#33-switch-state-service-design)
+		- [3.3.1 VxlanOrch Changes](#331-vxlanorch-changes)
+		- [3.3.2 FdbOrch Changes](#332-fdborch-changes)
+		- [3.3.3 IntfTrackOrch](#333-intftrackorch)
+			- *[3.3.3.1 IntfTrackOrch class](#3331-intftrackorch-class)*
+			- *[3.3.3.2 IntfTrackGroup class](#3332-intftrackgroup-class)*
+		- [3.3.4 PortsOrch changes](#334-portsorch-changes)
+		- [3.3.5 FdbSyncD](#335-fdbsyncd)
+	- [3.4 SAI](#34-sai)
+	- [3.5 CLI](#35-cli)
+		- [3.5.1 IS-CLI Compliance](#351-is-cli-compliance)
+		- [3.5.2 Data Models](#352-data-models)
+		- [3.5.3 Configuration Commands](#353-configuration-commands)
+			- *[3.5.3.1 Using Klish CLIs](#3531-using-klish-clis)*
+			- *[3.5.3.2 Using Click CLIs](#3532-using-click-clis)*
+			- *[3.5.3.3 Delay Restore Klish CLI](#3533-delay-restore-klish-cli)*
+		- [3.5.4 Show Commands](#354-show-commands)
+			- *[3.5.4.1 show interface tracking](#3541-show-interface-tracking)*
+			- *[3.5.4.2 Show delay restore timer](#3542-show-delay-restore-timer)*
+		- [3.5.5 Debug Commands](#355-debug-commands)
+		- [3.5.6 REST API Support](#356-rest-api-support)
+- **[4 Flow Diagrams](#4-flow-diagrams)**
+	- [4.1 LVTEP Tunnel Add](#41-lvtep-tunnel-add)
+	- [4.2 LVTEP Tunnel Delete](#42-lvtep-tunnel-delete)
+	- [4.3 MAC Addition from EVPN and ICCP](#43-mac-addition-from-evpn-and-iccp)
+	- [4.4 MAC Deletion from BGP EVPN and ICCP](#44-mac-deletion-from-bgp-evpn-and-iccp)
+	- [4.5 Interface tracking group create](#45-interface-tracking-group-create)
+	- [4.6 Handling upstream interface operational status](#46-handling-upstream-interface-operational-status)
+- **[5 Error Handling](#5-error-handling)**
+- **[6 Serviceability and Debug](#6-serviceability-and-debug)**
+- **[7 Warm Boot Support](#7-warm-boot-support)**
+- **[8 Scalability](#8-scalability)**
+- **[9 Unit Test](#9-unit-test)**
+	- [9.1 Functional Test Cases](#91-functional-test-cases)
+	- [9.2 Negative Test Cases](#92-negative-test-cases)
+	- [9.3 Warm boot Test Cases](#93-warm-boot-test-cases)
+- **[10 Configuration Example](#10-configuration-example)**
 
 # List of Tables
 
@@ -87,6 +87,7 @@ Rev 1.0
 | 0.4  | 8/26/2019  | Hasan Naqvi         | Add Fdbsyncd details                    |
 | 1.0  | 8/30/2019  | Lisa Nguyen         | Add MAC Management diagram              |
 | 1.1  | 12/18/2019 | Lisa Nguyen         | Update Serviceability and Debug section |
+| 1.2  | 06/17/2020 | Lisa Nguyen         | Add startup delay restore details       |
 
 # About this Manual
 This document provides general information about EVPN Logical VTEP feature in SONiC.
@@ -121,6 +122,7 @@ The diagram below provides a simple example of how LVTEP can be deployed in a le
 
 ![EVPN LVTEP Overview](images/LVTEPOverview.png "EVPN LVTEP Overview")
 
+**Figure 1: EVPN LVTEP Overview**
 In the above diagram:
 
 - Leaf1 and Leaf2 forms a MCLAG pair as described in MCLAG HLD. 
@@ -223,6 +225,7 @@ The following diagram describes the traffic forwarding behavior for known unicas
 
 ![EVPN LVTEP L2/L3 Traffic Forwarding](images/LVTEPUnicastTraffic.png "EVPN LVTEP L2/L3 Traffic Forwarding")
 
+**Figure 2: EVPN LVTEP L2/L3 Traffic Forwarding**
 In the above diagram:
 
 - Known unicast traffic from MHD1 to SHD3 can be LAG load-balanced to either MCLAG Leaf1 or Leaf2 as shown in Flow1 and Flow2 respectively. Leaf1 or Leaf2 will directly forward the traffic over VXLAN tunnel to Leaf3.
@@ -234,6 +237,7 @@ In the following digram, the table on the left describes the Broadcast, Unknown 
 
 ![EVPN LVTEP BUM Traffic Flooding](images/LVTEPBUMTraffic.png "EVPN LVTEP BUM Traffic Flooding")
 
+**Figure 3: EVPN LVTEP BUM Traffic Flooding**
 In the above diagram, the table describes the BUM traffic flooding behavior on Leaf1 node in the topology on the right. Note that:
 
 - BUM traffic received from local SHD, MHD, or VXLAN tunnel is always locally flooded to MHD unless its MCLAG interface is down
@@ -245,15 +249,35 @@ Loally learned MAC addresses on each LVTEP node are exchanged with remote leaf n
 
 ![EVPN LVTEP MAC Management](images/LVTEPFDBManagement.png "EVPN LVTEP MAC Management")
 
+**Figure 4: EVPN LVTEP MAC Management**
 ### 2.2.3 Uplink Interface Tracking
-
 In the following diagram,  if all the upstream links are down on Leaf1 node, all the traffic must be sent over to MCLAG peer node to reach Spine1 node. This would require the ICL link bandwidth to be large enough to handle the additional traffic as show in following figure.
 
 ![Traffic flow without Interface Tracking](images/LVTEPIntfTrack1.png "Traffic flow without Interface Tracking")
 
+**Figure 5: Traffic flow without Interface Tracking**
 Interface tracking introduces a mechanism with which the traffic from MHD1 and MHD2 can be sent to Leaf2 which has reachability to the spine by shutting down the MCLAG interfaces as shown in the following figure.
 
 ![Traffic flow with Interface Tracking](images/LVTEPIntfTrack2.png "Traffic flow with Interface Tracking")
+
+**Figure 6: Traffic flow with Interface Tracking**
+### 2.2.4 Startup Delay Restore
+The startup behavior described in this section is applicable to the following scenarios:
+
+- Node reboot triggered via reboot or fast-reboot command or system crash
+- Config reload command 
+- SwSS docker restart 
+
+The startup behavior is applicable to a MCLAG node forming a logical VTEP, namely Leaf1 or Leaf2 described in EVPN LVTEP Overview diagram above. On startup, the users can configure a delay restore timer to keep the MCLAG interfaces connecting to MHDs and orphan interfaces connecting to SHDs to be down for the duration of the specified time. The holdown of the interfaces will allow protocol to converge and VxLAN tunnels to be formed between MLAG node and remote leaf nodes before allowing traffic from MHDs and SHDs to be sent to MCLAG node. The holddown helps minimize traffic loss for the traffic sent from MHDs and SHDs connecting to MCLAG node to remote leaf nodes.   
+
+The delay restore logic will rely on the uplink interface tracking configuration to determine the MCLAG and orphan interfaces to be held down. In other words, uplink interface tracking must be configured in order for the delay restore timer to take effect. Below is the behavior of the delay restore timer:
+
+- The delay restore timer will be started when the first IP interface in the system comes up. 
+- While the timer is running, the MCLAG and orphan interfaces will be kept in operationally down state. The user can manually bring the interfaces up by shutting down and starting up the interfaces explicitly.
+- When the timer expires, the operationally down MCLAG and orphan interfaces will be brought up.  
+- By default, the timer is set to 300 seconds. This means delay restore is enabled by default. User needs to set the timer value to zero to disable it. 
+
+Since the delay timer is used in startup scenarios where the system will take more time to convergence compared to the leaf-spine uplink flapping scenario, the users should configure delay restore timer with a higher value than the uplink interface tracking timer. 
 
 # 3 Design
 
@@ -285,15 +309,28 @@ intf_name = "Ethernet"1-2DIGIT / "PortChannel"1*3DIGIT / "Vlan"1*4DIGIT
 ```
 
 ### 3.2.2 APP DB
-A new field will be added to PORT_TABLE, VLAN_TABLE and LAG_TABLE called ADMIN_DOWN_REASON to indicate any reason if the interface is forcefully admin down even if its configured as Admin UP in the config DB.
+Two new tables are added to APP_DB which allow uplink interface tracking and delay restore logic to control the operational status of the port and port-channel interfaces respectively.
 
 ```
-key              = PORT_TABLE:name
-key              = VLAN_TABLE:name
-key              = LAG_TABLE:name
+PORT_APP_STATUS_TABLE
+  Producer: IntfsOrch
+  Consumer: PortsOrch
 
-;field           = value
-ADMIN_DOWN_REASON = 1*255VCHAR
+key                    = PORT_APP_STATUS_TABLE:ifname 
+;field
+iftrack_status         = ”up" / ”down”        ;uplink interface tracking status
+delay_restore_status   = “up” / “down”        ;delay restore status
+```
+
+```
+LAG_APP_STATUS_TABLE
+  Producer: IntfsOrch
+  Consumer: TeamMgr
+  
+key                    = LAG_APP_STATUS_TABLE:lagname
+;field
+iftrack_status         = ”up" / ”down”         ;uplink interface tracking status
+delay_restore_status   = “up” / “down          ;delay restore status
 ```
 
 ### 3.2.3 STATE DB
@@ -366,6 +403,7 @@ FdbsyncD will take care of synchronizing the Local and ICCP remote MAC addresses
 
 ![MAC Handling in FdbsyncD](images/FdbsyncdLvtepMacHandling.png "MAC Handling in FdbsyncD")
 
+**Figure 7: MAC Handling in FdbsyncD**
 In the above diagram, Fdbsyncd listens to Kernel L2 Fdb events and programs VxLAN remote MAC addresses into VXLAN_FDB_TABLE. When a MAC is learned in the forwarding plane, Fdbsyncd will receive notification from STATE_FDB_TABLE and will program Local MAC address into Linux L2 Fdb. Zebra in BGP docker listens to Kernel L2 FDB events and will redistribute the local MAC into EVPN control plane.
 
 Typical MAC move scenarios handled by Fdbsyncd are listed below:
@@ -395,70 +433,143 @@ Broadcom SAI implementation for port isolation group will be extended to support
 ## 3.5 CLI
 ### 3.5.1 IS-CLI Compliance
 ### 3.5.2 Data Models
+
+OpenConfig MCLAG yang model is updated to support delay restore timer configured under MCLAG domain
+
+```
+openconfig-mclag
+  +--rw mclag
+     +--rw config
+     +--ro state
+     +--rw mclag-domains
+     |  +--rw mclag-domain* [domain-id]
+     |     +--rw domain-id    -> ../config/domain-id
+     |     +--rw config
+     |     |  +--rw domain-id?            uint32
+     |     |  +--rw source-address?       oc-inet:ip-address
+     |     |  +--rw peer-address?         oc-inet:ip-address
+     |     |  +--rw peer-link?            string
+     |     |  +--rw mclag-system-mac?     oc-yang:mac-address
+     |     |  +--rw keepalive-interval?   uint32
+     |     |  +--rw session-timeout?      uint32
+     |     |  +--rw delay-restore?        uint16
+     |     +--ro state
+     |        +--ro domain-id?            uint32
+     |        +--ro source-address?       oc-inet:ip-address
+     |        +--ro peer-address?         oc-inet:ip-address
+     |        +--ro peer-link?            string
+     |        +--ro mclag-system-mac?     oc-yang:mac-address
+     |        +--ro keepalive-interval?   uint32
+     |        +--ro session-timeout?      uint32
+     |        +--ro delay-restore?        uint16
+     |        +--ro oper-status?          enumeration
+     |        +--ro role?                 enumeration
+     |        +--ro system-mac?           oc-yang:mac-address
+```
+
+
+
 ### 3.5.3 Configuration Commands
 
 The following commands will be used to configure tracking group. The group will be created to track L3 interface.
 
+#### 3.5.3.1 Using Klish CLIs
+
+**Add linktrack group**
 ```
 sonic(config)# link state track NAME
-sonic(config-link-track)# description STRING
-sonic(config-link-track)# timeout <1-999>
-sonic(config-link-track)# downstream all-mclag
+```
 
+**Set a description for the group**
+```
+sonic(config-link-track)# [no] description STRING
+```
+
+**Set downstream port bringup timeout**
+```
+sonic(config-link-track)# timeout <1-999>
+```
+
+**Set downstream to all MCLAGs**
+```
+sonic(config-link-track)# downstream all-mclag
+```
+
+**Set upstream interfaces**
+```
 sonic(config)# interface (Ethernet|PortChannel|Vlan) PORTNUM
 sonic(config-if) link state group NAME upstream
 ```
 
+**Set orphan downstream ports**
+```
+sonic(config)# interface (Ethernet|PortChannel) PORTNUM
+sonic(config-if) link state group NAME downstream
+```
+
+#### 3.5.3.2 Using Click CLIs
+
+**config linktrack add** 
+
+```
+admin@sonic:~$ sudo config linktrack add --help
+Usage: config linktrack add [OPTIONS] <name>
+
+  Add Interface tracking group 
+
+Options:
+  -u, --upstream <upstream>      Set upstream interfaces
+  -d, --downstream <downstream>  Set downstream ports. Use port/lag names or 
+                                 all-mclag
+  -t, --timeout <timeout>        Set timeout value in seconds
+  --description <description>    Set group description
+  -?, -h, --help                 Show this message and exit. 
+```
+
+**config linktrack del** 
+
+```
+admin@sonic:~$ sudo config linktrack del --help
+Usage: config linktrack del [OPTIONS] <name>
+
+  Delete Interface tracking group 
+
+Options:
+  -?, -h, --help  Show this message and exit.
+```
+
+**config linktrack update**
+
+```
+admin@sonic:~$ sudo config linktrack update --help
+Usage: config linktrack update [OPTIONS] <name>
+
+  Update Interface tracking group
+
+Options:
+  -u, --upstream <upstream>       Set upstream interfaces
+  -nu, --no-upstream <upstream>   Remove upstream interfaces
+  -d, --downstream <downstream>   Set downstream ports. Use port/lag names or
+                                  all-mclag
+  -nd, --no-downstream <downstream>
+                                  Remove downstream ports
+  -t, --timeout <timeout>         Set timeout value in seconds
+  --description <description>     Set group description
+  -?, -h, --help                  Show this message and exit.
+```
+
+#### 3.5.3.3 Delay Restore Klish CLI
+
+Configure delay restore timer in seconds under MCLAG domain configuration
+
+```
+sonic(config)# mclag domain 5
+sonic-cli(config-mclag-domain-5)# delay-restore <seconds>
+```
+
 ### 3.5.4 Show Commands
 
-#### 3.5.4.1 show interface enhancements
-
-show interface command will be enhanced to show the reason an interface is disabled including the interface group(s) name(s).
-
-```
-sonic# show interface status
-------------------------------------------------------------------------------------------
-Name                Description         Admin          Oper           Speed          MTU  
-------------------------------------------------------------------------------------------
-Ethernet0           -                   up             down           100GB          9100 
-Ethernet4           -                   up             down           100GB          9100 
-Ethernet8           -                   up             down           100GB          9100 
-Ethernet12          -                   up             down           100GB          9100 
-Ethernet16          -                   up             down           100GB          9100 
-Ethernet20          -                   up             down           100GB          9100 
-Ethernet24          -                   up             down           100GB          9100 
-Ethernet28          -                   up             down           100GB          9100 
-Ethernet32          -                   up             down           100GB          9100 
-Ethernet36          -                   up             down           100GB          9100 
-Ethernet40          -                   up             down           100GB          9100 
-Ethernet44          -                   up             down           100GB          9100 
-Ethernet48          -                   up             down           100GB          9100 
-Ethernet52          -                   up             down           100GB          9100 
-Ethernet56          -                   up             down           100GB          9100 
-Ethernet60          -                   up             down           100GB          9100 
-Ethernet64          -                   up             down           100GB          9100 
-Ethernet68          -                   up             down           100GB          9100 
-Ethernet72          -                   up             down           100GB          9100 
-Ethernet76          -                   up             down           100GB          9100 
-Ethernet80          -                   up             down           100GB          9100 
-Ethernet84          -                   up             down           100GB          9100 
-Ethernet88          -                   up             down           100GB          9100 
-Ethernet92          -                   up             down           100GB          9100 
-Ethernet96          -                   up             down           100GB          9100 
-Ethernet100         -                   up             down           100GB          9100 
-Ethernet104         -                   up             down           100GB          9100 
-Ethernet108         -                   up             down           100GB          9100 
-Ethernet112         -                   up             down           100GB          9100 
-Ethernet116         -                   up             down           100GB          9100 
-Ethernet120         -                   up             down           100GB          9100 
-Ethernet124         -                   up             down           100GB          9100 
-PortChannel1        -                   up             down*          400GB          9100
-
-* Operationally disabled due to: Interface tracking
-
-```
-
-#### 3.5.4.2 show interface tracking 
+#### 3.5.4.1 show interface tracking
 
 The following command shows the configured interface tracking groups
 
@@ -475,10 +586,11 @@ Timeout: 120 seconds
 Upstream Interfaces:
     Ethernet0 (Up)
     Ethernet4 (Up)
-    Vlan100   (Up)
+    Vlan100 (Up)
 Downstream Interfaces:
     PortChannel1 (Up)
     PortChannel2 (Up)
+    Ethernet4 (Up)
 
 sonic# show link state group MclagLinkTracking
 Name: MclagLinkTracking
@@ -487,10 +599,35 @@ Timeout: 60 seconds
 Upstream:
     Ethernet0 (Down)
     Ethernet4 (Down)
-    Vlan100   (Down)
+    Vlan100 (Down)
 Downstream:
     PortChannel1 (Disabled)
     PortChannel2 (Disabled)
+    Ethernet4 (Disabled)
+```
+
+#### 3.5.4.2 Show delay restore timer
+
+```
+sonic#show mclag brief
+
+Domain ID                   : 5
+Role                        : Active
+Session Status              : Up
+Peer Link Status            : Up
+Source Address              : 192.168.1.1
+Peer Address                : 192.168.1.2
+Peer Link                   : PortChannel30
+Keepalive Interval          : 1 secs
+Session Timeout             : 15 secs
+Delay Restore               : 300 secs
+System MAC                  : b8:6a:97:73:6c:96
+MCLAG System MAC Address    : 00:80:c2:00:00:05
+Gateway MAC Address         : 00:01:02:03:04:05
+Number of MCLAG Interfaces  : 2
+MCLAG Interface             Local/Remote Status
+PortChannel50               Up/Up
+PortChannel60               Up/Up
 ```
 
 ### 3.5.5 Debug Commands
@@ -503,44 +640,39 @@ The existing debug commands from MCLAG and EVPN VXLAN will be used to debug LVTE
 
 # 4 Flow Diagrams
 
-### 4.1.1 LVTEP Tunnel Add
+## 4.1 LVTEP Tunnel Add
 The following diagram shows how VXLAN tunnel add handling is extended for LVTEP tunnel
 
 ![EVPN LVTEP Tunnel Add](images/LVTEPTunnelAdd.png "EVPN LVTEP Tunnel Add")
 
-### 4.1.2 LVTEP Tunnel Delete
+**Figure 8: EVPN LVTEP Tunnel Add**
+## 4.2 LVTEP Tunnel Delete
 The following diagram show how VXLAN tunnel delete handling is extended for LVTEP tunnel
 
 ![EVPN LVTEP Tunnel Delete](images/LVTEPTunnelDel.png "EVPN LVTEP Tunnel Delete")
 
-
-### 4.1.3 MAC Addition from EVPN and ICCP
-
+**Figure 9: EVPN LVTEP Tunnel Delete**
+## 4.3 MAC Addition from EVPN and ICCP
 ![FdbOrch Handling Mac ADD  from Multiple Sources](images/FdbOrchHandlingMacADDFromMultipleSources.png "FdbOrch Handling Mac ADD from Multiple Sources")
 
-### 4.1.4 MAC Deletion from BGP EVPN and ICCP
-
+**Figure 10: FdbOrch Handling Mac ADD from Multiple Sources**
+## 4.4 MAC Deletion from BGP EVPN and ICCP
 ![FdbOrch Handling Mac Del from Multiple Sources](images/FdbOrchHandlingMacDelFromMultipleSources.png "FdbOrch Handling Mac Del from Multiple Sources")
 
-
-
-## 4.2 Interface tracking group create
-
+**Figure 11: FdbOrch Handling Mac Del from Multiple Sources**
+## 4.5 Interface tracking group create
 The following diagram shows how interface tracking group create is handled.
 
 ![Handling interface tracking group create](images/IntfTrackCreate.png "Handling interface tracking group create")
 
-
-
-## 4.3 Handling upstream interface operational status
-
+**Figure 12: Handling interface tracking group create**
+## 4.6 Handling upstream interface operational status
 The following diagram shows how operational status events from Ports Orch is handled by Intf Tracking Orch agent.
 
 ![Handling interface operational status updates](images/IntfTrackOperStatus.png "Handling interface operational status updates")
 
-
+**Figure 13: Handling interface operational status updates**
 # 5 Error Handling
-
 Error returned by SAI for the added SAI calls will be added to syslog with ERROR log level. 
 
 # 6 Serviceability and Debug
