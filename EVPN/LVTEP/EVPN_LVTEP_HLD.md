@@ -72,6 +72,7 @@ Rev 1.0
 	- [9.1 Functional Test Cases](#91-functional-test-cases)
 	- [9.2 Negative Test Cases](#92-negative-test-cases)
 	- [9.3 Warm boot Test Cases](#93-warm-boot-test-cases)
+	- [9.4 Startup Delay Restore Test Cases](#94-startup-delay-restore-test-cases)
 - **[10 Configuration Example](#10-configuration-example)**
 
 # List of Tables
@@ -273,7 +274,7 @@ The startup behavior is applicable to a MCLAG node forming a logical VTEP, namel
 The delay restore logic will rely on the uplink interface tracking configuration to determine the MCLAG and orphan interfaces to be held down. In other words, uplink interface tracking must be configured in order for the delay restore timer to take effect. Below is the behavior of the delay restore timer:
 
 - The delay restore timer will be started when the first IP interface in the system comes up. 
-- While the timer is running, the MCLAG and orphan interfaces will be kept in operationally down state. The user can manually bring the interfaces up by shutting down and starting up the interfaces explicitly.
+- While the timer is running, the MCLAG and orphan interfaces will be kept in operationally down state. The user can manually bring the interfaces up by shutting down and starting up the interfaces explicitly.  Note that if user shutdown and startup the interface again while the delay restore timer is still running, the delay restore timer is not re-applied to the interface. 
 - When the timer expires, the operationally down MCLAG and orphan interfaces will be brought up.  
 - By default, the timer is set to 300 seconds. This means delay restore is enabled by default. User needs to set the timer value to zero to disable it. 
 
@@ -769,6 +770,14 @@ The feature will be tested with the following scaling numbers:
 3. Verify traffic between MLAG server and server on remote leaf recovers correctly after SwSS warmboot
 4. Verify traffic between MLAG server and server on remote leaf recovers correctly after system warmboot
 5. Verify traffic between MLAG server and server on remote leaf recovers correctly after MLAG peer node warmboot
+
+## 9.4 Startup Delay Restore Test Cases
+
+1. Verify default delay restore timer works in all startup scenarios
+2. Verify user can change the delay restore timer value
+3. Verify user-configured timer take effect in all startup scenarios
+4. Verfiy delay restore timer is shown correctly
+5. Verify user can manully bring the interface up while it is in holddown state by using interface shutdown and startup commands 
 
 # 10 Configuration Example
 
