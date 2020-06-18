@@ -5074,8 +5074,11 @@ This command displays portgroup information of current platform. It displays eac
             3  Ethernet24-35  25000, [10000, 1000]
             4  Ethernet36-47  25000, [10000, 1000]
   ```
-  25000, [10000, 1000] means that port group support 25000, 10000 and 1000 speeds.
-  [10000, 1000] means individual ports within that portgroup can change speed between 10000/1000 using 'config interface speed' command.
+  25000, [10000, 1000] means that port group support 25000 and 10000 speeds.
+  
+  [10000, 1000] means that port group support 10000 speeds. and individual ports within that portgroup can change speed to 1000 using 'config interface speed' command if the portgroup is in 10000.
+  
+  25000, 1000 means that port group support 25000 and 1000 speeds.
 
 **portgroup config commands
 This command configures portgroup speed.
