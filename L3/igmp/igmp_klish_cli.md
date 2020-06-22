@@ -234,7 +234,7 @@ SONiC Yang definitions for IGMP will be newly defined.  This Yang definition rep
 IGMP Configuration data will be as per SONiC YANG model.
 
 ```
-IGMP_INTERFACE
+### IGMP_INTERFACE
 
 Producer: config manager
 
@@ -253,8 +253,9 @@ key = IGMP_INTERFACE|Interface name|Multicast group address|Source address
           ; enable = true
 ```
 
-IGMP_INTERFACE_QUERY
+### IGMP_INTERFACE_QUERY
 
+```
 Producer: config manager
 
 Consumer: bgpcfgd
@@ -275,7 +276,7 @@ last-member-query-count        = 7                ; IGMP last member query count
 last-member-query-interval     = 24               ; IGMP last member query interval
 query-interval                 = 12               ; IGMP host query interval
 query-max-response-time        = 25               ; IGMP max query response value (seconds)
-   
+```
 ### 3.2.2 APP DB
 
 IGMP will be under FRR BGP docker. Hence there will not be any application data of IGMP in SONiC APP DB.
