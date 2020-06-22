@@ -233,6 +233,7 @@ SONiC Yang definitions for IGMP will be newly defined.  This Yang definition rep
 
 IGMP Configuration data will be as per SONiC YANG model.
 
+```
 IGMP_INTERFACE
 
 Producer: config manager
@@ -250,6 +251,7 @@ key = IGMP_INTERFACE|Interface name|Multicast group address|Source address
                         
 ; field = value
           ; enable = true
+```
 
 IGMP_INTERFACE_QUERY
 
