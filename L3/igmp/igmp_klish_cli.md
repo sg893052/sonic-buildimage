@@ -25,7 +25,7 @@
      * [3.6 CLI](#36-cli)
   * [4 Flow Diagrams](#4-flow-diagrams)
   * [6 Warm Boot Support](#6-warm-boot-support)
-  * [7 Warm Boot Support](#7-warm-boot-support)
+  * [7 Dynamic Port Breakout](#7-dynamic-port-breakout)
   * [8 Scalability](#8-scalability)
   * [9 Unit Test](#9-unit-test)
 
