@@ -31,6 +31,7 @@ Dynamic Port Breakout (DPB)
 | 0.3 | 04/21/2020 | Vishnu Shetty | Update review comments |
 | 0.4 | 05/11/2020 | Vishnu Shetty | Update QoS config comments |
 | 0.5 | 05/29/2020 | Vishnu Shetty | Update CLI and review comments |
+| 0.6 | 06/21/2020 | Vishnu Shetty | Update CLI output and review comments |
 
 # About this Manual
 
@@ -47,7 +48,7 @@ This document captures dynamic port break-out requirements and provides design o
 | Term | Meaning |
 | ---- | ---- |
 | CONFIG_DB | SONiC configuration database in Redis |
-| CVL | Config VaLidation |
+| CVL | Config Validation |
 | DPB | Dynamic Port Breakout |
 
 # 1 Feature Overview
@@ -495,21 +496,21 @@ sonic-mgmt-common/models/yang/openconfig-platform.yang
 **interface breakout port <slot/port> mode \<option\>**
 **no interface breakout port <slot/port>**
 
-slot - for future use (fixed to 1 now for pizza box)
+slot - for future use (fixed to 1 now for rack unit/pizza box)
 port - Front panel port number (cage number)
 
-To breakout to 4x10G:
+To breakout to 4x25G:
 
 ```
 sonic-cli# configure terminal
-sonic-cli(config)# interface breakout port 1/1 mode 4x10G
+sonic-cli(config)# interface breakout port 1/49 mode 4x25G
 ```
 
 To undo breakout 4x25G (back to default mode, e.g. 1x100G):
 
 ```
 sonic-cli# configure terminal
-sonic-cli(config)# no interface breakout port 1/1
+sonic-cli(config)# no interface breakout port 1/49
 ```
 
 #### 3.6.2.2 Show Commands
@@ -518,15 +519,70 @@ To display broken out ports and status.
 
 **show interface breakout port <slot/port>**
 ```
- show interface breakout port 1/1
+sonic# show interface breakout port 1/49
+-----------------------------------------------
+Port  Breakout Mode  Status        Interfaces          
+-----------------------------------------------
+1/49   4x25G          Completed    Ethernet48          
+                                   Ethernet49          
+                                   Ethernet50          
+                                   Ethernet51          
+sonic#
 ```
+To display breakout mode.
 
+**show interface breakout port <slot/port>**
+```
+sonic# show interface breakout modes
+----------------------------------------------
+Port Interface Supported Modes  Default Mode
+---------------------------------------------
+1/49 Ethernet48 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/53 Ethernet52 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/57 Ethernet56 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/61 Ethernet60 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/65 Ethernet64 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/69 Ethernet68 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/73 Ethernet72 1x100G[40G], 4x25G[10G] 1x100G[40G]
+sonic#
+sonic(config)# interface-naming standard
+sonic# show interface breakout modes
+------------------------------------------------
+Port  Interface   Supported Modes  Default Mode                     
+------------------------------------------------
+1/49 Eth1/49 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/53 Eth1/50 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/57 Eth1/51 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/61 Eth1/52 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/65 Eth1/53 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/69 Eth1/54 1x100G[40G], 4x25G[10G] 1x100G[40G]
+1/73 Eth1/55 1x100G[40G], 4x25G[10G] 1x100G[40G]
+sonic#
+```
 To display port dependent configurations.
 
 **show interface breakout dependencies port <slot/port>**
 
 ```
- show interface breakout dependencies port 1/1
+sonic# show interface breakout dependencies port 1/49
+----------------------------------
+Dependent Configurations
+----------------------------------
+VLAN|Vlan5
+VLAN|Vlan4
+VLAN|Vlan6
+VLAN|Vlan3
+VLAN|Vlan2
+VLAN|Vlan7
+VLAN|Vlan8
+VLAN_MEMBER|Vlan8|Ethernet48
+VLAN_MEMBER|Vlan5|Ethernet48
+VLAN_MEMBER|Vlan2|Ethernet48
+VLAN_MEMBER|Vlan6|Ethernet48
+VLAN_MEMBER|Vlan3|Ethernet48
+VLAN_MEMBER|Vlan7|Ethernet48
+VLAN_MEMBER|Vlan4|Ethernet48
+sonic#
 ```
 
 #### 3.6.2.3 Debug Commands
@@ -605,8 +661,16 @@ There is no direct impact on warm-reboot. As port increases in the system, the d
 
   Tests can be performed on any platform.  The script will execute all possible break-out combination and provides result. 
 
-  tests/ut/dpb/test_ut_dpb_infra.py
+tests/ut/dpb/test_ut_dpb_infra.py
+
+**Summary of tests:**
+
+ - Performs all breakout combination by parsing platform.json.  
+ - Tries invalid mode - negative test. 
+ - On two node setup breaks out ports and validates the traffic. 
+ - After breakout , does warm-boot and fast-boot.
 
 # 10 Internal Design Information
 
  None
+
