@@ -233,9 +233,9 @@ SONiC Yang definitions for IGMP will be newly defined.  This Yang definition rep
 
 IGMP Configuration data will be as per SONiC YANG model.
 
-```
 ### IGMP_INTERFACE
 
+```
 Producer: config manager
 
 Consumer: bgpcfgd
