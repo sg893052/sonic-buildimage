@@ -228,7 +228,6 @@ SONiC Yang definitions will be written to support IGMP configuration data.  OC Y
 
 SONiC Yang definitions for IGMP will be newly defined.  This Yang definition represents IGMP configuration data in SONiC Config DB. IGMP configurations will be stored in config_db.json as per IGMP SONiC YANG defined.
 
-
 ### 3.2.1 CONFIG DB
 
 IGMP Configuration data will be as per SONiC YANG model.
