@@ -297,20 +297,26 @@ Following is the traffic forwarding behavior for different types of traffic with
     - Queuing is based on payload PCP value.
   - L2 / L3 forwarded Traffic with L3 header 
     - On Tunnel encapsulation, outer header DSCP value is copied from the payload header DSCP value. 
-      - For L2 forwarded traffic, queuing is based on the payload PCP value. 
-      - For L3 forwarded traffic, queuing is based on the payload DSCP value.
-    - On Transit, queuing is based on the outer header DSCP value.
+      - Queuing is based on payload PCP value by default. 
+      - User can configure QoS map on the access interface to define queuing behavior.
+    - On Transit, 
+      - Default queuing is done to queue 0.
+      - User can apply a DSCP to TC map on the ingress interface to define queuing based on outer header DSCP value. 
     - On Tunnel termination, 
       - Outer header DSCP value is copied over to the inner IP header DSCP. Implementation is platform dependent.
-      - Queuing is based on outer header DSCP value. 
+      - Default queuing is done to queue 0.
+      - User can apply a DSCP to TC map on the network side ports to do queuing based on outer header DSCP value.
 
 - Pipe mode 
   - On Tunnel encapsulation, outer header DSCP value is based on the configured DSCP value. 
-    - For L2 forwarded traffic, queuing is based on the payload PCP value.
-    - For L3 forwarded traffic, queuing is based on the payload DSCP value.
-  - On Transit, queuing is based on the outer header DSCP value.
+    - Queuing is based on payload PCP value by default. 
+    - User can configure QoS map on the access interface to define queuing behavior.
+  - On Transit, 
+    - Default queuing is done to queue 0.
+    - User can apply a DSCP to TC map on the ingress interface to define queuing based on outer header DSCP value. 
   - On Tunnel termination, inner IP header DSCP value is retained.
-    - Queuing is based on outer header DSCP value.
+    - Default queuing is done to queue 0.
+    - User can apply a DSCP to TC map on the network side ports to define queuing based on outer header DSCP value.
   
 
 # 4 Feature Design
@@ -1302,6 +1308,11 @@ To create vxlan interface with src ip
 
 curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X POST https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" }, \"openconfig-vxlan:vxlan-if\": { \"config\": { \"source-vtep-ip\": \"4.5.6.7\" }    }     } ] }" -k
 
+To create vxlan interface with src ip, qos params
+-------------------------------------------------
+
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X POST https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" }, \"openconfig-vxlan:vxlan-if\": { \"config\": { \"source-vtep-ip\": \"4.5.6.7\", \"qos-mode\": \"UNIFORM\" }    }     } ] }" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X POST https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" }, \"openconfig-vxlan:vxlan-if\": { \"config\": { \"source-vtep-ip\": \"4.5.6.7\", \"qos-mode\": \"PIPE\", \"dscp\": 30 }    }     } ] }" -k
 
 To create src ip address for an existing vxlan interface 
 ---------------------------------------------------------
@@ -1311,6 +1322,11 @@ curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X P
 
 Note: src ip (source-vtep-ip) address cannot be replaced, or updated if exist
 
+To create/update qos-mode for an existing vxlan interface 
+--------------------------------------------------
+curl -v -u admin:YourPaSsWoRd -H "Content-Type: application/yang-data+json" -X PATCH https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config  -d "{\"openconfig-vxlan:config\":{\"source-vtep-ip\":\"4.5.6.7\", \"qos-mode\": \"UNIFORM\"}}" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-Type: application/yang-data+json" -X PATCH https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config  -d "{\"openconfig-vxlan:config\":{\"source-vtep-ip\":\"4.5.6.7\", \"qos-mode\": \"PIPE\", \"dscp\":32}}" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-Type: application/yang-data+json" -X PATCH https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config  -d "{\"openconfig-vxlan:config\":{\"source-vtep-ip\":\"4.5.6.7\",\"dscp\":48 }}" -k
 
 To delete the src ip address for an existing vxlan interface
 -------------------------------------------------------------
@@ -1318,6 +1334,10 @@ To delete the src ip address for an existing vxlan interface
 curl -v -u admin:YourPaSsWoRd -X DELETE -H "Content-type: application/yang-data+json" https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/source-vtep-ip -k
 
 Note: This will work, if there is no tunnel map (vni) exist for this vxlan interface, otherwise src ip address cannot deleted
+
+To delete the qos-mode for an existing vxlan interface
+------------------------------------------------------
+Deletion of qos-mode / dscp value is not supported. 
 
 To delete the vxlan interface
 ------------------------------
@@ -1353,6 +1373,8 @@ curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X G
 curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if -k
 curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/source-vtep-ip -k
 curl -v -u admin:YourPaSsWoRd -X GET -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-network-instance:network-instances/network-instance=Vlan5/openconfig-vxlan:vxlan-vni-instances -H "accept: application/yang-data+json" -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/qos-mode -k
+curl -v -u admin:YourPaSsWoRd -H "Content-type: application/yang-data+json" -X GET https://10.59.132.165/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/dscp -k
 
 GET support - state
 -------------------
@@ -1515,6 +1537,8 @@ A dedicated router port/unnumbered interface is not preferred here because the s
 Following is the qos-mode behavior on Trident3 based platforms.
 - Uniform - Uniform mode is supported only at encapsulation. i.e. payload DSCP value is copied to outer header DSCP value. At decapsulation, outer header DSCP is not copied to inner header DSCP. The original inner header DSCP value is retained.
 - Pipe - The behavior is as mentioned in section 3.2 above.
+Modification of qos-mode dynamically is supported but can result in traffic loss for a small duration during the update. 
+Queuing on tunnel termination is to queue 0 by default. User should bind a DSCP to TC map on the network side ports to define queuing behavior.
 
 ### 8.4 Unit Test Plans
 
