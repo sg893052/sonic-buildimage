@@ -307,32 +307,32 @@ module: openconfig-qos
 
 - Config TC to DSCP map  
 ````
-  sonic(config)# qos-map tc-dscp-map <mapname>
+  sonic(config)# qos map tc-dscp <mapname>
   sonic(conf-tc-dscp-map-mapname)# traffic-class <0..7> dscp <0..63>
 
-  sonic(config)# no tc-dscp-map <mapname>
+  sonic(config)# no qos map tc-dscp <mapname>
 ````
 
 - Config TC to DOT1P map  
 ````
-  sonic(config)# qos-map tc-dot1p-map <mapname>
+  sonic(config)# qos map tc-dot1p <mapname>
   sonic(conf-tc-dot1p-map-mapname)# traffic-class <0..7> dot1p <0..7>
 
-  sonic(config)# no tc-dot1p-map <mapname>
+  sonic(config)# no qos map tc-dot1p <mapname>
 ````
 
 - Config interface QoS
 ````
-  sonic(config)# qos interface <ifname>
-  sonic(conf-qos-ifname)# tc-to-dscp-map <mapname>
-  sonic(conf-qos-ifname)# tc-to-dot1p-map <mapname>
-  sonic(conf-qos-ifname)# dscp-to-tc-map <mapname>
-  sonic(conf-qos-ifname)# dot1p-to-tc-map <mapname>
+  sonic(config)# interface <ifname>
+  sonic(conf-if-ifname)# qos-map tc-dscp <mapname>
+  sonic(conf-if-ifname)# qos-map tc-dot1p <mapname>
+  sonic(conf-if-ifname)# qos-map dscp-tc <mapname>
+  sonic(conf-if-ifname)# qos-map dot1p-tc <mapname>
      
-  sonic(conf-qos-ifname)# no tc-to-dscp-map <mapname>
-  sonic(conf-qos-ifname)# no tc-to-dot1p-map <mapname>
-  sonic(conf-qos-ifname)# no dscp-to-tc-map <mapname>
-  sonic(conf-qos-ifname)# no dot1p-to-tc-map <mapname>
+  sonic(conf-if-ifname)# no qos-map tc-dscp <mapname>
+  sonic(conf-if-ifname)# no qos-map tc-dot1p <mapname>
+  sonic(conf-if-ifname)# no qos-map dscp-tc <mapname>
+  sonic(conf-if-ifname)# no qos-map dot1p-tc <mapname>
 ````
 
 ### 3.2.2 Show Commands
@@ -341,13 +341,13 @@ module: openconfig-qos
 ````
   >show qos interface <ifname>  	
   Sample Output:
-      Traffic-Class-to-DSCP map: tc-to-dscp-map_1
-      Traffic-Class-to-DOT1P map: tc-to-dot1p-map_1
+      tc-dscp-map: tc-to-dscp-map_1
+      tc-dot1p-map: tc-to-dot1p-map_1
 ````
 
 - Show TC to DSCP map
 ````
-  >show qos-map tc-dscp-map <mapname>   
+  >show qos map tc-dscp [<mapname>]
   Sample Output:
   TC-DSCP-MAP: tc-to-dscp-map1
   ----------------------------
@@ -361,7 +361,7 @@ module: openconfig-qos
 
 - Show TC to DOT1P map
 ````
-  >show qos-map tc-dot1p-map <mapname>
+  >show qos map tc-dot1p [<mapname>]
   Sample Output:
   TC-DOT1P-MAP: tc-to-dot1p-map1
   ----------------------------
