@@ -459,6 +459,8 @@ CONFIG_DB:
     },
 },
 ```
+
+##### 3.5.2.1.1 Default System Classifiers
 Table 1 shows a list of CoPP classifiers created by the system and the default CoPP policy configuration.  
 
 The scaling notes provide hints on the derivation of default rate limits. Latency sensitive protocols are set to higher rates.  Rates are subject to change based on performance and system testing.
