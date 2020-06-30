@@ -64,6 +64,7 @@
 | Rev |     Date    |          Authors             | Change Description                |
 |:---:|:-----------:|:----------------------------:|-----------------------------------|
 | 0.1 | 04/20/2020  |  Michael Li, Aravindu Maneti | Initial version                   |
+| 0.2 | 06/30/2020  |  Michael Li, Aravindu Maneti | Update init behavior and CPU Queue assignments |
 
 
 # About this Manual
@@ -108,7 +109,7 @@ The switch creates a default "system CoPP policy" that is statically applied to 
 2. Multiple CoPP classifiers can be assigned to the same CPU queue. The max number of CPU queues will be silicon specific.
 
 ### 1.1.4 Performance Requirements
-1. The max aggregate packet rate should be tuned to protect the CPU from utilizing too much CPU bandwidth (<mark>**TODO: provide guidance on what is "too much CPU utilization"**</mark>)
+1. The max aggregate packet rate should be tuned to protect the CPU from utilizing too much CPU bandwidth
 
 ### 1.1.5 Warm Boot Requirements
 CoPP functionalities are not expected to work during warm reboot but will be restored after warm reboot. Traffic to CPU will get dropped when CPU is reset until SAI drivers have restored the CPU pkt path.
@@ -168,13 +169,7 @@ The COPP_TRAP table allows configuration of a CoPP trap's packet match condition
 key           = "COPP_TRAP|name"
 trap_ids      = name ; list of trap ids (ie: bgp, lacp, arp, etc)
 trap_group    = ref_hash_key_reference ; reference to COPP_GROUP table entry
-
-;Feature specific attributes (sFlow)
-genetlink_name       = name      ; "psample" for sFlow 
-genetlink_mcgrp_name = group_name; "packets" for sFlow 
 ```  
-#### 3.2.1.1.1 Feature specific COPP_TRAP attributes 
-Feature specific attributes (currently only genetlink parameters for sFlow) will be exposed in CONFIG_DB COPP_TRAP for schema backward compatibility but will not be configurable from mgmt and CLI.  The CoPPMgr daemon will be responsible for adding these attributes to the COPP_TRAP table when receiving feature specific trap_ids such as "sflow".
 
 #### 3.2.1.2 COPP_GROUP
 The COPP_GROUP table allows configuration of the CoPP trap's action attributes such as queue mappings, packet action, and policer attributes.
@@ -195,6 +190,13 @@ cir           = number       ; guaranteed rate in pps or bytes/sec
 cbs           = number       ; guaranteed burst size in packets or bytes
 pir           = number       ; max rate in pps or bytes/sec
 pbs           = number       ; max burst size in packets or bytes
+```
+#### 3.2.1.2.1 Feature specific COPP_GROUP attributes 
+Feature specific attributes (currently only genetlink parameters for sFlow) will be exposed in CONFIG_DB COPP_GROUP for schema backward compatibility but will not be configurable from mgmt and CLI.  The CoPPMgr daemon will be responsible for adding these attributes to the APP_DB COPP_TABLE when configuring feature specific trap_ids such as "sflow".
+```
+;Feature specific attributes (sFlow)
+genetlink_name       = name      ; "psample" for sFlow 
+genetlink_mcgrp_name = group_name; "packets" for sFlow 
 ```
 
 ### 3.2.2 APP_DB
@@ -262,33 +264,64 @@ CoPP Orchestration agent is responsible for the following activities:
    - Calls hostif SAI APIs to create host interface traps with parameters from COPP_TABLE entries 
    - Calls policer SAI APIs to create policers with parameters from COPP_TABLE entries
 
-
 ### 3.3.3 Default CoPP Tables
-The default CoPP configuration is stored in JSON files that are loaded by the swssconfig utility when the swssconfig init bash script is started by the system supervisord daemon during bootup.
 
-The [swssconfig.sh script](https://github.com/Azure/sonic-buildimage/blob/master/dockers/docker-orchagent/swssconfig.sh) and [swssconfig utility](https://github.com/Azure/sonic-swss/blob/master/swssconfig/swssconfig.cpp) loads the following CoPP related JSON files from the default SWSS_CONFIG_DIR directory in the swss docker into the APP_DB (bypasses CONFIG_DB).
+### **swssconfig**
+In the current behavior, the [swssconfig.sh script](https://github.com/Azure/sonic-buildimage/blob/master/dockers/docker-orchagent/swssconfig.sh) and [swssconfig utility](https://github.com/Azure/sonic-swss/blob/master/swssconfig/swssconfig.cpp) loads the following CoPP related JSON files from the default SWSS_CONFIG_DIR directory in the swss docker into the APP_DB (bypasses CONFIG_DB).
 
     /etc/swss/config.d/early-copp.config.json
     /etc/swss/config.d/00-copp.config.json
 
-The 00-copp.config.json file (located at swssconfig/sample/00-copp.config.json) shall be modified to be compatible to CONFIG_DB schema (remove "OP" attributes used by `swssconfig` utility).  Instead of using the `swssconfig` utility to load the CoPP file directly into APP_DB, the `swssconfig.sh` script will be modified to use `sonic-cfggen` script to load the CoPP JSON file to CONFIG_DB.
+Handling of CoPP config json file shall be removed from ```dockers/docker-orchagent/swssconfig.sh`` script in the new CoPP Mgmt.
 
-```
-sonic-cfggen -j /etc/swss/config.d/00-copp.config.json --write-to-db
-```
+### **00-copp.config.json**
+The 00-copp.config.json file (located at swssconfig/sample/00-copp.config.json) shall be modified to be compatible to CONFIG_DB schema. It shall be renamed to ```copp_config.j2``` and moved to ```files/build_templates/copp_config.j2```
 
-The swssconfig.sh script loads the default configuration to CONFIG_DB. Some time later, the function postStartAction() in the docker control script (docker_image_ctl.j2) loads the config_db.json. Any user defined CoPP configuration will overwrite the defaults loaded by the swssconfig.sh script earlier.
-
+As part of the post start action, the Config DB shall be loaded with default CoPP tables and/or any previously configured CoPP tables as part of the following handler in ```files/build_templates/docker_image_ctl.j2```. Any user defined CoPP configuration in config_db.json will overwrite the CoPP defaults loaded from copp_config.json.
 ```
     function postStartAction()
         ...
+        if [ -r /etc/sonic/copp_config.json ]; then
+            sonic-cfggen -j /etc/sonic/copp_config.json --write-to-db
+        fi
         if [ -r /etc/sonic/config_db.json ]; then
             sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
         fi
 ```
+
 To handle potential merge conflicts when adding user defined CoPP configuration over the default CoPP configuration, the following limitations are imposed:
-* The system CoPP classifiers cannot be deleted but the match conditions can be modified. Changes to the system CoPP classifiers is a modify operation on an existing COPP_TABLE entry.
-* A protocol trap may only be added to a single CoPP classifier. This prevents a trap from being in both default and user defined CoPP configurations.
+* The system CoPP classifiers cannot be deleted and the match conditions cannot be modified. User created CoPP classifiers can be deleted and match conditions be added and deleted.
+* A protocol trap may only be added to a single user CoPP classifier. This prevents a trap from being in multiple user defined CoPP configurations.
+
+### **config save**
+The default config in copp_config.json is loaded into CONFIG_DB but should not be written back to config_db.json if the COPP config has not been modified.  Filtering logic is added to ```sonic-cfggen``` to only write back config modifications to the config_db.json file.
+
+On config save, sonic-cfggen will also detect deleted nodes from default config. These will be added back to the config_db.json file with a 'NULL' value to explicitly mark the deleted node. coppmgrd will handle this 'NULL' value and set field to its default value.
+
+* "config save" operation
+```
+sonic-cfggen -d --print-data > /etc/sonic/config_db.json
+```
+* changes in sonic-cfggen
+```
+    if args.print_data:
+        filter_dflt_copp_config(data)
+        print(json.dumps(FormatConverter.to_serialized(data), indent=4, cls=minigraph_encoder))
+```
+
+### **config reload**
+Add loading the default copp_config.json file during Click "config reload" script before loading config_db.json
+
+```
+        # Load CoPP config                     
+        if os.path.isfile('/etc/sonic/copp_config.json'):         
+            command = "{} -j /etc/sonic/copp_config.json --write-to-db".format(SONIC_CFGGEN_PATH)                                  
+            run_command(command, display_cmd=True)
+
+        command = "{} -j {} --write-to-db".format(SONIC_CFGGEN_PATH, filename) 
+        run_command(command, display_cmd=True)         
+        client.set(config_db.INIT_INDICATOR, 1)   
+```
 
 ### 3.3.3 Early CoPP Config JSON file
 To address an issue with CoPP config JSON file processing delayed during fast_reboot processing of a scaled number of entries in FDB and ARP tables, an "early CoPP" JSON file is introduced to process traps before loading FDB and ARP tables. The early CoPP JSON file will be loaded directly to APP_DB.  
@@ -352,6 +385,58 @@ The user facing COPP data model will build on top of the SONiC ACL flow based ma
 
 The backend data model (SONiC YANG) will use the COPP_TABLE format in CONFIG_DB. See CONFIG_DB changes section.
 
+#### 3.5.1.1 Openconfig Support
+```
+module: openconfig-copp-ext
+  +--rw copp
+     +--rw config
+     +--ro state
+     +--rw copp-groups
+     |  +--rw copp-group* [name]
+     |     +--rw name      -> ../config/name
+     |     +--rw config
+     |     |  +--rw name?            string
+     |     |  +--rw trap-priority?   uint16
+     |     |  +--rw trap-action?     copp-trap-action
+     |     |  +--rw queue?           uint8
+     |     |  +--rw cir?             uint64
+     |     |  +--rw cbs?             uint64
+     |     |  +--rw pir?             uint64
+     |     |  +--rw pbs?             uint64
+     |     |  +--rw meter-type?      copp-meter-type
+     |     |  +--rw mode?            copp-mode
+     |     |  +--rw green-action?    copp-trap-action
+     |     |  +--rw red-action?      copp-trap-action
+     |     |  +--rw yellow-action?   copp-trap-action
+     |     |  +--rw enable?          boolean
+     |     +--ro state
+     |        +--ro name?            string
+     |        +--ro trap-priority?   uint16
+     |        +--ro trap-action?     copp-trap-action
+     |        +--ro queue?           uint8
+     |        +--ro cir?             uint64
+     |        +--ro cbs?             uint64
+     |        +--ro pir?             uint64
+     |        +--ro pbs?             uint64
+     |        +--ro meter-type?      copp-meter-type
+     |        +--ro mode?            copp-mode
+     |        +--ro green-action?    copp-trap-action
+     |        +--ro red-action?      copp-trap-action
+     |        +--ro yellow-action?   copp-trap-action
+     |        +--ro enable?          boolean
+     +--rw copp-traps
+        +--rw copp-trap* [name]
+           +--rw name      -> ../config/name
+           +--rw config
+           |  +--rw name?         string
+           |  +--rw trap-ids?     string
+           |  +--rw trap-group?   string
+           +--ro state
+              +--ro name?         string
+              +--ro trap-ids?     string
+              +--ro trap-group?   string
+```
+
 ### 3.5.2 Configuration Commands
 
 The following KLISH CLI commands are used to configure CoPP policies.   The CLI syntax follows the SONiC ACL flow based management (based on OpenConfig YANG model) and is also follows industry-standard CLIs</br>
@@ -378,26 +463,24 @@ Table 1 shows a list of CoPP classifiers created by the system and the default C
 
 The scaling notes provide hints on the derivation of default rate limits. Latency sensitive protocols are set to higher rates.  Rates are subject to change based on performance and system testing.
 
-**NOTE**: The system CoPP classifiers cannot be deleted but the match conditions can be modified. User created CoPP classifiers can be deleted.
+**NOTE**: The system CoPP classifiers cannot be deleted and the match conditions cannot be modified. User created CoPP classifiers can be deleted and match conditions be added and deleted.
 
 **Table 1: Default system classifiers in CoPP policy**
 
 | Classifier           | Queue |  Rate (PPS)  | Protocols | Scaling Notes 
-|----------------------|-------|--------------|-----------|------
-| copp-system-lacp     | 25    |  1000        | lacp      | 1 sec timer/port 
-| copp-system-udld     | 24    |  1000        | udld      | 1 sec timer/port
-| copp-system-stp      | 23    |  16000       | stp,pvrst | 16K port-vlan instances
-| copp-system-bfd      | 22    |  5000        | bfd,bfdv6 | 64x100ms sessions
-| copp-system-ptp      | 21    |  16000       | ptp       | 16pps/port max
-| copp-system-lldp     | 20    |  1000        | lldp      | 5 sec/port min
-| copp-system-vrrp     | 19    |  5000        | vrrp,vrrpv6 |
-| copp-system-iccp     | 18    |  5000        | iccp      | 
-| copp-system-ospf     | 17    |  10000       | ospf      | 
-| copp-system-bgp      | 16    |  10000       | bgp,bgpv6 | minimize convergence of high scale routes
-| copp-system-pim      | 15    |  10000       | pim       |
-| copp-system-igmp     | 14    |  6000        | igmp_query| 
-| reserved             | 13    |  N/A         |           |
-| reserved             | 12    |  N/A         |           |
+|----------------------|-------|--------------|-----------|------ 
+| copp-system-lacp     | 23    |  1000        | lacp      | 1 sec timer/port 
+| copp-system-udld     | 22    |  1000        | udld      | 1 sec timer/port
+| copp-system-stp      | 21    |  16000       | stp,pvrst | 16K port-vlan instances
+| copp-system-bfd      | 20    |  5000        | bfd,bfdv6 | 64x100ms sessions
+| copp-system-ptp      | 19    |  16000       | ptp       | 16pps/port max
+| copp-system-lldp     | 18    |  1000        | lldp      | 5 sec/port min
+| copp-system-vrrp     | 17    |  5000        | vrrp,vrrpv6 |
+| copp-system-iccp     | 16    |  5000        | iccp      | 
+| copp-system-ospf     | 15    |  10000       | ospf      | 
+| copp-system-bgp      | 14    |  10000       | bgp,bgpv6 | minimize convergence of high scale routes
+| copp-system-pim      | 13    |  10000       | pim       |
+| copp-system-igmp     | 12    |  6000        | igmp_query| 
 | copp-system-suppress | 11    |  5000        | arp_suppress,nd_suppress |
 | copp-system-arp      | 10    |  6000        | arp_req,arp_resp,neigh_discovery | L3 perf tests
 | copp-system-dhcp     | 9     |  1000        | dhcp,dhcpv6 |
@@ -407,10 +490,11 @@ The scaling notes provide hints on the derivation of default rate limits. Latenc
 | copp-system-nat      | 5     |  600         | src_nat_miss,dest_nat_miss | limit exception case
 | copp-system-mtu      | 4     |  500         | l3_mtu_error | limit exception case
 | copp-system-sflow    | 3     |  16000       | sample_packet | detect large flows within 1 sec
-| reserved             | 2     |  N/A         |
-| reserved             | 1     |  N/A         |
-| copp-system-default  | 0     |  100         | any
+| reserved             | 2     |  N/A         |             |
+| copp-system-drop     | 1     |  N/A         |             | drop queue (trap cancel)
+| default  | 0     |  100         | any
 
+**NOTE**: "copp-system-ptp" and "copp-system-drop" queue assignments cannot be changed
 
 #### 3.5.2.2 Adding match protocol traps to the CoPP Classifers
 | Mode   | Classifier|
@@ -418,9 +502,9 @@ The scaling notes provide hints on the derivation of default rate limits. Latenc
 | Syntax | SONiC(config-classifier)# [**no**] **match protocol** *TRAP_ID* |
 | Arguments | ***TRAP_ID***: See [trap_id_map](https://github.com/Azure/sonic-swss/blob/cdffff315f10f79d4f68668540cb80c32d84c9ea/orchagent/copporch.cpp#L39) and user_trap_id_map for valid values. Some examples include arp, bgp, lacp, lldp, ip2me.  This is a mandatory field.
 
-**Note**: Modifying match conditions while the CoPP classifier is assigned to the system CoPP policy will cause service disruption to all traps assigned to the CoPP classifier (The COPP_TABLE entry will be removed, modified, and added back to APP_DB) 
+**Note**: Only user created CoPP classifier match conditions be added and removed. The system CoPP classifier match conditions cannot be modified. 
 
-**Note**: A protocol trap ID may only be added to a single CoPP classifier <mark>**(TODO: custom CVL logic to check this? or release note as invalid configuration).**</mark>
+**Note**: A protocol trap ID may only be added to a single user CoPP classifier.  Adding a protocol trap ID to multiple user CoPP classifiers is user configuration error and can result in undefined behavior.
 
 Example config and corresponding entry written into the COPP_TRAP in CONFIG_DB
 ```
@@ -469,22 +553,25 @@ CONFIG_DB:
 
 ```
 
+**NOTE**: "copp-system-ptp" and "copp-system-drop" queue assignments cannot be changed
+
 #### 3.5.2.3.1 Configuring the CoPP trap action
-Optional configuration. Default trap action is "trap".
+Manadatory configuration. Default trap action is "trap".
 
 | Mode        | action 
 |-------------|------------------------------------------------------
-| Syntax      | sonic(config-action)# [**no**] **set trap-action** *TRAP_ACTION*
+| Syntax      | sonic(config-action)# **set trap-action** *TRAP_ACTION*
 | Arguments   | ***TRAP_ACTION***: See [packet_action_map](https://github.com/Azure/sonic-swss/blob/cdffff315f10f79d4f68668540cb80c32d84c9ea/orchagent/copporch.cpp#L81): drop, forward, copy, copy_cancel, trap, log, deny, transit.
 
 The packet action maps directly to SAI Host interface packet action types. The [SAI switch packet action type](https://github.com/opencomputeproject/SAI/blob/befd00861459e343990a1e8b2acd8edc6be20b4f/inc/saiswitch.h#L68) describes the behavior of each action.
 
 #### 3.5.2.3.2 Configuring the CoPP trap action priority
 Optional configuration. Default is same as CPU queue value.
+
 | Mode   | Policy
 | ------ | ------ |
 | Syntax | SONiC(config-policy)# [**no**] **set trap-priority** *PRIORITY* |
-| Arguments | ***PRIORITY***: Priority number in range 0-1023.  The trap_priority refers to the priority of a classifier rule when a packet has multiple matches. |
+| Arguments | ***PRIORITY***: Priority number in range 1-1023.  The trap_priority refers to the priority of a classifier rule when a packet has multiple matches. Default trap_priority is 1. |
 
 #### 3.5.2.3.3 Configuring the CoPP action CPU queue
 Optional configuration. Default CPU queue is 0.
@@ -535,10 +622,11 @@ The only control plane policy is **copp-system-policy**, which cannot be deleted
 | Syntax | SONiC(config-policy)# [**no**] **class** *NAME* |
 | Arguments | ***NAME***: CoPP Classifier name. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_).|
 
-**NOTE**: The copp-system-default classifier (unclassified CPU traffic) always exists in the system CoPP policy and cannot be removed from the copp-system-policy.
+**NOTE**: The copp system default classifier (unclassified CPU traffic) always exists in the system CoPP policy and cannot be removed from the copp-system-policy.
 
 #### 3.5.2.6 Binding a CoPP action to the CoPP classifier
 Binds CoPP action group to a classifier match group. CoPP action is mandatory when adding a CoPP classifier to the CoPP policy. 
+
 | Mode   | Flow
 | ------ | ------ |
 | Syntax | SONiC(config-policy-flow)# **set copp-action** *NAME* |
@@ -726,15 +814,15 @@ sonic# show copp policy
 In a future enhancement, add policer statistics to each classifier flow output. 
 
 
-#### 3.5.3.5 show queue counters CPU
+#### 3.5.3.5 show queue counters interface CPU
 Show queue counters CLI can be used to monitor CPU queuing and trap policing functions.
 - Usage:
 ```
-  show queue counters CPU [queue <qid>]
+  show queue counters interface CPU [queue <qid>]
 ```
 - Example:
 ```
-sonic# show queue counters CPU
+sonic# show queue counters interface CPU
   Port    TxQ    Counter/pkts    Counter/bytes    Drop/pkts    Drop/bytes
 ------  -----  --------------  ---------------  -----------  ------------
    CPU    MC0               0                0            0             0
@@ -760,31 +848,7 @@ sonic# show queue counters CPU
    CPU   MC20               0                0            0             0
    CPU   MC21               0                0            0             0
    CPU   MC22               0                0            0             0
-   CPU   MC23               0                0            0             0
-   CPU   MC24               0                0            0             0
-   CPU   MC25               0                0            0             0
-   CPU   MC26               0                0            0             0
-   CPU   MC27               0                0            0             0
-   CPU   MC28               0                0            0             0
-   CPU   MC29               0                0            0             0
-   CPU   MC30               0                0            0             0
-   CPU   MC31               0                0            0             0
-   CPU   MC32               0                0            0             0
-   CPU   MC33               0                0            0             0
-   CPU   MC34               0                0            0             0
-   CPU   MC35               0                0            0             0
-   CPU   MC36               0                0            0             0
-   CPU   MC37               0                0            0             0
-   CPU   MC38               0                0            0             0
-   CPU   MC39               0                0            0             0
-   CPU   MC40               0                0            0             0
-   CPU   MC41               0                0            0             0
-   CPU   MC42               0                0            0             0
-   CPU   MC43               0                0            0             0
-   CPU   MC44               0                0            0             0
-   CPU   MC45               0                0            0             0
-   CPU   MC46               0                0            0             0
-   CPU   MC47               0                0            0             0
+...
 ```  
 #### 3.5.3.6 show running-config copp
 Dumps the CoPP running configuration
@@ -816,7 +880,7 @@ policy copp-system-policy type copp
 ###  3.5.4 Clear Commands
 - Usage:
 ```
-  clear queue counters CPU [queue <qid>]
+  clear queue counters interface CPU [queue <qid>]
 ```
 
 #### 3.5.5 IS-CLI Compliance
@@ -842,11 +906,13 @@ The following table maps SONIC CLI commands to corresponding IS-CLI commands. Th
 | show copp protocols | SONIC | N/A | N/A  |
 | show copp actions | SONIC | N/A | N/A  |
 | show policy type copp | IS-CLI-like | show policy-map copp copp-system-policy | [Control Plane Config](https://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus9000/sw/6-x/security/configuration/guide/b_Cisco_Nexus_9000_Series_NX-OS_Security_Configuration_Guide/b_Cisco_Nexus_9000_Series_NX-OS_Security_Configuration_Guide_chapter_010001.html#task_1082584)  |
-| show queue counters CPU [queue <qid>] | IS-CLI-like | show policy-map copp copp-system-policy | [Control Plane Config](https://www.arista.com/en/um-eos/eos-section-30-7-traffic-management-configuration-commands) |
-| clear queue counters CPU [queue <qid>]  | IS-CLI-like | clear policy-map interface control-plane counters copp-system-policy | [Control Plane Config](https://www.arista.com/en/um-eos/eos-section-30-7-traffic-management-configuration-commands)            
+| show queue counters interface CPU [queue <qid>] | IS-CLI-like | show policy-map copp copp-system-policy | [Control Plane Config](https://www.arista.com/en/um-eos/eos-section-30-7-traffic-management-configuration-commands) |
+| clear queue counters interface CPU [queue <qid>]  | IS-CLI-like | clear policy-map interface control-plane counters copp-system-policy | [Control Plane Config](https://www.arista.com/en/um-eos/eos-section-30-7-traffic-management-configuration-commands)            
 
 ### 3.5.5 Restrictions
-* A protocol trap may only be added to a single CoPP classifier. Adding traps to multiple CoPP classifiers that are added to the CoPP policy is user error.
+* Adding multiple CoPP classifiers with the same match protocols to the CoPP policy is user configuration error.
+* "copp-system-ptp" and "copp-system-drop" queue assignments cannot be changed
+* "copp-system-sflow" and "copp-system-ptp" classifiers should not be assigned to trap groups with other classifiers (ie sflow and ptp traps should have their own COPP action group)
 
 ### 3.5.5 Debug Commands
 Not applicable
@@ -858,7 +924,7 @@ The COPP data model will build on top of the SONiC ACL flow based management mod
 # 4 Flow Diagrams
 
 ## 4.1 Initial Config
-The following flow captures scenarios for ```boot-up``` sequence and ```config reload```. Default CoPP Tables shall be present in ```00-copp.config.json``` and if the same entry is present in ```config_db.json```, it is expected to be overwritten by ```config_db``` entry. This model ensures user-configuration gets priority over default configuration.
+The following flow captures scenarios for ```boot-up``` sequence and ```config reload```. Default CoPP Tables shall be present in ```copp_config.json``` and if the same entry is present in ```config_db.json```, it is expected to be overwritten by ```config_db``` entry. This model ensures user-configuration gets priority over default configuration.
 
 ![Init CoPP Config](images/copp_flow_init.png "Figure 1: Init CoPP Config")
 
@@ -908,7 +974,7 @@ CoPP functionalities are not expected to work during warm reboot but will be res
 # 8 Scalability
 - Limit CoPP classifiers to 64
 - Minimum number of CoPP policers supported must be equal to max number of CoPP protocol traps supported in SONiC
-- Max number of CPU queues is ASIC specific
+- Max number of CPU queues is ASIC specific. Testing should limit the CPU queue assignments to the range defined in the default COPP table (0-23)
 
 
 
@@ -931,8 +997,8 @@ CoPP functionalities are not expected to work during warm reboot but will be res
  
 1. Verify that protocol packets are rate-limited as per default configured policies</br>
 2. Verify that protocol packets go to the right CPU queue as per default configured policies</br>
-3. Verify that unmatched traffic to CPU is rate-limited after deleting IP2ME classifier
-4. Verify that protocol packets are rate-limited when an existing classifier action is modified
+3. Verify that unmatched traffic to CPU is rate-limited after removing the IP2ME classifier from the CoPP policy
+4. Verify that protocol packets are rate-limited when a bound classifier action is modified
 
 ## 9.3 Scaling Test Cases
 1. Verify creating of maximum number of classifiers
@@ -969,7 +1035,18 @@ MC_PERQ_BYTE(10).cpu0       :             3,077,184          +3,077,184         
 Supported on TD2, TD3, TH1, TH2, TH3.
 
 ### 10.2.1 Scalability
-* Max number of CPU queues is ASIC specific (48 CPU queues available in most BRCM ASICs)
+* Max number of CPU queues is ASIC specific (48 CPU queues available in most BRCM ASICs) but is limited by the config.bcm soc property "num_queues_pci".  This soc property determines how many of the total CPU queues are allocated to the CPU PCI vs R5 cores. To accomodate some older ASICs, we have limited the range of CPU queue usage to 24 CPU queues (0-23). Some examples of configurations below:
+
+| config.bcm                         | SOC property                         |
+|------------------------------------|--------------------------------------|
+| broadcom-sonic-td2.config.bcm      | num_queues_pci=24
+| broadcom-sonic-th.config.bcm       | num_queues_pci=24
+| broadcom-sonic-td3.config.bcm	     | num_queues_pci=46
+| broadcom-sonic-th2.config.bcm	     | num_queues_pci=46
+| broadcom-sonic-th3.config.bcm	     | num_queues_pci=46
+| th-as7712-32x100G.config.bcm.dpb	 | num_queues_pci=24
+| th-as7712-32x100G.config.bcm	     | num_queues_pci=24
+
 
 ## 10.3 CLI syntax references
 * https://www.arista.com/en/um-eos/eos-section-30-5-traffic-management-configuration--trident-platform-switches
