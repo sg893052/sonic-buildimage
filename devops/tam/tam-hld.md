@@ -194,15 +194,15 @@ TAM\_COLLECTOR\_TABLE
     1) "TAM_COLLECTOR_TABLE|collector1" 
 
     > HGETALL "TAM_COLLECTOR_TABLE|collector1" 
-    1) "ipaddress"
-    2) "10.20.2.1"
-    3) "port"
-    4) "6050"
-    5) "ipaddress-type"
-    6) "ipv4"
-    7) "protocol"
-    8) "UDP"
-    9) "encapsulation"
+    1) "ipaddress"
+    2) "10.20.2.1"
+    3) "port"
+    4) "6050"
+    5) "ipaddress-type"
+    6) "ipv4"
+    7) "protocol"
+    8) "UDP"
+    9) "encapsulation"
     10) "NONE"
 
 TAM\_FEATURES\_TABLE
@@ -221,7 +221,7 @@ TAM\_FEATURES\_TABLE
     4)"TAM_FEATURES_TABLE|thresholds”
 
     > hgetall "tam_features_table|ifa”
-    1) "status"
+    1) "status"
     2) "active"
 
 TAM\_SAMPLINGRATE\_TABLE
@@ -239,7 +239,7 @@ TAM\_SAMPLINGRATE\_TABLE
     2)"TAM_FEATURES_TABLE|lazy" 
 
     > hgetall "tam_features_table|aggressive”
-    1) "sampling-rate"
+    1) "sampling-rate"
     2) 1000
 
 ### 3.2.2 APP DB
@@ -302,7 +302,7 @@ TAM\_SAMPLINGRATE\_TABLE
     2)"TAM_FEATURES_TABLE|lazy" 
 
     > hgetall "tam_features_table|aggressive”
-    1) "sampling-rate"
+    1) "sampling-rate"
     2) 1000
 
 ### 3.2.4 ASIC DB
