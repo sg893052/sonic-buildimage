@@ -83,7 +83,7 @@ This document provides general information about the TAM infrastructure implemen
 
 ## Scope
 
- SAI community defined a Telemetry and Monitoring specification that defines a unified interface - [TAM] (https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) - for provisioning and monitoring various telemetry and monitoring technologies / application.
+ SAI community defined a Telemetry and Monitoring specification that defines a unified interface - [TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) - for provisioning and monitoring various telemetry and monitoring technologies / application.
 
 This document describes the high level design of TAM infrastructure in SONiC. The design is intended to help implement TAM applications that use and share the common TAM infrastructure.
 
@@ -136,7 +136,7 @@ A container called 'tam' is introducted as a holder for all TAM applications, in
 
 ### 1.2.3 SAI Overview
 
-The SAI TAM spec specifies the TAM APIs to be used to configure the TAM functionality. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
+The SAI TAM spec specifies the TAM APIs to be used to configure the TAM functionality. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in https://github.com/opencomputeproject/SAI/tree/master/doc/TAM for more details.
 
 # 2 Functionality
 
@@ -284,7 +284,7 @@ TAM\_FEATURES\_TABLE
     4)"TAM_FEATURES_TABLE|thresholds”
 
     > hgetall "tam_features_table|ifa”
-    1) "status"
+    1) "status"
     2) "unsupported"
 
 TAM\_SAMPLINGRATE\_TABLE
@@ -333,7 +333,7 @@ N/A
 
 ## 3.6 SAI
 
-The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
+The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in https://github.com/opencomputeproject/SAI/tree/master/doc/TAM for more details.
 
 ## 3.7 CLI
 
