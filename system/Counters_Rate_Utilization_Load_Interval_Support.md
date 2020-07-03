@@ -75,10 +75,10 @@ This document provides details of interface/queue counters rate/utilization/load
 ## 1.1 Requirements
 ### 1.1.1 Functional Requirements
 
-1. Support for show interface utilization
-2. Support for show interface BPS/PPS/bps
+1. Support for show port/port-channel utilization
+2. Support for show port/port-channel BPS/PPS/bps
 3. Support for show queue counters PPS/BPS.
-4. Dynamic load interval for rate calculations per interface.
+4. Dynamic load interval for rate calculations per port/port-channel.
 5. Dynamic load interval for rate calculations for all queue counters.
 
 ### 1.1.2 Configuration and Management Requirements
@@ -103,7 +103,7 @@ Following are the limitations which prevent the warm-boot support for this featu
 
 Rate calculations are done in backend and NBI will pick the data from counters DB.
 Interface load interval and global queue load interval are supported. 
-The current load interval can be fetched from APP_DB.
+The load interval is fixed for this release and the current load interval can be fetched from APP_DB.
 
 ### 1.2.2 SAI Overview
 No SAI changes.
@@ -179,8 +179,8 @@ The transformer code fetches the new counters and shares it to the client.
 ```
 Global Switch level config to be stored in this table.
 
-    load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported.
-    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported.
+    load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
+    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
 
 "SWITCH|switch"
  "load_interval" : "30" ; Load interval for interface rate/utilization.
@@ -189,7 +189,7 @@ Global Switch level config to be stored in this table.
 
 #### PORT_TABLE
 ```
-    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported.
+    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
 
 "PORT|ifName"
  "load_interval" : "30" ; Load interval for interface rate/utilization.
@@ -200,8 +200,8 @@ Global Switch level config to be stored in this table.
 ```
 Global Switch level config set by portsOrch.
 
-    load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported.
-    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported.
+    load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
+    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
 
 
 "SWITCH_TABLE|switch"
@@ -213,7 +213,7 @@ Global Switch level config set by portsOrch.
 ```
 Interface level load interval set by portsOrch.
 
-    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported.
+    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
 
 
 "PORT_TABLE|ifName"
@@ -288,10 +288,10 @@ Last clearing of "show interface" counters: 1970-01-01 00:00:00
 
 ##### show interface counters
 ```
-       IFACE    STATE    RX_OK    RX_MBPS  RX_MbPS    RX_UTIL    RX_ERR    RX_DRP    RX_OVR    TX_OK    TX_BPS    TX_bPS    TX_UTIL    TX_ERR    TX_DRP    TX_OVR
-------------  -------  -------  --------  --------  ---------  --------  --------  --------  -------  --------  --------  ---------  --------  --------  --------
-  Ethernet48        U   87,219  0.00 MB/s  0.00 Mb/s  0.00%         0         3         0   86,871      0.00 B/s  0.00 b/s  0.00%         0         0         0
-  Ethernet49        U    5,649  0.00 MB/s  0.00 Mb/s  0.00%         0     5,649         0    5,645      0.00 B/s  0.00 b/s  0.00%         0         0         0  
+       IFACE    STATE    RX_OK    RX_MBPS  RX_MbPS    RX_UTIL    RX_ERR    RX_DRP    RX_OVR    TX_OK    TX_MBPS    TX_MbPS    TX_UTIL    TX_ERR    TX_DRP    TX_OVR
+------------  -------  -------  --------  --------  ---------  --------  --------  --------  -------    --------  --------  ---------  --------  --------  --------
+  Ethernet48        U   87,219  0.00 MB/s  0.00 Mb/s  0.00%         0         3         0   86,871      0.00 MB/s  0.00 Mb/s  0.00%         0         0         0
+  Ethernet49        U    5,649  0.00 MB/s  0.00 Mb/s  0.00%         0     5,649         0    5,645      0.00 MB/s  0.00 Mb/s  0.00%         0         0         0  
 
 ```
 
