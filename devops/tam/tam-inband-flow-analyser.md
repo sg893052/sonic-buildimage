@@ -208,7 +208,7 @@ At all other non-IFA activated nodes, IFA sampled packet is forwarded as a norma
 
 ***Example IFA  topology illustrating the packet paths and metadata***
 
-![IFA topology](images/sample-ifa-topology.png)
+![IFA topology](sample-ifa-topology.png)
 
 # 3 Design
 
@@ -216,7 +216,7 @@ At all other non-IFA activated nodes, IFA sampled packet is forwarded as a norma
 
 ***IFA Architecture***
 
-![IFA architecture](images/IFA_Arch.JPG)
+![IFA architecture](ifa-arch.JPG)
 
 The above diagram illustrates the architecture of the IFA feature within SONiC.
 
@@ -381,7 +381,7 @@ The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-
 
 ***Below diagram provides details about various TAM objects needed to support IFA and their correlation***
 
-![IFA TAM objects correlation](images/IFA_TAM_correlation.JPG)
+![IFA TAM objects correlation](ifa-tam-correlation.JPG)
 
 ## 3.7 CLI
 
