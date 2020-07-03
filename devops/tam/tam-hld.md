@@ -365,6 +365,8 @@ A collector is typically a machine reachable from the switch, where the telemetr
 
 TAM infrastructure allows us to create a collector by specifying the reachability information and associating a reference to this collector. This reference, a name, can be specified as a collector by individual feature configurations.
 
+A collector, if associated with any TAM application, can't be removed. The `no` command fails citing existing association.
+
 The following collector attribtes are supported.
 
 | **Attribute**                 | **Description**                         |
@@ -390,6 +392,8 @@ TBD
 #### 3.7.2.2 Setting up Samplers
 
 TAM infrastructure supports setting up a sampling configuration on a per-interface basis and refer to this sampler configuration from the application which support sampling for the traffic.
+
+A sampler, if associated with any TAM application, can't be removed. The `no` command fails citing existing association.
 
 The following sampling attribtes are supported.
 
