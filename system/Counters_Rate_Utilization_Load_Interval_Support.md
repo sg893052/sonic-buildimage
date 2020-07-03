@@ -305,6 +305,8 @@ Ethernet0   UC1  0              0              0/s            0/s            0  
 Ethernet0   UC2  0              0              0/s            0/s            0           0
 Ethernet0   UC3  0              0              0/s            0/s            0           0
 ...
+
+Queue counter load interval: 30 sec
 ```
 
 ##### show queue counters interface CPU
@@ -318,6 +320,7 @@ MC2  0              0              0/s            0/s            0           0
 MC3  0              0              0/s            0/s            0           0
 MC4  0              0              0/s            0/s            0           0
 
+Queue counter load interval: 30 sec
 ```
 ### 3.4.4 REST APIs
 
