@@ -264,13 +264,13 @@ TAM\_IFA\_TABLE
     1) "TAM_IFA_TABLE|ifa1"
 
     > hgetall "TAM_IFA_TABLE|ifa1"
-    1) "flowgroup"
-    2) "websrvrflows"
-    3) "collector"
-    4) "ifacol1"
-    5) "sample-rate"
-    6) "aggressive"
-    7) "node-type"
+    1) "flowgroup"
+    2) "websrvrflows"
+    3) "collector"
+    4) "ifacol1"
+    5) "sample-rate"
+    6) "aggressive"
+    7) "node-type"
     8) "ingress"
 
 ### 3.2.2 APP DB
