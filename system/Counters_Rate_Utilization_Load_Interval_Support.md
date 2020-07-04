@@ -194,6 +194,15 @@ Global Switch level config to be stored in this table.
 "PORT|ifName"
  "load_interval" : "30" ; Load interval for interface rate/utilization.
 ```
+
+#### PORTCHANNEL_TABLE
+```
+    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
+
+"PORTCHANNEL|portchannelName"
+ "load_interval" : "30" ; Load interval for portchannel rate/utilization.
+```
+
 ### 3.2.2 APP DB
 
 #### SWITCH_TABLE
@@ -201,12 +210,12 @@ Global Switch level config to be stored in this table.
 Global Switch level config set by portsOrch.
 
     load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
-    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
+    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 
 "SWITCH_TABLE|switch"
  "load_interval" : "30" ; Load interval for interface rate/utilization.
- "queue_load_interval" : "30" ; Load interval for Queue rate/utilization
+ "queue_load_interval" : "10" ; Load interval for Queue rate/utilization
 ```
 
 #### PORT_TABLE
@@ -220,14 +229,26 @@ Interface level load interval set by portsOrch.
  "load_interval" : "30" ; Load interval for interface rate/utilization.
 
 ```
+#### LAG_TABLE
+```
+Portchannel level load interval.
+
+    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
+
+
+"LAG_TABLE:PortChannel10"
+ "load_interval" : "30" ;  Load interval for portchannel rate/utilization.
+
+```
+
 ### 3.2.3 COUNTER DB
 
-Following new fields are added to existing COUNTERS Table for both port and queue Counters.
+Following new fields are added to existing COUNTERS Table for both port/portchannel and queue Counters.
 
 ```
 COUNTERS_DB:
 {
-    "COUNTERS:oid:<portVid>": {
+    "COUNTERS:oid:<port/portchannel Vid>": {
       "SAI_PORT_STAT_IF_IN_PKTS_PER_SECOND": "0",
       "SAI_PORT_STAT_IF_OUT_PKTS_PER_SECOND": "0",
       "SAI_PORT_STAT_IF_IN_OCTETS_PER_SECOND": "0",
@@ -260,10 +281,17 @@ DELL team to add more details here.
 
 #### config interface load_interval Ethernet0 <load-interval-in-seconds>
 
-Set rate calculation interval for the interface. Supported values are 10 seconds to 600 seconds.
+Set rate calculation interval for the interface(port/portchannel). Supported values are 10 seconds to 600 seconds.
 
 
   config interface load_interval Ethernet0 30
+
+#### config queue load_interval <load-interval-in-seconds>
+
+Set rate calculation interval for the queue. Supported values are 10 seconds to 600 seconds.
+
+  config queue load_interval 30
+
 
 
 ### 3.4.3 Show Commands
