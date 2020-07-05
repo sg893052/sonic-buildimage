@@ -154,7 +154,7 @@ The TAM IFA feature supports the new management framework and KLISH CLI for conf
 
 ### 1.1.3 Scalability Requirements
 
-- Number of IFA flow-groups that can be supported is proportional to the availability of resources in hardware such as ACLs. No specific constraints are imposed.
+- Number of IFA sessions that can be supported is proportional to the availability of resources in hardware such as ACLs. No specific constraints are imposed.
 - Only a single collector is supported.
 
 ## 1.2 Design Overview
@@ -252,7 +252,7 @@ TAM\_IFA\_TABLE
 
     ;Defines TAM IFA configuration in CONFIG_DB
 
-    key = name 			        ; name is ifa flow name and should be unique. 
+    key = name 			          ; name is ifa flow name and should be unique. 
     flowgroup = 1*255VCHAR 		; Flow group reference
     collector = 1*255VCHAR 		; Collector Reference
     sample-rate = 1*255VCHAR 	; Sampler reference
@@ -315,11 +315,11 @@ TAM\_IFA\_FLOW\_TABLE
                                                      sampled.
 
     Example:
-    127.0.0.1:6379> KEYS *TAM_INT_IFA_FLOW*                                  
+    > KEYS *TAM_INT_IFA_FLOW*                                  
     1) "TAM_INT_IFA_FLOW_TABLE:F1"
     2) "TAM_INT_IFA_FLOW_TABLE:F2"
 
-    127.0.0.1:6379> HGETALL TAM_INT_IFA_FLOW_TABLE:F1
+    > HGETALL TAM_INT_IFA_FLOW_TABLE:F1
     1)  "acl-table-name"
     2)  "T1"
     3)  "acl-rule-name"
@@ -335,7 +335,7 @@ TAM\_IFA\_FLOW\_TABLE
     13) "src-ipaddress"
     14) "10.52.141.231"
 
-    127.0.0.1:6379> HGETALL TAM_INT_IFA_FLOW_TABLE:F2
+    > HGETALL TAM_INT_IFA_FLOW_TABLE:F2
     1) "acl-table-name"
     2) "T2"
     3) "acl-rule-name"
@@ -404,32 +404,32 @@ Deactivating IFA will purge all IFA configuration from the switch.
 
 #### 3.7.2.2 Setting up flows for monitoring with IFA
 
-A flow, (or a set of flows called a flow-group) may be associated with IFA as described below.
+A IFA monitoring session associated a previously defined flow-group, with IFA as described below.
 
-- The IFA flow must have a unique name for referencing.
+- The IFA session must have a unique name for referencing.
 - The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy).
-- The switch can be setup to act as an ingress node or as an egress node.
+- The switch can be setup to act as an ingress node or as an egress node for this session.
 - On ingress nodes, the sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy).
 - On the egress nodes, a collector must be associated with the flow, where the extracted metadata will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy)..
 
-When a flow that is previously associated with IFA has been de-associated (with the `no` command), the flow is no longer processed for IFA as an ingress node or as an egress-node by the switch. 
+When a sesssion that is previously created is removed (with the `no` command), the associated flows are no longer processed for IFA as an ingress node or as an egress-node by the switch. 
 
-The following attribtes are supported for IFA flows.
+The following attribtes are supported for IFA sessions.
 
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
-| `name`               | A string that uniquely identifies the IFA flow        |
+| `name`               | A string that uniquely identifies the IFA session        |
 | `flowgroup`            | Specifies the name of *flow-group* |
 | `collector`               | Specifies the name of the *collector*,  valid and mandatory for egress nodes |
 | `sample-rate`            | Specifies the name of the *sampler*, valid and mandatory for ingress nodes    |
 | `node-type`                | Specifies the IFA role of the switch for the flow. Valid values are `"ingress"` and `"egresss"`|
 
-The command syntax for associating/de-associating the flows are as follows:
+The command syntax for creating /removing the sessions are as follows:
 
 ```
-sonic(config-tam-ifa)# flow <name> flowgroup <fg-name> [collector <col-name>] [sample-rate <sampler-name>] node-type {ingress | egress }
+sonic(config-tam-ifa)# session <name> flowgroup <fg-name> [collector <col-name>] [sample-rate <sampler-name>] node-type {ingress | egress }
 
-sonic (config-tam-ifa)# no flow <name>
+sonic (config-tam-ifa)# no session <name>
 ```
 
 ### 3.7.3 Show Commands
@@ -453,18 +453,18 @@ Enterprise ID      : 2345
 
 ```
 
-#### 3.7.3.1 Listing the IFA flows
+#### 3.7.3.1 Listing the IFA sessions
 
-The following command lists the details for all ifa flows or for a specific flow. Note that only explicitly configured tuples in the flow-group are displayed.
+The following command lists the details for all ifa sessions or for a specific session. Note that only explicitly configured tuples in the associated flow-group are displayed.
 
 ```
-sonic # show tam ifa flows [<name>]
+sonic # show tam ifa sessions [<name>]
 ```
 
 Sample usage shown below.
 
 ```
-sonic # show tam ifa flows
+sonic # show tam ifa sessions
 
 Name           Flow Group          Collector          Sampler           Node Type
 -----------    ----------------    --------------     -------------     ----------
@@ -472,9 +472,9 @@ http_236       udp_port_236        -                  aggresive         Ingress
 http_239       udp_port_239        -                  -                 Intermediate
 http_241       udp_port_241        IFA_Col_i19        -                 Egress
 
-sonic # show tam ifa flow http_236
+sonic # show tam ifa sessions http_236
 
-Flow               : http_236 (Ingress)
+Session            : http_236 (Ingress)
 Flow Group Name    : udp_port_236
    SRC IP          : 13.92.96.32
    DST IP          : 7.72.235.82
