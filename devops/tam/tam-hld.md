@@ -100,7 +100,7 @@ This document describes the high level design of TAM infrastructure in SONiC. Th
 
 For an introduction to TAM, reader is encouraged to consult the SAI specification referred earlier. In general, TAM deals with dataplane telemetry applications that are supported by the silicon. The SONiC NOS is responsible for provisioning the dataplane application behavior, using the appropriate SAI API.
 
-There are many common aspects among the TAM features, as defined in the . For example, almost all of them will require a controller to be setup, which is the intended receiver for the telemetry information. Likewise, when the applications may allow a per-flow (or a group of flows) configuration. The TAM infrastructure implements these common aspects so that applications can share the design and implementation without having to re-implement from scratch. More details on provisioning are avaiable in subsequent sections.
+There are many common aspects among the TAM features, as defined in the TAM specification. For example, almost all of them will require a controller to be setup, which is the intended receiver for the telemetry information. Likewise, when the applications may allow a per-flow (or a group of flows) configuration. The TAM infrastructure implements these common aspects so that applications can share the design and implementation without having to re-implement from scratch. More details on provisioning are avaiable in subsequent sections.
 
 ## 1.1 Requirements
 
@@ -166,10 +166,10 @@ TAM\_SWITCH\_TABLE
     enterprise-id      = 1 * 5DIGIT    ; IPFIX
 
     Example:
-    127.0.0.1:6379[4]> keys *TAM_DEVICE*
+    > keys *TAM_SWITCH*
     1) "TAM_SWITCH_TABLE|global"
 
-    127.0.0.1:6379[4]> HGETALL "TAM_SWITCH_TABLE|global"
+    > HGETALL "TAM_SWITCH_TABLE|global"
     1)"switch-id”
     2)54325
     3)"enterprise-id"
@@ -209,7 +209,7 @@ TAM\_FEATURES\_TABLE
 
     ;Defines TAM Features configuration in CONFIG_DB
 
-    key = name 			            ; Feature name and should be among 
+    key = name 			                ; Feature name and should be among 
                                     ; ifa, drop-monitor, tail-stamping, thresholds
     status = ”active" / ”inactive" 	; Activate or Turnoff the feature
 
@@ -252,16 +252,16 @@ TAM\_SWITCH\_TABLE
 
     ;Operational TAM Global Status in STATE_DB
 
-    key                = global         ; Only one instance and 
-                                        ; has a fixed key ”global".
+    key                   = global         ; Only one instance and 
+                                          ; has a fixed key ”global"
     op-switch-id          = 1 * 5DIGIT    ; Currently used switch-id
     op-enterprise-id      = 1 * 5DIGIT    ; Currently used enterprise-id
 
     Example:
-    127.0.0.1:6379[4]> keys *TAM_DEVICE*
+    > keys *TAM_SWITCH*
     1) "TAM_SWITCH_TABLE|global"
 
-    127.0.0.1:6379[4]> HGETALL "TAM_SWITCH_TABLE|global"
+    > HGETALL "TAM_SWITCH_TABLE|global"
     1)”op-switch-id”
     2)54325
     3)”op-enterprise-id"
