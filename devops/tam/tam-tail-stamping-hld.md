@@ -252,7 +252,7 @@ TAM\_TAILSTAMPING\_TABLE
 
     > hgetall "TAM_TAILSTAMPING_TABLE|sla1"
 
-    1) "flowgroup"
+    1) "flowgroup"
     2) "slaflows"
 
 ### 3.2.2 APP DB
@@ -316,7 +316,7 @@ Tailstamping feature is accomplished by attaching a SAI TAM INT object to SAI AC
 
 ***Below diagram provides details about various TAM objects needed to support TS and their correlation***
 
-![TS TAM objects correlation](ts-tam-correlation.JPG)
+![TS TAM objects correlation](ts-tam-correlation.png)
 
 ## 3.7 CLI
 
