@@ -438,7 +438,7 @@ The following attribtes are supported for  drop-monitor sessions.
 The command syntax for creating /removing the sessions are as follows:
 
 ```
-sonic(config-tam-dm)# session <name> flowgroup <fg-name> [collector <col-name>] [sample-rate <sampler-name>]
+sonic(config-tam-dm)# session <name> flowgroup <fg-name> collector <col-name> [sample-rate <sampler-name>]
 
 sonic (config-tam-dm)# no session <name>
 ```
