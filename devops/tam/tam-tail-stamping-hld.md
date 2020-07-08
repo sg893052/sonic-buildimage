@@ -50,6 +50,7 @@
     + [3.7.3 Show Commands](#373-show-commands)
       - [3.7.3.1 Listing the TS attributes](#3731-listing-the-ts-attributes)
       - [3.7.3.1 Listing the Tailstamping sessions](#3731-listing-the-tailstamping-sessions)
+    + [3.7.4 Sample Workflow](#374-sample-workflow)
     + [3.7.5 Debug Commands](#375-debug-commands)
     + [3.7.6 REST API Support](#376-rest-api-support)
 - [4 Flow Diagrams](#4-flow-diagrams)
@@ -411,6 +412,32 @@ Flow Group Name    : tcp_port_236
 Packet Count       : 7656
 
 ```
+
+### 3.7.4 Sample Workflow
+
+This section provides a sample Tailstamping workflow using CLI, for monitoring the traffic as described below.
+
+> Gather flow metadata for network probe packets sent from 10.10.1.1:8080 to 20.4.5.2:7070 (tcp)  
+
+```
+; setup switch-wide configuration
+
+sonic (config-tam)# switch-id 1234
+
+; create the flowgroup
+
+sonic (config-tam)# flow-group probeflow src-ip 10.10.1.1 src-l4-port 8080 dst-ip 20.4.5.2 dst-l4-port 7070 protocol 6
+
+; Enable Tailstamping on the switch
+
+sonic (config-tam-ts)# enable
+
+; Create the Tailstamping monitoring session
+
+sonic(config-tam-ts)# session probemonitor flowgroup probeflow
+
+```
+
 
 ### 3.7.5 Debug Commands
 N/A

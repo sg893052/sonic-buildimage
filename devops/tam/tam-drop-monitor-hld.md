@@ -51,6 +51,7 @@
     + [3.6.3 Show Commands](#363-show-commands)
       - [3.6.3.1 Listing the Drop Monitor attributes](#3631-listing-the-drop-monitor-attributes)
       - [3.6.3.1 Listing the Drop Monitor sessions](#3631-listing-the-drop-monitor-sessions)
+    + [3.6.4 Sample Workflow](#364-sample-workflow)
     + [3.6.5 Debug Commands](#365-debug-commands)
     + [3.6.6 REST API Support](#366-rest-api-support)
 - [4 Flow Diagrams](#4-flow-diagrams)
@@ -69,6 +70,7 @@
   * [Supported Drop Reasons](#supported-drop-reasons)
   * [Qualified Drop Reasons](#qualified-drop-reasons)
   * [Drop Report format](#drop-report-format)
+
 
 ## List of Tables
 
@@ -492,6 +494,43 @@ Flow Group Name    : tcp_port_236
 Collector          : Col_i19
 Sampler            : aggresive
 Packet Count       : 7656
+
+```
+
+### 3.6.4 Sample Workflow
+
+This section provides a sample Drop Monitor workflow using CLI, for monitoring the packet drops as described below.
+
+> Need to monitor all packet drops on this switch, for all the flows destined for the webserver running at 20.20.1.1. A Drop Monitor collector for analysing the metadata is running at 20.20.20.4:9091 (UDP). Not every packet drop needs monitored, but one in 100 is acceptable. If a flow didn't see any drop for 5sec, it can be assumed that the active drop window may have ended. The flows are ingressing onto switch1 on port 'Ethernet44'
+
+```
+; setup switch-wide configuration
+
+sonic (config-tam)# switch-id 1234
+
+; setup the sample-rate
+
+sonic (config-tam)# sampler websamp interface Ethernet44 rate 100
+
+; create the flowgroup
+
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
+
+; setup the collector
+
+collector dmcol1 type ipv4 ip 20.20.20.4 port 9091 protocol UDP
+
+; Enable Drop Monitor on the switch
+
+sonic (config-tam-dm)# enable
+
+; Setup aging interval
+
+sonic (config-tam-dm)# aging-interval 5
+
+; Create the drop-monitoring session
+
+sonic(config-tam-dm)# session webflowmonitor flowgroup websrvflows sample-rate websamp collector dmcol1
 
 ```
 

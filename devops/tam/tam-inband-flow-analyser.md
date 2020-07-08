@@ -49,7 +49,11 @@
       - [3.7.2.2 Setting up flows for monitoring with IFA](#3722-setting-up-flows-for-monitoring-with-ifa)
     + [3.7.3 Show Commands](#373-show-commands)
       - [3.7.3.1 Listing the IFA attributes](#3731-listing-the-ifa-attributes)
-      - [3.7.3.1 Listing the IFA flows](#3731-listing-the-ifa-flows)
+      - [3.7.3.1 Listing the IFA sessions](#3731-listing-the-ifa-sessions)
+    + [3.7.4 Sample Workflow](#374-sample-workflow)
+      - [Ingress Node configuration](#ingress-node-configuration)
+      - [Intermediate/Transit Node configuration](#intermediate-transit-node-configuration)
+      - [Egress Node configuration](#egress-node-configuration)
     + [3.7.5 Debug Commands](#375-debug-commands)
     + [3.7.6 REST API Support](#376-rest-api-support)
 - [4 Flow Diagrams](#4-flow-diagrams)
@@ -484,6 +488,77 @@ Flow Group Name    : tcp_port_236
 Collector          : None
 Sampler            : aggresive
 Packet Count       : 7656
+
+```
+### 3.7.4 Sample Workflow
+
+This section provides a sample IFA workflow using CLI, for monitoring the traffic as described below.
+
+> Need to monitor all flows to the webserver running at 20.20.1.1. A IFA collector for analysing the metadata is running at 20.20.20.4:9090 (UDP). Not every packet needs monitored, but one in 1000 is acceptable. The flows are ingressing onto switch1 on port 'Ethernet44'
+
+#### Ingress Node configuration
+
+```
+; setup switch-wide configuration
+
+sonic (config-tam)# switch-id 1234
+sonic (config-tam)# enterprise-id 4434
+
+; setup the sample-rate
+
+sonic (config-tam)# sampler websamp interface Ethernet44 rate 1000
+
+; create the flowgroup
+
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
+
+; Enable IFA on the switch
+
+sonic (config-tam-ifa)# enable
+
+; Create the IFA monitoring session
+
+sonic(config-tam-ifa)# session webflowmonitor flowgroup websrvflows sample-rate websamp node-type ingress
+
+```
+
+#### Intermediate/Transit Node configuration
+
+```
+; setup switch-wide configuration
+
+sonic (config-tam)# switch-id 1235
+sonic (config-tam)# enterprise-id 4434
+
+; Enable IFA on the switch
+
+sonic (config-tam-ifa)# enable
+
+```
+
+#### Egress Node configuration
+
+```
+; setup switch-wide configuration
+
+sonic (config-tam)# switch-id 1236
+sonic (config-tam)# enterprise-id 4434
+
+; setup the collector
+
+collector ifacol1 type ipv4 ip 20.20.20.4 port 9090 protocol UDP
+
+; create the flowgroup
+
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
+
+; Enable IFA on the switch
+
+sonic (config-tam-ifa)# enable
+
+; Create the IFA monitoring session
+
+sonic(config-tam-ifa)# session webflowmonitor flowgroup websrvflows collector ifacol1 node-type egress
 
 ```
 
