@@ -123,19 +123,19 @@ Load interval functionality allows to configure per interface rate calculations 
 
 ### 3.1.1 Orchagent
 
-Ports orchagent will be programming rate interval from SWITCH_TABLE to SYNCD.
-Queue counters are fetched every 10 seconds, so the rate interval can only be multiples of 10.
+Ports orchagent will be programming load interval from SWITCH_TABLE to SYNCD.
+Queue counters are fetched every 10 seconds, so the load interval can only be multiples of 10.
 
 ### 3.1.2 SYNCD
 
 SYNCD flex counter thread fetches the interface and queue counters from SAI and updates the COUNTERS DB. 
-When rate interval is set, then thread caches the counters and after every rate interval,  will generate the  interface utilization counters and update the new fields to same COUNTERS DB.
+When load interval is set, then thread caches the counters and after every load interval,  will generate the  interface utilization counters and update the new fields to same COUNTERS DB.
 
 
 ```
 // stats has current counters read from SAI
-// cache has stats from last rate interval
-// load_interval is per port load interval
+// cache has stats from last load interval
+// load_interval is per port/queue load interval
 // poll_interval is interval at which stats are polled from SAI.
 
 // Logic to set load_divisor is called when polling interval or load_interval changes
