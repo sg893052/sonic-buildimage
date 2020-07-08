@@ -248,22 +248,22 @@ A CLI reads IFA ACL counters from COUNTER DB and displays it as output of show c
 
 ### 3.2.1 CONFIG DB
 
-TAM\_IFA\_TABLE
+TAM\_IFA\_SESSIONS\_TABLE
 
     ;Defines TAM IFA configuration in CONFIG_DB
 
-    key = name 			          ; name is ifa flow name and should be unique. 
-    flowgroup = 1*255VCHAR 		; Flow group reference
-    collector = 1*255VCHAR 		; Collector Reference
-    sample-rate = 1*255VCHAR 	; Sampler reference
+    key = name                  ; name is ifa flow name and should be unique. 
+    flowgroup = 1*255VCHAR      ; Flow group reference
+    collector = 1*255VCHAR      ; Collector Reference
+    sample-rate = 1*255VCHAR    ; Sampler reference
     node-type = ”INGRESS"/”EGRESS”/”INTERMEDIATE”
                                 ; IFA Node type, INTERMEDIATE is the default
 
     Example: 
-    > keys *TAM_IFA* 
-    1) "TAM_IFA_TABLE|ifa1"
+    > keys *TAM_IFA_SESSIONS* 
+    1) "TAM_IFA_SESSIONS_TABLE|ifa1"
 
-    > hgetall "TAM_IFA_TABLE|ifa1"
+    > hgetall "TAM_IFA_SESSIONS_TABLE|ifa1"
     1) "flowgroup"
     2) "websrvrflows"
     3) "collector"
@@ -468,14 +468,16 @@ sonic # show tam ifa sessions
 
 Name           Flow Group          Collector          Sampler           Node Type
 -----------    ----------------    --------------     -------------     ----------
-http_236       udp_port_236        -                  aggresive         Ingress
-http_239       udp_port_239        -                  -                 Intermediate
-http_241       udp_port_241        IFA_Col_i19        -                 Egress
+http_236       tcp_port_236        -                  aggresive         Ingress
+http_239       tcp_port_239        -                  -                 Intermediate
+http_241       tcp_port_241        IFA_Col_i19        -                 Egress
 
 sonic # show tam ifa sessions http_236
 
 Session            : http_236 (Ingress)
-Flow Group Name    : udp_port_236
+Flow Group Name    : tcp_port_236
+   Id              : 4025
+   Priority        : 100
    SRC IP          : 13.92.96.32
    DST IP          : 7.72.235.82
    DST L4 Port     : 236

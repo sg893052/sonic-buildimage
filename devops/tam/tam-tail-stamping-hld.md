@@ -238,7 +238,7 @@ A CLI reads TS ACL counters from COUNTER DB and displays it as output of show co
 
 ### 3.2.1 CONFIG DB
 
-TAM\_TAILSTAMPING\_TABLE
+TAM\_TAILSTAMPING\_SESSIONS\_TABLE
 
     ;Defines TAM TS configuration in CONFIG_DB
 
@@ -246,11 +246,11 @@ TAM\_TAILSTAMPING\_TABLE
     flowgroup = 1*255VCHAR      ; Flow group reference
 
     Example: 
-    > keys *TAM_TAILSTAMPING* 
+    > keys *TAM_TAILSTAMPING_SESSIONS* 
 
-    1) "TAM_TAILSTAMPING_TABLE|sla1" 
+    1) "TAM_TAILSTAMPING_SESSIONS_TABLE|sla1" 
 
-    > hgetall "TAM_TAILSTAMPING_TABLE|sla1"
+    > hgetall "TAM_TAILSTAMPING_SESSIONS_TABLE|sla1"
 
     1) "flowgroup"
     2) "slaflows"
@@ -403,6 +403,8 @@ sonic # show tam tail-stamping sessions http_236
 
 Session            : http_236
 Flow Group Name    : tcp_port_236
+   Id              : 4025
+   Priority        : 100
    SRC IP          : 13.92.96.32
    DST IP          : 7.72.235.82
    DST L4 Port     : 236

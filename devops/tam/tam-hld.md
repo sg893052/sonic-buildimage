@@ -209,9 +209,9 @@ TAM\_FEATURES\_TABLE
 
     ;Defines TAM Features configuration in CONFIG_DB
 
-    key = name 			                ; Feature name and should be among 
+    key = name                      ; Feature name and should be among 
                                     ; ifa, drop-monitor, tail-stamping, thresholds
-    status = ”active" / ”inactive" 	; Activate or Turnoff the feature
+    status = ”active" / ”inactive"  ; Activate or Turnoff the feature
 
     Example: 
     > keys *TAM_FEATURES* 
@@ -230,17 +230,39 @@ TAM\_SAMPLINGRATE\_TABLE
 
     key = name                  ; Sampler name and should be unique
 
-    sampling-rate = 1 * 5DIGIT 	; Sampling rate. One packet in every ‘rate’ packets 
+    interface = PORT_TABLE:ifname    ; Port on which  the packets are ingressing
+    sampling-rate = 1 * 5DIGIT  ; Sampling rate. One packet in every ‘rate’ packets 
                                 ; will be sampled
 
     Example: 
     > keys *TAM_SAMPLINGRATE_TABLE* 
-    1)"TAM_FEATURES_TABLE|aggressive" 
-    2)"TAM_FEATURES_TABLE|lazy" 
+    1)"TAM_SAMPLINGRATE_TABLE|aggressive" 
+    2)"TAM_SAMPLINGRATE_TABLE|lazy" 
 
     > hgetall "TAM_SAMPLINGRATE_TABLE|aggressive”
     1) "sampling-rate"
     2) 1000
+    3) "interface"
+    4) "Ethernet10"
+
+TAM\_FLOWGROUP\_TABLE
+
+    ;Defines TAM Flow Group configuration in CONFIG_DB
+
+    key             = name         ; Flowgroup name and should be unique
+    id              = 1 * 5DIGIT   ; Unique identification for a flow-group
+    table-name      = 1*255VCHAR   ; ACL Table reference               
+
+    Example: 
+    > keys *TAM_FLOWGROUP_TABLE* 
+    1)"TAM_FLOWGROUP_TABLE|websrv1" 
+    2)"TAM_FLOWGROUP_TABLE|storagecluster2" 
+
+    > hgetall "TAM_FLOWGROUP_TABLE|storagecluster2"
+    1) "id"
+    2) 1000
+    3) "table-name"
+    4) "TAM21"
 
 ### 3.2.2 APP DB
 
@@ -293,7 +315,8 @@ TAM\_SAMPLINGRATE\_TABLE
 
     key = name                  ; Sampler name and should be unique
 
-    sampling-rate = 1 * 5DIGIT 	; Sampling rate. One packet in every ‘rate’ packets 
+    interface = PORT_TABLE:ifname    ; Port on which  the packets are ingressing
+    sampling-rate = 1 * 5DIGIT  ; Sampling rate. One packet in every ‘rate’ packets 
                                 ; will be sampled
 
     Example: 
@@ -304,6 +327,8 @@ TAM\_SAMPLINGRATE\_TABLE
     > hgetall "TAM_SAMPLINGRATE_TABLE|aggressive”
     1) "sampling-rate"
     2) 1000
+    3) "interface"
+    4) "Ethernet10"
 
 ### 3.2.4 ASIC DB
 
@@ -394,7 +419,6 @@ TAM infrastructure allows us to create a flow-group by specifying the tuple info
 The following flow-group attribtes are supported. Except the `name` attribute, all the other attributes are optional. When not specified, they default to the equivalent of a wildcard in the packet matching.
 
 
-
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
 | `name`               | A string that uniquely identifies the flow-group, and will be referrenced from other configurations        |
@@ -406,12 +430,13 @@ The following flow-group attribtes are supported. Except the `name` attribute, a
 | `l4-src-port`               | Source Port (L4) of the packets belonging to the flow-group       |
 | `l4-dst-port`               | Destination Port (L4) of the packets belonging to the flow-group       |
 | `protocol`            | Protocol field of the ip-header of the packets belonging to the flow-group  |
-| `ifa`            | When specified, all IFA-tagged flows are included in the flow-group   |
+| `priority`            | Priority of the flow-group, among the other flow-groups that are created. Range is 1 - 1024, Default value is 100  |
+
 
 The command syntax for setting up the flow-groups is as follows:
 
 ```
-sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [ifa]
+sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>]
 
 sonic (config-tam)# no flow-group <name> 
 ```
@@ -522,26 +547,26 @@ Sample usage shown below.
 sonic # show tam flow-groups
 
 Flow Group Name    : udp_port_239
+   Id              : 4025
+   Priority        : 100
    SRC IP          : 10.72.195.23
    DST L4 Port     : 239
-Collector          : None
-Sampler            : None
 Packet Count       : 10584
  
 Flow Group Name    : udp_port_241
+   Id              : 4022
+   Priority        : 99
    SRC Port        : 1906
    DST L4 Port     : 241
-Collector          : IFA_Col_i19
-Sampler            : None
 Packet Count       : 8654367
 
 sonic # show tam flow-groups udp_port_239
 
 Flow Group Name    : udp_port_239
+   Id              : 4025
+   Priority        : 100
    SRC IP          : 10.72.195.23
    DST L4 Port     : 239
-Collector          : None
-Sampler            : None
 Packet Count       : 10584
 ```
 

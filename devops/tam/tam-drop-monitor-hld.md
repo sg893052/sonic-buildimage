@@ -6,7 +6,69 @@
 
 # Table of Contents
 
-
+- [Drop Monitor](#drop-monitor)
+  * [Highlevel Design Document](#highlevel-design-document)
+    + [Rev 0.1](#rev-01)
+- [Table of Contents](#table-of-contents)
+  * [List of Tables](#list-of-tables)
+  * [Revision](#revision)
+  * [About This Manual](#about-this-manual)
+  * [Scope](#scope)
+  * [Definition/Abbreviation](#definition-abbreviation)
+    + [Table 1: Abbreviations](#table-1--abbreviations)
+- [1 Feature Overview](#1-feature-overview)
+  * [1.1 Requirements](#11-requirements)
+    + [1.1.1 Functional Requirements](#111-functional-requirements)
+    + [1.1.2 Configuration and Management Requirements](#112-configuration-and-management-requirements)
+    + [1.1.3 Scalability Requirements](#113-scalability-requirements)
+  * [1.2 Design Overview](#12-design-overview)
+    + [1.2.1 Basic Approach](#121-basic-approach)
+    + [1.2.2 Container](#122-container)
+    + [1.2.3 SAI Overview](#123-sai-overview)
+- [2 Functionality](#2-functionality)
+  * [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
+  * [2.2 Functional Description](#22-functional-description)
+- [3 Design](#3-design)
+  * [3.1 Overview](#31-overview)
+  * [3.1.1 DropMonitorMgr](#311-dropmonitormgr)
+  * [3.2 DB Changes](#32-db-changes)
+    + [3.2.1 CONFIG DB](#321-config-db)
+    + [3.2.2 APP DB](#322-app-db)
+    + [3.2.3 STATE DB](#323-state-db)
+    + [3.2.4 ASIC DB](#324-asic-db)
+    + [3.2.5 COUNTER DB](#325-counter-db)
+  * [3.3 Switch State Service Design](#33-switch-state-service-design)
+    + [3.3.1 Orchestration Agent](#331-orchestration-agent)
+    + [3.3.2 Other Process](#332-other-process)
+  * [3.4 SyncD](#34-syncd)
+  * [3.5 SAI](#35-sai)
+  * [3.6 CLI](#36-cli)
+    + [3.6.1 Data Models](#361-data-models)
+    + [3.6.2 Configuration Commands](#362-configuration-commands)
+      - [3.6.2.1 Activating and Deactivating Drop Monitor](#3621-activating-and-deactivating-drop-monitor)
+      - [3.6.2.2 Setting up Aging interval](#3622-setting-up-aging-interval)
+      - [3.6.2.3 Setting up flows for drop-monitoring](#3623-setting-up-flows-for-drop-monitoring)
+    + [3.6.3 Show Commands](#363-show-commands)
+      - [3.6.3.1 Listing the Drop Monitor attributes](#3631-listing-the-drop-monitor-attributes)
+      - [3.6.3.1 Listing the Drop Monitor sessions](#3631-listing-the-drop-monitor-sessions)
+    + [3.6.5 Debug Commands](#365-debug-commands)
+    + [3.6.6 REST API Support](#366-rest-api-support)
+- [4 Flow Diagrams](#4-flow-diagrams)
+  * [4.1 Config call flow](#41-config-call-flow)
+- [5 Error Handling](#5-error-handling)
+  * [DropMgr](#dropmgr)
+  * [DropMonitorOrch](#dropmonitororch)
+- [6 Serviceability and Debug](#6-serviceability-and-debug)
+- [7 Warm Boot Support](#7-warm-boot-support)
+- [8 Scalability](#8-scalability)
+- [9 Unit Test](#9-unit-test)
+  * [CLI](#cli)
+- [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information---to-be-removed-before-publishing-externally)
+  * [Key notes](#key-notes)
+  * [Specific Limitations](#specific-limitations)
+  * [Supported Drop Reasons](#supported-drop-reasons)
+  * [Qualified Drop Reasons](#qualified-drop-reasons)
+  * [Drop Report format](#drop-report-format)
 
 ## List of Tables
 
@@ -422,7 +484,8 @@ sonic # show tam drop-monitor sessions http_236
 
 Session            : http_236
 Flow Group Name    : tcp_port_236
-   Id              : 6687
+   Id              : 4025
+   Priority        : 100
    SRC IP          : 13.92.96.32
    DST IP          : 7.72.235.82
    DST L4 Port     : 236
