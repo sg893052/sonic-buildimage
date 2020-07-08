@@ -220,7 +220,7 @@ TAM\_FEATURES\_TABLE
     3)"TAM_FEATURES_TABLE|tail-stamping" 
     4)"TAM_FEATURES_TABLE|thresholds”
 
-    > hgetall "tam_features_table|ifa”
+    > hgetall "TAM_FEATURES_TABLE|ifa”
     1) "status"
     2) "active"
 
@@ -238,7 +238,7 @@ TAM\_SAMPLINGRATE\_TABLE
     1)"TAM_FEATURES_TABLE|aggressive" 
     2)"TAM_FEATURES_TABLE|lazy" 
 
-    > hgetall "tam_features_table|aggressive”
+    > hgetall "TAM_SAMPLINGRATE_TABLE|aggressive”
     1) "sampling-rate"
     2) 1000
 
@@ -283,7 +283,7 @@ TAM\_FEATURES\_TABLE
     3)"TAM_FEATURES_TABLE|tail-stamping" 
     4)"TAM_FEATURES_TABLE|thresholds”
 
-    > hgetall "tam_features_table|ifa”
+    > hgetall "TAM_FEATURES_TABLE|ifa”
     1) "status"
     2) "unsupported"
 
@@ -298,10 +298,10 @@ TAM\_SAMPLINGRATE\_TABLE
 
     Example: 
     > keys *TAM_SAMPLINGRATE_TABLE* 
-    1)"TAM_FEATURES_TABLE|aggressive" 
-    2)"TAM_FEATURES_TABLE|lazy" 
+    1)"TAM_SAMPLINGRATE_TABLE|aggressive" 
+    2)"TAM_SAMPLINGRATE_TABLE|lazy" 
 
-    > hgetall "tam_features_table|aggressive”
+    > hgetall "TAM_SAMPLINGRATE_TABLE|aggressive”
     1) "sampling-rate"
     2) 1000
 
