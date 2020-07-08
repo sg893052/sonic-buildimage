@@ -138,8 +138,8 @@ When load interval is set, then thread caches the counters and after every load 
 // load_interval is per port/queue load interval
 // poll_interval is interval at which stats are polled from SAI.
 
-// Logic to set load_divisor is called when polling interval or load_interval changes
-if (load_interval > poll_interval)
+// Logic to set load_divisor is called when poll_interval or load_interval changes
+if (load_interval >= poll_interval)
     load_divisor = load_interval / poll_interval
 
 if (load_interval < poll_interval)
