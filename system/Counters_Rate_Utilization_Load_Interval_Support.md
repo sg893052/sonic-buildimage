@@ -33,11 +33,11 @@
     * [3.3 SAI](#33-sai)
     * [3.4 CLI](#34-cli)
       * [3.4.1 Data Models](#341-data-models)
-      * [3.4.2 Configuration Commands](#342-configuration-commands)
-      * [3.4.3 Show Commands](#343-show-commands)
-      * [3.4.4 REST APIs](#344-rest-apis) 
+      * [3.4.2 Show Commands](#342-show-commands)
+      * [3.4.3 REST APIs](#343-rest-apis)
   * [4 Error Handling](#5-error-handling)
   * [5 Serviceability and Debug](#6-serviceability-and-debug)
+    * [5.1 Configuration Commands](#51-configuration-commands)
   * [6 Warm Boot Support](#7-warm-boot-support)
   * [7 Scalability](#8-scalability)
   * [8 Unit Test](#9-unit-test)
@@ -136,22 +136,33 @@ When rate interval is set, then thread caches the counters and after every rate 
 // stats has current counters read from SAI
 // cache has stats from last rate interval
 // load_interval is per port load interval
-// poll_interval is interval at which stats are polled from SAI
+// poll_interval is interval at which stats are polled from SAI.
+
+// Logic to set load_divisor is called when polling interval or load_interval changes
+if (load_interval > poll_interval)
+    load_divisor = load_interval / poll_interval
+
+if (load_interval < poll_interval)
+    # log message and set to same as poll_interval.
+    load_interval = poll_interval
+    load_divisor = 1
+
+// This logic is called every load interval.
 // counter overflow will be handled.
 
 # Interface IN counters
 current = stats[SAI_PORT_STAT_IF_IN_UCAST_PKTS] + stats[SAI_PORT_STAT_IF_IN_NON_UCAST_PKTS];
 prev = cache[SAI_PORT_STAT_IF_IN_PKTS]
-PPS = (current - prev) / (load_interval * poll_interval))
-BPS = ((stats[SAI_PORT_STAT_IF_IN_OCTETS] - cache[SAI_PORT_STAT_IF_IN_OCTETS]) / (load_interval * poll_interval))
+PPS = (current - prev) / load_divisor)
+BPS = ((stats[SAI_PORT_STAT_IF_IN_OCTETS] - cache[SAI_PORT_STAT_IF_IN_OCTETS]) / load_divisor)
 bps = BPS << 3
 utilization = (bps/port-speed)
 
 # Interface OUT counters
 current = stats[SAI_PORT_STAT_IF_OUT_UCAST_PKTS] + stats[SAI_PORT_STAT_IF_OUT_NON_UCAST_PKTS];
 prev = cache[SAI_PORT_STAT_IF_OUT_PKTS]
-PPS = (current - prev) / (load_interval * poll_interval))
-BPS = ((stats[SAI_PORT_STAT_IF_IN_OCTETS] - cache[SAI_PORT_STAT_IF_IN_OCTETS]) / (load_interval * poll_interval))
+PPS = (current - prev) / load_divisor)
+BPS = ((stats[SAI_PORT_STAT_IF_IN_OCTETS] - cache[SAI_PORT_STAT_IF_IN_OCTETS]) / load_divisor)
 bps = BPS << 3
 utilization = (bps/port-speed)
 
@@ -159,10 +170,10 @@ Queue Counters
 
 current = stats[SAI_QUEUE_STAT_PACKETS]
 prev = cache[SAI_QUEUE_STAT_PACKETS]
-PPS = (current - prev) / (load_interval * poll_interval))
+PPS = (current - prev) / load_divisor)
 current = stats[SAI_QUEUE_STAT_BYTES]
 prev = cache[SAI_QUEUE_STAT_BYTES]
-BPS = (current - prev) / (load_interval * poll_interval))
+BPS = (current - prev) / load_divisor)
 bps = BPS << 3
 
 ```
@@ -179,28 +190,28 @@ The transformer code fetches the new counters and shares it to the client.
 ```
 Global Switch level config to be stored in this table.
 
-    load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
-    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
+    port_load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 10 seconds
+    queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 "SWITCH|switch"
- "load_interval" : "30" ; Load interval for interface rate/utilization.
- "queue_load_interval" : "30" ; Load interval for Queue rate/utilization
+ "port_load_interval" : "10" ; Load interval for interface rate/utilization.
+ "queue_load_interval" : "10" ; Load interval for Queue rate/utilization
 ```
 
 #### PORT_TABLE
 ```
-    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
+    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 "PORT|ifName"
- "load_interval" : "30" ; Load interval for interface rate/utilization.
+ "port_load_interval" : "10" ; Load interval for interface rate/utilization.
 ```
 
 #### PORTCHANNEL_TABLE
 ```
-    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
+    port_load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 "PORTCHANNEL|portchannelName"
- "load_interval" : "30" ; Load interval for portchannel rate/utilization.
+ "load_interval" : "10" ; Load interval for portchannel rate/utilization.
 ```
 
 ### 3.2.2 APP DB
@@ -209,12 +220,12 @@ Global Switch level config to be stored in this table.
 ```
 Global Switch level config set by portsOrch.
 
-    load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 30 seconds
+    port_load_interval               = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 10 seconds
     queue_load_interval         = 3DIGIT  ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 
 "SWITCH_TABLE|switch"
- "load_interval" : "30" ; Load interval for interface rate/utilization.
+ "port_load_interval" : "10" ; Load interval for interface rate/utilization.
  "queue_load_interval" : "10" ; Load interval for Queue rate/utilization
 ```
 
@@ -222,22 +233,22 @@ Global Switch level config set by portsOrch.
 ```
 Interface level load interval set by portsOrch.
 
-    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
+    port_load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 
 "PORT_TABLE|ifName"
- "load_interval" : "30" ; Load interval for interface rate/utilization.
+ "port_load_interval" : "10" ; Load interval for interface rate/utilization.
 
 ```
 #### LAG_TABLE
 ```
 Portchannel level load interval.
 
-    load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 30 seconds
+    port_load_interval               = 3DIGIT ; Value in seconds. 10-600 supported. Default is 10 seconds
 
 
 "LAG_TABLE:PortChannel10"
- "load_interval" : "30" ;  Load interval for portchannel rate/utilization.
+ "port_load_interval" : "10" ;  Load interval for portchannel rate/utilization.
 
 ```
 
@@ -248,22 +259,22 @@ Following new fields are added to existing COUNTERS Table for both port/portchan
 ```
 COUNTERS_DB:
 {
-    "COUNTERS:oid:<port/portchannel Vid>": {
-      "SAI_PORT_STAT_IF_IN_PKTS_PER_SECOND": "0",
-      "SAI_PORT_STAT_IF_OUT_PKTS_PER_SECOND": "0",
-      "SAI_PORT_STAT_IF_IN_OCTETS_PER_SECOND": "0",
-      "SAI_PORT_STAT_IF_OUT_OCTETS_PER_SECOND": "0",
-      "SAI_PORT_STAT_IF_IN_BITS_PER_SECOND": "0",
-      "SAI_PORT_STAT_IF_OUT_BITS_PER_SECOND": "0",
-      "SAI_PORT_STAT_IF_IN_UTILIZATION": "0",
-      "SAI_PORT_STAT_IF_OUT_UTILIZATION": "0",
+    "COUNTERS:oid:<port/portchannel OID>": {
+      "PORT_STAT_IF_IN_PKTS_PER_SECOND": "0",
+      "PORT_STAT_IF_OUT_PKTS_PER_SECOND": "0",
+      "PORT_STAT_IF_IN_OCTETS_PER_SECOND": "0",
+      "PORT_STAT_IF_OUT_OCTETS_PER_SECOND": "0",
+      "PORT_STAT_IF_IN_BITS_PER_SECOND": "0",
+      "PORT_STAT_IF_OUT_BITS_PER_SECOND": "0",
+      "PORT_STAT_IF_IN_UTILIZATION": "0",
+      "PORT_STAT_IF_OUT_UTILIZATION": "0",
     },
 },
 
-"COUNTERS:oid:<queueVid>": {
-    "SAI_QUEUE_STAT_PACKETS_PER_SECOND": "0",
-    "SAI_QUEUE_STAT_BYTES_PER_SECOND": "0",
-    "SAI_QUEUE_STAT_BITS_PER_SECOND": "0",
+"COUNTERS:oid:<queueOID>": {
+    "QUEUE_STAT_PACKETS_PER_SECOND": "0",
+    "QUEUE_STAT_BYTES_PER_SECOND": "0",
+    "QUEUE_STAT_BITS_PER_SECOND": "0",
   }
 
 ```
@@ -277,24 +288,7 @@ No changes needed in SAI for this feature.
 Existing openconfig interface yang and sonic yang to be extended to support this feature.
 DELL team to add more details here.
 
-### 3.4.2 Configuration Commands
-
-#### config interface load_interval Ethernet0 <load-interval-in-seconds>
-
-Set rate calculation interval for the interface(port/portchannel). Supported values are 10 seconds to 600 seconds.
-
-
-  config interface load_interval Ethernet0 30
-
-#### config queue load_interval <load-interval-in-seconds>
-
-Set rate calculation interval for the queue. Supported values are 10 seconds to 600 seconds.
-
-  config queue load_interval 30
-
-
-
-### 3.4.3 Show Commands
+### 3.4.2 Show Commands
 
 #### Interface Counters
 
@@ -310,8 +304,8 @@ Interface IPv6 oper status: Disabled
 IP MTU 9100 bytes
 LineSpeed 25GB, Auto-negotiation off
 Last clearing of "show interface" counters: 1970-01-01 00:00:00
-30 seconds input rate 84640 bits/sec, 10236 Bytes/sec, 52 packets/sec 
-30 seconds output rate 176760 bits/sec, 22432 Bytes/sec, 45 packets/sec
+10 seconds input rate 84640 bits/sec, 10236 Bytes/sec, 52 packets/sec
+10 seconds output rate 176760 bits/sec, 22432 Bytes/sec, 45 packets/sec
 ```
 
 ##### show interface counters
@@ -334,7 +328,7 @@ Ethernet0   UC2  0              0              0/s            0/s            0  
 Ethernet0   UC3  0              0              0/s            0/s            0           0
 ...
 
-Queue counter load interval: 30 sec
+Queue counter load interval: 10 sec
 ```
 
 ##### show queue counters interface CPU
@@ -348,15 +342,34 @@ MC2  0              0              0/s            0/s            0           0
 MC3  0              0              0/s            0/s            0           0
 MC4  0              0              0/s            0/s            0           0
 
-Queue counter load interval: 30 sec
+Queue counter load interval: 10 sec
 ```
-### 3.4.4 REST APIs
+### 3.4.3 REST APIs
 
 To be filled by DELL team
 
 # 4 Error Handling
 
 # 5 Serviceability and Debug
+
+Below config commands are added in CLICK to help during debugging.
+This release supports only fixed load interval.
+These config commands help during debugging if the user wishes to change the load interval.
+
+### 5.1 Configuration Commands
+
+#### config interface load_interval Ethernet0 <load-interval-in-seconds>
+
+Set rate calculation interval for the interface(port/portchannel). Supported values are 10 seconds to 600 seconds.
+
+
+  config interface load_interval Ethernet0 30
+
+#### config queue load_interval <load-interval-in-seconds>
+
+Set rate calculation interval for the queue. Supported values are 10 seconds to 600 seconds.
+
+  config queue load_interval 30
 
 # 6 Warm Boot Support
 Not applicable for this feature.
