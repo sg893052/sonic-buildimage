@@ -230,7 +230,6 @@ TAM\_SAMPLINGRATE\_TABLE
 
     key = name                  ; Sampler name and should be unique
 
-    interface = PORT_TABLE:ifname    ; Port on which  the packets are ingressing
     sampling-rate = 1 * 5DIGIT  ; Sampling rate. One packet in every ‘rate’ packets 
                                 ; will be sampled
 
@@ -251,18 +250,22 @@ TAM\_FLOWGROUP\_TABLE
 
     key             = name         ; Flowgroup name and should be unique
     id              = 1 * 5DIGIT   ; Unique identification for a flow-group
-    table-name      = 1*255VCHAR   ; ACL Table reference               
-
+    table-name      = 1*255VCHAR   ; ACL Table reference          
+    ingress-interface = PORT_TABLE:ifname    ; Port on which  the packets are ingressing
+    
     Example: 
     > keys *TAM_FLOWGROUP_TABLE* 
     1)"TAM_FLOWGROUP_TABLE|websrv1" 
     2)"TAM_FLOWGROUP_TABLE|storagecluster2" 
+    
 
     > hgetall "TAM_FLOWGROUP_TABLE|storagecluster2"
     1) "id"
     2) 1000
     3) "table-name"
     4) "TAM21"
+    5) "ingress-interface"
+    6) "Ethernet20"
 
 ### 3.2.2 APP DB
 
@@ -431,19 +434,20 @@ The following flow-group attribtes are supported. Except the `name` attribute, a
 | `l4-dst-port`               | Destination Port (L4) of the packets belonging to the flow-group       |
 | `protocol`            | Protocol field of the ip-header of the packets belonging to the flow-group  |
 | `priority`            | Priority of the flow-group, among the other flow-groups that are created. Range is 1 - 1024, Default value is 100  |
+| `ingress-interface`            | Refers to one of the interfaces on the switch on which traffic is entering the switch. |
 
 
 The command syntax for setting up the flow-groups is as follows:
 
 ```
-sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>]
+sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>] [ingress-interface <interface-name>]
 
 sonic (config-tam)# no flow-group <name> 
 ```
 
 #### 3.7.2.2 Setting up Samplers
 
-TAM infrastructure supports setting up a sampling configuration on a per-interface basis and refer to this sampler configuration from the application which support sampling for the traffic.
+TAM infrastructure supports setting up a sampling configuration and refer to this sampler configuration from the application which support sampling for the traffic.
 
 A sampler, if associated with any TAM application, can't be removed. The `no` command fails citing existing association.
 
@@ -452,13 +456,12 @@ The following sampling attribtes are supported.
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
 | `name`               | A string that uniquely identifies the sampler, and will be referrenced from other configurations        |
-| `interface`            | Refers to one of the interfaces on the switch on which traffic        |
 | `sample-rate`               | Sampling rate, one in every `sample-rate` packets will be sampled      |
 
 The command syntax for setting up the samplers are as follows:
 
 ```
-sonic (config-tam)# sampler <name> interface <interface-name> rate <sample-rate> 
+sonic (config-tam)# sampler <name>  rate <sample-rate> 
 
 sonic (config-tam)# no sampler <name> 
 
@@ -522,15 +525,14 @@ Sample usage shown below.
 ```
 sonic # show tam samplers
 
-Name         Interface      Sample Rate
------------  ---------      -----------
-sflow_low    Ethernet10     1
-aggresive    Ethernet20     2000
+Name         Sample Rate
+-----------  -----------
+sflow_low    1
+aggresive    2000
 
 sonic-cli# show tam samplers aggresive
  
 Name          : aggresive
-Interface     : Ethernet20
 Sample Rate   : 2000
 ```
 
@@ -551,6 +553,7 @@ Flow Group Name    : udp_port_239
    Priority        : 100
    SRC IP          : 10.72.195.23
    DST L4 Port     : 239
+   Ingress Intf    : Ethernet20
 Packet Count       : 10584
  
 Flow Group Name    : udp_port_241

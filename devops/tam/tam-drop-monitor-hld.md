@@ -419,7 +419,7 @@ The default value for the aging interval is 5 seconds.
 A Drop Monitoring session associated a previously defined flow-group as described below.
 
 - The Drop Monitor session must have a unique name for referencing.
-- The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy).
+- The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy). For drop-monitoring, the flow-group definition must contain the `ingress-interface` attribute.
 - The sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy).
 - A collector must be associated with the session, where the drop-reports will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy)..
 
@@ -491,6 +491,7 @@ Flow Group Name    : tcp_port_236
    SRC IP          : 13.92.96.32
    DST IP          : 7.72.235.82
    DST L4 Port     : 236
+   Ingress Intf    : Ethernet20
 Collector          : Col_i19
 Sampler            : aggresive
 Packet Count       : 7656
@@ -510,11 +511,11 @@ sonic (config-tam)# switch-id 1234
 
 ; setup the sample-rate
 
-sonic (config-tam)# sampler websamp interface Ethernet44 rate 100
+sonic (config-tam)# sampler websamp rate 100
 
 ; create the flowgroup
 
-sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 ingress-interface Ethernet44 
 
 ; setup the collector
 

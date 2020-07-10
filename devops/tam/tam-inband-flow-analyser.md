@@ -413,7 +413,7 @@ A IFA monitoring session associated a previously defined flow-group, with IFA as
 - The IFA session must have a unique name for referencing.
 - The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy).
 - The switch can be setup to act as an ingress node or as an egress node for this session.
-- On ingress nodes, the sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy).
+- On ingress nodes, the sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy). On ingress nodes, the flow-group definition must contain the `ingress-interface` attribute.
 - On the egress nodes, a collector must be associated with the flow, where the extracted metadata will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy)..
 
 When a sesssion that is previously created is removed (with the `no` command), the associated flows are no longer processed for IFA as an ingress node or as an egress-node by the switch. 
@@ -485,6 +485,7 @@ Flow Group Name    : tcp_port_236
    SRC IP          : 13.92.96.32
    DST IP          : 7.72.235.82
    DST L4 Port     : 236
+   Ingress Intf    : Ethernet20
 Collector          : None
 Sampler            : aggresive
 Packet Count       : 7656
@@ -506,11 +507,11 @@ sonic (config-tam)# enterprise-id 4434
 
 ; setup the sample-rate
 
-sonic (config-tam)# sampler websamp interface Ethernet44 rate 1000
+sonic (config-tam)# sampler websamp rate 1000
 
 ; create the flowgroup
 
-sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 ingress-interface Ethernet44
 
 ; Enable IFA on the switch
 
