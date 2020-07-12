@@ -269,7 +269,7 @@ The startup behavior described in this section is applicable to the following sc
 - Config reload command 
 - SwSS docker restart 
 
-The startup behavior is applicable to a MCLAG node forming a logical VTEP, namely Leaf1 or Leaf2 described in EVPN LVTEP Overview diagram above. On startup, the users can configure a delay restore timer to keep the MCLAG interfaces connecting to MHDs and orphan interfaces connecting to SHDs to be down for the duration of the specified time. The holdown of the interfaces will allow protocol to converge and VxLAN tunnels to be formed between MLAG node and remote leaf nodes before allowing traffic from MHDs and SHDs to be sent to MCLAG node. The holddown helps minimize traffic loss for the traffic sent from MHDs and SHDs connecting to MCLAG node to remote leaf nodes.   
+The startup behavior is applicable to a MCLAG node forming a logical VTEP, namely Leaf1 or Leaf2 described in EVPN LVTEP Overview diagram above. On startup, the users can configure a delay restore timer to keep the MCLAG interfaces connecting to MHDs and orphan interfaces connecting to SHDs to be down for the duration of the specified time. The holdown of the interfaces will allow protocol to converge and VxLAN tunnels to be formed between a MLAG node and remote leaf nodes before allowing traffic from MHDs and SHDs to be sent to MCLAG node. The holddown helps minimize traffic loss for the traffic sent from MHDs and SHDs connecting to a MCLAG node to remote leaf nodes.   
 
 The delay restore logic will rely on the uplink interface tracking configuration to determine the MCLAG and orphan interfaces to be held down. In other words, uplink interface tracking must be configured in order for the delay restore timer to take effect. Below is the behavior of the delay restore timer:
 
@@ -277,6 +277,9 @@ The delay restore logic will rely on the uplink interface tracking configuration
 - While the timer is running, the MCLAG and orphan interfaces will be kept in operationally down state. The user can manually bring the interfaces up by shutting down and starting up the interfaces explicitly.  Note that if user shutdown and startup the interface again while the delay restore timer is still running, the delay restore timer is not re-applied to the interface. 
 - When the timer expires, the operationally down MCLAG and orphan interfaces will be brought up.  
 - By default, the timer is set to 300 seconds. This means delay restore is enabled by default. User needs to set the timer value to zero to disable it. 
+- If user changes the timer value when it is not active, the new value will take effect in the next startup. If user changes the timer value while the timer is running, there are two scenarios:
+  - If the new timer value is larger then the existing timer value, the remaining time will be increased to include the additional time.
+  - If the new timer value is smaller than the existing timer value, the difference will be subtracted from the remaining time which could result in the timer immedidately expired.
 
 Since the delay timer is used in startup scenarios where the system will take more time to convergence compared to the leaf-spine uplink flapping scenario, the users should configure delay restore timer with a higher value than the uplink interface tracking timer. 
 
@@ -435,7 +438,7 @@ Broadcom SAI implementation for port isolation group will be extended to support
 ### 3.5.1 IS-CLI Compliance
 ### 3.5.2 Data Models
 
-OpenConfig MCLAG yang model is updated to support delay restore timer configured under MCLAG domain
+OpenConfig MCLAG yang model is updated to support delay-restore timer configured under MCLAG domain and delay-restore-start-time which is the time in seconds since the Epoch
 
 ```
 openconfig-mclag
@@ -446,29 +449,28 @@ openconfig-mclag
      |  +--rw mclag-domain* [domain-id]
      |     +--rw domain-id    -> ../config/domain-id
      |     +--rw config
-     |     |  +--rw domain-id?            uint32
-     |     |  +--rw source-address?       oc-inet:ip-address
-     |     |  +--rw peer-address?         oc-inet:ip-address
-     |     |  +--rw peer-link?            string
-     |     |  +--rw mclag-system-mac?     oc-yang:mac-address
-     |     |  +--rw keepalive-interval?   uint32
-     |     |  +--rw session-timeout?      uint32
-     |     |  +--rw delay-restore?        uint16
+     |     |  +--rw domain-id            uint32
+     |     |  +--rw source-address       oc-inet:ip-address
+     |     |  +--rw peer-address         oc-inet:ip-address
+     |     |  +--rw peer-link            string
+     |     |  +--rw mclag-system-mac     oc-yang:mac-address
+     |     |  +--rw keepalive-interval   uint32
+     |     |  +--rw session-timeout      uint32
+     |     |  +--rw delay-restore        uint16
      |     +--ro state
-     |        +--ro domain-id?            uint32
-     |        +--ro source-address?       oc-inet:ip-address
-     |        +--ro peer-address?         oc-inet:ip-address
-     |        +--ro peer-link?            string
-     |        +--ro mclag-system-mac?     oc-yang:mac-address
-     |        +--ro keepalive-interval?   uint32
-     |        +--ro session-timeout?      uint32
-     |        +--ro delay-restore?        uint16
-     |        +--ro oper-status?          enumeration
-     |        +--ro role?                 enumeration
-     |        +--ro system-mac?           oc-yang:mac-address
+     |        +--ro domain-id                  uint32
+     |        +--ro source-address             oc-inet:ip-address
+     |        +--ro peer-address               oc-inet:ip-address
+     |        +--ro peer-link                  string
+     |        +--ro mclag-system-mac           oc-yang:mac-address
+     |        +--ro keepalive-interval         uint32
+     |        +--ro session-timeout            uint32
+     |        +--ro delay-restore              uint16
+     |        +--ro oper-status                enumeration
+     |        +--ro role                       enumeration
+     |        +--ro system-mac                 oc-yang:mac-address
+     |        +--ro delay-restore-start-time   oc-types:timeticks64     
 ```
-
-
 
 ### 3.5.3 Configuration Commands
 
@@ -609,6 +611,8 @@ Downstream:
 
 #### 3.5.4.2 Show delay restore timer
 
+If the timer is running, the remaining time will also be shown 
+
 ```
 sonic#show mclag brief
 
@@ -621,7 +625,7 @@ Peer Address                : 192.168.1.2
 Peer Link                   : PortChannel30
 Keepalive Interval          : 1 secs
 Session Timeout             : 15 secs
-Delay Restore               : 300 secs
+Delay Restore               : 300 secs (12 secs left on timer)
 System MAC                  : b8:6a:97:73:6c:96
 MCLAG System MAC Address    : 00:80:c2:00:00:05
 Gateway MAC Address         : 00:01:02:03:04:05
@@ -637,7 +641,7 @@ The existing debug commands from MCLAG and EVPN VXLAN will be used to debug LVTE
 
 ### 3.5.6 REST API Support
 
-
+User can use REST API to set and get the delay restore timer. User can also get the delay restore start time in seconds since the Epoch since the timer is triggered.  
 
 # 4 Flow Diagrams
 
