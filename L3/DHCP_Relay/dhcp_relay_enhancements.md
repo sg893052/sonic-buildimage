@@ -33,7 +33,7 @@ DHCP Relay Enhancements.
       * [3.1.3 Source interface selection](#313-source-interface-sel)
       * [3.1.4 Relay over IPv6 next hops](#314-relay-over-ipv6-nexthop)
       * [3.1.5 VRF support](#315-vrf-support)  
-        * [3.1.5.1 Sub-option 151](#3151-vrf-suboption-151)  
+        * [3.1.5.1 Virtual Subnet Selection Sub-option](#3151-vrf-suboption)  
       * [3.1.6 Relay and VTEP](#316-relay-and-vtep)
       * [3.1.7 Relay and SAG](#317-relay-and-sag)
       * [3.1.8 Rate limiting](#318-rate-limiting)
@@ -95,13 +95,14 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 | MC-LAG                   | Multi-chassis Link aggregation group|
 | VTEP                     | VXLAN Tunnel End Point              |
 | SAG                      | Static Anycast Gateway              |
+| VSS                      | Virtual Subnet Selection sub-option              |
 
 # 1 Feature Overview
 ## 1.1 Requirements
 ### 1.1.1 Functional Requirements
 #### 1.1.1.1 New Functional Requirements
 1. Support relaying of DHCPv4 packets over IPv4 unnumbered interfaces.
-2. Support Virtual subnet selection (VSS) options 151/152 as per RFC 6607.
+2. Support Virtual subnet selection (VSS) options 151/152 for DHCPv4, and VSS option 68 for DHCPv6, as per RFC 6607.
 3. Support relaying of DHCPv4/DHCPv6 packets when client and server are in different VRFs.
 
 
@@ -380,24 +381,28 @@ __Figure5: DHCP Relay with VRF__
 #Configure Relay with server VRF
 
 config interface ip dhcp-relay add Ethernet0 172.16.0.1 -vrf-name=VrfRed
+config interface ip dhcp-relay src-intf add Ethernet0 Loopback0
+config interface ip dhcp-relay link-select add Ethernet0
 ```
+
+In case of DHCPv4 relay, link-selection must be enabled when client and server are in different VRFs. The link-selection sub-option must use an interface that is bound to server VRF. This is needed to ensure that the response from the server is received by the DHCPv4 relay. If the client and server are in the same VRF, say VrfRed, then link-selection need not be enabled, as the 'giaddr' is also in the server VRF.
 
 As an alternate configuration, route leaking can be enabled in client VRF to ensure reachability to DHCP server residing in different VRF. This approach is not preferred/recommended due to overhead of adding leaked routes in each of the client VRFs and server VRF.
 
-#### 3.1.5.1 Sub-option 151/152
+#### 3.1.5.1 Virtual Subnet Selection Sub-option 
 
-DHCP relay supports multiple clients on different VRFs, and these clients can also share the same/overlapping IP addresses. In such VRF deployments, there is a need for the DHCP server to know the client's VRF, so that the address allocation can be done based on that VRF. To convey VRF information, DHCP relay includes the sub-option 151 as defined in RFC 6607.
+DHCP relay supports multiple clients on different VRFs, and these clients can also share the same/overlapping IP addresses. In such VRF deployments, there is a need for the DHCP server to know the client's VRF, so that the address allocation can be done based on that VRF. To convey VRF information, DHCP relay includes the sub-option 151 (for DHCPv4) and sub-option 68 (for DHCPv6) as defined in RFC 6607.
 
-The suboption 151 (Virtual subnet selection sub-option, type 0) carries the ASCII VRFNAME configured on the incoming interface to which the client is connected. If the incoming interface is in default VRF, the sub option is not added to the relayed packet. The format of the sub-option 151 added by the relay agent is shown below - only type 0 identifier is supported. This option is supported for both DHCPv4 and DHCPv6 clients.
+The Virtual subnet selection sub-option (type 0) carries the ASCII VRFNAME configured on the incoming interface to which the client is connected. If the incoming interface is in default VRF, the sub option is not added to the relayed packet. The format of the sub-option added by the relay agent is shown below - only type 0 identifier is supported. This option is supported for both DHCPv4 and DHCPv6 clients.
 
 ```
  Suboption      Length     Type      Value
     151           7         0        ASCII VPN identifier (VRFNAME)
 ```
 
- The sub-option 152 is a control sub-option that is added along with 151, to check if the DHCP server supports these sub-options. If the DHCP server strips out sub-option 152 when sending the response to the relay, it indicates that the DHCP server has used the VRFNAME to allocate IP address. If the DHCP server returns sub-option 152 back, it indicates the DHCP server did not understand the sub-options sent by the relay.
+ For DHCPv4, the sub-option 152 is a control sub-option that is added along with 151, to check if the DHCP server supports these sub-options. If the DHCP server strips out sub-option 152 when sending the response to the relay, it indicates that the DHCP server has used the VRFNAME to allocate IP address. If the DHCP server returns sub-option 152 back, it indicates the DHCP server did not understand the sub-options sent by the relay.
 
- To ensure interoperability, the sub-option 151 must be enabled only when DHCP server supports address allocation based on VRF. Some server may not recognize sub-option 151 and would still allocate lease in global/default VRF space. DHCP relay does not discard those replies from server.
+ To ensure interoperability, the VSS sub-option must be enabled only when DHCP server supports address allocation based on VRF. Some server may not recognize sub-option and would still allocate lease in global/default VRF space. DHCP relay does not discard those replies from server.
 
 &nbsp;
 ![Figure6](./dhcp_suboption_151.png "Figure6: DHCP Relay with suboption 151")
@@ -853,7 +858,7 @@ Options:
 
 **config interface [ip|ipv6] dhcp-relay vrf-select [add|remove] <interface_name>**
 
-- The above command enables or disables VRF selection sub option 151/152 on the given interface. The sub option is disabled by default. If the interface belongs to default/global VRF, the sub option is not added to the relayed packet.
+- The above command enables or disables VRF selection sub option (VSS) on the given interface. The sub option is disabled by default. If the interface belongs to default/global VRF, the sub option is not added to the relayed packet.
 
 ```
 Usage: config interface ip dhcp-relay vrf-select add [OPTIONS]
@@ -1350,7 +1355,7 @@ sonic(conf-if-Vlan100)# ip dhcp-relay link-select
 sonic(conf-if-Vlan100)# no ip dhcp-relay link-select
 ```
 
-The below command enables/disables IPv4/IPv6 VRF-selection sub-option 151 on the given interface.
+The below command enables/disables IPv4/IPv6 VRF-selection sub-option (VSS) on the given interface.
 
 ```
 sonic(conf-if-Vlan100)# ip dhcp-relay vrf-select
@@ -1594,7 +1599,7 @@ Up to 4 DHCP relay addresses can be configured on each routing interface in the 
 29. Enable link selection with IPv4 unnumbered configuration, and verify that relayed packet includes sub-option 5.
 30. With IPv4 unnumbered configuration, verify the relay forwards client requests after save/reload, config reload operations.
 31. Configure IPv4/IPv6 DHCP relay with server and client residing in different VRFs. Ensure client gets the DHCP lease.
-32. Enable option 151, and ensure the relay is appending client VRF name in the relayed packet to server.
+32. Enable VSS option, and ensure the relay is appending client VRF name in the relayed packet to server.
 33. Verify that adding/modifying/deleting of DHCP server address on the interface does not restart the docker. Check 'uptime' of the docker using 'docker ps' command.
 34. Verify that the packets with agent option 82 are handled as per the configured policy action (discard/append/replace).
 
