@@ -332,15 +332,15 @@ sonic-cli(config)# ip forward-protocol udp exclude 541
 
 5. Configure the UDP broadcast packet rate limiting value in the range 600 - 10000 pps. The default value is 600 pps.
 
-[no] ip forwarding udp rate-limit <value-in-pps>
+[no] ip forward-protocol udp rate-limit <value-in-pps>
 
 example:
-sonic-cli(config)# ip forwarding udp rate-limit 1000
-sonic-cli(config)# no ip forwarding udp rate-limit
+sonic-cli(config)# ip forward-protocol udp rate-limit 1000
+sonic-cli(config)# no ip forward-protocol udp rate-limit
 ```
 
 ### 3.4.3 Show Commands
-
+#### Using Python Click framework
 ```
 1. show ip helper_address config <interface>
 Use this command to display the IP Helper configuration on the interface
@@ -413,9 +413,81 @@ Ethernet28
   All ones broadcast packets received           : 50
   Net directed broadcast packets received       : 50
 ```
+#### Using unified KliSH framework
+```
+1. show ip helper-address <interface>
+Use this command to display the IP Helper configuration on the interface
 
+# show ip helper-address Ethernet24
+
+    Interface   Vrf         Relay address
+    -------------------------------------
+    Ethernet24              31.1.0.2
+                            2.2.2.3
+                vrf20       11.19.0.144
+
+2. show ip helper-address
+Use this command to display the IP Helper configuration on all the interfaces
+
+# show ip helper-address
+
+    Interface   Vrf         Relay address
+    -------------------------------------
+    Ethernet24              31.1.0.2
+                            2.2.2.3
+                vrf20       11.19.0.144
+    Ethernet28              31.1.0.2
+
+
+3. show ip forward-protocol
+Use this command to display the IP Helper Global configuration
+
+# show ip forward-protocol
+
+    UDP forwarding: Enabled
+
+    UDP rate limit: 6000 pps
+
+    UDP forwarding enabled on the ports: TFTP , NTP , 330 , 234, 1000
+
+    UDP forwarding disabled on the ports: DNS , NetBios-Name-server , NetBios-datagram-server
+
+4. show ip helper-address statistics [<interface>]
+Use this command to display the IP Helper statistics on the interface.
+Without the optional interface argument, the statistics are displayed for all the configured interfaces.
+
+# show ip helper-address statistics Ethernet24
+
+    Packets received                              : 1098
+    Packets relayed                               :  980
+    Packets dropped                               :  118
+    Invalid TTL packets                           :   22
+    All ones broadcast packets received           :  602
+    Net directed broadcast packets received       :  496
+
+# show ip helper-address statistics
+
+Ethernet24
+-----------
+  Packets received                              : 1098
+  Packets relayed                               :  980
+  Packets dropped                               :  118
+  Invalid TTL packets                           :   22
+  All ones broadcast packets received           :  602
+  Net directed broadcast packets received       :  496
+
+
+Ethernet28
+-----------
+  Packets received                              : 100
+  Packets relayed                               : 90
+  Packets dropped                               : 10
+  Invalid TTL packets                           : 5
+  All ones broadcast packets received           : 50
+  Net directed broadcast packets received       : 50
+```
 ### 3.4.4 Clear Commands
-
+#### Using Python Click framework
 ```
 1. clear ip helper_address statistics <interface>
 Use this command to clear the relay statistics on an interface.
@@ -423,7 +495,14 @@ Use this command to clear the relay statistics on an interface.
 2. clear ip helper_address statistics
 Use this command to clear the relay statistics on all the interfaces.
 ```
+#### Using unified KliSH framework
+```
+1. clear ip helper-address statistics <interface>
+Use this command to clear the relay statistics on an interface.
 
+2. clear ip helper-address statistics
+Use this command to clear the relay statistics on all the interfaces.
+```
 ### 3.4.5 REST APIs
 
 #### Global Parameters
