@@ -308,35 +308,35 @@ sonic-cli(conf-if-Ethernet0)# no ip address vrf Vrf-1 192.168.1.254
 
 2. Enable/Disable UDP broadcast forwarding.
 
-[no] ip forward_protocol udp enable
+[no] ip forward-protocol udp enable
 
 example:
 sonic-cli(config)# ip forward_protocol udp enable
-sonic-cli(config)# no ip forward_protocol udp enable
+sonic-cli(config)# no ip forward-protocol udp enable
 
 3. Add UDP port to the list of forwarding ports.
 
-ip forward_protocol udp include {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | <port>}
+ip forward-protocol udp include {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | <port>}
 
 example:
-sonic-cli(config)# ip forward_protocol udp include ntp 
-sonic-cli(config)# ip forward_protocol udp include 540
+sonic-cli(config)# ip forward-protocol udp include ntp 
+sonic-cli(config)# ip forward-protocol udp include 540
 
 4. Remove UDP port from the list of forwarding ports.
 
 ip forward_protocol udp exclude {[tftp/dns/ntp/netbios-name-server/netbios-datagram-server/tacacs] | <port>}
 
 example:
-sonic-cli(config)# ip forward_protocol udp exclude dns
-sonic-cli(config)# ip forward_protocol udp exclude 541
+sonic-cli(config)# ip forward-protocol udp exclude dns
+sonic-cli(config)# ip forward-protocol udp exclude 541
 
 5. Configure the UDP broadcast packet rate limiting value in the range 600 - 10000 pps. The default value is 600 pps.
 
-[no] ip forwarding udp rate_limit <value-in-pps>
+[no] ip forwarding udp rate-limit <value-in-pps>
 
 example:
-sonic-cli(config)# ip forwarding udp rate_limit 1000
-sonic-cli(config)# no ip forwarding udp rate_limit
+sonic-cli(config)# ip forwarding udp rate-limit 1000
+sonic-cli(config)# no ip forwarding udp rate-limit
 ```
 
 ### 3.4.3 Show Commands
@@ -442,15 +442,13 @@ The REST data model fo IP Helper addresses under interface will be available und
 	"config":  {  
 		"enable":  true,  
 		"incoming-rate-limit":  0,  
-		"include-ports":  [  0  ],
-		"exclude-default-ports": [ 0 ]  
+		"ports":  [  0  ]  
 	},  
 	"state":  {  
 		"enable":  true,  
 		"incoming-rate-limit":  0,  
-		"include-ports":  [  0  ],  
-		"exclude-default-ports":  [  0  ], 
-		"default-ports":  [  0  ] 
+		"ports":  [  0  ],  
+		"exclude-default-ports":  [  0  ] 
 	}  
 }  
 ```
