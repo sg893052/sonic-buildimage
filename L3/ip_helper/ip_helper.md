@@ -301,10 +301,10 @@ Configure the UDP broadcast packet rate limiting value in the range 600 - 10000 
 [no] ip helper-address [ vrf <vrf-name> ] <ip-address>
 
 example:
-sonic-cli(conf-if-Ethernet0)# ip address 192.168.1.254
-sonic-cli(conf-if-Ethernet0)# ip address vrf Vrf-1 192.168.1.254
-sonic-cli(conf-if-Ethernet0)# no ip address 192.168.1.254
-sonic-cli(conf-if-Ethernet0)# no ip address vrf Vrf-1 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# ip helper-address 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# ip helper-address vrf Vrf1 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# no ip helper-address 192.168.1.254
+sonic-cli(conf-if-Ethernet0)# no ip helper-address vrf Vrf1 192.168.1.254
 
 2. Enable/Disable UDP broadcast forwarding.
 
