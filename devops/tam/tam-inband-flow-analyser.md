@@ -413,7 +413,7 @@ A IFA monitoring session associated a previously defined flow-group, with IFA as
 - The IFA session must have a unique name for referencing.
 - The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy).
 - The switch can be setup to act as an ingress node or as an egress node for this session.
-- On ingress nodes, the sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy). On ingress nodes, the flow-group definition must contain the `ingress-interface` attribute.
+- On ingress nodes, the sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy). On ingress nodes, the flow-group must be associated with an interface.
 - On the egress nodes, a collector must be associated with the flow, where the extracted metadata will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy)..
 
 When a sesssion that is previously created is removed (with the `no` command), the associated flows are no longer processed for IFA as an ingress node or as an egress-node by the switch. 
@@ -511,7 +511,12 @@ sonic (config-tam)# sampler websamp rate 1000
 
 ; create the flowgroup
 
-sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 ingress-interface Ethernet44
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
+
+# associate the ingress interface to the flowgroup
+
+sonic (config) # interface Ethernet 44
+sonic (config-if-Ethernet44)# flow-group websrvflows
 
 ; Enable IFA on the switch
 
@@ -570,10 +575,81 @@ N/A
 
 The following REST API are supported - 
 
-- BroadView REST API for IFA feature
+#### Yang-based REST API based on the openconfig-tam module defintions
+
+##### Obtaining the all of the sessions
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/ifa/state/ifa-sessions
+* Response format
+```json
+{
+  "openconfig-tam:ifa-sessions": {
+    "ifa-session": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "flowgroup": "string",
+          "collector": "string",
+          "samplerate": "string",
+          "node-type": "INGRESS_NODE"
+        },
+        "state": {
+          "name": "string",
+          "flowgroup": "string",
+          "collector": "string",
+          "samplerate": "string",
+          "node-type": "INGRESS_NODE"
+        }
+      }
+    ]
+  }
+}
+```
+
+##### Obtaining a specific session
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/ifa/state/ifa-sessions/ifa-session={name}/state
+* Response format
+```json
+{
+ "openconfig-tam:state": {
+    "name": "string",
+    "flowgroup": "string",
+    "collector": "string",
+    "samplerate": "string",
+    "node-type": "INGRESS_NODE"
+  }
+}
+```
+
+##### Creating a session
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/ifa/config/ifa-sessions/ifa-session={name}/config
+* Data format
+```json
+{
+  "openconfig-tam:config": {
+    "name": "string",
+    "flowgroup": "string",
+    "collector": "string",
+    "samplerate": "string",
+    "node-type": "INGRESS_NODE"
+  }
+}
+```
+
+##### Deleting a session
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/ifa/config/ifa-sessions/ifa-session={name}
+
+#### BroadView REST API for IFA feature
     - TBD : Provide reference and listlimitations 
-- REST API as obtained from the openconfig-tam module defintions
-    - TBD List these 
+
  
  # 4 Flow Diagrams
 

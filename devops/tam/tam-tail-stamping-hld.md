@@ -446,10 +446,69 @@ N/A
 
 The following REST API are supported - 
 
-- BroadView REST API for TS feature
+#### Yang-based REST API based on the openconfig-tam module defintions
+
+##### Obtaining the all of the sessions
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/tailstamping/state/tailstamping-sessions
+* Response format
+```json
+{
+  "openconfig-tam:tailstamping-sessions": {
+    "tailstamping-session": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "flowgroup": "string"
+        },
+        "state": {
+          "name": "string",
+          "flowgroup": "string"
+        }
+      }
+    ]
+  }
+}
+```
+
+##### Obtaining a specific session
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/tailstamping/state/tailstamping-sessions/tailstamping-session={name}/state
+* Response format
+```json
+{
+  "openconfig-tam:state": {
+    "name": "string",
+    "flowgroup": "string"
+  }
+}
+```
+
+##### Creating a session
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/tailstamping/config/tailstamping-sessions/tailstamping-session={name}/config
+* Data format
+```json
+{
+  "openconfig-tam:config": {
+    "name": "string",
+    "flowgroup": "string"
+  }
+}
+
+```
+
+##### Deleting a session
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/tailstamping/config/tailstamping-sessions/tailstamping-session={name}
+
+#### BroadView REST API for Tailstamping feature
     - TBD : Provide reference and listlimitations 
-- REST API as obtained from the openconfig-tam module defintions
-    - TBD List these 
  
  # 4 Flow Diagrams
 

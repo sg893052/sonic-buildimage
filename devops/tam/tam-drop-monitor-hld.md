@@ -419,7 +419,7 @@ The default value for the aging interval is 5 seconds.
 A Drop Monitoring session associated a previously defined flow-group as described below.
 
 - The Drop Monitor session must have a unique name for referencing.
-- The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy). For drop-monitoring, the flow-group definition must contain the `ingress-interface` attribute.
+- The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy). For drop-monitoring, the flow-group must be associated with an interface.
 - The sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy).
 - A collector must be associated with the session, where the drop-reports will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy)..
 
@@ -515,7 +515,12 @@ sonic (config-tam)# sampler websamp rate 100
 
 ; create the flowgroup
 
-sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 ingress-interface Ethernet44 
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 
+
+# associate the ingress interface to the flowgroup
+
+sonic (config) # interface Ethernet 44
+sonic (config-if-Ethernet44)# flow-group websrvflows
 
 ; setup the collector
 
@@ -540,12 +545,104 @@ N/A
 
 ### 3.6.6 REST API Support
 
-The following REST API are supported - 
+#### Yang-based REST API based on the openconfig-tam module defintions
 
-- BroadView REST API for Drop Monitor feature
+##### Setting up the aging-interval
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/aging-interval
+* Data format
+```json
+{
+  "openconfig-tam:aging-interval": 0
+}
+```
+
+##### Obtaining the current aging-interval
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/state/state/aging-interval
+* Response format
+```json
+{
+  "openconfig-tam:aging-interval": 0
+}
+```
+
+##### Resetting the aging-interval to defaults
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/aging-interval
+
+##### Obtaining the all of the sessions
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/state/state/dropmonitor-sessions
+* Response format
+```json
+{
+  "openconfig-tam:dropmonitor-sessions": {
+    "dropmonitor-session": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "flowgroup": "string",
+          "collector": "string",
+          "samplerate": "string"
+        },
+        "state": {
+          "name": "string",
+          "flowgroup": "string",
+          "collector": "string",
+          "samplerate": "string"
+        }
+      }
+    ]
+  }
+}
+
+```
+
+##### Obtaining a specific session
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/state/state/dropmonitor-sessions/dropmonitor-session={name}/state
+* Response format
+```json
+{
+  "openconfig-tam:state": {
+    "name": "string",
+    "flowgroup": "string",
+    "collector": "string",
+    "samplerate": "string"
+  }
+}
+```
+
+##### Creating a session
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/dropmonitor-sessions/dropmonitor-session={name}/config
+* Data format
+```json
+{
+  "openconfig-tam:config": {
+    "name": "string",
+    "flowgroup": "string",
+    "collector": "string",
+    "samplerate": "string"
+  }
+}
+```
+
+##### Deleting a session
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/dropmonitor-sessions/dropmonitor-session={name}
+
+#### BroadView REST API for IFA feature
     - TBD : Provide reference and listlimitations 
-- REST API as obtained from the openconfig-tam module defintions
-    - TBD List these 
  
  # 4 Flow Diagrams
 

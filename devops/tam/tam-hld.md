@@ -415,6 +415,8 @@ sonic (config-tam)# no collector <name>
 ```
 
 #### 3.7.2.2 Setting up Flow Groups
+
+##### Creating a Flow Group
 A flow-group is a packet match criterion that defines a set of flows that are of interest. For example, "all packets destined for a the webserver at 10.10.1.1" is an example flow group. Multiple flows can match a given flow-group criterion. Typically, a flow-group is defined with a combination of L2 and L3 header fields, with some fields specified as wild-cards.
 
 TAM infrastructure allows us to create a flow-group by specifying the tuple information and associating a reference to this flow-group from TAM applications. A flow-group can be removed with the `no` form of the command. Flow Groups that are actively referenced in other applications can't be removed.
@@ -434,15 +436,23 @@ The following flow-group attribtes are supported. Except the `name` attribute, a
 | `l4-dst-port`               | Destination Port (L4) of the packets belonging to the flow-group       |
 | `protocol`            | Protocol field of the ip-header of the packets belonging to the flow-group  |
 | `priority`            | Priority of the flow-group, among the other flow-groups that are created. Range is 1 - 1024, Default value is 100  |
-| `ingress-interface`            | Refers to one of the interfaces on the switch on which traffic is entering the switch. |
 
 
 The command syntax for setting up the flow-groups is as follows:
 
 ```
-sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>] [ingress-interface <interface-name>]
+sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>]
 
 sonic (config-tam)# no flow-group <name> 
+```
+
+##### Attaching a Flow Group to an interface
+
+Created flow-groups can be attached to an interface. This is accomplished via the interface mode as shown below. The flow-group can be attached to more than one interface.
+
+```
+sonic (config) # interface <Interface Name>
+sonic (config-if-EthernetXY)# [no] flow-group <Flow-Group-Name>
 ```
 
 #### 3.7.2.2 Setting up Samplers
