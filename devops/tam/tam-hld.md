@@ -611,8 +611,521 @@ N/A
 
 ### 3.7.6 REST API Support
 
-TBD
- 
+#### Yang-based REST API based on the openconfig-tam module defintions
+
+##### Obtaining the status of all TAM feautures on the switch
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/features/state/features-state
+* Response format
+```json
+{
+  "openconfig-tam:features-state": {
+    "feature-list": [
+      {
+        "feature-ref": "string",
+        "state": {
+          "op-feature-ref": "string",
+          "op-feature-status": "ACTIVE"
+        }
+      }
+    ]
+  }
+}
+```
+
+##### Obtaining a status of a specific TAM feature
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/features/state/features-state/feature-list={feature-ref}/state/op-feature-status
+* Response format
+```json
+{
+  "openconfig-tam:op-feature-status": "ACTIVE"
+}
+```
+
+##### Activating/De-activating a specific TAM feature
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/features/config/features/feature-list={feature-ref}/config/feature-status
+* Data format
+```json
+{
+  "openconfig-tam:feature-status": "ACTIVE"
+}
+```
+
+##### Obtaining TAM switch-wide attributes
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/switch/state
+* Response format
+```json
+{
+  "openconfig-tam:state": {
+    "switch-id": 0,
+    "enterprise-id": 0,
+    "op-switch-id": 0,
+    "op-enterprise-id": 0
+  }
+}
+```
+
+##### Setting-up TAM switch-wide attribute : switch-id
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/switch/config/switch-id
+* Data format
+```json
+{
+  "openconfig-tam:switch-id": 0
+}
+```
+##### Setting-up TAM switch-wide attribute : enterprise-id
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/switch/config/enterprise-id
+* Data format
+```json
+{
+  "openconfig-tam:enterprise-id": 0
+}
+```
+
+##### Resetting the TAM switch-wide attributes to defaults
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/switch/config/switch-id 
+* URI : /restconf/data/openconfig-tam:tam/switch/config/enterprise-id
+
+##### Obtaining all of the collectors
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/collectors/state/collectors/collector
+* Response format
+```json
+{
+  "openconfig-tam:collector": [
+    {
+      "name": "string",
+      "config": {
+        "name": "string",
+        "ip": "string",
+        "port": 0,
+        "protocol": "UDP",
+        "encapsulation": "NONE"
+      },
+      "state": {
+        "name": "string",
+        "ip": "string",
+        "port": 0,
+        "protocol": "UDP",
+        "encapsulation": "NONE"
+      }
+    }
+  ]
+}
+```
+
+##### Obtaining a specific collector
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/collectors/state/collectors/collector={name}/state
+* Response format
+```json
+{
+  "openconfig-tam:state": {
+    "name": "string",
+    "ip": "string",
+    "port": 0,
+    "protocol": "UDP",
+    "encapsulation": "NONE"
+  }
+}
+```
+##### Creating a collector
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/collectors/config/collectors/collector={name}/config
+* Data format
+```json
+{
+  "openconfig-tam:config": {
+    "name": "string",
+    "ip": "string",
+    "port": 0,
+    "protocol": "UDP",
+    "encapsulation": "NONE"
+  }
+}
+```
+##### Deleting a collector
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/collectors/config/collectors/collector={name}
+
+##### Obtaining all of the Samplers
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/samplers/state/samplerates/samplerate
+* Response format
+```json
+{
+  "openconfig-tam:samplerate": [
+    {
+      "name": "string",
+      "config": {
+        "name": "string",
+        "sample-rate": 0
+      },
+      "state": {
+        "name": "string",
+        "sample-rate": 0
+      }
+    }
+  ]
+}
+```
+
+##### Obtaining a specific sampler
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/samplers/state/samplerates/samplerate={name}/state
+* Response format
+```json
+{
+  "openconfig-tam:state": {
+    "name": "string",
+    "sample-rate": 0
+  }
+}
+```
+##### Creating a Sampler
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/samplers/config/samplerates/samplerate={name}/config
+* Data format
+```json
+{
+  "openconfig-tam:config": {
+    "name": "string",
+    "sample-rate": 0
+  }
+}
+```
+##### Deleting a Sampler
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/samplers/config/samplerates/samplerate={name}
+
+
+##### Obtaining all of the flow-groups
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/flowgroups/state/flowgroups
+* Response format
+```json
+{
+  "openconfig-tam:flowgroups": {
+    "flowgroup": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "id": 0,
+          "priority": 0,
+          "interface": "string",
+          "l2": {
+            "config": {
+              "source-mac": "string",
+              "source-mac-mask": "string",
+              "destination-mac": "string",
+              "destination-mac-mask": "string",
+              "ethertype": "string"
+            },
+            "state": {
+              "source-mac": "string",
+              "source-mac-mask": "string",
+              "destination-mac": "string",
+              "destination-mac-mask": "string",
+              "ethertype": "string"
+            }
+          },
+          "ipv4": {
+            "config": {
+              "source-address": "string",
+              "destination-address": "string",
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            },
+            "state": {
+              "source-address": "string",
+              "destination-address": "string",
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            }
+          },
+          "ipv6": {
+            "config": {
+              "source-address": "string",
+              "source-flow-label": 0,
+              "destination-address": "string",
+              "destination-flow-label": 0,
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            },
+            "state": {
+              "source-address": "string",
+              "source-flow-label": 0,
+              "destination-address": "string",
+              "destination-flow-label": 0,
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            }
+          },
+          "transport": {
+            "config": {
+              "source-port": "string",
+              "destination-port": "string",
+              "tcp-flags": [
+                "string"
+              ]
+            },
+            "state": {
+              "source-port": "string",
+              "destination-port": "string",
+              "tcp-flags": [
+                "string"
+              ]
+            }
+          }
+        },
+        "state": {
+          "name": "string",
+          "id": 0,
+          "priority": 0,
+          "interface": "string",
+          "l2": {
+            "config": {
+              "source-mac": "string",
+              "source-mac-mask": "string",
+              "destination-mac": "string",
+              "destination-mac-mask": "string",
+              "ethertype": "string"
+            },
+            "state": {
+              "source-mac": "string",
+              "source-mac-mask": "string",
+              "destination-mac": "string",
+              "destination-mac-mask": "string",
+              "ethertype": "string"
+            }
+          },
+          "ipv4": {
+            "config": {
+              "source-address": "string",
+              "destination-address": "string",
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            },
+            "state": {
+              "source-address": "string",
+              "destination-address": "string",
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            }
+          },
+          "ipv6": {
+            "config": {
+              "source-address": "string",
+              "source-flow-label": 0,
+              "destination-address": "string",
+              "destination-flow-label": 0,
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            },
+            "state": {
+              "source-address": "string",
+              "source-flow-label": 0,
+              "destination-address": "string",
+              "destination-flow-label": 0,
+              "dscp": 0,
+              "protocol": "string",
+              "hop-limit": 0
+            }
+          },
+          "transport": {
+            "config": {
+              "source-port": "string",
+              "destination-port": "string",
+              "tcp-flags": [
+                "string"
+              ]
+            },
+            "state": {
+              "source-port": "string",
+              "destination-port": "string",
+              "tcp-flags": [
+                "string"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+##### Obtaining a specific flow-group
+
+* Method : GET
+* URI : /restconf/data/openconfig-tam:tam/flowgroups/state/flowgroups/flowgroup={name}/state
+* Response format
+```json
+{
+  "openconfig-tam:state": {
+    "name": "string",
+    "id": 0,
+    "priority": 0,
+    "interface": "string",
+    "l2": {
+      "config": {
+        "source-mac": "string",
+        "source-mac-mask": "string",
+        "destination-mac": "string",
+        "destination-mac-mask": "string",
+        "ethertype": "string"
+      },
+      "state": {
+        "source-mac": "string",
+        "source-mac-mask": "string",
+        "destination-mac": "string",
+        "destination-mac-mask": "string",
+        "ethertype": "string"
+      }
+    },
+    "ipv4": {
+      "config": {
+        "source-address": "string",
+        "destination-address": "string",
+        "dscp": 0,
+        "protocol": "string",
+        "hop-limit": 0
+      },
+      "state": {
+        "source-address": "string",
+        "destination-address": "string",
+        "dscp": 0,
+        "protocol": "string",
+        "hop-limit": 0
+      }
+   },
+    "ipv6": {
+      "config": {
+        "source-address": "string",
+        "source-flow-label": 0,
+        "destination-address": "string",
+        "destination-flow-label": 0,
+        "dscp": 0,
+        "protocol": "string",
+        "hop-limit": 0
+      },
+      "state": {
+        "source-address": "string",
+        "source-flow-label": 0,
+        "destination-address": "string",
+        "destination-flow-label": 0,
+        "dscp": 0,
+        "protocol": "string",
+        "hop-limit": 0
+      }
+    },
+    "transport": {
+      "config": {
+        "source-port": "string",
+        "destination-port": "string",
+        "tcp-flags": [
+          "string"
+        ]
+      },
+      "state": {
+        "source-port": "string",
+        "destination-port": "string",
+        "tcp-flags": [
+          "string"
+        ]
+      }
+    }
+  }
+}
+```
+##### Creating a flow-group
+
+* Method : PUT
+* URI : /restconf/data/openconfig-tam:tam/flowgroups/config/flowgroups/flowgroup={name}/config
+* Data format
+```json
+{
+  "openconfig-tam:config": {
+    "name": "string",
+    "id": 0,
+    "priority": 0,
+    "interface": "string",
+    "l2": {
+      "config": {
+        "source-mac": "string",
+        "source-mac-mask": "string",
+        "destination-mac": "string",
+        "destination-mac-mask": "string",
+        "ethertype": "string"
+      }
+    },
+    "ipv4": {
+      "config": {
+        "source-address": "string",
+        "destination-address": "string",
+        "dscp": 0,
+        "protocol": "string",
+        "hop-limit": 0
+      }
+    },
+    "ipv6": {
+      "config": {
+        "source-address": "string",
+        "source-flow-label": 0,
+        "destination-address": "string",
+        "destination-flow-label": 0,
+        "dscp": 0,
+        "protocol": "string",
+        "hop-limit": 0
+      }
+    },
+    "transport": {
+      "config": {
+        "source-port": "string",
+        "destination-port": "string",
+        "tcp-flags": [
+          "string"
+        ]
+      }
+    }
+  }
+}
+```
+##### Deleting a flow-group
+
+* Method : DELETE
+* URI : /restconf/data/openconfig-tam:tam/flowgroups/config/flowgroups/flowgroup={name}
+
  # 4 Flow Diagrams
 
 ## 4.1 Config call flow
