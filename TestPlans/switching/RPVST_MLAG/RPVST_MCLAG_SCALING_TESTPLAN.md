@@ -10,13 +10,13 @@
 
 | Rev  |    Date    |        Author        | Change Description |
 | :--: | :--------: | :------------------: | :----------------: |
-| 0.1  | 10/10/2019 | Rakesh Kumar Vooturi |  Initial version   |
+| 0.1  | 7/22/2020  | Rakesh Kumar Vooturi |  Initial version   |
 
 # List of Reviewers
 
 | Function |         Name         |
 | :------: | :------------------: |
-|   Dev    |      Ramakanth       |
+|   Dev    |      Narendra       |
 |    QA    | Anil Kumar Kolkaleti |
 |    QA    |   Giri Babu Sajja    |
 
@@ -24,7 +24,7 @@
 
 | Function |         Name         | Date Approved |
 | :------: | :------------------: | :-----------: |
-|   Dev    |      Ramakanth       |               |
+|   Dev    |      Narendra       |               |
 |    QA    | Anil Kumar Kolkaleti |               |
 |    QA    |   Giri Babu Sajja    |               |
 
@@ -36,7 +36,7 @@
 
 #### <span style="color:red"> </span>
 
-![Topology:1](RPVST_MCLAG_SCALE_TOPOLOGY.png "Figure: RPVST_MCLAG ")
+![Topology:1](RPVST_MCLAG_SCALE_TOPOLOGY.png "Figure: RPVST_MCLAG")
 
 
 # 2 Functional
