@@ -82,12 +82,16 @@ The various conditions under which the default configuration is generated are de
 - 1.1.1.5 - All configurations derived from a port configuration must be removed except break out configuration. The port will continue to be in the broken out state when switch port's config is restored to its default configuration. The default speed of the port will be defined by the breakout mode configured on its master port.
 - 1.1.1.6 - When a switch port is being restored to its default configuration, configuration operations on the port are allowed only after the configuration restoration procedure is completed.
 - 1.1.1.7 -  The user should be able to save the configuration state of a selected switch port as a named checkpoint. At a later point in time, such a saved checkpoint can be specified as an input to specify the intended switch port configuration instead of the default configuration.
+- 1.1.1.8 - The user should be able to restore a PortChannel interface to its default configuration.
+- 1.1.1.9 - The user should be able to restore a VLAN interface to its default configuration.
+- 1.1.1.10 - The user should be able to restore a loopback interface to its default configuration.
 
 ### 1.1.2 Configuration and Management Requirements
 
 - 1.1.2.0 - The user must be able to view and choose between one or more available default configuration profiles.
 - 1.1.2.1 - The available configuration profiles are identified using a unique name string.
 - 1.1.2.2 - When the user changes the default configuration profile setting, the switch configuration is restored to the default configuration defined by the newly chosen default configuration profile.
+- 1.1.2.3 - The user should be able to select a range of interfaces and restore them to default configuration using a single CLI command.
 
 ### 1.1.3 Scalability Requirements
 N/A
@@ -109,9 +113,13 @@ N/A
 | 1.1.1.5        | All configurations derived from a port configuration must be removed except break out configuration. The port will continue to be in the broken out state when switch port's config is restored to its default configuration. The default speed of the port will be defined by the breakout mode configured on its master port. | 3.1               |
 | 1.1.1.6        | When a switch port is being restored to its default configuration, configuration operations on the port are allowed only after the configuration restoration procedure is completed. | 3.1               |
 | 1.1.1.7        | The user should be able to save the configuration state of a selected switch port as a named checkpoint. At a later point in time, such a saved checkpoint can be specified as an input to specify the intended switch port configuration instead of the default configuration. | Future            |
+| 1.1.1.8        | The user should be able to restore a PortChannel interface to its default configuration. | Future            |
+| 1.1.1.9        | The user should be able to restore a VLAN interface to its default configuration. | Future            |
+| 1.1.1.10       | The user should be able to restore a loopback interface to its default configuration. | Future            |
 | 1.1.2.0        | The user must be able to view and choose between one or more available default configuration profiles. | 2.0               |
 | 1.1.2.1        | The available configuration profiles are identified using a unique name string. | 2.0               |
 | 1.1.2.2        | When the user changes the default configuration profile setting, the switch configuration is restored to the default configuration defined by the newly chosen default configuration profile. | 2.0               |
+| 1.1.2.3        | The user should be able to select a range of interfaces and restore them to default configuration using a single CLI command. | 3.1               |
 
 
 
@@ -211,10 +219,16 @@ root@sonic:/home/admin# tree --charset=ascii /usr/share/broadcom_sonic
 |-- config_profiles
 |   |-- active
 |   |-- l2
+|   |   |-- data
+|   |   |   |-- default_config_db.json
+|   |   |   `-- features.json
 |   |   |-- description
 |   |   `-- templates
 |   |       `-- config_db.json.j2
 |   `-- l3
+|       |-- data
+|       |   |-- default_config_db.json
+|       |   `-- features.json
 |       |-- description
 |       `-- templates
 |           `-- config_db.json.j2
@@ -224,6 +238,7 @@ root@sonic:/home/admin# tree --charset=ascii /usr/share/broadcom_sonic
     |   `-- 08-config-profile-migrate
     |-- config-profiles
     `-- factory-default-hooks
+        |-- 09-features-json
         |-- 09-swap-bcm-config
         `-- 10-render-config-db-json
 ```
@@ -309,7 +324,10 @@ The following Switch configuration *(l2/templates/config_db.json.j2)* is rendere
 
 - Ports
 
-  - Administrative mode: Up
+  - STP feature is available (Enterprise package)
+    - Administrative mode: Up
+  - STP feature is not available (Cloud package)
+    - Administrative mode: Down
   - Speed
   - MTU: 9100
   - Spanning tree: Enabled
@@ -319,6 +337,10 @@ The following Switch configuration *(l2/templates/config_db.json.j2)* is rendere
   - Port Fast Mode: Enabled
   - Uplink Fast Mode: Disabled
 
+- COREDUMP
+
+  - Enabled
+  
 - KDUMP
 
   - Enabled
@@ -365,6 +387,10 @@ The following Switch configuration *(l3/templates/config_db.json.j2)* is rendere
   - Speed
   - MTU: 9100
 
+- COREDUMP
+
+  - Enabled
+  
 - KDUMP
 
   - Enabled
@@ -411,7 +437,7 @@ The switch administrators, as part of provisioning the network, configure variou
 
   
 
-To perform the *default interface* configuration operation, the user has to issue the corresponding KLISH command.
+To perform the *default interface* configuration operation, the user has to issue the appropriate KLISH command.
 
 ```
 admin@sonic:~$ sonic-cli
@@ -421,7 +447,7 @@ sonic(config)# default interface Ethernet 8
 
 
 
-The port configuration restore operation is performed as an RPC action by the REST server. The RPC action is initiated by the KLISH CLI command and uses interface name as input. The *default interface* KLISH CLI command is blocked until the RPC operation is completed and feedback is provided to the user. The *default interface* RPC command can also be issued by a REST client. No configurations are allowed on the port, including a parallel instance of the *default interface* command. while a port is going through the port configuration restore operation. A STATE_DB table entry is used to mark the port to be in a busy state. The CVL validation layer in the management framework will make use of this busy state to reject any configuration requests on the interface. The busy status is also used as a gating check to initiate the RPC command and this allows the REST server to not allow more than one parallel instance of *default interface* command on the same port. As the *default interface* command is designed to be a synchronous operation, there is no status command available to the user to view the operation's progress.
+The port configuration restore operation is performed as an RPC action by the REST server. The RPC action is initiated by the KLISH CLI command and uses interface name as input. The *default interface* KLISH CLI command is blocked until the RPC operation is completed and feedback is provided to the user. The *default interface* RPC command can also be issued by a REST client. No configurations are allowed on the port, including a parallel instance of the *default interface* command. While a port is going through the port configuration restore operation, the REST server blocks access. The CVL validation layer in the management framework watches for any parallel configuration requests. If any parallel DB access happens, the *default interface* RPC action fails and no configuration changes are committed. As the *default interface* command is designed to be a synchronous operation, there is no status command available to the user to view the operation's progress.
 
 
 
@@ -431,9 +457,9 @@ The first step of port configuration restore operation is to identify all the co
 
 
 
-#### Default Port Configuration Template
+#### Default Port Configuration
 
-After the dependent configuration delete operations, the next step is to configure the port to the default configuration state. A port's default configuration profile is represented in the form of a jinja2 (j2) template file. It is accessible to the REST server in the path */usr/share/broadcom_sonic/config_profiles/active-profile-name/templates/port_config.j2*. When the *default interface* command is executed, the port configuration restore operation creates a port specific configuration file using this template file. The contents of the generated file are used by the REST server to configure the port to its default configuration state.
+After the dependent configuration delete operations, the next step is to configure the port to the default configuration state. A port's default configuration profile is read from the default_config_db.json file. It is accessible to the REST server in the path */usr/share/broadcom_sonic/config_profiles/active-profile-name/data/default_config_db.json*. When the *default interface* command is executed, the port configuration restore operation uses the port specific configuration read to configure the port to its default configuration state.
 
 
 
@@ -453,24 +479,32 @@ value: l3
 
 ### 3.2.2 STATE DB
 
-A new table **PORT_CONFIG_STATUS** is introduced to mark a port state as busy. This will be used to block port related configuration from the management framework.
+A new table **DEFAULT_CONFIG_PROFILES** is introduced to list all supported default configuration profiles. It also indicates which profile is currently being used to generate factory default configuration.
 
 ```
-table: PORT_CONFIG_STATUS
-key: PORT_CONFIG_STATUS|Ethernet0
-field: state
-value: busy
+table: DEFAULT_CONFIG_PROFILES
+key: DEFAULT_CONFIG_PROFILES|l3
+field: l3
+value: None
+field: "description"
+value: "Layer 3 Router Configuration"
+field: "active"
+value: "true"
 
-table: PORT_CONFIG_STATUS
-key: PORT_CONFIG_STATUS|Ethernet0
-field: state
-value: ok
+table: DEFAULT_CONFIG_PROFILES
+key: DEFAULT_CONFIG_PROFILES|l2
+field: l2
+value: None
+field: "description"
+value: "Layer 2 Switch Configuration"
+field: "active"
+value: "false"
 ```
 
 ## 3.3 Switch State Service Design
 ### 3.3.1 Orchestration Agent
 
-A few changes are expected to be made to configure the **PORT_CONFIG_STATUS** table entries while executing the *default interface* command. More details will be added to this section after implementing the feature.
+N/A
 
 ### 3.3.2 Other Process 
 N/A
@@ -485,37 +519,33 @@ N/A
 ### 3.6.1 Data Models
 ```
 module: sonic-config-mgmt
-  +--ro factory-default-profiles
-     +--ro factory-default-profile* [name]
-        +--ro name       -> ../state/name
-        +--ro state        
-           +--ro name         string
-           +--ro description  string
-           +--ro active       boolean
+  +--rw sonic-default-config-profiles
+     +--rw DEFAULT_CONFIG_PROFILES
+        +--rw DEFAULT_CONFIG_PROFILES_LIST* [profile-name]
+           +--rw profile-name    string
+           +--rw description?    string
+           +--rw active?         boolean
 
   rpcs:
     +---x write-erase
+    |  +---w input
+    |  |  +---w subcmd?   string
+    |  +--ro output
+    |     +--ro status?          int32
+    |     +--ro status-detail?   string
+    +---x factory-default-profile
+    |  +---w input
+    |  |  +---w profile-name?   string
+    |  +--ro output
+    |     +--ro status?          int32
+    |     +--ro status-detail?   string
+    +---x default-port-config
        +---w input
-       |  +---w subcmd?   string
+       |  +---w ifname?   -> /prt:sonic-port/PORT/PORT_LIST/ifname
        +--ro output
           +--ro status?          int32
           +--ro status-detail?   string
 ```
-
-
-
-```
-module: openconfig-interfaces-ext
-
-  rpcs:
-    +---x default
-       +---w input
-       |  +---w interface   string
-       +--ro output
-          +--ro status?          int32
-          +--ro status-detail?   string
-```
-
 
 
 ### 3.6.2 CLI
@@ -559,8 +589,7 @@ write erase
 **Example**
 
 ```
-sonic# configure terminal
-sonic(config)# write erase 
+sonic# write erase 
 ```
 
 
@@ -580,8 +609,7 @@ write erase boot
 **Example**
 
 ```
-sonic# configure terminal
-sonic(config)# write erase boot
+sonic# write erase boot
 Existing switch configuration files will be removed, continue? [y/N]:
 ```
 
@@ -602,8 +630,7 @@ write erase install
 **Example**
 
 ```
-sonic# configure terminal
-sonic(config)# write erase install
+sonic# write erase install
 All SONiC switch content will be restored to default values, continue? [y/N]:
 ```
 
@@ -624,8 +651,7 @@ no write erase
 **Example**
 
 ```
-sonic# configure terminal
-sonic(config)# no write erase
+sonic# no write erase
 Switch configuration erase operation will be cancelled, continue? [y/N]:
 ```
 
@@ -635,8 +661,7 @@ Switch configuration erase operation will be cancelled, continue? [y/N]:
 
 **Description**
 
-The *default interface* command is used to delete all the all the user configuration of a specified interface(s) and restore it to its default state.
-
+The *default interface* command is used to delete all the all the user configuration of a specified interface and restore it to its default state.
 
 **Usage**
 
@@ -649,6 +674,27 @@ default interface < if >
 ```
 sonic# configure terminal
 sonic(config)# default interface Ethernet 0
+```
+
+
+
+#### default interface range
+
+**Description**
+
+The *default interface* command is used to delete all the all the user configuration of a specified range of interface(s) and restore it to its default state.
+
+**Usage**
+
+```
+default interface range < if-range >
+```
+
+**Example**
+
+```
+sonic# configure terminal
+sonic(config)# default interface range Ethernet 0-16
 ```
 
 
@@ -701,7 +747,23 @@ N/A
 
 ### 3.6.3 REST API Support
 
-This section will be updated with the supported REST API after implementing the YANG data model.
+The following REST URIs are supported to configure factory default configuration profile.
+
+```
+PATCH "<REST-SERVER:PORT>/restconf/operations/sonic-config-mgmt:factory-default-profile" -d "{  \"sonic-config-mgmt:input\": {\"profile-name\": \"l2\"}}"
+
+PATCH "<REST-SERVER:PORT>/restconf/operations/sonic-config-mgmt:factory-default-profile" -d "{  \"sonic-config-mgmt:input\": {\"profile-name\": \"l3\"}}"
+
+GET "<REST-SERVER:PORT>/restconf/data/sonic-config-mgmt:sonic-default-config-profiles/DEFAULT_CONFIG_PROFILES"
+```
+
+
+
+The following REST URI is used to restore a port to its default configuration
+
+```
+PATCH "<REST-SERVER:PORT>/restconf/operations/sonic-config-mgmt:default-port-config" -d "{  \"sonic-config-mgmt:input\": {\"ifname\": \"Ethernet8\"}}"
+```
 
 
 
@@ -742,7 +804,7 @@ N/A
 | 10   | Issue write erase/write erase boot/write erase install commands. Issue warm-reboot command. The warm-reboot command should fail indicating that there is a pending configuration erase action. |
 | 11   | Configure factory default configuration profile as l2. Issue "default interface" command and verify that the interface is restored to L2 default configuration. |
 | 12   | Configure factory default configuration profile as l3. Issue "default interface" command and verify that the interface is restored to L3 default configuration. |
-| 13   | Issue two "default interface Ethernet 0" commands in two sonic-cli sessions. Only one of them should succeed and the other one fails. |
-| 14   | Issue "default interface Ethernet 0" command and while it is in progress,and add port Ethernet0 to a port channel. The port channel member add command should fail. |
+| 13   | Issue two "default interface Ethernet 0" commands in two sonic-cli sessions. Only one of them should succeed and the other one should wait for the first one to finish before continuing. |
+| 14   | Issue "default interface Ethernet 0" command and while it is in progress,and add port Ethernet0 to a port channel. The "default interface Ethernet0" command should fail to commit. |
 | 15   | Issue "default interface Ethernet 0" command and after the command exits, issue a command to add the port Ethernet0 to a VLAN. The VLAN add command should succeed indicating that the port Ethernet0 is ready to accept new configurations. |
-| 16   | Verify that the STATE_DB table PORT_CONFIG_STATUS indicates busy state when the "default interface" command is in progress. It should be set to ok, once the "default interface" command exits . |
+| 16   | Issue "default interface Ethernet0" command when Ethernet0 is a broken out port. Also issue "default interface Ethernet1" on a port which is created as part of a breakout configuration. |
