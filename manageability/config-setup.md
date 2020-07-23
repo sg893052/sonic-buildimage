@@ -324,7 +324,7 @@ This command is executed as part of system bootup by the config-setup service. U
 
 This section provides example extensions of the Configuration Setup service to perform configuration migration in a SONiC switch.
 
-## Linux Users, Groups and Passwords Migration
+## 4.1 Linux Users, Groups and Passwords Migration
 
 When a new SONIC image is installed, a new Linux root filesystem is created. As a result, any changes made in the Linux root filesystem are not carried forward to the newly installed image. Only specific contents in the /etc/sonic directory (e.g config_db.json, frr config) are migrated to the new image as part of config migration. Simple changes in Linux, such as change of admin user password or Unix group membership, are not transferred over as part of config migration.
 
@@ -347,3 +347,72 @@ When a new SONiC switch image is installed using the "sonic_installer install" c
 ```
 
 After the SONiC switch is rebooted to boot into the newly installed image, the /etc/config-setup/config-migration-post-hooks.d/01-local-users-post script is executed which reads the files in /host/backup/users_info directory and migrates contents of the backed up data to the Linux root filesystem of newly installed user. After migrating the user data, the directory /host/backup/users_info is removed.
+
+
+
+
+## 4.2 Config DB Version Migration
+
+The configuration state of a SONiC switch is stored in a file */etc/sonic/config_db.json* in JSON format. During bootup, the contents of the */etc/sonic/config_db.json* are loaded into the RedisDB which is called ConfigDB. 
+
+The contents of the ConfigDB are assigned a version using the following format:
+
+```
+Table: VERSIONS
+Key: DATABASE
+Field: VERSION
+Value: version_x_y_z
+```
+
+
+
+**RedisDB dump**
+
+```
+128.127.0.0.1:6379[4]> hgetall VERSIONS|DATABASE
+1) "VERSION"
+2) "version_1_0_3"
+127.0.0.1:6379[4]>
+```
+
+
+
+**JSON Representation**
+
+```
+"VERSIONS": {
+    "DATABASE": {
+        "VERSION": "version_1_0_3"
+    }
+}
+```
+
+
+
+The ConfigDB version of the /etc/sonic/config_db.json file should be less than or equal to the version of ConfigDB supported by an SONiC version. This allows all applications to consume data in an expected format. The supported version of ConfigDB is set by the *db_migrator.py* tool provided by the *python-sonic-utilities* package. The db_migrator.py reads the contents of ConfigDB and performs the necessary upgrade to the target version of the ConfigDB using the defined migration functions in the tool. The *db_migrator.py* was originally designed to perform ConfigDB migration from an older version to a new version. Such a migration scenario is seen when users install a newer version of SONiC which contains a different table/key layout compared to the older version where the *config_db.json* is being migrated from.
+
+
+
+Consider the case where a user is currently on the latest version of SONiC (v3.1) which is using *version_1_0_3* of ConfigDB. The user plans to migrate to an older version of SONiC (v3.0) which uses an older version of ConfigDB, *version_1_0_2*. For a seamless transition from SONiC v3.1 to SONiC v3.0. it will require that the contents of the saved configuration file *config_db.json* that is being migrated needs to be downgraded to a compatible version (*version_1_0_2*. The knowledge of the ConfigDB *version_1_0_3* is only available in the db_migrator.py of SONiC v3.1. The intended target ConfigDB version information (*version_1_0_2*) is available only after the SONiC v3.0 image boots. There is also a use case where users would want to perform a warm-reboot after installing SONiC v3.0.
+
+
+
+To allow downgrading of a ConfigDB from a newer version to an older version, the *db_migrator.py* tool is enhanced to support:
+
+- Migration API's to transform ConfigDB from Version_N to Version_N-1. This is used during warm-reboot as the contents of ConfigDB are restored from a saved RedisDB snapshot file (RDB) instead of the *config_db.json* file.
+- Migration API's to transform config_db.json from Version_N to Version_N-1
+
+
+
+The below work flow is used by the db_migrator tool to downgrade SONiC configuration.
+
+![DB Migration](images\db_migrator_downgrade.png)
+
+
+
+A new installer migration hook is introduced to take backup of the *db_migrator.py*. Refer to the [section 2.2.2 Config Migration](#222-config-migration). A new post-config migration hook is also introduced which makes use of the backed up *db_migrator.py* to perform the ConfigDB/config_db.json downgrade operation. This allows the transfer of new ConfigDB information from a previous active image to a newly installed image. The post-config migration hook is also transferred to the newly installed image. This allows the configuration downgrade feature to be supported in the older SONiC releases. The below flow diagram explains the configuration migration flow during a SONiC version downgrade which involves downgrade of ConfigDB version as well.
+
+
+
+![ConfigDB_VersionMigration](images\ConfigDB_VersionMigration.png)
+
