@@ -125,7 +125,7 @@ Below is a high level hierarchy of IGMP OC YANG extended model. IGMP YANG data w
 
 Below is a high level hierarchy of IGMP OC YANG extended model to display IGMP operational data. IGMP show YANG data will be under module openconfig-igmp.
 
-        |      +--rw igmp
+        |     +--rw igmp
         |     |  +--rw oc-igmp-ext:statistics
         |     |  |  +--rw oc-igmp-ext:counters
         |     |  |  |  +--rw oc-igmp-ext:queries
@@ -201,6 +201,8 @@ Below is a high level hierarchy of IGMP OC YANG extended model to display IGMP o
         |     |           |  +--ro oc-igmp-ext:query-startup-count?   uint32
         |     |           |  +--ro oc-igmp-ext:query-timer?           string
         |     |           |  +--ro oc-igmp-ext:query-general-timer?   string
+        |     |           |  +--ro oc-igmp-ext:status?                string
+        |     |           |  +--ro oc-igmp-ext:ip-addr?               oc-inet:ip-address
         |     |           +--ro oc-igmp-ext:timers
         |     |           |  +--ro oc-igmp-ext:group-membership-interval?     uint16
         |     |           |  +--ro oc-igmp-ext:last-member-query-count?       uint16
@@ -211,8 +213,6 @@ Below is a high level hierarchy of IGMP OC YANG extended model to display IGMP o
         |     |           |  +--ro oc-igmp-ext:query-response-interval?       uint16
         |     |           |  +--ro oc-igmp-ext:robustness-variable?           uint8
         |     |           |  +--ro oc-igmp-ext:startup-query-interval?        uint16
-        |     |           +--ro oc-igmp-ext:status?            string
-        |     |           +--ro oc-igmp-ext:ip-addr?           oc-inet:ip-address
 
 
 
@@ -347,6 +347,7 @@ Sub sections below describe KLISH supported CLI commands for IGMP. Command synta
 
 #### 3.6.2.1 IGMP configuration
 
+                [no] ip igmp
 	        [no] ip igmp version (2-3)
 	        [no] ip igmp join [multicast-group-address] [source-address]
 	        [no] ip igmp last-member-query-count (1-7)
@@ -364,48 +365,53 @@ Below list of KLISH IGMP show commands will be supported
                 Interface        Address         Group              Mode Timer    Srcs    V    Uptime  
                 Vlan301          33.33.33.1      232.1.1.1       ---- 00:00:03    1         2    00:00:02
 
-        	show ip igmp interface [IFNAME]
-                               
-                Interface : Vlan1301
-                State     : up
-                Address   : 33.33.33.1
-                Uptime    : 00:00:49
-                Version   : 2
 
-                Querier
-                -------
-                Querier     : local
-                Start Count : 0
-                Query Timer : 00:00:00
-                Other Timer : --:--:--
+                show ip igmp [vrf <vrf-name>] groups
 
-                Timers
-                ------
-                Group Membership Interval      : 5s
-                Last Member Query Count        : 2
-                Last Member Query Time         : 2s
-                Older Host Present Interval    : 5s
-                Other Querier Present Interval : 4s
-                Query Interval                 : 2s
-                Query Response Interval        : 1s
-                Robustness Variable            : 2
-                Startup Query Interval         : 1s
+                VRF: Vrf_RED
+                Interface        Address         Group           Mode Timer    Srcs V Uptime
+                Vlan1301         33.33.33.1      232.1.1.1       INCL --:--:--    1 3 00:03:10
+                Vlan1301         33.33.33.1      232.1.1.2       INCL --:--:--    0 3 00:03:10
+                Vlan1301         33.33.33.1      225.1.1.1       INCL --:--:--    1 3 00:00:01
 
-                Flags
-                -----
-                All Multicast   : no
-                Broadcast       : yes
-                Deleted         : no
-                Interface Index : 190
-                Multicast       : yes
-                Multicast Loop  : 0
-                Promiscuous     : no
 
+        	show ip igmp vrf all groups
+                
+                VRF: Vrf_RED
+                Interface        Address         Group           Mode Timer    Srcs V Uptime  
+                Vlan1301         33.33.33.1      232.1.1.1       INCL --:--:--    1 3 00:03:10
+                Vlan1301         33.33.33.1      232.1.1.2       INCL --:--:--    0 3 00:03:10 
+                Vlan1301         33.33.33.1      225.1.1.1       INCL --:--:--    1 3 00:00:01
+
+                VRF: default
+                Interface        Address         Group           Mode Timer    Srcs V Uptime  
+                Vlan301          33.33.33.1      232.1.1.1       INCL --:--:--    1 3 00:03:42
+                Vlan301          33.33.33.1      232.1.1.2       INCL --:--:--    0 3 00:03:42
+                Vlan301          33.33.33.1      225.1.1.1       INCL --:--:--    1 3 00:00:20
 
         	show ip igmp sources
                 
                 Interface        Address         Group           Source          Timer Fwd Uptime  
                 Vlan301          33.33.33.1      232.1.1.1       *               00:02   Y 00:00:03
+
+
+        	show ip igmp [vrf <vrf-name>] sources
+                
+                Interface        Address         Group           Source          Timer Fwd Uptime  
+                Vlan1301         33.33.33.1      232.1.1.1       90.0.0.2        04:15   Y 00:00:05
+                Vlan1301         33.33.33.1      232.1.1.1       91.0.0.2        04:15   Y 00:00:05
+
+
+        	show ip igmp vrf all sources
+                
+                VRF: Vrf_RED
+                Interface        Address         Group           Source          Timer Fwd Uptime  
+                Vlan1301         33.33.33.1      232.1.1.1       *               00:03   Y 00:00:04
+
+                VRF: default
+                Interface        Address         Group           Source          Timer Fwd Uptime  
+                Vlan301          33.33.33.1      232.1.1.1       *               00:04   Y 00:00:05
+
 
         	show ip igmp statistics
                 
@@ -422,6 +428,7 @@ Below list of KLISH IGMP show commands will be supported
                 mtrace request  : 0
                 unsupported     : 0
 
+
         	show ip igmp [vrf <vrf-name>] statistics
                 
                 IGMP RX statistics
@@ -437,35 +444,6 @@ Below list of KLISH IGMP show commands will be supported
                 mtrace request  : 0
                 unsupported     : 0
                 
-        	show ip igmp [vrf <vrf-name>] sources
-                
-                Interface        Address         Group           Source          Timer Fwd Uptime  
-                Vlan1301         33.33.33.1      232.1.1.1       90.0.0.2        04:15   Y 00:00:05
-                Vlan1301         33.33.33.1      232.1.1.1       91.0.0.2        04:15   Y 00:00:05
-
-        	show ip igmp vrf all groups
-                
-                VRF: Vrf_RED
-                Interface        Address         Group           Mode Timer    Srcs V Uptime  
-                Vlan1301         33.33.33.1      232.1.1.1       INCL --:--:--    1 3 00:03:10
-                Vlan1301         33.33.33.1      232.1.1.2       INCL --:--:--    0 3 00:03:10 
-                Vlan1301         33.33.33.1      225.1.1.1       INCL --:--:--    1 3 00:00:01
-
-                VRF: default
-                Interface        Address         Group           Mode Timer    Srcs V Uptime  
-                Vlan301          33.33.33.1      232.1.1.1       INCL --:--:--    1 3 00:03:42
-                Vlan301          33.33.33.1      232.1.1.2       INCL --:--:--    0 3 00:03:42
-                Vlan301          33.33.33.1      225.1.1.1       INCL --:--:--    1 3 00:00:20
-
-        	show ip igmp vrf all sources
-                
-                VRF: Vrf_RED
-                Interface        Address         Group           Source          Timer Fwd Uptime  
-                Vlan1301         33.33.33.1      232.1.1.1       *               00:03   Y 00:00:04
-
-                VRF: default
-                Interface        Address         Group           Source          Timer Fwd Uptime  
-                Vlan301          33.33.33.1      232.1.1.1       *               00:04   Y 00:00:05
 
         	show ip igmp [vrf <vrf-name>] interface [IFNAME]
                 
@@ -503,7 +481,75 @@ Below list of KLISH IGMP show commands will be supported
                 Multicast       : yes
                 Multicast Loop  : 0
                 Promiscuous     : no              
-      
+ 
+
+          	show ip igmp interface [IFNAME]
+                               
+                Interface : Vlan1301
+                State     : up
+                Address   : 33.33.33.1
+                Uptime    : 00:00:49
+                Version   : 2
+
+                Querier
+                -------
+                Querier     : local
+                Start Count : 0
+                Query Timer : 00:00:00
+                Other Timer : --:--:--
+
+                Timers
+                ------
+                Group Membership Interval      : 5s
+                Last Member Query Count        : 2
+                Last Member Query Time         : 2s
+                Older Host Present Interval    : 5s
+                Other Querier Present Interval : 4s
+                Query Interval                 : 2s
+                Query Response Interval        : 1s
+                Robustness Variable            : 2
+                Startup Query Interval         : 1s
+
+                Flags
+                -----
+                All Multicast   : no
+                Broadcast       : yes
+                Deleted         : no
+                Interface Index : 190
+                Multicast       : yes
+                Multicast Loop  : 0
+                Promiscuous     : no
+
+
+                show ip igmp join 
+
+                Interface        Address         Source          Group           Socket Uptime  
+                Ethernet8        *               90.0.0.2        232.1.1.1           15 00:00:07
+                Ethernet8        *               91.0.0.2        232.1.1.1           16 00:00:07
+                Ethernet8        *               90.0.0.2        232.1.1.2           17 00:00:07
+                Ethernet8        *               91.0.0.2        232.1.1.2           18 00:00:06
+
+
+                show ip igmp [vrf <vrf-name>] join
+
+                Interface        Address         Source          Group           Socket Uptime
+                Ethernet8        *               90.0.0.2        232.1.1.1           15 00:00:07
+                Ethernet8        *               91.0.0.2        232.1.1.1           16 00:00:07
+                Ethernet8        *               90.0.0.2        232.1.1.2           17 00:00:07
+
+
+                show ip igmp vrf all join
+
+                VRF: Vrf_RED
+                Interface        Address         Source          Group           Socket Uptime
+                Ethernet8        *               90.0.0.2        232.1.1.1           15 00:00:07
+                Ethernet8        *               91.0.0.2        232.1.1.1           16 00:00:07
+
+                VRF: default
+                Interface        Address         Source          Group           Socket Uptime
+                vlan301          33.33.33.1      40.1.1.1        233.1.1.1           19 00:00:08
+
+
 Below list of KLISH IGMP clear commands will be supported
 
 
@@ -562,29 +608,41 @@ REST URI for IGMP configuration command will be below
 #### 3.6.5.9 show ip igmp groups
 GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-groups  name= default-vrf, name1= igmp 
 
-#### 3.6.5.10 show ip igmp sources
+#### 3.6.5.10 show ip igmp vrf vrf_RED groups
+GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-groups  name= vrf_RED, name1= igmp 
+
+#### 3.6.5.11 show ip igmp vrf all groups
+GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-groups  name= all, name1= igmp 
+
+#### 3.6.5.12 show ip igmp sources
 GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-sources  name= default-vrf, name1= igmp
 
-#### 3.6.5.11 show ip igmp statistics
-GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:statistics.  name = default-vrf, name1 =igmp
-
-#### 3.6.5.12 show ip igmp interface <>
-GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:interfaces/interface={interface-id}  name= default-vrf, name1= igmp,interface-id= <interfacename> 
-
-#### 3.6.5.13 show ip igmp vrf all groups
-GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-groups  name= all, name1= igmp 
+#### 3.6.5.13 show ip igmp vrf vrf_RED sources
+GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-sources  name= vrf_RED, name1= igmp
 
 #### 3.6.5.14 show ip igmp vrf all sources
 GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-sources  name= all, name1= igmp
 
-#### 3.6.5.15 show ip igmp vrf vrf_RED statistics
+#### 3.6.5.15 show ip igmp statistics
+GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:statistics.  name = default-vrf, name1 =igmp
+
+#### 3.6.5.16 show ip igmp vrf vrf_RED statistics
 GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:statistics  name = vrf_RED , name1 = igmp
 
-#### 3.6.5.16 show ip igmp vrf vrf_RED interface <>
+#### 3.6.5.17 show ip igmp vrf vrf_RED interface <>
 GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:interfaces/interface={interface-id}  name= vrf_RED, name1= igmp,interface-id= <interfacename> 
 
-#### 3.6.5.17 show ip igmp vrf vrf_RED sources
-GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:igmp-sources  name= vrf_RED, name1= igmp
+#### 3.6.5.18 show ip igmp interface <>
+GET /restconf/data/openconfig-network-instance:network-instances/network-instance={name}/protocols/protocol={identifier},{name1}/igmp/openconfig-igmp-ext:interfaces/interface={interface-id}  name= default-vrf, name1= igmp,interface-id= <interfacename> 
+
+#### 3.6.5.19 show ip igmp join
+GET /restconf/operations/sonic-igmp:get-igmp-join inputs vrf-name=default-vrf
+
+#### 3.6.5.20 show ip igmp vrf vrf_RED join
+GET /restconf/operations/sonic-igmp:get-igmp-join inputs vrf-name=vrf_RED
+
+#### 3.6.5.21 show ip igmp vrf all join
+GET /restconf/operations/sonic-igmp:get-igmp-join inputs vrf-name=all
 
 
 ### 3.6.6 Operational Commands
@@ -592,7 +650,7 @@ GET /restconf/data/openconfig-network-instance:network-instances/network-instanc
 Below operational command will be supported from KLISH. 
 
         clear ip igmp interfaces
-        clear ip igmp [vrf <vrf-name>] interfaces
+        clear ip igmp vrf
 
 
 ### 3.6.7 Limitations
