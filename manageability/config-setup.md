@@ -406,7 +406,7 @@ To allow downgrading of a ConfigDB from a newer version to an older version, the
 
 The below work flow is used by the db_migrator tool to downgrade SONiC configuration.
 
-![DB Migration](images\db_migrator_downgrade.png)
+![DB Migration](images/db_migrator_downgrade.png)
 
 
 
@@ -414,5 +414,5 @@ A new installer migration hook is introduced to take backup of the *db_migrator.
 
 
 
-![ConfigDB_VersionMigration](images\ConfigDB_VersionMigration.png)
+![ConfigDB_VersionMigration](images/ConfigDB_VersionMigration.png)
 
