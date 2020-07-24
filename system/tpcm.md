@@ -218,7 +218,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 - The loaded TPC can be viewed using the following regular Docker command to view the running Dockers. This command will list all the running containers including the SONiC as well as TPC Docker containers.
 
-		# docker ls 
+		# docker ps 
 		
 ## TPC Docker Upgrade
 
