@@ -42,6 +42,7 @@ Rev   |   Date   |  Author   | Change Description
 :---: | :-----:  | :------:  | :---------
 1.0   | 15/05/20 | Kalimuthu | Initial version
 2.0   | 22/07/20 | Precy Lee | KLISH CLI
+2.1   | 23/07/20 | Precy Lee | update tpcm uninstall and upgrade CLIs 
 
 
 # About this Manual
@@ -310,10 +311,10 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 ## 3. Upgrading the TPC image
 
-#### tpcm  upgrade  name \<container-name\> <same options as install\> [--skip_data]
+#### tpcm  upgrade  name \<container-name\> <same options as install\> [--skip_data_migration]
 
 - where 
-	--skip_data => If set, container data backup and restore steps will be skipped.
+	--skip_data_migration => If yes, container data is not migrated or retained, else data is migrated and retained.  
 	All other options are same as install command.
 	
 
@@ -396,7 +397,11 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 ## 2. Uninstalling the TPC image
 
-#### tpcm uninstall name \<container-name\> [skip_data <yes/no>]
+#### tpcm uninstall name \<container-name\> [clean_data <yes/no>]
+
+- where 
+	--clean_data => If yes, container data is removed, else data is not removed.  
+	All other options are same as install command.
 
 #### Data Model:
 
@@ -417,7 +422,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 ## 3. Upgrading the TPC image
 
-#### tpcm  upgrade  name \<container-name\> <same options as install\> [skip_data <yes/no>] [args <container args>]
+#### tpcm  upgrade  name \<container-name\> <same options as install\> [skip_data_migration <yes/no>] [args <container args>]
 
         - Example:
 
