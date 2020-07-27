@@ -487,7 +487,10 @@ module sonic-switch-resource {
   }
 }
 
+```
 
+
+Openconfig YANG:
 
 ```
 
