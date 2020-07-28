@@ -566,10 +566,10 @@ Example:
 	0001000480a04000  0         0001000480a04000  Root  20   2    15                  
 	
 	RSTP (IEEE 802.1w) Port Parameters:                                                    
-	Port        Prio  PortPath  link    Edge  BPDU   Role      State     Designa-  Designated          
-	Num         rity  Cost      type    Port  Filter                     ted cost  bridge           
-	Ethernet3    128  20000     P2P     F     N      DISABLED  DISABLED  0         0000000000000000           
-	Ethernet13   128  20000     P2P     F     N      DISABLED  DISABLED  0         0000000000000000           
+	Port        Prio  PortPath  link    Edge  BPDU   Guard Role      State   Designa- Designated          
+	Num         rity  Cost      type    Port  Filter Type                    ted cost  bridge           
+	Ethernet3    128  20000     P2P     F     N      Loop  DISABLED  DISABLED  0         0000000000000000           
+	Ethernet13   128  20000     P2P     F     N      -     DISABLED  DISABLED  0         0000000000000000           
 
 #### 3.6.3.2 show spanning-tree counters vlan ####
 
