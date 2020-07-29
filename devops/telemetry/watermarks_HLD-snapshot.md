@@ -34,6 +34,10 @@
       - [3.1.2.1 CLI show](#3121-cli-show)
       - [3.1.2.2 CLI clear](#3122-cli-clear)
       - [3.1.2.3 Show/configure telemetry interval](#3123-showconfigure-telemetry-interval)
+      - [3.1.2.4 KLISH config](#3124-klish-cli-config)
+      - [3.1.2.5 KLISH no config](#3125-klish-cli-no-config)
+      - [3.1.2.6 KLISH show](#3126-klish-cli-show)
+      - [3.1.2.7 KLISH clear](#3127-klish-cli-clear)
     - [3.1.3 Lua plugins](#313-lua-plugins)
     - [3.1.4 SWSS](#314-swss)
     - [3.1.5 SAI Redis](#315-sai-redis)
@@ -297,7 +301,7 @@ The CLI flow does not involve any logic, the cli only gets the data from
 a related table in DB (see table above). It does not do any comparison
 between watermark values.
 
-#### 3.1.2.1 CLI show
+#### 3.1.2.1 CLICK CLI show
 
 New script and alias should be implemented to provide watermark values:
 
@@ -374,19 +378,19 @@ $ show buffer_pool \[watermark|persistent-watermark\] \[-p\]
 Note: [-p] option is to display value in percentages
 
 
-#### 3.1.2.2 CLI clear
+#### 3.1.2.2 CLICK CLI clear
 
 In addition clear functionality will be added:
 
-    # clear priority-group [watermark|persistent-watermark] headroom
+    # sonic-clear priority-group [watermark|persistent-watermark] headroom
     
-    # clear priority-group [watermark|persistent-watermark] shared
+    # sonic-clear priority-group [watermark|persistent-watermark] shared
     
-    # clear queue [watermark|persistent-watermark] unicast
+    # sonic-clear queue [watermark|persistent-watermark] unicast
     
-    # clear queue [watermark|persistent-watermark] mutlicast
+    # sonic-clear queue [watermark|persistent-watermark] mutlicast
 
-    # clear buffer_pool [watermark|persistent-watermark]
+    # sonic-clear buffer_pool [watermark|persistent-watermark]
 
 The user can clear the persistent watermark, and the "user" watermark.
 The user can not clear the periodic(telemetry) watermark. The clear
@@ -394,7 +398,7 @@ command requires sudo, as the watermark is shared for all users, and
 clear will affect every user(if a number of people are connected through
 ssh).
 
-#### 3.1.2.3 Show/configure telemetry interval
+#### 3.1.2.3 CLICK Show/configure telemetry interval
 
 The telemetry interval will be available for viewing and configuring
 with the following CLI:
@@ -408,7 +412,53 @@ with the following CLI:
 Note: after the new interval is configured, it will be changed only when
 the current telemetry interval ends.
 
+
     
+#### 3.1.2.4 KLISH CLI config
+
+    # sonic(config)# watermark interval <value>
+
+    # sonic(config)# watermark telemetry interval <value>
+
+
+Note: after the new interval is configured, it will be changed only when
+the current telemetry interval ends.
+
+
+
+#### 3.1.2.5 KLISH CLI no config
+
+    # sonic(config)# no watermark interval
+
+    # sonic(config)# no watermark telemetry interval
+
+
+
+#### 3.1.2.6 KLISH CLI show
+
+    # sonic# show watermark interval
+
+    # sonic# show watermark telemetry interval
+
+    # sonic# show priority-group watermark {headroom|shared} [interface Ethernet<num>]
+
+    # sonic# show queue watermark {unicast|multicast|cpu} [interface Ethernet <num>]
+ 
+    # sonic# show priority-group persistent-watermark {headroom|shared} [interface Ethernet <num>]
+
+    # sonic# show queue persistent-watermark {unicast|multicast|cpu} [interface Ethernet <num>]
+
+
+
+#### 3.1.2.7 KLISH clear 
+
+    # sonic# clear priority-group watermark {headroom|shared} [interface Ethernet <num>]
+
+    # sonic# clear queue watermark {unicast|multicast} [interface Ethernet <num>]
+ 
+    # sonic# clear priority-group persistent-watermark {headroom|shared} [interface Ethernet <num>]
+
+    # sonic# clear queue persistent-watermark {unicast|multicast} [interface Ethernet <num>]
 
 ### 3.1.3 Lua plugins
 
