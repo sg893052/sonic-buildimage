@@ -323,7 +323,7 @@ In the Enterprise SONiC distributed by Broadcom, the following policy is impleme
 
 **minor-number** : Same as the minor Enterprise SONiC release, the code version belongs to. E.g 1 in 3.1, 0 in 3.0.5. This will act as a quick reference to the  minor Enterprise SONiC release version where this ConfigDB version was introduced.
 
-**db-version-id** : A number starting from 1 which is serially incremented with every ConfigDB version change.
+**db-version-id** : A number starting from 1 which is serially incremented with every ConfigDB version change within a *&lt;major-number&gt;\_&lt;minor-number&gt;* series.
 
 
 
