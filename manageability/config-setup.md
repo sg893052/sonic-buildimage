@@ -1,7 +1,7 @@
 # SONiC Configuration Setup Service
 
 # High Level Design Document
-#### Rev 0.4
+#### Rev 0.5
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -30,6 +30,7 @@
 | 0.2 | 07/22/2019 | Rajendra Dendukuri | Update Test plan, fixed review comments |
 | 0.3 | 10/16/2019 | Rajendra Dendukuri | Added an example usecase of password migration |
 | 0.4 | 02/25/2020 | Rajendra Dendukuri | Added:<BR>    Installer migration hooks capability<BR>    Automatic backup and restore of migration hooks|
+| 0.5 | 07/29/2020 | Rajendra Dendukuri | Added ConfigDB version scheme and downgrade support|
 
 # About this Manual
 This document provides details about how the switch configuration is handled on a SONiC device.
@@ -316,7 +317,7 @@ Value: version_x_y_z
 
 In the Enterprise SONiC distributed by Broadcom, the following policy is implemented while assigning ConfigDB version numbers. 
 
-**Format:      version\_&lt;major-number&gt;&lt;\_minor-number&gt;\_&lt;db-version-id&gt;**
+**Format:      version\_&lt;major-number&gt;\_&lt;minor-number&gt;\_&lt;db-version-id&gt;**
 
  **major-number** : Same as the major Enterprise SONiC release, the code version belongs to. E.g 3, 4. This will act as a quick reference to the major Enterprise SONiC release where this ConfigDB version was introduced.
 
@@ -330,7 +331,7 @@ In the Enterprise SONiC distributed by Broadcom, the following policy is impleme
 
 
 
-The ConfigDB versions used by Enterprise SONiC will not align with the ConfigDB versions used by the community SONiC. As a result any attempts of configuration migration to/from Enterprise SONiC from/to community SONiC will result in unexpected failures. It is advised that users can either use the --skip_migration option when installing a SONiC image or install the image from the ONIE prompt.
+The ConfigDB versions used by Enterprise SONiC will not align with the ConfigDB versions used by the community SONiC. As a result any attempts of configuration migration to/from Enterprise SONiC from/to community SONiC will likely fail. It is advised that users can either use the --skip_migration option when installing a SONiC image or install the image from the ONIE prompt.
 
 
 
@@ -387,7 +388,7 @@ The ConfigDB version map is stored in a JSON format in the file */etc/sonic/conf
 
 **SONIC_VERSIONS** - A map whose keys represent the Enterprise SONiC versions and values represent the corresponding ConfigDB version introduced in the respective Enterprise SONiC version. To reduce the number of entries in the version map, only versions where a ConfigDB version change has happened are specified. An 'x' is used to represent a wildcard match. For e.g "2.x" represents all the Enterprise SONiC versions starting from 2.0 to the latest maintenance release version 2.1.3 (as on 7/29/2020).
 
-Given an Enterprise SONiC version, the closest Enterprise SONiC version in the versions map which is less than the given version is used to determine the ConfigDB version.
+Given an Enterprise SONiC version, the closest Enterprise SONiC version in the versions map which is less than or equal to the given version is used to determine the ConfigDB version.
 
 
 
@@ -398,6 +399,7 @@ Consider the before mentioned ConfigDB versions map file, the following are a fe
 | 2.1.2                             | 2.x                                         | version_1_0_1    |
 | 3.0.6                             | 3.0.x                                       | version_1_0_2    |
 | 3.1.1_RC7                         | 3.1.1_RC4                                   | version_3_1_2    |
+| 3.1.1                             | 3.1.1                                       | version_3_1_3    |
 | 3.2.3                             | 3.1.1                                       | version_3_1_3    |
 | 3.2.7                             | 3.2.4                                       | version_3_2_1    |
 | 5.1                               | x                                           | version_4_0_1    |
