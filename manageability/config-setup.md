@@ -493,7 +493,8 @@ It is important to note that the ConfigDB downgrade process executes on the imag
 - Daily builds
   - SONiC-OS-sonic_3.1_daily_200727_0600_415
 
-
+3. The ConfigDB versioning policy implemented for Enterprise SONiC is different from community SONiC images. The migration of ConfigDB from community SONiC and Enterprise SONiC will
+not be claimed to be supported.
 
 ## 2.3 CLI
 Following are the commands supported by the config-setup tool. These are Linux shell commands.
