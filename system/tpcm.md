@@ -67,7 +67,7 @@ This document describes the high level design details of Third Party Container M
 
 # Requirements Overview
 
-This document describes mechanisms for Third Party Container Management(TPCM) in  the SONiC environment. The TPCM allows the user to Install and Manage the custom container into the SONiC.  
+This document describes mechanisms for Third Party Container Management(TPCM) in  the SONiC environment. The TPCM allows the user to Install and Manage the TPC docker into the SONiC.  
 
 SONiC is a network operating system based on the Debian distribution. The  SONiC components are tightly integrated with the installation image that are created during the build time itself. It allows the user to install the additional tools from the standard Debian repo, but any addition of new components to the SONiC system requires the rebuilding of the SONiC binary image. This feature allows user to install the third party components in the form of containers and that can be loaded and integrated as part of the SONiC system independently without rebuilding of SONiC image. 
 
@@ -174,6 +174,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 	- SFTP SERVER - Copied from a remote server through sftp protcol.
 	- MEDIA PATH  - Copied from a local media folder.
 	- DOCKER HUB  - Downloaded from remote Docker registry.
+	- LOCAL IMAGE - Use one of the existing docker image. 
 
 - One or more TPC images can be installed on the SONiC system. Once the SONiC OS is up, the TPC instance can be brought up into SONiC by running tpcm install command. 
 
@@ -197,7 +198,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 	- Example:
 		
-			tpcm uninstall \<tpc-name\>  -y
+			tpcm uninstall <tpc-name>  -y
 		
 - During the uninstallation process, the following steps get executed.
 
@@ -222,92 +223,137 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 		
 ## TPC Docker Upgrade
 
-- The TPCM framework allows the user to upgrade the running TPC Dockers.  The tcpm framework upgrade option allows the user to upgrade an existing TPC docker with a new one. During the upgrade process, TPCM provides the interface to run the pre/post script of a container if it is present inside the TPC container. These hook allows the user to take the backup of data from existing container and restore it back to the upgraded Docker. The pre hook is executed as part of running container and the post hook is executed as part of the upgraded container. The hook scripts should be placed in a fixed folder in the TPC container with the name as /tpc/hook/pre.sh' and 'tpc/hook/post.sh'. The pre script should create a backup file with the name as '/tpc/backup/data.tar.gz' and the post script should restore the contents from the data file. For each TPC, the volume '/tpc/' is mounted from host partition '/host/tpc/\<tpc-name\>'.
+- The TPCM framework allows the user to upgrade the running TPC Dockers.  The tcpm framework upgrade option allows the user to upgrade an existing TPC docker with a new one. During the upgrade process, TPCM provides the interface to run the pre/post script present in the container. These hook allow the user to take the backup of data from existing TPC container and restore it back into the upgraded TPC Docker. Each TPC is provided with private data volume for storing the container data which will presist across docker upgrade. The pre/post hook is an optional script that should be added by the user and it will be based on the user needs on what data to be backed up during the upgrade. If all the TPC's data is already stored on the private volume or user doesnt want to take data backup during upgrade then this script is optional. 
+
+	- The pre hook is executed as part of running container and the post hook is executed as part of the upgraded container. 
+    - These scripts are optional and it get executed only if it is present in the container. It skips the script execution if it is not present. 
+    - Two level of hook script is supported.
+        1. Internal hook scripts
+            - These scripts are prepared by the user and it should come along with the container.
+	        - The internal hook scripts should be placed in a fixed folder in the TPC container with the name as /tpc/scripts/pre.sh' and '/tpc/scripts/post.sh'. 
+            - These scriptes get executed only if it is present inside the container.
+
+        2. External hook scripts
+            - These scripts are prepared by the user and stored in the host folder and volume mount into TPC. 
+            - It will presist across TPC upgrade. 
+	        - It should be placed in a fixed folder in the Host with the name as /tpcm/tpc/<tpc-name>/pdata/scripts/pre.sh' and '/tpcm/tpc/<tpc-name>/pdata/scripts/post.sh'. 
+	        - As part of volume mount, it automatically get mapped into the TPC with the name as /tpc/pdata/scripts/pre.sh' and '/tpc/pdata/scripts/post.sh'. 
+	- The pre script should create a backup data file and store them into '/tpc/pdata/' folder inside the container, and the post script should restore the contents from the data file. 
+	- For each TPC, a private volume '/tpc/pdata' is mounted from host partition '/tpcm/tpc/\<tpc-name\>' for saving the data across TPC upgrade.
 
 - Example:
 
-		# tpcm upgrade  \<tpc-name\> \<tpc-image source\> -y 
+		# tpcm upgrade  name <tpc-name> <tpc-image source> -y 
  
-- It executes the following sequence to upgrade the running Docker.
-	1. Run the TPC pre hook script
-	3. It stops the already running TPC container
-	4. Remove the existing TPC container
+- It executes the following sequence to upgrade the running TPC Docker.
+	1. Run the TPC internal pre hook script.
+	2. Run the TPC external pre hook script.
+	3. It stops the already running TPC container.
+	4. Remove the existing TPC container.
 	5. Loads the new TPC image into the Docker image list.
-	6. Create the new TPC container from newly loaded TPC image
-	7. Run the newly created container
-	8. Execute the TPC post script
-	9. Remove the old TPC image.
+	6. Create the new TPC container from newly loaded TPC image.
+	7. Run the newly created container.
+	8. Execute the TPC external post script.
+	9. Execute the TPC internal post script.
+	10. Remove the old TPC image.
+
+- During the TPC upgrade if any these operation fails, it will rollback to old container.
+
 
 # CLI:
 
 ## 1. Installing the TPC image
 
-	TPC image can be loaded and installed in two forms:
+	TPC image can be loaded and installed in three forms:
 
 #### TPC image from a file:
 	It uses the download protocol to download the TPC image into a temporary path and then that gets loaded into Docker image filesystem. 
 	1. Load the TPC image file from a external http/https server
 
 	- Syntax:
-	#### tpcm install name \<tpc-container-name\> [--args \<container args\>] \<URL\> [-y]
+	#### tpcm install name <tpc-container-name> url <URL> [-y] [--args <container args>]
 	where:
-	\<tpc-container-name\>  => Name of the TPC container to be loaded.
-	--args  => It specifies the additional container creation parameters.
-	\<URL\> => It is http/https web url from which the TPC image can be downloaded.
+	<tpc-container-name>  => Name of the TPC container to be loaded.
+	<URL> => It is http/https web url from which the TPC image can be downloaded.
 	[-y]  => User confirmation
+	--args  => It specifies the additional container parameters.
 	- Example:
-		tpcm install name mydocker http://myserver/path/mydocker.tar.gz -y
+		tpcm install name mydocker url http://myserver/path/mydocker.tar.gz -y
 
 	2. Load the image file from a external server through scp/sftp
 
 	- Syntax:
-	#### tpcm install name \<tpc-container-name\> --protocol \<scp/sftp\> --server \<server name\>  --username \<username\> [--password \<password\>] \<TPC image path\> [--args \<container args\>] [-y]
+	#### tpcm install name <tpc-container-name> scp  <server name>  --username <username> [--password <password>] --filename <TPC image path> [-y] [--args <container args>]
+	#### tpcm install name <tpc-container-name> sftp <server name>  --username <username> [--password <password>] --filename <TPC image path> [-y] [--args <container args>]
 	where:
-	\<tpc-container-name\>  => Name of the TPC container to be loaded.
-	--protocol  => It specifies the protocol through which it downloads the image and it can be either scp or sftp.
-	--server    => Specifies the remote server name from which image is being download.
+	<tpc-container-name>  => Name of the TPC container to be loaded.
+	<server name>    => Specifies the remote server name from which image is being download.
 	--username  => Specifies the remote server user credentials.
 	--password  => Specifies the remote server user's password. If passwd is not given, prompted passwd for during the image download.
-	--args      => It specifies the additional container creation parameters.
-	\<TPC image path\> => Path on the remote server where the TPC image is located.
+	--filename  => Path on the remote server where the TPC image is located.
 	[-y] => User confirmation
+	--args      => It specifies the additional container parameters.
 	- Example:
 
-			tpcm install name mydocker --protocol scp --server myserver  --username myuser /path/mydocker.tar.gz -y
+			tpcm install name mydocker scp myserver  --username myuser --filename /path/mydocker.tar.gz -y
 			Password:
 
 	3. Load the image file from a local media path
 	- Syntax:
-	#### tpcm install name \<tpc-container-name\> \<TPC image path\> [--args \<container args\>] [-y]
+	#### tpcm install name <tpc-container-name> file  <TPC image path> [-y] [--args <container args>]
 	where:
-	\<TPC image path\> => Local media path where the TPC image is located.
-	--args => It specifies the additional container creation parameters.
+	<TPC image path> => Local media path where the TPC image is located.
 	[-y]   => User confirmation
+	--args => It specifies the additional container parameters.
 	- Example:
 
-			tpcm install name mydocker /media/usb/path/mydocker.tar.gz -y
+			tpcm install name mydocker file /media/usb/path/mydocker.tar.gz -y
 
 		
 #### Load the TPC image from a external Docker repo
 	It loads the TPC image directly from external Docker registry into local Docker image filesystem.
 
 	- Syntax:
-	#### tpcm install name \<tpc-container-name\> \<Image name\>[:\<Tagname\>] [--args \<container args\>] [-y]
+	#### tpcm install name <tpc-container-name> pull <Image name>[:<Tagname>] [-y] [--args <container args>]
 
 	- where 
-	\<tpc-container-name\>  => Name of the TPC container to be loaded.
-	\<Image name\>  => Name of the image to be downloaded.
+	<tpc-container-name>  => Name of the TPC container to be loaded.
+	<Image name>  => Name of the image to be downloaded.
 	[Tagname]  => Optional, Tagname of the image, by default 'latest' would be taken. 
-	--args => It specifies the additional container creation parameters.
 	[-y] => User confirmation
+	--args => It specifies the additional container parameters.
+	- Example:
+
+			tpcm install name mydocker pull ubuntu:latest -y
+
+#### Use one of the existing docker image
+	It uses one of the exising docker images installed in the system. It simply creates the service file and takes care of TPC and migration feature across the image  upgrade. This allows the user to use the regular docker commands to create the TPC images. Once the image is ready, user can associate TPCM management feature to it. 
+
+	- Syntax:
+	#### tpcm install name <tpc-container-name> image <Image name>[:<Tagname>] [-y] [--args <container args>]
+
+	- where 
+	<tpc-container-name>  => Name of the TPC container to be created.
+	<Image name>  => Name of the docker image in the local system.
+	Tagname  => Optional, Tagname of the image, by default 'latest' would be taken. 
+	[-y] => User confirmation
+	--args   => It specifies the additional container parameters.
+
+	- Example:
+
+			tpcm install name mydocker image ubuntu:latest -y
 	
 ## 2. Uninstalling the TPC image
 
-#### tpcm uninstall name \<container-name\> [-y]
+#### tpcm uninstall name \<container-name\> [-y] [--clean_data]
 
 - where 
 	\<tpc-container-name\>  => Name of the TPC container to be removed.
+	--clean_data  => It removes all the container specific data which includes config file, service file and container private data.
 	[-y] => User confirmation
+	- Example:
+
+			tpcm uninstall name mydocker -y
 
 ## 3. Upgrading the TPC image
 
@@ -316,6 +362,9 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 - where 
 	--skip_data_migration => If yes, container data is not migrated or retained, else data is migrated and retained.  
 	All other options are same as install command.
+	- Example:
+
+			tpcm upgrade name mydocker image ubuntu:latest -y
 	
 
 ## 4.  List the TPC images
@@ -475,7 +524,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 	1. All Dockers in SONiC run on host IP stack (Default VRF)
 	2. There is no option to run specific Dockers under Management VRF
 	3. The following ip rule should be added to allow access to ‘eth0’ for all Dockers
-		# sudo ip rule add pref 32768 from all lookup mgmt
+### sudo ip rule add pref 32768 from all lookup mgmt
 
 
 ## SONiC image NetInstall
