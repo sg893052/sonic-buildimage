@@ -29,6 +29,7 @@
   * [TPC Docker Upgrade](#tpc-docker-upgrade)
   * [System Reboot](#system-reboot)
 * [CLI](#cli)
+* [KLISH CLI](#klish-cli)
 * [Unit Test](#unit-test)
 
 # List of Tables
@@ -40,7 +41,8 @@
 Rev   |   Date   |  Author   | Change Description
 :---: | :-----:  | :------:  | :---------
 1.0   | 15/05/20 | Kalimuthu | Initial version
-2.0   |          |           |  
+2.0   | 22/07/20 | Precy Lee | KLISH CLI
+2.1   | 23/07/20 | Precy Lee | update tpcm uninstall and upgrade CLIs 
 
 
 # About this Manual
@@ -216,7 +218,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 - The loaded TPC can be viewed using the following regular Docker command to view the running Dockers. This command will list all the running containers including the SONiC as well as TPC Docker containers.
 
-		# docker ls 
+		# docker ps 
 		
 ## TPC Docker Upgrade
 
@@ -247,19 +249,19 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 	1. Load the TPC image file from a external http/https server
 
 	- Syntax:
-	#### tpcm install \<tpc-container-name\> [--args \<container args\>] \<URL\> [-y]
+	#### tpcm install name \<tpc-container-name\> [--args \<container args\>] \<URL\> [-y]
 	where:
 	\<tpc-container-name\>  => Name of the TPC container to be loaded.
 	--args  => It specifies the additional container creation parameters.
 	\<URL\> => It is http/https web url from which the TPC image can be downloaded.
 	[-y]  => User confirmation
 	- Example:
-		tpcm install mydocker http://myserver/path/mydocker.tar.gz -y
+		tpcm install name mydocker http://myserver/path/mydocker.tar.gz -y
 
 	2. Load the image file from a external server through scp/sftp
 
 	- Syntax:
-	#### tpcm install \<tpc-container-name\> --protocol \<scp/sftp\> --server \<server name\>  --username \<username\> [--password \<password\>] \<TPC image path\> [--args \<container args\>] [-y]
+	#### tpcm install name \<tpc-container-name\> --protocol \<scp/sftp\> --server \<server name\>  --username \<username\> [--password \<password\>] \<TPC image path\> [--args \<container args\>] [-y]
 	where:
 	\<tpc-container-name\>  => Name of the TPC container to be loaded.
 	--protocol  => It specifies the protocol through which it downloads the image and it can be either scp or sftp.
@@ -271,26 +273,26 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 	[-y] => User confirmation
 	- Example:
 
-			tpcm install mydocker --protocol scp --server myserver  --username myuser /path/mydocker.tar.gz -y
+			tpcm install name mydocker --protocol scp --server myserver  --username myuser /path/mydocker.tar.gz -y
 			Password:
 
 	3. Load the image file from a local media path
 	- Syntax:
-	#### tpcm install \<tpc-container-name\> \<TPC image path\> [--args \<container args\>] [-y]
+	#### tpcm install name \<tpc-container-name\> \<TPC image path\> [--args \<container args\>] [-y]
 	where:
 	\<TPC image path\> => Local media path where the TPC image is located.
 	--args => It specifies the additional container creation parameters.
 	[-y]   => User confirmation
 	- Example:
 
-			tpcm install mydocker /media/usb/path/mydocker.tar.gz -y
+			tpcm install name mydocker /media/usb/path/mydocker.tar.gz -y
 
 		
 #### Load the TPC image from a external Docker repo
 	It loads the TPC image directly from external Docker registry into local Docker image filesystem.
 
 	- Syntax:
-	#### tpcm install \<tpc-container-name\> \<Image name\>[:\<Tagname\>] [--args \<container args\>] [-y]
+	#### tpcm install name \<tpc-container-name\> \<Image name\>[:\<Tagname\>] [--args \<container args\>] [-y]
 
 	- where 
 	\<tpc-container-name\>  => Name of the TPC container to be loaded.
@@ -301,7 +303,7 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 	
 ## 2. Uninstalling the TPC image
 
-#### tpcm uninstall \<container-name\> [-y]
+#### tpcm uninstall name \<container-name\> [-y]
 
 - where 
 	\<tpc-container-name\>  => Name of the TPC container to be removed.
@@ -309,10 +311,10 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 ## 3. Upgrading the TPC image
 
-#### tpcm  upgrade  \<container-name\> <same options as install\> [--skip_data]
+#### tpcm  upgrade  name \<container-name\> <same options as install\> [--skip_data_migration]
 
 - where 
-	--skip_data => If set, container data backup and restore steps will be skipped.
+	--skip_data_migration => If yes, container data is not migrated or retained, else data is migrated and retained.  
 	All other options are same as install command.
 	
 
@@ -322,8 +324,152 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 #### tpcm  list   
 
+# KLISH CLI:
 
-## TPCM with Mgmt VRF 
+## 1. Installing the TPC image
+
+#### TPC image from a file:
+
+        1. Load the TPC image file from a external http/https server
+
+        - Syntax:
+                #### tpcm install name <tpc-container-name> url <URL> [args <container args>]
+
+        - Example:
+                sonic# tpcm install name mydocker url http://myserver/path/mydocker.tar.gz
+                sonic# tpcm install name mydocker url http://myserver/path/mydocker.tar.gz args " -e TESTENV=TESTVALUE"
+
+        2. Load the image file from a external server through scp/sftp
+
+        - Syntax:
+        #### tpcm install name <tpc-container-name> scp  <server name>  username <username> password <password> filename <TPC image path> 
+             [args <container args>]
+        #### tpcm install name <tpc-container-name> sftp <server name>  username <username> password <password> filename <TPC image path>
+             [args <container args>]
+
+        - Example:
+
+             sonic# tpcm install name mydocker scp myserver  username myuser password paswd filename /path/mydocker.tar.gz
+
+        3. Load the image file from a local media path
+
+        - Syntax:
+        #### tpcm install name <tpc-container-name> file  <TPC image path> [args <container args>]
+
+        - Example:
+              sonic# tpcm install name mydocker file /media/usb/path/mydocker.tar.gz
+
+#### Load the TPC image from a external Docker repo
+
+        - Syntax:
+        #### tpcm install name <tpc-container-name> pull <Image name>[:<Tagname>] [args <container args>]
+
+        - Example:
+
+              sonic# tpcm install name mydocker pull ubuntu:latest
+
+#### Use one of the existing docker image
+
+        - Syntax:
+        #### tpcm install name <tpc-container-name> image <Image name>[:<Tagname>] [args <container args>]
+
+        - Example:
+
+               sonic# tpcm install name mydocker image ubuntu:latest
+
+#### Data Model:
+
+         module: sonic-tpcm
+         rpcs:
+             +---x tpcm-install
+                +---w input
+                |  +---w options?       string
+                |  +---w docker-name?   string
+                |  +---w image-name?    string
+                +--ro output
+                   +--ro status?          int32
+                   +--ro status-detail*   string
+
+#### Rest API Support:
+
+      POST "<REST-SERVER:PORT>/restconf/operations/sonic-tpcm:tpcm-install
+      request body: {"sonic-tpcm:input": {"image-name": "<image_name>", "docker-name": "<docker_name>", "options": "<options>"}}"
+
+## 2. Uninstalling the TPC image
+
+#### tpcm uninstall name \<container-name\> [clean_data <yes/no>]
+
+- where 
+	--clean_data => If yes, container data is removed, else data is not removed.  
+	All other options are same as install command.
+
+#### Data Model:
+
+         module: sonic-tpcm
+         rpcs:
+            +---x tpcm-uninstall
+               +---w input
+               |  +---w options?       string
+               |  +---w docker-name?   string
+               +--ro output
+                  +--ro status?          int32
+                  +--ro status-detail*   string
+
+#### Rest API Support:
+
+      POST "<REST-SERVER:PORT>/restconf/operations/sonic-tpcm:tpcm-install
+         request body: {"sonic-tpcm:input": {"docker-name": "<docker_name>", "options": "<options>"}}"
+
+## 3. Upgrading the TPC image
+
+#### tpcm  upgrade  name \<container-name\> <same options as install\> [skip_data_migration <yes/no>] [args <container args>]
+
+        - Example:
+
+           sonic#  tpcm upgrade name mydocker image ubuntu:latest
+
+#### Data Model:
+
+         module: sonic-tpcm
+
+         rpcs:
+            +---x tpcm-upgrade
+               +---w input
+               |  +---w options?       string
+               |  +---w docker-name?   string
+               |  +---w image-name?    string
+               +--ro output
+                  +--ro status?          int32
+                  +--ro status-detail*   string
+
+#### Rest API Support:
+
+      POST "<REST-SERVER:PORT>/restconf/operations/sonic-tpcm:tpcm-upgrade
+          request body: {"sonic-tpcm:input": {"docker-name": "<docker_name>", "options": "<options>"}}"
+
+## 4.  List the TPC images
+
+#### show tpcm list
+        - The TPCs can be listed using the tpcm list command.
+
+        - Example:
+           sonic#   show tpcm list
+                    CONTAINER NAME  IMAGE TAG                      STATUS
+                    TEST            mydocker:latest                Up 8 seconds
+
+#### Data Model:
+
+        The openconfig-tpcm yang model is included as an extension to the openconfig-system yang model.
+
+             +--rw oc-sys-ext:tpcm
+               +--ro oc-sys-ext:state
+                 +--ro oc-sys-ext:tpcm-image-list*   string
+
+#### Rest API Support:
+
+        GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:tpcm/state/tpcm-image-list"
+
+# TPCM with Mgmt VRF 
 - Creating a management VRF will enslave eth0 under a layer 3 construct (VRF). This will ensure traffic exchanges between the third-party docker to any internal server is not advertised on the data ports.
 - If Mgmt-VRF is configured, Users should note that:
 	1. All Dockers in SONiC run on host IP stack (Default VRF)
