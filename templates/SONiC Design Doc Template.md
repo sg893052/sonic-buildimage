@@ -17,7 +17,6 @@
         - [1.3.2 Container](#132-Container)
         - [1.3.3 SAI Overview](#133-SAI-Overview)
 - [2 Functionality](#2-Functionality)
-    - [2.1 Functional Description](#21-Functional-Description)
 - [3 Design](#3-Design)
     - [3.1 Overview](#31-Overview)
         - [3.1.1 Service and Docker Management](#311-Service-and-Docker-Management)
