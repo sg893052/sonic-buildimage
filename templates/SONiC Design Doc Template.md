@@ -28,8 +28,8 @@
         - [3.2.5 COUNTER DB](#325-COUNTER-DB)
         - [3.2.6 ERROR DB](#326-ERROR-DB)
     - [3.3 Switch State Service Design](#33-Switch-State-Service-Design)
-        - [3.3.1 Orchestration Agent](#331-Orchestration Agent)
-        - [3.3.2 Other Processes](#331-Other-Processes)
+        - [3.3.1 Orchestration Agent](#331-Orchestration-Agent)
+        - [3.3.2 Other Processes](#332-Other-Processes)
     - [3.4 SyncD](#34-SyncD)
     - [3.5 SAI](#35-SAI)
     - [3.6 User Interface](#36-User-Interface)
@@ -75,9 +75,10 @@ This document provides comprehensive functional and design information about the
 ## 1.1 Target Deployment Use Cases
 
 *This section should discuss any user-centric deployment details, including (but not limited to): -*
-    *- Target use-cases*
-    *- Generalized target topologies (pictures please)*
-    *- Configuration and Administration*
+    - *Target use-cases*
+    - *Generalized target topologies (pictures please)*
+    - *Configuration and Administration*
+
 *Note that some features are general in nature, and so the above specifics do not apply. The goal here is to set a context for the detailed requirements.*
 
 *Note: A library of baseline pictures will be provided to make life easier here - the idea is that the author can choose from one or move of these, make the edits, and bring them into here.*
