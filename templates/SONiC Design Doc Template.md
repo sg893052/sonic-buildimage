@@ -92,10 +92,10 @@ This document provides comprehensive functional and design information about the
 3. *Interfaces - Which interfaces does the feature run on? Cover physical ports (incl. dynamic port breakout), port channels, routing interfaces (port, VLAN, loopback), tunnel interfaces (VXLAN), Management port etc*
 4. *Configurability - What configuration options will the feature have? Describe at a general level.*
 5. *User Interfaces - Which UIs will be available for managing the feature (Klish, REST, gNMI, Click, vtysh, Linux shell etc). On these: -*
-   - *SONiC Management Framework UIs (YANG, REST/gNMI, Klish) is basically mandatory for all new features (full coverage)*
-     - *Please also state where the underlying Northbound YANG model will come from (standards, standard augmentations/deviations, proprietary)*
-   - *Click - generally only added when extending an existing Click feature*
-   - *vtysh - only when adding or extending an FRR feature*
+    - *SONiC Management Framework UIs (YANG, REST/gNMI, Klish) is basically mandatory for all new features (full coverage)*
+        - *Please also state where the underlying Northbound YANG model will come from (standards, standard augmentations/deviations, proprietary)*
+    - *Click - generally only added when extending an existing Click feature*
+    - *vtysh - only when adding or extending an FRR feature*
 6. *Serviceability - Which serviceability features are provided to allow the feature to be debugged in development, QA, and the field (e.g. debug commands, logs, counters, state dumps etc)?*
 7. *Scaling - Key scaling factors (e.g. instances, interfaces, neighbors, table entries etc)*
 8. *Warm Boot/ISSU - How should the feature behave through a Warm Boot or Upgrade?* 
