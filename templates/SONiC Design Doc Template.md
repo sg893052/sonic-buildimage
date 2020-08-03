@@ -112,76 +112,77 @@ This document provides comprehensive functional and design information about the
 
 *Below is an example for the BFD feature - these are hypothetical, and only relate loosely to the existing SONiC BFD feature!*
 
-1 Overview
-1.0 - BFD (Bidirectional Forwarding Detection) is an OAM protocol used to detect the health (or otherwise) of a forwarding path. It is used as a detection mechanism by other protocols, typically because it can detect failures faster than the protocol-native detection mechanisms.
-1.1 - BFD is widely used in Routing environments, and is broadly supported in OEM products.
-1.2 - It is standardized through RFC 5880 and a set of related RFCs (RFC 5881 to RFC 5885)
+1 Overview  
+1.0 - BFD (Bidirectional Forwarding Detection) is an OAM protocol used to detect the health (or otherwise) of a forwarding path. It is used as a detection mechanism by other protocols, typically because it can detect failures faster than the protocol-native detection mechanisms.  
+1.1 - BFD is widely used in Routing environments, and is broadly supported in OEM products.  
+1.2 - It is standardized through RFC 5880 and a set of related RFCs (RFC 5881 to RFC 5885.  
+
 
 2 Functionality
 
 *In this example, sub-categories (with additional numbering) are used to get natural grouping and ordering, and to allow requirement insertion without re-numbering.*
 
-2.0 Overview
-2.0.1 - Compliant with RFC 5880 (BFD) and RFC 5881 (BFD for IPv4 and IPv6 (Single Hop)) unless otherwise stated
-2.1 Protocol Functions
-2.1.1 - Support Asynchronous mode
-2.1.2 - Support Demand mode
-2.1.3 - Support Echo function
-2.2 Security Functions
-2.2.1 - Support MD5 Authentication (incl. meticulous)
-2.2.2 - Support SHA1 Authentication (incl. meticulous)
-2.3 Encapsulation Functions
-2.3.1 - IPv4 encapsulation
-2.3.1 - IPv6 encapsulation
-2.4 Timer interval range
-2.4.1 - Support >= 100ms Tx interval
-2.5 Client Protocols
-2.5.1 - Operate with BGP. BGP uses BFD to inform on the state of the forwarding path to a neighbor
-2.5.2 - When BGP Graceful Restart is enabled, helper mode is triggered when a BFD session with a neighbor goes down.
+2.0 Overview  
+2.0.1 - Compliant with RFC 5880 (BFD) and RFC 5881 (BFD for IPv4 and IPv6 (Single Hop)) unless otherwise stated  
+2.1 Protocol Functions  
+2.1.1 - Support Asynchronous mode  
+2.1.2 - Support Demand mode  
+2.1.3 - Support Echo function  
+2.2 Security Functions  
+2.2.1 - Support MD5 Authentication (incl. meticulous)  
+2.2.2 - Support SHA1 Authentication (incl. meticulous)  
+2.3 Encapsulation Functions  
+2.3.1 - IPv4 encapsulation  
+2.3.1 - IPv6 encapsulation  
+2.4 Timer interval range  
+2.4.1 - Support >= 100ms Tx interval  
+2.5 Client Protocols  
+2.5.1 - Operate with BGP. BGP uses BFD to inform on the state of the forwarding path to a neighbor  
+2.5.2 - When BGP Graceful Restart is enabled, helper mode is triggered when a BFD session with a neighbor goes down  
 
-3 Interfaces 
-3.0 - Supported on loopback interfaces
-3.1 - Supported on Port-based routing interfaces
-3.2 - Supported on VLAN-based routing interfaces
-3.3 - In the case of a VLAN-based interface, physical path selection is consistent with VLAN forwarding - no special measures are taken to steer to a given physical path
-3.4 - In the case of a LAG on the physical path, BFD runs at the LAG-level and not at the member port level
-3.5 - BFD can be used on routing interfaces in any VRF except for the Management VRF
+3 Interfaces  
+3.0 - Supported on loopback interfaces  
+3.1 - Supported on Port-based routing interfaces  
+3.2 - Supported on VLAN-based routing interfaces  
+3.3 - In the case of a VLAN-based interface, physical path selection is consistent with VLAN forwarding - no special measures are taken to steer to a given physical path  
+3.4 - In the case of a LAG on the physical path, BFD runs at the LAG-level and not at the member port level  
+3.5 - BFD can be used on routing interfaces in any VRF except for the Management VRF  
 
-4 Configuration
-4.0 - BFD is enabled on a per-interface basis
-4.1 - BFD session parameters are managed per session
-4.2 - Session Tx intervals are configurable
-4.3 - Configure operational mode (Async, Demand, Echo)
-4.4 - A session may be administratively set to down
-4.5 - Detect Multiplier is configurable
-4.6 - Associate a BFD session to a BGP neighbor relationship
+4 Configuration  
+4.0 - BFD is enabled on a per-interface basis  
+4.1 - BFD session parameters are managed per session  
+4.2 - Session Tx intervals are configurable  
+4.3 - Configure operational mode (Async, Demand, Echo)  
+4.4 - A session may be administratively set to down  
+4.5 - Detect Multiplier is configurable  
+4.6 - Associate a BFD session to a BGP neighbor relationship  
 
-5 User Interfaces
-5.0 The feature is managed through the SONiC Management Framework, including full support for Klish, REST and gNMI
-5.1 Base data model is OpenConfig BFD with extensions - https://github.com/openconfig/public/blob/master/release/models/bfd/openconfig-bfd.yang
+5 User Interfaces  
+5.0 The feature is managed through the SONiC Management Framework, including full support for Klish, REST and gNMI  
+5.1 Base data model is OpenConfig BFD with extensions - https://github.com/openconfig/public/blob/master/release/models/bfd/openconfig-bfd.yang  
 
-6 Serviceability
-6.0 - UI show commands are provided to show session states
-6.1 - Per-session statistics are provided on packet Tx, Rx and stats change events
-6.2 - All session events are logged
+6 Serviceability  
+6.0 - UI show commands are provided to show session states  
+6.1 - Per-session statistics are provided on packet Tx, Rx and stats change events  
+6.2 - All session events are logged  
 
-7 Scaling
-7.0 Support up to 64 BFD session at an interval of 100 milliseconds (total 6400 pps) 
-7.1 Number of sessions can scale up or down according to the packet limit (e.g. 128 sessions at 200 ms)
+7 Scaling  
+7.0 Support up to 64 BFD session at an interval of 100 milliseconds (total 6400 pps)   
+7.1 Number of sessions can scale up or down according to the packet limit (e.g. 128 sessions at 200 ms)  
 
-8 Warm Boot/ISSU
-8.0 BFD allows Warm Boot to be supported in conjunction with client protocol Graceful Restart methods (e.g. BGP GR)
-8.1 During a Warm Boot, BFD packet processing stops. This would normally cause the session neighbors to detect the path as down and route around the Warm Booting switch. However, when used in conjunction with BGP GR, BFD sets a flag to state that the forwarding plane does not share fate with the control plane, enabling the neighbors to continue using the Warm Boot data path.
-8.2 After warm-boot is completed BGP will re-establish all the sessions and trigger BFD to re-establish corresponding BFD sessions.
+8 Warm Boot/ISSU  
+8.0 BFD allows Warm Boot to be supported in conjunction with client protocol Graceful Restart methods (e.g. BGP GR)  
+8.1 During a Warm Boot, BFD packet processing stops. This would normally cause the session neighbors to detect the path as down and route around the Warm Booting switch. However, when used in conjunction with BGP GR, BFD sets a flag to state that the forwarding plane does not share fate with the control plane, enabling the neighbors to continue using the Warm Boot data path.  
+8.2 After warm-boot is completed BGP will re-establish all the sessions and trigger BFD to re-establish corresponding BFD sessions.  
 
-9 Platforms
-9.0 - BFD is supported on all SONiC platforms
+9 Platforms  
+9.0 - BFD is supported on all SONiC platforms  
 
-10 Limitations
-10.0 - BFD is not supported on the out-of-band management port
-10.1 - BFD is not supported on VXLAN tunnels
-10.2 - Multi-hop BFD is not required
-10.3 - Password session Authentication is not supported
+10 Limitations  
+10.0 - BFD is not supported on the out-of-band management port  
+10.1 - BFD is not supported on VXLAN tunnels  
+10.2 - Multi-hop BFD is not required  
+10.3 - Password session Authentication is not supported  
 
 ## 1.3 Design Overview
 ### 1.3.1 Basic Approach
