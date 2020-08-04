@@ -74,23 +74,23 @@ This document provides comprehensive functional and design information about the
 
 ## 1.1 Target Deployment Use Cases
 
-*This section should discuss any user-centric deployment details, including (but not limited to): -*
-    - *Target use-cases*
-    - *Generalized target topologies (pictures please)*
-    - *Configuration and Administration*
+*This section should discuss any user-centric deployment details, including (but not limited to): -*  
+    - *Target use-cases*  
+    - *Generalized target topologies (pictures please)*  
+    - *Configuration and Administration*  
 
-*Note that some features are general in nature, and so the above specifics do not apply. The goal here is to set a context for the detailed requirements.*
+*Note that some features are general in nature, and so the above specifics may not apply. The goal here is to set a context for the detailed requirements.*
 
-*Note: A library of baseline pictures will be provided to make life easier here - the idea is that the author can choose from one or move of these, make the edits, and bring them into here.*
+*Note: A library of baseline pictures will be provided to make life easier here - the idea is that the author can choose from one or more of these, make the edits, and bring them into here.*
 
 ## 1.2 Requirements
 
 *Fill out with detailed, immutably numbered requirements from which test cases can be generated. A structured numbering scheme is used using the following sections. Some sections may be omitted according to the needs of the feature: -*
 
 1. *Overview - Overview of the feature and its purpose and usage*
-2. *Functionality - This is the main body of the detailed requirements, and contains most of the functionality statements. This section may be further sub-divided into sub-categories as make sense, each covering a different aspect of the functionality. Doing this allows requirements to be later inserted into their natural position without renumbering*
+2. *Functionality - This is the main body of the detailed requirements, and contains most of the functionality statements. This section may be further sub-divided into sub-categories as makes sense, each covering a different aspect of the functionality. Numbering like this allows requirements to be later inserted into their natural position without renumbering*
 3. *Interfaces - Which interfaces does the feature run on? Cover physical ports (incl. dynamic port breakout), port channels, routing interfaces (port, VLAN, loopback), tunnel interfaces (VXLAN), Management port etc*
-4. *Configurability - What configuration options will the feature have? Describe at a general level.*
+4. *Configurability - What configuration operations will the feature have? Describe these at a general level.*
 5. *User Interfaces - Which UIs will be available for managing the feature (Klish, REST, gNMI, Click, vtysh, Linux shell etc). On these: -*
     - *SONiC Management Framework UIs (YANG, REST/gNMI, Klish) is basically mandatory for all new features (full coverage)*
         - *Please also state where the underlying Northbound YANG model will come from (standards, standard augmentations/deviations, proprietary)*
@@ -102,13 +102,13 @@ This document provides comprehensive functional and design information about the
    - *Forwarding plane features are required to maintain consistent forwarding through and after the restart, and for the system to arrive at a fully consistent state (SW, HW) afterwards.* 
    - *For Control Plane features, what provisions (if any) are required to manage our relationships with other devices in the network to avoid forwarding plane disruption?*
 9. *Platforms - In general, all SONiC features should be available on all SONiC hardware platforms. However in some cases there may be some limitations, and these can be documented here.*
-10. *Limitations - Any limitations relative to what might be expected of the feature?*
+10. *Limitations - Any limitations relative to what might be expected of the feature? This can include future enhancements.*
 
-*Some general guidance for the requirements: -*
+*Some general guidance for the detailed requirements: -*
 - *These requirements should be written in sufficient detail to allow: -*
    - *The reviewers to confirm that the feature will meet customer and product needs*
-   - *The test case development to start writing a test plan (tracing back to these requirements)*
-   - *The developer (and their manager) to come up with an accurate sizing of the work effort*
+   - *The test case developer to start writing a test plan (tracing back to these requirements)*
+   - *The developer (and their manager) to come up with an accurate sizing of the work effort and schedule*
 
 *Below is an example for the BFD feature - these are hypothetical, and only relate loosely to the existing SONiC BFD feature!*
 
@@ -167,13 +167,13 @@ This document provides comprehensive functional and design information about the
 6.2 - All session events are logged  
 
 7 Scaling  
-7.0 Support up to 64 BFD session at an interval of 100 milliseconds (total 6400 pps)   
-7.1 Number of sessions can scale up or down according to the packet limit (e.g. 128 sessions at 200 ms)  
+7.0 Support up to 64 BFD sessions at an interval of 100 milliseconds (total 6400 pps)   
+7.1 Number of sessions can scale up or down according to the packet (pps) limit (e.g. 128 sessions at 200 ms)  
 
 8 Warm Boot/ISSU  
 8.0 BFD allows Warm Boot to be supported in conjunction with client protocol Graceful Restart methods (e.g. BGP GR)  
 8.1 During a Warm Boot, BFD packet processing stops. This would normally cause the session neighbors to detect the path as down and route around the Warm Booting switch. However, when used in conjunction with BGP GR, BFD sets a flag to state that the forwarding plane does not share fate with the control plane, enabling the neighbors to continue using the Warm Boot data path.  
-8.2 After warm-boot is completed BGP will re-establish all the sessions and trigger BFD to re-establish corresponding BFD sessions.  
+8.2 After Warm Boot is completed, BGP will re-establish all the sessions and trigger BFD to re-establish corresponding BFD sessions.  
 
 9 Platforms  
 9.0 - BFD is supported on all SONiC platforms  
@@ -225,10 +225,10 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 
 *Discuss the dockers affected by the feature. If a new service and/or a new docker is introduced, please follow the guidelines below:*
 
-- *Identify the dependencies on other services. This includes the starting order, restart dependencies on other services, etc. Please take the multiple images into consideration where this feature can be included/excluded.*
+- *Identify the dependencies on other services. This includes the starting order, restart dependencies on other services, etc. Please take the multiple images (Cloud Base, Enterprise Advanced) into consideration - where is this feature included/excluded?*
 - *Identify the processes in the docker and their starting order (if applicable); specify process restartability needs and dependencies*
 ## 3.2 DB Changes
-*Describe changes to existing DBs or any new DBs being added. Cover schema and defaults.*
+*Describe changes to existing DB tables or any new tables being added. Cover schema and defaults.*
 
 *Note that changes to existing DB contents (keys, fields) should be avoided where possible, and handled very carefully where necessary. Need to consider forward/backward migration etc.*
 
@@ -247,10 +247,10 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 *Describe adds/changes to other processes within SwSS (if applicable) - e.g. \*mgrd, \*syncd*
 
 ## 3.4 SyncD
-*Describe changes to syncd if applicable.*
+*Describe changes to syncd (if applicable).*
 
 ## 3.5 SAI
-*Describe [new/existing] SAI APIs used by this feature. State whether they are new or existing.*
+*Describe SAI APIs used by this feature. State whether they are new or existing.*
 
 ## 3.6 User Interface
 *Please follow the SONiC Management Framework Developer Guide - https://drive.google.com/drive/folders/1J5_VVuwoJBa69UZ2BoXLYW8PZCFIi76K*
@@ -294,10 +294,10 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 # 6 Serviceability and Debug
 ***This section is important and due attention should be given to it**. Topics include:*
 
-- *Commands: Debug commands are those that are not targeted for the end user, but are more for Dev, Support and QA engineers. They and not a replacement for user show commands, and don't necessarily need to comply with command style rules. Many features will not have these.*
+- *Commands: Debug commands are those that are not targeted for the end user, but are more for Dev, Support and QA engineers. They are not a replacement for user show commands, and don't necessarily need to comply with all command style rules. Many features will not have these.*
 - *Logging: Please state specific, known events that will be logged (and at what severity level)*
 - *Counters: Ensure that you add counters/statistics for all interesting events (e.g. packets rx/tx/drop/discard)*
-- *Trace: Please make sure you have incorporated the debugging framework feature. e.g., ensure your code registers with the debugging framework and add your dump routines for any debug info you want to be collected.*
+- *Trace: Please make sure you have incorporated the debugging framework feature (or similar) as appropriate. e.g. ensure your code registers with the debugging framework and add your dump routines for any debug info you want to be collected.*
 # 7 Warm Boot Support
 *Describe expected behavior and any limitations.*
 
