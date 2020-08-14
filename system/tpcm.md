@@ -43,6 +43,8 @@ Rev   |   Date   |  Author   | Change Description
 1.0   | 15/05/20 | Kalimuthu | Initial version
 2.0   | 22/07/20 | Precy Lee | KLISH CLI
 2.1   | 23/07/20 | Precy Lee | update tpcm uninstall and upgrade CLIs 
+2.2   | 06/08/20 | Precy Lee | TPCM OC yang compliance
+
 
 
 # About this Manual
@@ -407,6 +409,8 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
         - Example:
               sonic# tpcm install name mydocker file /media/usb/path/mydocker.tar.gz
+              sonic# tpcm install name mydocker url http://myserver/path/mydocker.tar.gz args " -e TESTENV=TESTVALUE"
+
 
 #### Load the TPC image from a external Docker repo
 
@@ -427,22 +431,34 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
                sonic# tpcm install name mydocker image ubuntu:latest
 
 #### Data Model:
+        module: openconfig-system-ext
 
-         module: sonic-tpcm
-         rpcs:
+            rpcs:
              +---x tpcm-install
-                +---w input
-                |  +---w options?       string
-                |  +---w docker-name?   string
-                |  +---w image-name?    string
-                +--ro output
-                   +--ro status?          int32
-                   +--ro status-detail*   string
+             |  +---w input
+             |  |  +---w docker-name?     string
+             |  |  +---w image-source?    string
+             |  |  +---w image-name?      string
+             |  |  +---w remote-server?   string
+             |  |  +---w username?        string
+             |  |  +---w password?        string
+             |  |  +---w args?            string
+             |  +--ro output
+             |     +--ro status?          int32
+             |     +--ro status-detail*   string
+
+
 
 #### Rest API Support:
 
-      POST "<REST-SERVER:PORT>/restconf/operations/sonic-tpcm:tpcm-install
-      request body: {"sonic-tpcm:input": {"image-name": "<image_name>", "docker-name": "<docker_name>", "options": "<options>"}}"
+      POST "<REST-SERVER:PORT>/restconf/operations/openconfig-system-ext:tpcm-install
+      request body:
+            {"openconfig-system-ext:input":{"docker-name":"string","image-source":"string","image-name":"string","remote-server":"string","username":"string","password":"string","args":"string"}}
+      Examples:
+         {"openconfig-system-ext:input":{"docker-name":"mydocker","image-source":"scp","image-name":"/path/mydocker.tar.gz","remote-server":"myserver","username":"myuser","password":"passwd","args":"-e TESTENV=TESTVALUE"}}
+
+         {"openconfig-system-ext:input":{"docker-name":"mydocker","image-source":"file","image-name":"/path/mydocker.tar.gz","remote-server":"string","username":"string","password":"string","args":"-e TESTENV=TESTVALUE"}}
+
 
 ## 2. Uninstalling the TPC image
 
@@ -454,20 +470,28 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
 
 #### Data Model:
 
-         module: sonic-tpcm
+         module: openconfig-system-ext
+          
          rpcs:
             +---x tpcm-uninstall
                +---w input
-               |  +---w options?       string
-               |  +---w docker-name?   string
-               +--ro output
-                  +--ro status?          int32
-                  +--ro status-detail*   string
+               |  |  +---w clean-data?    string
+               |  |  +---w docker-name?   string
+               |  +--ro output
+               |     +--ro status?          int32
+               |     +--ro status-detail*   string
+
 
 #### Rest API Support:
+      POST "<REST-SERVER:PORT>/restconf/operations/openconfig-system-ext:tpcm-uninstall
+         request body:
+           {"openconfig-system-ext:input":{"clean-data":"string","docker-name":"string"}}
 
-      POST "<REST-SERVER:PORT>/restconf/operations/sonic-tpcm:tpcm-install
-         request body: {"sonic-tpcm:input": {"docker-name": "<docker_name>", "options": "<options>"}}"
+         Examples:
+            {"openconfig-system-ext:input":{"clean-data":"yes","docker-name":"mydocker"}}
+            {"openconfig-system-ext:input":{"clean-data":"no","docker-name":"mydocker"}}
+
+
 
 ## 3. Upgrading the TPC image
 
@@ -476,25 +500,40 @@ By default, for each TPC docker, the CPU resource limit is restricted to 20%. Me
         - Example:
 
            sonic#  tpcm upgrade name mydocker image ubuntu:latest
+           sonic#  tpcm upgrade name mydocker sftp myserver username myuser password passwd filename mydocker.tar.gz skip_data_migration yes
+ args " -e TESTENV=TESTVALUE"
 
-#### Data Model:
+#### Data Model: 
 
-         module: sonic-tpcm
+        module: openconfig-system-ext
 
-         rpcs:
-            +---x tpcm-upgrade
-               +---w input
-               |  +---w options?       string
-               |  +---w docker-name?   string
-               |  +---w image-name?    string
-               +--ro output
-                  +--ro status?          int32
-                  +--ro status-detail*   string
+            rpcs:
+             +---x tpcm-install
+             |  +---w input
+             |  |  +---w docker-name?     string
+             |  |  +---w image-source?    string
+             |  |  +---w image-name?      string
+             |  |  +---w remote-server?   string
+             |  |  +---w username?        string
+             |  |  +---w password?        string
+             |  |  +---w skip-data-migration?   string
+             |  |  +---w args?            string
+             |  +--ro output
+             |     +--ro status?          int32
+             |     +--ro status-detail*   string
+
+
 
 #### Rest API Support:
 
-      POST "<REST-SERVER:PORT>/restconf/operations/sonic-tpcm:tpcm-upgrade
-          request body: {"sonic-tpcm:input": {"docker-name": "<docker_name>", "options": "<options>"}}"
+      POST "<REST-SERVER:PORT>/restconf/operations/openconfig-system-ext:tpcm-upgrade
+         request body:
+            {"openconfig-system-ext:input":{"docker-name":"string","image-source":"string","image-name":"string","remote-server":"string","username":"string","password":"string","skip-data-migration":"string","args":"string"}}
+
+         Example:
+             {"openconfig-system-ext:input":{"docker-name":"mydocker","image-source":"scp","image-name":"/path/mydocker.tar.gz","remote-server":"myserver","username":"myuser","password":"passwd","skip-data-migration"  : "yes", "args":"-e TESTENV=TESTVALUE"}}
+
+
 
 ## 4.  List the TPC images
 
