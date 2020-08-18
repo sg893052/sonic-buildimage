@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.1
+### Rev 0.2
 
 # Table of Contents
 
@@ -80,7 +80,8 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
-| 0.1 | 07/01/2020  | Bandaru Viswanath  | New draft for SONiC Drop Monitor feature            |
+| 0.1 | 10/15/2019  | Shirisha Dasari  | Initial Version            |
+| 0.2 | 07/01/2020  | Bandaru Viswanath  | Major update to accomodate enhancements to use new TAM infrastructure, DB schmas and UI              |
 
 ## About This Manual
 
@@ -228,7 +229,7 @@ The DropMonitorMgr configures the source IP address to be used in drop reports t
 
 ### 3.2.1 CONFIG DB
 
-TAM\_DROP\_MONITOR\_TABLE
+TAM\_DROPMONITOR\_TABLE
 
     ;Defines TAM Drop Monitor switch-wide configuration in CONFIG_DB
 
@@ -237,15 +238,15 @@ TAM\_DROP\_MONITOR\_TABLE
     aging-interval     = 1 * 5DIGIT     ; Aging interval in seconds
 
     Example: 
-    > keys *TAM_DROP_MONITOR_TABLE* 
-    1) "TAM_DROP_MONITOR_TABLE|global" 
+    > keys *TAM_DROPMONITOR_TABLE* 
+    1) "TAM_DROPMONITOR_TABLE|global" 
 
-    > hgetall "TAM_DROP_MONITOR_TABLE|global"
+    > hgetall "TAM_DROPMONITOR_TABLE|global"
 
     1) "aging-interval"
     2) 3600
 
-TAM\_DROP\_MONITOR\_SESSIONS\_TABLE
+TAM\_DROPMONITOR\_SESSIONS\_TABLE
 
     ;Defines TAM Drop Monitor session configuration in CONFIG_DB
 
@@ -255,11 +256,11 @@ TAM\_DROP\_MONITOR\_SESSIONS\_TABLE
     sample-rate = 1*255VCHAR    ; Sampler reference
 
     Example: 
-    > keys *TAM_DROP_MONITOR_SESSIONS* 
+    > keys *TAM_DROPMONITOR_SESSIONS* 
 
-    1) "TAM_DROP_MONITOR_SESSIONS_TABLE|dm1" 
+    1) "TAM_DROPMONITOR_SESSIONS_TABLE|dm1" 
 
-    > hgetall "TAM_DROP_MONITOR_SESSIONS_TABLE|dm1"
+    > hgetall "TAM_DROPMONITOR_SESSIONS_TABLE|dm1"
 
     1) "flowgroup"
     2) "websrvrflows"
@@ -269,21 +270,22 @@ TAM\_DROP\_MONITOR\_SESSIONS\_TABLE
     6) "aggressive"
 
 
-### 3.2.2 APP DB
+### 3.2.2 APPL DB
 
-TAM\_DROP\_MONITOR\_FEATURE\_TABLE
+TAM\_DROPMONITOR\_TABLE
 
-    ;Defines TAM DROP MONITOR feature configuration
+    ;Contains DROPMONITOR feature status
 
-    key                = feature        ; Only one instance and has a fixed key "feature".
-    deviceid           = 1 * 5DIGIT     ; Uniquely identifies a device on the network. 
+    key                   = global         ; Only one instance and 
+                                          ; has a fixed key ”global"
+    op-switch-id          = 1 * 5DIGIT    ; Currently used switch-id
 
     Example:
-    > keys *TAM_DROP_MONITOR_FEATURE*
-    1) "TAM_DROP_MONITOR_FEATURE_TABLE:feature"
+    > keys *TAM_DROPMONITOR*
+    1) "TAM_DROPMONITOR_TABLE:global"
 
-    > HGETALL "TAM_DROP_MONITOR_FEATURE_TABLE:feature"
-    1) "deviceid"
+    > HGETALL "TAM_DROPMONITOR_TABLE:global"
+    1) "op-switch-id"
     2) 54325
 
 TAM\_DROP\_MONITOR\_FLOW\_TABLE
@@ -309,7 +311,7 @@ TAM\_DROP\_MONITOR\_FLOW\_TABLE
                                                    sampled for processing.
     aging-interval = 1 * 5DIGIT                  ; Optional. Aging interval for 
                                                    drop-                                                  
-                                                   monitoring in milliseconds. Determines  
+                                                   monitoring in seconds. Determines  
                                                    the interval for which the system 
                                                    waits to declare that a flow is 
                                                    no longer being dropped.
@@ -359,13 +361,15 @@ N/A
 
 ### 3.3.1 Orchestration Agent
 
-A new orchestration agent class, DropMonitorOrch is added to convert the incoming drop monitor configuration from APPL_DB to ASIC_DB configuration. DropMonitorOrch subscribes to the TAM_DROP_MONITOR_FLOW_TABLE and TAM_DROP_MONITOR_TABLE and converts the incoming flow configuration into drop-monitor SAI configuration.
+A new orchestration agent class, DropMonitorOrch is added to convert the incoming drop monitor configuration from APPL_DB to ASIC_DB configuration. DropMonitorOrch subscribes to the TAM_DROPMONITOR_FLOW_TABLE and TAM_DROPMONITOR_TABLE and converts the incoming flow configuration into drop-monitor SAI configuration.
 
 DropMonitorOrch maintains data pertaining to all the currently configured flows and the associated TAM object bindings. TAM object bindings are re-used wherever possible.
 
 Interaction with aclOrch is required to retrieve the SAI object ID associated with the drop-monitor flow ACL rule.  
 
-Drop monitor uses sampling rate configuration for sampling the dropped packets of the flow. The sampling configuration in terms of rate is converted into a SAI sample packet object and provided to the TAM drop-monitor object for configuration
+Drop monitor uses sampling rate configuration for sampling the dropped packets of the flow. The sampling configuration in terms of rate is converted into a SAI sample packet object and provided to the TAM drop-monitor object for configuration.
+
+DropMonitorOrch checks for support for the Drop Monitor feature in the silicon using SAI capability API and sets the field `drop_monitor_supported` to `True` in the `SWITCH_TABLE` of APPL_DB under the key `switch`.
 
 ### 3.3.2 Other Process
 
@@ -377,7 +381,7 @@ N/A
 
 ## 3.5 SAI
 
-The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
+The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to [SAI-Proposal-TAM2.0-v2.0.doc](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
 
 ***Below diagram provides details about various TAM objects needed to support Drop Monitor, and their correlation***
 
@@ -387,7 +391,7 @@ The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-
 
 ### 3.6.1 Data Models
 
-The user facing data model is based on OpenConfig TAM yang model (TBD). The backend data model (SONiC YANG) will use the formats in CONFIG_DB & STATE_DB. See above sections.
+The user facing data model is based on OpenConfig compatible TAM yang model. The backend data model (SONiC YANG) will use the formats in CONFIG_DB & APPL_DB. See above sections.
 
 ### 3.6.2 Configuration Commands
 
@@ -504,7 +508,10 @@ This section provides a sample Drop Monitor workflow using CLI, for monitoring t
 
 > Need to monitor all packet drops on this switch, for all the flows destined for the webserver running at 20.20.1.1. A Drop Monitor collector for analysing the metadata is running at 20.20.20.4:9091 (UDP). Not every packet drop needs monitored, but one in 100 is acceptable. If a flow didn't see any drop for 5sec, it can be assumed that the active drop window may have ended. The flows are ingressing onto switch1 on port 'Ethernet44'
 
+Note that there would be other system wide configuration that is not covered in the sample workflow below, but would be required for the packet forwarding/routing.
+
 ```
+
 ; setup switch-wide configuration
 
 sonic (config-tam)# switch-id 1234
@@ -549,35 +556,47 @@ N/A
 
 ##### Setting up the aging-interval
 
-* Method : PUT
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/aging-interval
+* Method : PATCH
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/global
 * Data format
 ```json
 {
-  "openconfig-tam:aging-interval": 0
+  "openconfig-tam:global": {
+    "config": {
+      "aging-interval": 0
+    }
+  }
 }
+
 ```
 
 ##### Obtaining the current aging-interval
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/state/state/aging-interval
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/global
 * Response format
 ```json
 {
-  "openconfig-tam:aging-interval": 0
+  "openconfig-tam:global": {
+    "config": {
+      "aging-interval": 0
+    },
+    "state": {
+      "aging-interval": 0
+    }
+  }
 }
 ```
 
 ##### Resetting the aging-interval to defaults
 
 * Method : DELETE
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/aging-interval
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/global/config/aging-interval
 
 ##### Obtaining the all of the sessions
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/state/state/dropmonitor-sessions
+* URI : /restconf/data/openconfig-tam:tam/dropmonitor/dropmonitor-sessions
 * Response format
 ```json
 {
@@ -589,13 +608,13 @@ N/A
           "name": "string",
           "flowgroup": "string",
           "collector": "string",
-          "samplerate": "string"
+          "sample-rate": "string"
         },
         "state": {
           "name": "string",
           "flowgroup": "string",
           "collector": "string",
-          "samplerate": "string"
+          "sample-rate": "string"
         }
       }
     ]
@@ -607,31 +626,49 @@ N/A
 ##### Obtaining a specific session
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/state/state/dropmonitor-sessions/dropmonitor-session={name}/state
+* URI :  /restconf/data/openconfig-tam:tam/dropmonitor/dropmonitor-sessions/dropmonitor-session={name}
 * Response format
 ```json
 {
-  "openconfig-tam:state": {
-    "name": "string",
-    "flowgroup": "string",
-    "collector": "string",
-    "samplerate": "string"
-  }
+  "openconfig-tam:dropmonitor-session": [
+    {
+      "name": "string",
+      "config": {
+        "name": "string",
+        "flowgroup": "string",
+        "collector": "string",
+        "sample-rate": "string"
+      },
+      "state": {
+        "name": "string",
+        "flowgroup": "string",
+        "collector": "string",
+        "sample-rate": "string"
+      }
+    }
+  ]
 }
 ```
 
 ##### Creating a session
 
-* Method : PUT
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/dropmonitor-sessions/dropmonitor-session={name}/config
+* Method : PATCH
+* URI :  /restconf/data/openconfig-tam:tam/dropmonitor/dropmonitor-sessions
 * Data format
 ```json
 {
-  "openconfig-tam:config": {
-    "name": "string",
-    "flowgroup": "string",
-    "collector": "string",
-    "samplerate": "string"
+  "openconfig-tam:dropmonitor-sessions": {
+    "dropmonitor-session": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "flowgroup": "string",
+          "collector": "string",
+          "sample-rate": "string"
+        }
+      }
+    ]
   }
 }
 ```
@@ -639,10 +676,8 @@ N/A
 ##### Deleting a session
 
 * Method : DELETE
-* URI : /restconf/data/openconfig-tam:tam/dropmonitor/config/config/dropmonitor-sessions/dropmonitor-session={name}
+* URI :  /restconf/data/openconfig-tam:tam/dropmonitor/dropmonitor-sessions/dropmonitor-session={name}
 
-#### BroadView REST API for IFA feature
-    - TBD : Provide reference and listlimitations 
  
  # 4 Flow Diagrams
 

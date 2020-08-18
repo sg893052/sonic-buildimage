@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.1
+### Rev 0.3
 
 # Table of Contents
 
@@ -78,7 +78,9 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
-| 0.1 | 07/01/2020  | Bandaru Viswanath  | New draft for SONiC IFA feature            |
+| 0.1 | 06/14/2019  | Naveen Kumar Aketi  | Initial version            |
+| 0.2 | 10/16/2019  | Naveen Kumar Aketi  | Version 0.2 as per new design            |
+| 0.3 | 08/18/2020  | Bandaru Viswanath  | Major update to accomodate enhancements to use new TAM infrastructure, DB schmas, UI and IFA 2.0 support           |
 
 ## About This Manual
 
@@ -104,7 +106,7 @@ This document describes the high level design of Inband Flow Analyzer feature in
 
 # 1 Feature Overview
 
-Inband Flow Analyzer (IFA) records flow specific information from switches across a network for specific flows. It is described at the IETF draft [https://datatracker.ietf.org/doc/draft-kumar-ippm-ifa](https://datatracker.ietf.org/doc/draft-kumar-ippm-ifa). The protocol defines an IFA header to mark the flow and direct the collection of analyzed metadata per marked packet per hop across the network. Some of the text in the document is taken from the above IETF draft, for contextual purposes.
+Inband Flow Analyzer (IFA) records flow specific information from switches across a network for specific flows. It is described at the [IETF draft](https://datatracker.ietf.org/doc/draft-kumar-ippm-ifa). The protocol defines an IFA header to mark the flow and direct the collection of analyzed metadata per marked packet per hop across the network. Some of the text in the document is taken from the above IETF draft, for contextual purposes.
 
 IFA performs flow analysis, and possible actions on the flow data, inband.  Once a flow is enabled for analysis, an Ingress node makes a copy of the flow or samples the live traffic flow, or tags a live traffic flow for analysis and data collection. Copying of a flow is done by sampling or cloning the flow.  These new packets are representative packets of the original flow and possess the exact same characteristics as the original flow.  This means that IFA packets traverse the same path in the network and same queues in the networking element as the original packet would.  
 
@@ -173,7 +175,7 @@ A container called 'tam' exists as a container for all TAM applications, includi
 
 ### 1.2.3 SAI Overview
 
-The SAI TAM spec specifies the TAM APIs to be used to configure the TAM functionality. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
+The SAI TAM spec specifies the TAM APIs to be used to configure the TAM functionality. Please refer to [SAI-Proposal-TAM2.0-v2.0.docx](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
 
 # 2 Functionality
 
@@ -226,7 +228,7 @@ The above diagram illustrates the architecture of the IFA feature within SONiC.
 
 Below is the call flow sequence specified in above architecture diagram
 
-1 IFA and ACL configuration from CLI is saved to CONFIG DB.
+1 IFA and ACL configuration from UI is saved to CONFIG DB.
 
 2 IFA Manager reads IFA configuration from CONFIG DB, processes and validates the same.
 
@@ -260,7 +262,7 @@ TAM\_IFA\_SESSIONS\_TABLE
     flowgroup = 1*255VCHAR      ; Flow group reference
     collector = 1*255VCHAR      ; Collector Reference
     sample-rate = 1*255VCHAR    ; Sampler reference
-    node-type = ”INGRESS"/”EGRESS”/”INTERMEDIATE”
+    node-type = "INGRESS"/"EGRESS"/"INTERMEDIATE"
                                 ; IFA Node type, INTERMEDIATE is the default
 
     Example: 
@@ -277,7 +279,28 @@ TAM\_IFA\_SESSIONS\_TABLE
     7) "node-type"
     8) "ingress"
 
-### 3.2.2 APP DB
+### 3.2.2 APPL DB
+
+TAM\_IFA\_TABLE
+
+This table holds the current operational attributes for the IFA feature.
+
+    ;Operational IFA Global Status in APPL_DB
+
+    key                   = global         ; Only one instance and 
+                                          ; has a fixed key ”global"
+    op-switch-id          = 1 * 5DIGIT    ; Currently used switch-id
+    op-enterprise-id      = 1 * 5DIGIT    ; Currently used enterprise-id
+
+    Example:
+    > keys *TAM_IFA_TABLE*
+    1) "TAM_IFA_TABLE|global"
+
+    > HGETALL "TAM_IFA_TABLE|global"
+    1)”op-switch-id”
+    2)54325
+    3)”op-enterprise-id"
+    4)22334
 
 TAM\_IFA\_FLOW\_TABLE
 
@@ -371,6 +394,8 @@ A new orchestration agent class, IFAOrch is added to convert the incoming IFA co
 
 IFAOrch maintains data pertaining to all the currently configured IFA entities and the associated TAM object bindings. TAM object bindings are re-used wherever possible.
 
+IFAOrch checks for support for the IFA feature in the silicon using SAI capability API and sets the field `tam_int_ifa_supported` to `True` in the `SWITCH_TABLE` of APPL_DB under the key `switch`.
+
 ### 3.4.2 Other Process
 
 N/A
@@ -381,7 +406,7 @@ N/A
 
 ## 3.6 SAI
 
-The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx in [https://github.com/opencomputeproject/SAI/tree/master/doc/TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
+The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-Proposal-TAM2.0-v2.0.docx at [TAM](https://github.com/opencomputeproject/SAI/tree/master/doc/TAM) for more details.
 
 ***Below diagram provides details about various TAM objects needed to support IFA and their correlation***
 
@@ -391,7 +416,7 @@ The SAI TAM API spec defines all TAM APIs supported in SAI. Please refer to SAI-
 
 ### 3.7.1 Data Models
 
-The user facing data model is based on OpenConfig TAM yang model (TBD). The backend data model (SONiC YANG) will use the formats in CONFIG_DB & STATE_DB. See above sections.
+The user facing data model is based on OpenConfig compatible TAM yang model. The backend data model (SONiC YANG) will use the formats in CONFIG_DB & STATE_DB. See above sections.
 
 ### 3.7.2 Configuration Commands
 
@@ -497,6 +522,8 @@ This section provides a sample IFA workflow using CLI, for monitoring the traffi
 
 > Need to monitor all flows to the webserver running at 20.20.1.1. A IFA collector for analysing the metadata is running at 20.20.20.4:9090 (UDP). Not every packet needs monitored, but one in 1000 is acceptable. The flows are ingressing onto switch1 on port 'Ethernet44'
 
+Note that there would be other system wide configuration that is not covered in the sample workflow below, but would be required for the packet forwarding/routing. 
+
 #### Ingress Node configuration
 
 ```
@@ -580,7 +607,7 @@ The following REST API are supported -
 ##### Obtaining the all of the sessions
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/ifa/state/ifa-sessions
+* URI : /restconf/data/openconfig-tam:tam/ifa-sessions
 * Response format
 ```json
 {
@@ -592,15 +619,15 @@ The following REST API are supported -
           "name": "string",
           "flowgroup": "string",
           "collector": "string",
-          "samplerate": "string",
-          "node-type": "INGRESS_NODE"
+          "sample-rate": "string",
+          "node-type": "INGRESS"
         },
         "state": {
           "name": "string",
           "flowgroup": "string",
           "collector": "string",
-          "samplerate": "string",
-          "node-type": "INGRESS_NODE"
+          "sample-rate": "string",
+          "node-type": "INGRESS"
         }
       }
     ]
@@ -611,33 +638,52 @@ The following REST API are supported -
 ##### Obtaining a specific session
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/ifa/state/ifa-sessions/ifa-session={name}/state
+* URI : /restconf/data/openconfig-tam:tam/ifa-sessions/ifa-session={name}
 * Response format
 ```json
 {
- "openconfig-tam:state": {
-    "name": "string",
-    "flowgroup": "string",
-    "collector": "string",
-    "samplerate": "string",
-    "node-type": "INGRESS_NODE"
-  }
+  "openconfig-tam:ifa-session": [
+    {
+      "name": "string",
+      "config": {
+        "name": "string",
+        "flowgroup": "string",
+        "collector": "string",
+        "sample-rate": "string",
+        "node-type": "INGRESS"
+      },
+      "state": {
+        "name": "string",
+        "flowgroup": "string",
+        "collector": "string",
+        "sample-rate": "string",
+        "node-type": "INGRESS"
+      }
+    }
+  ]
 }
 ```
 
 ##### Creating a session
 
-* Method : PUT
-* URI : /restconf/data/openconfig-tam:tam/ifa/config/ifa-sessions/ifa-session={name}/config
+* Method : PATCH
+* URI : /restconf/data/openconfig-tam:tam/ifa-sessions
 * Data format
 ```json
 {
-  "openconfig-tam:config": {
-    "name": "string",
-    "flowgroup": "string",
-    "collector": "string",
-    "samplerate": "string",
-    "node-type": "INGRESS_NODE"
+  "openconfig-tam:ifa-sessions": {
+    "ifa-session": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "flowgroup": "string",
+          "collector": "string",
+          "sample-rate": "string",
+          "node-type": "INGRESS"
+        }
+      }
+    ]
   }
 }
 ```
@@ -645,11 +691,7 @@ The following REST API are supported -
 ##### Deleting a session
 
 * Method : DELETE
-* URI : /restconf/data/openconfig-tam:tam/ifa/config/ifa-sessions/ifa-session={name}
-
-#### BroadView REST API for IFA feature
-    - TBD : Provide reference and listlimitations 
-
+* URI :  /restconf/data/openconfig-tam:tam/ifa-sessions/ifa-session={name}
  
  # 4 Flow Diagrams
 
@@ -659,9 +701,13 @@ All the configuration is stored in the CONFIG_DB via the management framework.
 
 # 5 Error Handling
 
+## IFA/TAM Application
+
+- Any configuration errors/dependency failures are logged into Syslog and are ignored.
+
 ## CLI
 
-* CLI configuration sanity will be enforced by the CLI handler & CVL and any invalid configuration is rejected. An error is displayed to the user notifying the reason for rejection of the configuration.
+- CLI configuration sanity will be enforced by the CLI handler & CVL and any invalid configuration is rejected. An error is displayed to the user notifying the reason for rejection of the configuration.
 
 ## IFAOrch
 
@@ -691,13 +737,17 @@ TBD
 
 ## Key notes
 
-* IFA 2.0 protocol is not documented in this specification. It may be requested via docSafe for the document number 56870-AN500-D1.
+* With the addition of IFA 2.0 support, IFA 1.1 support is removed in Broadcom-SONIC.
+
+* IFA 2.0 protocol is not documented in this document. It may be requested via docSafe for the document number 56870-AN500-D1.
 
 * IFA 2.0 feature is very similar to the IFA 1.1 feature supported in 2.x and 3.0 release of Broadcom SONiC. They are almost identical from a provisioning perspetive. However, the protocol is very different.
 
 * IFA 2.0 feature is an *advanced* feature that is not available in all the Broadcom SONiC packages.
 
-## Specific Limitations
+* IFA 2.0 feature requires premium Cancun (for TD3-X7) and the firmware, both of which are packaged into the SONIC packages.
+
+## Specific limitations
 
 IFA 2.0 feature in SONiC inherits the limitations of the underlying firmware and the hardware. These are listed below.
 
@@ -706,4 +756,7 @@ IFA 2.0 feature in SONiC inherits the limitations of the underlying firmware and
 3. IFA enabled flows must be L3 & IPv4 flows
 4. IFA is supported on TD3-X7 platforms only.
 5. The flow path may not exceed 32 nodes
-6. The sampled packet has about 128bytes of the original packet, and will be sent to the collector along with the aggregated metadata from individual nodes in the flow path.
+
+## Additional constraints
+
+1. The sampled packet contains about 128bytes of the original packet, and will be sent to the collector along with the aggregated metadata from individual nodes in the flow path.

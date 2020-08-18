@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.1
+### Rev 0.2
 
 # Table of Contents
 
@@ -75,7 +75,8 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
-| 0.1 | 07/01/2020  | Bandaru Viswanath  | New draft for SONiC Tailstamping feature            |
+| 0.1 | 10/29/2019  | Naveen Kumar Aketi  | Initial version            |
+| 0.2 | 08/18/2020  | Bandaru Viswanath  | Major update to accomodate enhancements to use new TAM infrastructure, DB schmas  and UI          |
 
 ## About This Manual
 
@@ -256,21 +257,38 @@ TAM\_TAILSTAMPING\_SESSIONS\_TABLE
     1) "flowgroup"
     2) "slaflows"
 
-### 3.2.2 APP DB
+### 3.2.2 APPL DB
 
-TAM\_TAILSTAMPING\_TABLE
+TAM\_TS\_TABLE
 
-    ;Defines TS flow configuration
+;Operational TS Global Status in APPL_DB
+
+    key                   = global         ; Only one instance and 
+                                          ; has a fixed key ”global"
+    op-switch-id          = 1 * 5DIGIT    ; Currently used switch-id
+
+    Example:
+    > keys *TAM_TS_TABLE*
+    1) "TAM_TS_TABLE|global"
+
+    > HGETALL "TAM_TS_TABLE|global"
+    1)”op-switch-id”
+    2)54325
+
+
+TAM\_TS\_FLOW\_TABLE
+
+    ;Contains TS flow configuration
 
     key            = name       ; name is flow name and should be unique.
     acl-table-name = table-name ; Parameter to map to acl table to the flow.
     acl-rule-name  = rule-name  ; Parameter to map to acl rule to the flow.
 
     Example:
-    > KEYS *TAM__TAILSTAMPING_TABLE*
-    1) "TAM__TAILSTAMPING_TABLE:F1"
+    > KEYS *TAM\_TS\_FLOW_TABLE*
+    1) "TAM_TS_FLOW_TABLE:F1"
 
-    > HGETALL TAM__TAILSTAMPING_TABLE:F1
+    > HGETALL TAM_TS_FLOW_TABLE:F1
     1)  "acl-table-name"
     2)  "T1"
     3)  "acl-rule-name"
@@ -290,7 +308,7 @@ N/A
 
 ## 3.3 Daemons
 
-TS manager daemon runs as part of TAM docker. TS manager processes TS configuration from CONFIG DB, validates for consistency and completeness of TS configuration and updates valid S configuration to APPL DB.
+TS manager daemon runs as part of TAM docker. TS manager processes TS configuration from CONFIG DB, validates for consistency and completeness of TS configuration and updates valid configuration to APPL DB.
 
 ## 3.4 Switch State Service Design
 
@@ -299,6 +317,8 @@ TS manager daemon runs as part of TAM docker. TS manager processes TS configurat
 A new orchestration agent class, TSOrch is added to convert the incoming config to ASIC configuration. TSOrch subscribes to the TS tables of APPL DB and converts the configuration to the SAI TAM API call sequence described in section 3.6.
 
 TSOrch maintains data pertaining to all the currently configured TS entities and the associated TAM object bindings. TAM object bindings are re-used wherever possible.
+
+TSOrch checks for support for the Tailstamping feature in the silicon using SAI capability API and sets the field `tam_int_ifa_ts_supported` to `True` in the `SWITCH_TABLE` of APPL_DB under the key `switch`.
 
 ### 3.4.2 Other Process
 
@@ -323,7 +343,7 @@ Tailstamping feature is accomplished by attaching a SAI TAM INT object to SAI AC
 
 ### 3.7.1 Data Models
 
-The user facing data model is based on OpenConfig TAM yang model (TBD). The backend data model (SONiC YANG) will use the formats in CONFIG_DB & STATE_DB. See above sections.
+The user facing data model is based on OpenConfig TAM yang model (TBD). The backend data model (SONiC YANG) will use the formats in CONFIG_DB & APPL_DB. See above sections.
 
 ### 3.7.2 Configuration Commands
 
@@ -419,6 +439,8 @@ This section provides a sample Tailstamping workflow using CLI, for monitoring t
 
 > Gather flow metadata for network probe packets sent from 10.10.1.1:8080 to 20.4.5.2:7070 (tcp)  
 
+Note that there would be other system wide configuration that is not covered in the sample workflow below, but would be required for the packet forwarding/routing. 
+
 ```
 ; setup switch-wide configuration
 
@@ -451,7 +473,7 @@ The following REST API are supported -
 ##### Obtaining the all of the sessions
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/tailstamping/state/tailstamping-sessions
+* URI :  /restconf/data/openconfig-tam:tam/tailstamping-sessions
 * Response format
 ```json
 {
@@ -476,27 +498,43 @@ The following REST API are supported -
 ##### Obtaining a specific session
 
 * Method : GET
-* URI : /restconf/data/openconfig-tam:tam/tailstamping/state/tailstamping-sessions/tailstamping-session={name}/state
+* URI : /restconf/data/openconfig-tam:tam/tailstamping-sessions/tailstamping-session={name}
 * Response format
 ```json
 {
-  "openconfig-tam:state": {
-    "name": "string",
-    "flowgroup": "string"
-  }
+  "openconfig-tam:tailstamping-session": [
+    {
+      "name": "string",
+      "config": {
+        "name": "string",
+        "flowgroup": "string"
+      },
+      "state": {
+        "name": "string",
+        "flowgroup": "string"
+      }
+    }
+  ]
 }
 ```
 
 ##### Creating a session
 
-* Method : PUT
-* URI : /restconf/data/openconfig-tam:tam/tailstamping/config/tailstamping-sessions/tailstamping-session={name}/config
+* Method : PATCH
+* URI : /restconf/data/openconfig-tam:tam/tailstamping-sessions
 * Data format
 ```json
 {
-  "openconfig-tam:config": {
-    "name": "string",
-    "flowgroup": "string"
+  "openconfig-tam:tailstamping-sessions": {
+    "tailstamping-session": [
+      {
+        "name": "string",
+        "config": {
+          "name": "string",
+          "flowgroup": "string"
+        }
+      }
+    ]
   }
 }
 
@@ -505,10 +543,7 @@ The following REST API are supported -
 ##### Deleting a session
 
 * Method : DELETE
-* URI : /restconf/data/openconfig-tam:tam/tailstamping/config/tailstamping-sessions/tailstamping-session={name}
-
-#### BroadView REST API for Tailstamping feature
-    - TBD : Provide reference and listlimitations 
+* URI :  /restconf/data/openconfig-tam:tam/tailstamping-sessions/tailstamping-session={name}
  
  # 4 Flow Diagrams
 
@@ -517,6 +552,10 @@ The following REST API are supported -
 All the configuration is stored in the CONFIG_DB via the management framework.
 
 # 5 Error Handling
+
+## Tailstamping/TAM Application
+
+- Any configuration errors/dependency failures are logged into Syslog and are ignored.
 
 ## CLI
 
@@ -544,7 +583,60 @@ N/A
 
 ## CLI
 
+* Verify CLI command to configure TAM INT IFA IFA-TS feature enable.
+* Verify CLI command to configure TAM INT IFA IFA-TS feature disable.
+* Verify ACL configuration with packet action type as int_insert for IPv4 type ACL.
+* Verify ACL configuration with packet action type as int_insert for IPv6 type ACL.
+* Verify CLI command to configure IFA-TS flow with ACL table name and ACL rule name.
+* Verify CLI clear command to clear TAM INT IFA IFA-TS flow.
+* Verify CLI show command to show TAM INT IFA IFA-TS status.
+* Verify CLI show command to show TAM INT IFA IFA-TS statistics for all flows.
+* Verify CLI show command to show TAM INT IFA IFA-TS statistics for a specific flows.
+* Verify CLI show command to show TAM INT IFA IFA-TS flow.
+
+## REST
+
 TBD
+
+## Tailstamping Application
+
+* Verify if IFA-TS configuration from CONFIG DB is received by IFA-TS manager.
+* Verify if TSOrch is able to create IFA-TS table entries in APPL DB successfully.
+* Verify if TSOrch is able to delete IFA-TS table entries in APPL DB successfully.
+
+## TSOrch
+
+* Verify if IFA-TS configuration from APPL DB is received by TSOrch.
+* Verify if TSOrch is able to create TAM objects for IFA-TS configuration via SAI TAM APIs successfully.
+* Verify if TSOrch is able to delete existing IFA-TS configuration via SAI TAM APIs successfully.
+* Verify if TSOrch is able to use existing TAM objects for IFA-TS config.
+* Verify if TSOrch rolls back config in a clean way if there is a SAI API failure.
+* Verify if TSOrch is able to set TAM INT attribute for IFA-TS ACL.
+* Verify if TSOrch is able to reset TAM INT attribute for IFA-TS ACL.
+
+## Functional Tests
+
+* Verify if IPv4 traffic matching IFA-TS flow is time stamped.
+* Verify if IPv6 traffic matching IFA-TS flow is time stamped.
+* Verify if IFA-TS headers are inserted in correct order.
+* Verify that there is no crash encountered at any of the layers with an invalid IFA-TS configuration.
+* Verify that an invalid configuration is rejected gracefully at appropriate layers.
+* Verify that IFA-TS configuration is restored after warmboot.
+* Verify that switched traffic matching IFA-TS flow is time stamped.
+* Verify that routing traffic matching IFA-TS flow is time stamped.
+
+## Negative Tests
+
+* Verify if CLI throws error when a user tries to create a duplicate IFA-TS flow.
+* Verify if CLI returns error if CLI is unable to write the IFA-TS config to config DB.
+* Verify if CLI returns entry not found when a clear command is issued on non-existent flow.
+* Verify if IFA-TS manager logs an error on receipt of an incorrect IFA-TS table entries from CONFIG DB.
+* Verify if TSOrch logs an error on receipt of an incorrect IFA-TS table entries from APPL DB.
+* Verify if TSOrch logs an error if it is unable to read IFA-TS table data from APPL DB.
+* Verify if TSOrch logs all errors encountered during processing of the incoming IFA-TS config request.
+* Verify if TSOrch logs any errors arising out of SAI API failure.
+* Verify if TSOrch logs an error when no further IFA-TS configuration can be configured to hardware.
+* Verify if feature not supported is returned when IFA-TS feature is not supported by underlying silicon.
 
 # Broadcom Internal Information : To be removed before publishing externally.
 
@@ -568,4 +660,4 @@ Tailstamping feature inherits the  usage constraints from the underlying hardwar
 4. Header length fields or checksum fields(e.g UDP checksum) will not be updated upon insertion of the timestamp.
 5. IEEE 802.3 frames(e.g SNAP LLC) are not supported.
 6. No switches across the timestamping path should do pad stripping or otherwise adjust frame content based on the IP header payload/total length fields for Ethernet II frames.
-7. Platforms using the HiGig2 extension header cannot coexist with packet timestamping.
+7. Packets/Features using the HiGig2 extension header cannot coexist with packet timestamping.
