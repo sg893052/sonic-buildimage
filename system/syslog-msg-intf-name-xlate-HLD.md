@@ -5,7 +5,7 @@ Syslog Message Interface Name Translation
 
 # High Level Design Document
 
-#### Rev 0.6
+#### Rev 0.7
 
 # Table of Contents
 
@@ -33,6 +33,7 @@ Syslog Message Interface Name Translation
 | 0.4 | 07/23/2020 | Greg Paussa | Do not rely on PORT table for base port alias names. |
 | 0.5 | 08/03/2020 | Greg Paussa | Handle non-base breakout port alias name variations. Special-case master port references in log messages. |
 | 0.6 | 08/12/2020 | Greg Paussa | Use STATE_DB update to indicate DPB change instead of CONFIG_DB. |
+| 0.7 | 08/24/2020 | Greg Paussa | Added disclaimer for DPB log message translations in Section 1.1. |
 
 # About this Manual
 
@@ -113,6 +114,8 @@ A high-level view of the operation:
 7. The rsyslog service cannot infer or otherwise determine the semantic intent of an interface name that appears in a syslog message.
     - The rsyslog daemon performs a literal substitution of the standard alias for its native name while configured for standard interface naming mode, regardless of where it appears in the syslog message.
     - Rsyslog is not aware of the context of the message sender, for example, whether it originated a message before or after processing DPB-related port events that modify a standard alias name.
+    - **Interface name translation in some DPB event logs may not be accurate in the context of the event, or may not get translated.**
+        - Such log messages should be fixed at the source (back-end).
 
 8. It is SUGGESTED to also translate non-SONiC native names in syslog messages, such as Linux device names "eth1" into standard naming convention as well.
     - Only if it makes sense to do so and does not put undue burden on rsyslog.
