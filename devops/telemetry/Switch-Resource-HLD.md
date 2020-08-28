@@ -1,7 +1,7 @@
 # Switch Resource Management in SONiC
 
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 
 
@@ -83,6 +83,7 @@
 | Rev  |    Date    |              Author              | Change Description |
 | ---- | :--------: | :------------------------------: | ------------------ |
 | 0.1  | 07/17/2020 | Prabhu Sreenivasan               | Initial version    |
+| 0.2  | 08/28/2020 | Prabhu Sreenivasan               | Marked requirement 1.1.1.0 not commited for 3.1 by updating section 1.1.5 as the same not confirmed by marketing |
 
 
 # About this Manual
@@ -101,10 +102,11 @@ This document captures Switch Resource Management feature requirement and provid
 ### Table 1: Abbreviations
 | **Term** | **Meaning** |
 | -------- | ---------------------------------------- |
+| ALPM | Algorithmic Lower Prefix Match |
+| EM | Exact Match |
 | L2 | Layer 2   |
 | L3  | Layer 3  |
-|ALPM| Algorithmic Lower Prefix Match|
-| EM | Exact Match |
+| UFT | Unified Forwarding Tables |
 
 
 
@@ -146,6 +148,7 @@ NA
 
 | Requirement Number | Description | Supported in 3.1 |
 | ------------------ | ------------------------------------------------------------ | ---------------- |
+| 1.1.1.0 | SONiC to set aside a minimum number of exact-match entries to allow drop-monitor feature to work without needing a switch reboot. This impacts L2, L3 and/or ALPM scaling limits as they share a common switch resource. | No |
 | 1.1.2.2 | It should allow the user to set the value as 'max' to allocate maximum resource to drop-monitor.  | No |
 
 
@@ -328,7 +331,7 @@ Hence to support 57,000 drop-monitor flow, we need to have the below configurati
 | L3 |  81K |  81K |  -   |   -  |Max number L3 routes|
 
 ### 2.2.4 Interaction with switch config-profiles
-SONiC has two switch profiles defined namely L2 and L3 to customize it based on L2 or L3 deployments. L3 profile is the default profile on a fresh installation.On platforms where drop-monitor is supported two UTF banks are carved outfor exact match tables from the L2 and L3 profiles. Hence the default L2 and L3 profiles values got updated for the drop-monitor feature. The resource allocation can be changed using the CLI command provided with switch resource management feature. The switch resource allocation falls back to the profile default values whenever a new profile is chosen by the user.
+SONiC has two switch profiles defined namely L2 and L3 to customize it based on L2 or L3 deployments. L3 profile is the default profile on a fresh installation. On platforms where drop-monitor is supported two UTF banks are carved out for exact match tables from the L2 and L3 profiles. Hence the default L2 and L3 profiles values got updated for the drop-monitor feature. The resource allocation can be changed using the CLI command provided with switch resource management feature. The switch resource allocation falls back to the profile default values whenever a new profile is chosen by the user.
 
 
 # 3 Design
@@ -636,6 +639,7 @@ Remove Drop Monitor Flows Configurations
 ```
 
 CLICK
+
 Configure Drop Monitor Flow configuration
 ```
     config switch-resource drop-monitor flows min
