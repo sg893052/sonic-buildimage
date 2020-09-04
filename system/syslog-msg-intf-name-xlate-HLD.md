@@ -5,7 +5,7 @@ Syslog Message Interface Name Translation
 
 # High Level Design Document
 
-#### Rev 0.7
+#### Rev 0.8
 
 # Table of Contents
 
@@ -34,6 +34,7 @@ Syslog Message Interface Name Translation
 | 0.5 | 08/03/2020 | Greg Paussa | Handle non-base breakout port alias name variations. Special-case master port references in log messages. |
 | 0.6 | 08/12/2020 | Greg Paussa | Use STATE_DB update to indicate DPB change instead of CONFIG_DB. |
 | 0.7 | 08/24/2020 | Greg Paussa | Added disclaimer for DPB log message translations in Section 1.1. |
+| 0.8 | 09/03/2020 | Greg Paussa | Added a note regarding an inband log message as a faster alternative to SIGHUP for reloading tables. Added Section 3.6.5 describing system resource usage. |
 
 # About this Manual
 
@@ -78,6 +79,9 @@ A high-level view of the operation:
 
 5. The localhost rsyslogd is not state-aware of any context from which a syslog message is originated.
 
+### A Note About SIGHUP Usage
+
+This document mentions using the SIGHUP signal to notify the rsyslogd process to reload its translation tables from files. While this works and is a valid way to reload the tables, experimentation has shown that there is a quicker way to do this by sending a special log message to rsyslog that is detected by an rsyslog configuration rule and calls reload_lookup_table() as its action. This special inband log message can be discarded. From a design perspective these two techniques are equivalent, however the implementation can use either one.
 
 ## 1.1 Requirements
 
@@ -251,7 +255,7 @@ $IncludeConfig /etc/rsyslog-intf-name.conf
         - See /etc/rsyslog.d/01-sonic-broadcom.conf for details.
 
 11. The **/etc/rsyslog-intf-name.conf** file shall instantiate the rsyslog lookup table and the new alias translation action.
-    - Enable the lookup table to be reloaded from its .json file on a SIGHUP signal.
+    - Enable the lookup table to be reloaded from its .json file automatically on a SIGHUP signal (if desired).
     - Handle translating up to two native interface names in the same syslog message.
     - Allow an exemption for all messages at or below (lower severity than) a specified severity level.
     - Allow an exemption list of an entire category of message originators, as defined by the syslog message tag field (specifically, $programname).
@@ -275,10 +279,10 @@ $IncludeConfig /etc/rsyslog-intf-name.conf
     - A change in the interface-naming mode *does* require restarting the rsyslog service.
         - This is a rather significant, yet infrequent, config event in the system.
         - It allows the /etc/rsyslog.conf file to be rewritten to add/remove the lookup table operation.
-    - A change in DPB configuration only requires issuing a SIGHUP signal to the rsyslog process to force a reload of the lookup table (when in use).
+    - A change in DPB configuration only requires that the rsyslog process reload its lookup table (SIGHUP signal or special inband log message) when in use.
         - The rsyslog process remains operational and is not restarted.
         - Much faster: approximately 0.5 msec for SIGHUP vs. 30 msec for rsyslog service restart.
-        - The implementation can trigger the SIGHUP as soon as DPB signals via the STATE_DB that the current breakout transaction has reached a certain point, which is after the old ports have been deleted, but before the new ports are created.
+        - The implementation can initiate the lookup table rebuild and reload as soon as DPB signals via the STATE_DB that the current breakout transaction has reached a certain point, which is after the old ports have been deleted, but before the new ports are created.
         -  The subsequent translation table update can proceed, since it does not rely on any CONFIG_DB PORT table updates, which may occur asynchronously.
 
 
@@ -317,15 +321,15 @@ The rsyslog service running in the switch host environment is where the interfac
         - Then continues running as a daemon, subscribing to relevant CONFIG_DB and STATE_DB changes.
     - Once the new rsyslog JSON files are created, the rsyslog-config.py script either:
         - (Re)generates the rsyslog.conf file and restarts the rsyslog service, or
-        - Reloads just the mapping table from the rsyslog_port_aliases.json file via a SIGHUP signal.
-        - For example:
+        - Reloads just the mapping table from the rsyslog_port_aliases.json file via a SIGHUP signal or special inband log message.
+        - For example, using SIGHUP:
 ```
 --- restart rsyslog service ---
   sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog.conf.j2 >/etc/rsyslog.conf
   systemctl restart rsyslog
 
 --- reload mapping tables ---
-  kill -HUP `ps -eo pid,stat,cmd | grep "rsyslog" | grep "Ssl" | aux '{ print $1 }'`
+  systemctl kill -s HUP rsyslog
 ```
 
 2. The /etc/rsyslog.conf file is dynamically generated from a jinja2 template using elements from the CONFIG_DB DEVICE_METADATA|localhost configuration.
@@ -354,7 +358,7 @@ The expectation is that a given device's platform.json file contains a single ma
 
 DPB related configuration changes do *not* require a system reboot or config reload, therefore the rsyslog translation table must be updated whenever a change in port breakout mode is detected in the STATE_DB PORT_BREAKOUT table (only interested in base port DPB status changes). The current breakout mode can be read from the CONFIG_DB BREAKOUT_CFG table 'brkout_mode' attribute listed for the base port.
 
-For the base ports, their standard alias name is determined by reading the first 'alias_at_lanes' entry in their platform.json definition, subject to the following modification: if the port supports breakout, but is currently not broken out, then the trailing "/<breakout_port> part of the alias name is removed. Once the new translation table JSON file is built, a SIGHUP signal is used to tell rsyslog to reload its lookup table from the JSON file without restarting the process.
+For the base ports, their standard alias name is determined by reading the first 'alias_at_lanes' entry in their platform.json definition, subject to the following modification: if the port supports breakout, but is currently not broken out, then the trailing "/<breakout_port> part of the alias name is removed. Once the new translation table JSON file is built, rsyslog is told to reload its lookup table from the JSON file (SIGHUP or special inband log message) without restarting the process.
 
 
 ### 1.2.1.2 Systemd Journal Remains Untranslated
@@ -395,7 +399,6 @@ Platforms that support standard interface naming mode.
 
 
 ## 2.2 Functional Description
-
 
 
 
@@ -526,11 +529,27 @@ The rsyslog service in the localhost Debian environment is where interface name 
 - config reload
 - interface naming mode config change
 
-The rsyslog service will simply reload its translation table upon receipt of a SIGHUP signal for the following:
+The rsyslog service will simply reload its translation table (SIGHUP signal or special inband log message) for the following:
 
 - DPB config change
 
 The rsyslog-config service creates the rsyslog configuration prior to (re)starting the rsyslog service. It is restarted during cold boot, warm boot, and config reload along with the rest of the system. The rsyslog-config service runs as a daemon process in the localhost environment.
+
+### 3.6.5 Resource Usage
+
+Interface name translation by the rsyslog service requires some  translation tables and additional rules in the rsyslog.conf configuration. Although exact numbers can vary, the following incremental resource usage was observed with ```top``` on a vSONIC VS device while running in standard naming mode as compared to native mode:
+
+- CPU Utilization: +1% (approximately)
+- Memory: +80 MB
+
+The CPU utilization was measured while sending 10000 logger messages from the swss Docker (approximately 435 messages per second on this setup).
+
+In addition, the rsyslog-config service is now a daemon process that consumes the following system resources:
+
+- CPU Utilization: 0%
+- Memory: 56 MB
+
+The rsyslog-config daemon metrics are not affected by the current interface-naming mode.
 
 # 4 Flow Diagrams
 
