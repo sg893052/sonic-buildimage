@@ -89,6 +89,7 @@ Table of Contents
          * [Drop Monitor](#drop-monitor)  
          * [Tail Timestamping](#tail-timestamping)  
          * [Snapshot](#snapshot)  
+         * [REST Server](#rest-server)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)  
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)  
@@ -2894,6 +2895,34 @@ The snapshot interval configuration is defined in **SNAPSHOT_TABLE**.
         }
     }
 }
+```
+
+### REST Server
+
+REST Serever configurations are defined in **REST_SERVER** table. Only one row can be created with name *default*. This is an optional configuration. REST Server will run with default configurations when the *REST_SERVER|default* entry does not exist.
+
+```
+key         = REST_SERVER|default   ; REST server configurations.
+;field      = value
+port        = 1*5DIGIT              ; server port - defaults to 443
+client_auth = "none" / "password" / "jwt" / "cert" 
+                                    ; Client authentication mode.
+                                    ; none: No authentication, all clients
+                                    ;       are allowed. Should be used only
+                                    ;       for debugging.
+                                    ; password: HTTP Basic authentication.
+                                    ; jwt : HTTP Bearer Token authentication with
+                                    ;       JSON Web Token format.
+                                    ; cert: Certificate based authentication.
+                                    ;       Requires ca_crt configuration.
+                                    ; Any combination of "password", "jwt" and "cert" modes can be
+                                    ; enabled by specifying a comma separated values.
+                                    ; Eg: "password,jwt" enables both password and jwt modes.
+log_level   = DIGIT                 ; Verbosity for glog.V logs
+server_crt  = 1*VCHAR               ; Path to TLS certificate file
+server_key  = 1*VCHAR               ; Path to TLS private key file
+ca_crt      = 1*VCHAR               ; Path to the CA certificate to be used for
+                                    ; client certificate validation.
 ```
 
 For Developers
