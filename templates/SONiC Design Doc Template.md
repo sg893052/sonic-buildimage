@@ -1,5 +1,5 @@
 *Notes: -*
-- *This HLD is subject to a 2-stage development and Gerrit review process*
+- *This HLD is subject to a 2-stage development and review process*
 - *The first stage only includes section 1. It should appear for review within 1 to 2 weeks of feature start, as part of the "Define" process stage. The purpose is to get the functional overview and detailed requirements quickly in place and agreed. This is to ensure that the feature target content is consistent with the product or customer need, and is then used as the basis for the sizing that goes into the committed schedule.*
 - *The second-stage completes the rest of the document. It is done as part of the "Implementation" process stage, and can take several weeks to appear. If requirements change (or add/del) relative to the first stage review then they should be discussed as part of the second stage review.*
 - *Note that, for a small feature, where the second stage is completed within 1 to 2 weeks, then it is OK to go straight to the second-stage review.*
@@ -20,6 +20,7 @@
 - [3 Design](#3-Design)
     - [3.1 Overview](#31-Overview)
         - [3.1.1 Service and Docker Management](#311-Service-and-Docker-Management)
+        - [3.1.2 Packet Handling](#312-Packet-Handling)
     - [3.2 DB Changes](#32-DB-Changes)
         - [3.2.1 CONFIG DB](#321-CONFIG-DB)
         - [3.2.2 APP DB](#322-APP-DB)
@@ -40,15 +41,22 @@
         - [3.6.2.3 Exec Commands](#3623-Exec-Commands)
         - [3.6.3 REST API Support](#363-REST-API-Support)
         - [3.6.4 gNMI Support](#364-gNMI-Support)
+     - [3.7 Warm Boot Support](#37-Warm-Boot-Support)
+     - [3.8 Upgrade and Downgrade Considerations](#38-Upgrade-and-Downgrade-Considerations)
+     - [3.9 Resource Needs](#39-Resource-Needs)
 - [4 Flow Diagrams](#4-Flow-Diagrams)
 - [5 Error Handling](#5-Error-Handling)
 - [6 Serviceability and Debug](#6-Serviceability-and-Debug)
-- [7 Warm Boot Support](#7-Warm-Boot-Support)
-- [8 Scalability](#8-Scalability)
-- [9 Platform](#9-Platform)
+- [7 Scalability](#7-Scalability)
+- [8 Platform](#8-Platform)
+- [9 Limitations](#9-Limitations)
 - [10 Unit Test](#10-Unit-Test)
 - [11 Internal Design Information](#11-Internal-Design-Information)
     - [11.1 IS-CLI Compliance](#111-IS-CLI-Compliance)
+    - [11.2 Broadcom Packaging](#112-Broadcom-SONiC-Packaging)
+    - [11.3 Broadcom Silicon Considerations](#113-Broadcom-Silicon-Considerations)    
+    - [11.4 Design Alternatives](#114-Design-Alternatives)
+    - [11.5 Broadcom Release Matrix](#115-Broadcom-Release-Matrix)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-Abbreviations)
@@ -89,7 +97,7 @@ This document provides comprehensive functional and design information about the
 
 1. *Overview - Overview of the feature and its purpose and usage*
 2. *Functionality - This is the main body of the detailed requirements, and contains most of the functionality statements. This section may be further sub-divided into sub-categories as makes sense, each covering a different aspect of the functionality. Numbering like this allows requirements to be later inserted into their natural position without renumbering*
-3. *Interfaces - Which interfaces does the feature run on? Cover physical ports (incl. dynamic port breakout), port channels, routing interfaces (port, VLAN, loopback), tunnel interfaces (VXLAN), Management port etc*
+3. *Interfaces - Which interfaces does the feature run on? Cover physical ports (incl. dynamic port breakout), port channels/MCLAGs, routing interfaces (port, VLAN, loopback), tunnel interfaces (VXLAN), routing sub-interfaces (future), Management port etc.*
 4. *Configurability - What configuration operations will the feature have? Describe these at a general level.*
 5. *User Interfaces - Which UIs will be available for managing the feature (Klish, REST, gNMI, Click, vtysh, Linux shell etc). On these: -*
     - *SONiC Management Framework UIs (YANG, REST/gNMI, Klish) is basically mandatory for all new features (full coverage)*
@@ -102,7 +110,8 @@ This document provides comprehensive functional and design information about the
    - *Forwarding plane features are required to maintain consistent forwarding through and after the restart, and for the system to arrive at a fully consistent state (SW, HW) afterwards.* 
    - *For Control Plane features, what provisions (if any) are required to manage our relationships with other devices in the network to avoid forwarding plane disruption?*
 9. *Platforms - In general, all SONiC features should be available on all SONiC hardware platforms. However in some cases there may be some limitations, and these can be documented here.*
-10. *Limitations - Any limitations relative to what might be expected of the feature? This can include future enhancements.*
+10. *Feature Interactions/Exclusions - requirements associated with other/adjacent features (e.g. "should not be used with feature x", "depends upon feature y") 
+11. *Limitations - Any limitations relative to what might be expected of the feature? This can include future enhancements.*
 
 *Some general guidance for the detailed requirements: -*
 - *These requirements should be written in sufficient detail to allow: -*
@@ -115,7 +124,7 @@ This document provides comprehensive functional and design information about the
 1 Overview  
 1.0 - BFD (Bidirectional Forwarding Detection) is an OAM protocol used to detect the health (or otherwise) of a forwarding path. It is used as a detection mechanism by other protocols, typically because it can detect failures faster than the protocol-native detection mechanisms.  
 1.1 - BFD is widely used in Routing environments, and is broadly supported in OEM products.  
-1.2 - It is standardized through RFC 5880 and a set of related RFCs (RFC 5881 to RFC 5885.  
+1.2 - It is standardized through RFC 5880 and a set of related RFCs (RFC 5881 to RFC 5885).  
 
 
 2 Functionality
@@ -178,19 +187,22 @@ This document provides comprehensive functional and design information about the
 9 Platforms  
 9.0 - BFD is supported on all SONiC platforms  
 
-10 Limitations  
-10.0 - BFD is not supported on the out-of-band management port  
-10.1 - BFD is not supported on VXLAN tunnels  
-10.2 - Multi-hop BFD is not required  
-10.3 - Password session Authentication is not supported  
+10 Feature Interactions/Exclusions  
+10.0 - A BFD session is typically associated with a BGP session.
+
+11 Limitations  
+11.0 - BFD is not supported on the out-of-band management port  
+11.1 - BFD is not supported on VXLAN tunnels  
+11.2 - Multi-hop BFD is not required  
+11.3 - Password session Authentication is not supported  
 
 ## 1.3 Design Overview
 ### 1.3.1 Basic Approach
-*Where is the code coming from? Existing Open-source project? Internal Broadcom codebase? New development? Somewhere else? Mixture?*
+*Where is the code coming from? Existing Open-source project (e.g. SONiC Community)? Internal Broadcom codebase? New development? Somewhere else? Mixture? What dependencies does this create (e.g. Debian/kernel functions and version)?*
 
 *Example for BFD: -*
 
-This is a software implementation. In this, the BFD state machines and session termination uses existing FRR functionality. This is adapted to the SONiC system.
+This is a software implementation. In this, the BFD state machines and session termination uses existing FRR functionality (v7.2). This is adapted to the SONiC system. These adaptions will result in FRR and SONiC upstream items. 
 
 Integration with the Management Framework uses existing methods for FRR adaption, including CONFIG_DB definitions as required.
 
@@ -219,7 +231,7 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 
 # 3 Design
 ## 3.1 Overview
-*Big picture view of the actors involved - containers, processes, DBs etc. What's being added, what's being changed, how will they interact etc. A diagram is strongly encouraged.*
+*Big picture view of the actors involved - containers, processes, DBs, kernel etc. What's being added, what's being changed, how will they interact etc. A diagram is strongly encouraged.*
 
 ### 3.1.1 Service and Docker Management
 
@@ -227,6 +239,10 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 
 - *Identify the dependencies on other services. This includes the starting order, restart dependencies on other services, etc. Please take the multiple images (Cloud Base, Enterprise Advanced) into consideration - where is this feature included/excluded?*
 - *Identify the processes in the docker and their starting order (if applicable); specify process restartability needs and dependencies*
+
+### 3.1.2 Packet Handling
+*e.g. Discuss CoPP queue/priority and limits here*
+
 ## 3.2 DB Changes
 *Describe changes to existing DB tables or any new tables being added. Cover schema and defaults.*
 
@@ -272,6 +288,9 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
    - *show output formats*
    - *show running-config outputs*
 
+*Where there are command interactions (e.g. dependencies, ordering) that are not obvious, then please state some "best practices" for the configuration sequence(s).*
+*Also cover backward compatibility (if applicable). For instance, if existing commands are being changed, how is compatibility maintained? Any command deprecation?*
+
 *This content should go into the following sub-sections.*
 
 #### 3.6.2.1 Configuration Commands
@@ -283,7 +302,16 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 *URL-based view*
 
 ### 3.6.4 gNMI Support
-*Generally this is covered by the YANG specification - there may not be much else to add - this is a placeholder section in case there is something else.*
+*Generally this is covered by the YANG specification. This section should also cover objects where on-change and interval based telemetry subscriptions can be configured.*
+
+## 3.7 Warm Boot Support
+*Describe expected behavior and any limitations. Also describe any design artefacts in support of this.*
+
+## 3.8 Upgrade and Downgrade Considerations
+*If any - cover things like DB changes/versioning, config migration etc*
+
+## 3.9 Resource Needs
+*Describe any significant resource needs for the feature (esp. at scale) - memory, CPU, disk, I/O etc. Only cover for significant needs (designed decision) - not required for small/medium resource usages.*
 
 # 4 Flow Diagrams
 *Provide flow diagrams for inter-container and intra-container interactions.*
@@ -298,22 +326,23 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 - *Logging: Please state specific, known events that will be logged (and at what severity level)*
 - *Counters: Ensure that you add counters/statistics for all interesting events (e.g. packets rx/tx/drop/discard)*
 - *Trace: Please make sure you have incorporated the debugging framework feature (or similar) as appropriate. e.g. ensure your code registers with the debugging framework and add your dump routines for any debug info you want to be collected.*
-# 7 Warm Boot Support
-*Describe expected behavior and any limitations.*
 
-# 8 Scalability
+# 7 Scalability
 *Describe key scaling factors and considerations.*
 
-# 9 Platform
+# 8 Platform
 *Describe any platform support considerations (e.g. supported/not, scaling, deviations etc)*
 
+# 9 Limitations
+*More detail on the limitations stated in requirements*
+
 # 10 Unit Test
-*List unit test cases added for this feature (one-liners). These should ultimately align to SPytests that can be shared with the Community.*
+*List unit test cases added for this feature (one-liners). These should ultimately align to tests (e.g SPytest, Pytest) that can be shared with the Community.*
 
 # 11 Internal Design Information
 *Internal BRCM information to be removed before sharing with the community.*
 
-#### 11.1 IS-CLI Compliance
+## 11.1 IS-CLI Compliance
 *This is here because we don't want to be too externally obvious about a "follow the leader" strategy. However it must be filled in for all Klish commands.*
 
 *The following table maps SONIC CLI commands to corresponding IS-CLI commands. The compliance column identifies how the command comply to the IS-CLI syntax:*
@@ -334,3 +363,17 @@ Note that the SAI specification includes a BFD capability for SAI acceleration o
 
 ***Deviations from IS-CLI:** If there is a deviation from IS-CLI, Please state the reason(s).*
 
+## 11.2 Broadcom SONiC Packaging
+*Cloud base vs. Enterprise etc*
+
+## 11.3 Broadcom Silicon Considerations
+*Where this feature is/not supported, silicon-specific scaling factors and behaviors*
+
+## 11.4 Design Alternatives
+*Please state any significant design alternatives considered (if any), and why these were not chosen*
+
+## 11.5 Broadcom Release Matrix
+*Please state the Broadcom release in which a feature is planned to be introduced. Where a feature spans multiple releases, then please state which enhancements/sub-features go into which Broadcom release*
+|Release|Change(s)|
+|:-------:|:-------------------------------------------------------------------------|
+| | |
