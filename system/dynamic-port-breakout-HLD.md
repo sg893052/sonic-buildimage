@@ -33,6 +33,7 @@ Dynamic Port Breakout (DPB)
 | 0.5 | 05/29/2020 | Vishnu Shetty | Update CLI and review comments |
 | 0.6 | 06/21/2020 | Vishnu Shetty | Update CLI output and review comments |
 | 0.7 | 09/11/2020 | Vishnu Shetty | Update CLI, migration and design details |
+| 0.8 | 09/14/2020 | Vishnu Shetty | Add flow diagram |
 # About this Manual
 
 This document provides dynamic port break-out feature content.
@@ -54,16 +55,16 @@ This document captures dynamic port break-out requirements and provides design o
 
 # 1 Feature Overview
 
-Ports can be broken out to different sub-ports and speeds with subset of lanes in most HW today. In SONiC Buzznik or older release, the port breakouts are only made possible by hard-coding the HW profiles that are loaded at boot-up time. If a different port breakout config is desired, a new image must be loaded, or at least services need to be restarted which impacts the services. The HW profiles either achieved through spinning off different HWSKU or using static breakout script (SPB) which are used in development environment.  The DPB will address these limitations, ie
+Ports can be broken out to different sub-ports and speeds with subset of lanes in most hardware today. In SONiC Buzznik or older release, the port breakouts are only made possible by hard-coding the hardware profiles that are loaded at boot-up time. If a different port breakout config is desired, a new image must be loaded or at least services need to be restarted which impacts the services. The required hardware profiles either achieved through spinning off different HWSKU or using static breakout (SPB).  The DPB feature in Buzznik+ will address these limitations, ie
 
 - No system or config reload required.
-- No traffic impact on other ports which are not subject to DPB configuration, and
+- No traffic impact on other ports which are not subject to DPB, and
 - Users have option to choose a different break out modes.
 
 A high-level view of the operation:
 1. DPB request is initiated through SONiC management interface (KLISH).
-2. Management framework infrastructure derives port dependencies from the SONiC YANG model, and updates the CONFIG DB. (e.g. VLAN member removal followed by port delete, and new port addition).
-3. Based on the CONFIG_DB update (ports delete followed by create), Port Manager (back end application) cleanups all dependent resources  (configuration and dynamic dependencies) and deletes ports. Port manager will then create new ports in default state. Here, "back end" primarily refers to SWSS and syncd components (orchagent, SAI etc). System has other dependency as well like protocols, platform services like xcvrd, led, pmon, etc. For some of the components these DB triggers are "no op".
+2. Management framework infrastructure derives port dependencies from the SONiC YANG model, and updates the CONFIG DB. (e.g. VLAN member removal followed by port delete).
+3. Based on the CONFIG_DB update (ports delete followed by create), Port Manager (back end application) cleanups dependent resources (configuration and dynamic dependencies) and deletes ports. Port manager will then create new ports in default state. Here, "back end" primarily refers to SWSS and syncd components (orchagent, SAI etc). System has other dependency as well like protocols, platform services like xcvrd, led, pmon, etc. For some of the components these config cleanup triggers are "no op".
 
 This document is complementary to the community DPB HLD. Link to the community HLD is [here](https://github.com/Azure/SONiC/blob/439944c120d59edf7f62ed28a902b1a3c07a35f8/doc/dynamic-port-breakout/sonic-dynamic-port-breakout-HLD.md). Please refer design section for major difference with community.
 
@@ -71,7 +72,7 @@ This document is complementary to the community DPB HLD. Link to the community H
 
 High Level Requirements:
 
-- SONiC to support port breakout dynamically. User should be able to change port breakout mode at run time without affecting the traffic on other ports. The remaining ports of the switch should not be touched, traffic should not be interrupted on those ports.
+- SONiC to support port breakout dynamically. User should be able to change port breakout mode at run time without affecting the traffic on other ports. The traffic on the remaining ports of the switch should not be disrupted.
   
 - Configuration dependencies and respective resources of the ports that are subject to DPB should be removed automatically. User should be able to query configuration dependencies on these ports. 
 
@@ -82,45 +83,44 @@ The management framework generates port configuration dependencies and automatic
 
 ### 1.1.1 Functional (detail) Requirements
 
-- Only allow valid break-out modes. This is achieved by a platform-specific file "platform.json".  It contains port capabilities, lane mapping,  alias naming, speed and mode constraints.  Refer design section for example.
+- Only allow valid break-out modes. This is achieved by a platform-specific file "platform.json". It contains port capabilities, lane mapping, alias naming, speed and mode constraints. Refer design section for an example.
 - Users should be able to migrate from a previous Broadcom sonic release. 
-- If a given platform does not have the platform.json file, the DPB CLI shall error out. The system falls back to non-DPB release behavior (port_config.ini being used).
+- If a given platform does not have the platform.json file, the DPB request shall error out. The system falls back to non-DPB release behavior (in such cases "port_config.ini" used).
 - All of the configuration dependency checking logic for a about to delete port is implemented in the SONiC Management Framework. In order for this logic to work correctly, the following must be true.
 	- All of the affected configuration is in the CONFIG_DB.
 	- A matching SONiC YANG file is available.
 	- Where necessary (complex cases only), custom override functions are provided to delete the configuration.
-- For respective User Interface (UI)
-	- The above is always expected to be true to features supported in the Management Framework (including FRR features).
-	- For Click features, if there is SONiC YANG provided through Management Framework support for the feature, then Click configuration will also work correctly both before and after a breakout operation.
-	- For FRR, Configuration applied directly to FRR (through either vtysh or *.conf startup files in split mode) is not present in the CONFIG_DB, and so will not be cleaned up by a DPB operation. However, configuration applied to FRR through the Management framework is correctly cleaned up in FRR after a DPB operation. In reality this mean that vyhsh can be used for show but not configuration before and after a DPB operation.
+- For the respective User Interface (UI)
+	- The above is always expected to be true to the features supported in the Management Framework (including FRR features).
+	- For FRR, configuration applied directly (through either vtysh or *.conf startup files in split mode) is not present in the CONFIG_DB, and so will not be cleaned up by a DPB operation. However, configuration applied to FRR through the Management framework is correctly cleaned up in FRR after a DPB operation. In reality this mean that vyhsh can be used for show but not configuration before and after a DPB operation.
 - To support automatic configuration cleanup SONiC YANG model adoption is a must.
-- The back-end components, CONFIG_DB listeners (majority of SWSS components, protocols) act on DB updates and clean-up all configurations and run time dependencies and resources.
-- DPB interface (REST, CLI command) is supported in platform open-config YANG. On the YANG model it is update request.
-- DPB operation result in port deletion and creation events. The ports must be shutdown before deletion. New ports created as part of "create" operation will be in the default state and configuration. The user need to take care of new desired configuration and any topology changes.  
-- DBP configuration dependency checking is implemented in the SONiC Management Framework in broadcom-sonic builds. Community builds have a separate mechanism that is not used in Broadcom builds. However both methods depend upon SONiC YANG files, and this is required to be common between the two approaches. 
-- "config reload" functionality shall remain available to users. Users shall be able to apply port breakout configuration directly in config DB and issue "config reload" (no need of KLISH DPB CLI). It is not dynamic, config reload will restart the services.
+- The back-end components, CONFIG_DB listeners (majority of SWSS components, protocols) act on DB updates and clean-up all configurations. This intern cleanup run time dependencies and resources.
+- DPB interface (REST or CLI) is supported in platform open-config YANG. DPB is an update request.
+- DPB operation result in port deletion and creation events. The ports will be shutdown in the back-end before deletion. New ports created as part of "create" operation will be in the default state. The user need to take care of new desired configuration and any topology changes.  
+- DBP configuration dependency checking is implemented in the SONiC Management Framework in broadcom-sonic builds. Community builds have a separate mechanism that is not used in Broadcom builds. However both methods depend upon SONiC YANG files, and this is required to be common between the two design. 
+- "config reload" functionality shall remain available to users. Users shall be able to apply port breakout configuration in config DB. This is another method of loading DPB configuration. It is not dynamic, config reload will restart the services.
 - No custom MMU settings are applied as part of DPB.
 
-- When upgrading from a prior release into the new image supporting DPB:
-     1. All HWSKUs that are defined in prior images must be supported in the new image.
+- When upgrading from a prior release into the new release supporting DPB:
+     1. All HWSKUs that are defined in prior images must be supported in the new image (platform.json).
      2. All HWSKUs are upgraded into the same exact HWSKU after upgrade into the new image. 
-     3. After upgrade, it is advised to migrate to **base** HWSKU to avoid managing multiple HWSKU's in future. The same CONFIG_DB can be used with minor changes (change hwsku name field).
-     4. There are two class of HWSKU, one is base (or default) and other one is derived from the base. Later one is called non-default HWSKU. The non-default HWSKU require two additional files ("platform_hwsku.json" and "hwsku.json") to achieve exact set of ports as defined by virtue of HWSKU and to migrate to DPB enabled release. These two files are used in upgrade to achieve DPB during boot up.
-     5.  Downgrading from an image supporting DPB to an older non-DPB image is not supported.  If the port set matches HWSKU default port set (same as in non-DPB release) downgrade is allowed. During the downgrade check is added to flag the error. Otherwise user need to add/del  ports (undo DPB commands) or use default configuration.
+     3. After upgrade, it is advised to migrate to **base** HWSKU to avoid managing multiple HWSKUs in future. The same CONFIG_DB can be used with minor changes (change in hwsku name field).
+     4. There are two classes of HWSKU, one is base (or default) and other one is derived from the base. Later one is called non-default HWSKU. The non-default HWSKU require two additional files ("platform_hwsku.json" and "hwsku.json") to achieve exact set of ports as defined by virtue of HWSKU and to migrate to DPB enabled release. These two files are used in upgrade to achieve DPB during boot up.
+     5. In general downgrading from an image supporting DPB to an older non-DPB image is not supported. If the port set matches that of HWSKU default (same as in non-DPB release) downgrade is allowed. During the downgrade to detect mismatch in port set, check is added to flag the error. User can always downgrade by deleting DPB config or using default configuration profiles.
 
 ### 1.1.2 Scalability Requirements
 
-Port breakout must be supported on all ports as defined in platform.json file.  The multiple breakout commands can be (one command per port) requested together. This will be buffered and executed one by one in back end. Each break out command is expensive operation (with default config takes 1 to 1.5 sec). The additional configuration on the port will consume more time.
+Port breakout are supported on set of ports defined in platform.json file. The platform.json file is prepared by keeping number of platform and device restriction (number of logical port, ports per pipe etc). This may limit number of break-out capable ports.The multiple breakout commands can be (one command per port) requested together. This will be buffered and executed one by one in back end. Each break out command is expensive operation (with default config takes 1 to 1.5 sec). The additional configuration on the port will take more time to complete breakout operation.
 
 ### 1.1.3 Warm Boot Requirements
   
-DPB doesn't change the warm-boot behavior.
+No change in warm-boot behavior. DPB capable port should support warm-boot feature.
 
 ## 1.2 Design Overview
 
 ## 1.2.1 DPB Management Framework
 
-![](https://lh5.googleusercontent.com/BnWFIXVVILN-knX-UjEU_gqbeQVwhUU4Jtk46g1iBTUnhZflaoLhwO4yoO2o1ON2YKU_aKcgVDpuzw92LwgzxE5ykv1hNsmlOvulMM_g15syPQnP-e0Td9xvKgE5DfEKEqFStDSX)
+![alt text](images/management-framework.png)
 
 Overview:
 
@@ -331,7 +331,7 @@ Basic Flow
  - Management infrastructure application gets all port dependent configuration and updates the CONFIG_DB for cleanup.
  - Back end applications receives config clean up triggers.
  - SWSS (portmgd) receives DPB requests and updates APP_DB.
- - SWSS (orchagent) updates ASIC_DB for port delete/create request after port dependent resource cleanup (e.g. MAC, VLAN etc).
+ - SWSS (orchagent) updates ASIC_DB for port delete/create request after port dependent resource cleanup is over (e.g. MAC, VLAN etc).
  - Syncd (syncd) calls SAI api to carry the port operation.
 
   
@@ -351,7 +351,7 @@ sai_port_api_t create_port and  remove_port.
 ## 2.1 Target Deployment Use Cases
 
 - The DPB on Broadcom SONiC version is supported only through management framework (REST and CLI).  The CLICK "config reload" works with DPB configuration, "config load" is not supported.  
-- After DPB request,  when port delete and create in progress any configuration on these ports should be avoided. During this period REST/CLI will respond with an error. The DPB status can be queried via CLI.
+- After DPB request, when port delete and create is in progress, any configuration on these ports should be avoided. During this period REST/CLI will respond with an error. The DPB status can be queried via CLI.
 
 ## 2.2 Functional Description
   
@@ -363,9 +363,9 @@ Based on hardware platform various port speeds are supported.
 
 ## 3.1 Overview (community comparison)
 
-  In community version,  DPB is supported only through CLICK management infrastructure. The SONiC YANG configuration dependency generation and cleanup are done through Python YANG (libYANG, pyang) tools. The dependency cleanup is directly applied to CONFIG_DB in controlled way. The CLICK DPB commands blocks CLI till DPB operation is complete. This is to make sure not accept any additional configuration during DPB. This way community achieved DPB in synchronous way.
+  In community version, DPB is supported only through CLICK infrastructure. The SONiC YANG configuration dependency generation and cleanup are done through Python YANG (libYANG, pyang) tools. The dependency cleanup is directly applied to CONFIG_DB in controlled way. The CLICK DPB commands blocks CLI till DPB operation is complete. This is to make sure not accept any additional configuration during DPB. This way community achieved DPB in synchronous way.
       
-In Broadcom version (Buzznik+) DPB is supported through management infrastructure only.  Due to some device restriction (master port to be deleted last), asynchronous management infrastructure and DB update ordering challenges across the back end application,  DPB operation being staged in back end port manager.  To achieve synchronization between back and front end there are some additional CONFIG_DB and STATE_DB tables.   
+In Broadcom version (Buzznik+) DPB is supported only in management infrastructure.  Due to some device restriction (master port to be deleted last), asynchronous config DB update from management infrastructure and DB update ordering challenges across the back end application,  DPB operation being staged in back end port manager.  To achieve synchronization between back and front end there are some additional CONFIG_DB and STATE_DB tables.   
 
 ## 3.2 DB Changes 
 
@@ -618,31 +618,21 @@ To display breakout mode.
 
 **show interface breakout port <slot/port>**
 ```
-sonic# show interface breakout modes
-----------------------------------------------
-Port Interface Supported Modes  Default Mode
----------------------------------------------
-1/49 Ethernet48 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/53 Ethernet52 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/57 Ethernet56 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/61 Ethernet60 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/65 Ethernet64 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/69 Ethernet68 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/73 Ethernet72 1x100G[40G], 4x25G[10G] 1x100G[40G]
-sonic#
+sonic# show interface breakout modes 
+-------------------------------------------------------------------------
+Port  Interface   Supported Modes                           Default Mode
+-------------------------------------------------------------------------
+1/49  Ethernet48  1x100G, 1x40G, 4x25G, 4x10G               1x100G
+1/56  Ethernet76  1x100G, 1x40G, 4x25G, 4x10G               1x100G
+
 sonic(config)# interface-naming standard
-sonic# show interface breakout modes
-------------------------------------------------
-Port  Interface   Supported Modes  Default Mode                     
-------------------------------------------------
-1/49 Eth1/49 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/53 Eth1/50 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/57 Eth1/51 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/61 Eth1/52 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/65 Eth1/53 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/69 Eth1/54 1x100G[40G], 4x25G[10G] 1x100G[40G]
-1/73 Eth1/55 1x100G[40G], 4x25G[10G] 1x100G[40G]
-sonic#
+sonic# show interface breakout modes 
+-------------------------------------------------------------------------
+Port  Interface   Supported Modes                           Default Mode
+-------------------------------------------------------------------------
+1/49  Eth1/49     1x100G, 1x40G, 4x25G, 4x10G               1x100G
+1/56  Eth1/56     1x100G, 1x40G, 4x25G, 4x10G               1x100G
+
 ```
 To display port dependent configurations.
 
@@ -651,23 +641,12 @@ To display port dependent configurations.
 ```
 sonic# show interface breakout dependencies port 1/49
 ----------------------------------
-Dependent Configurations
+Dependent Configurations 
 ----------------------------------
-VLAN|Vlan5
-VLAN|Vlan4
-VLAN|Vlan6
-VLAN|Vlan3
-VLAN|Vlan2
-VLAN|Vlan7
-VLAN|Vlan8
-VLAN_MEMBER|Vlan8|Ethernet48
-VLAN_MEMBER|Vlan5|Ethernet48
-VLAN_MEMBER|Vlan2|Ethernet48
-VLAN_MEMBER|Vlan6|Ethernet48
-VLAN_MEMBER|Vlan3|Ethernet48
-VLAN_MEMBER|Vlan7|Ethernet48
-VLAN_MEMBER|Vlan4|Ethernet48
+VLAN|Vlan10         
+VLAN_MEMBER|Vlan10|Ethernet49
 sonic#
+
 ```
 
 #### 3.6.2.3 Debug Commands
@@ -706,21 +685,22 @@ DELETE /restconf/data/openconfig-platform:components/component=1/1/port/openconf
   NA
   
 # 4 Flow Diagrams
- 
+![alt text](images/dpb-flow.png)
+
  DPB Sequence:
  
- 1. DPB command from user
- 2.  Mgmt Infra issues config delete (port dependency cleanup)  
- 3. Mgmt Infra updates PORT, BREAKOUT_CFG, BREAKOUT_PORT config tables (port entry gets created here in CONFIG_DB) 
- 4. PortMgr listens to PORT/BREAKOUT config tables.
- 5. PortMgr receives DEL port, sets "in-progress" state for master port in STATE_DB 
- 6. PortMgr: After all update received from config DB (master/sub ports), starts breakout
- 7. PortMgr: DEL APP_DB port entry, this intern deletes HOST interface (syncd/SAI dependencies) 
- 8. orchagent : HOST interface delete -> NetLink event -> (swss/portsyncd)deletes PORT entry in STATE_DB (async event)
- 9. Port Mgr : waits for port delete completion in HW (ASIC_DB) - (Step 2 happening in parallel)
- 10. Port Mgr : ADD port to APP_DB
- 11. orchagent: creates HOST interface -> NetLink event -> (swss/portsyncd) create port entry in STATE_DB (async event)
- 12. Port Mgr : set DPB state to "complete" for master port in STATE_DB
+ 1. User: requests DPB command (REST or CLI).
+ 2. MgmtInfra: issues config delete (port dependent config cleanup).
+ 3. MgmtInfra: updates PORT, BREAKOUT_CFG, BREAKOUT_PORTS config tables (port entry gets created in CONFIG_DB).
+ 4. PortMgr: listens to PORT and BREAKOUT config table updates.
+ 5. PortMgr: receives delete port and sets "In-progress" state for master port in STATE_DB. 
+ 6. PortMgr: after all update received from config DB (master/sub ports), starts breakout.
+ 7. PortMgr: deletes APP_DB port entry, this intern deletes port HOST interface. At this stage syncd/SAI dependencies cleaned up, port object reference count zero. 
+ 8. orchagent: host interface delete results in kernel netlink event. swss/portsyncd deletes port entry in STATE_DB (netlink async event).
+ 9. PortMgr: waits for port delete completion in hardware (ASIC_DB). port config cleanup is happening in parallel (step 2).
+ 10. PortMgr: adds port to APP_DB.
+ 11. orchagent: creates port HOST interface results in netlink event. swss/portsyncd creates port entry in STATE_DB (netlink async event).
+ 12. PortMgr: sets DPB state to "complete" for master port in STATE_DB.
 
 
 # 5 Error Handling
@@ -748,7 +728,6 @@ There is no direct impact on warm-reboot. As port increases in the system, the d
 
  DPB allows to scale up total number of ports in the system.
 
-  
 
 # 9 Unit Test
 
@@ -766,5 +745,4 @@ tests/ut/dpb/test_ut_dpb_infra.py
 # 10 Internal Design Information
 
  None
-
 
