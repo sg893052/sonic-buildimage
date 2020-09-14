@@ -1,7 +1,7 @@
 # Feature Name
 DHCP Relay Enhancements.
 # High Level Design Document
-#### Rev 0.4
+#### Rev 0.5
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -39,6 +39,7 @@ DHCP Relay Enhancements.
       * [3.1.8 Rate limiting](#318-rate-limiting)
       * [3.1.9 IPv4 unnumbered support](#319-ipv4-unnumbered)
       * [3.1.10 Handling DHCPv4 packets with relay agent options](#3110-handling-agent-options)
+      * [3.1.11 Server Identifier override sub-option](#3111-server-override)
     * [3.2 DB Changes](#32-db-changes)
       * [3.2.1 CONFIG DB](#321-config-db)
       * [3.2.2 APP DB](#322-app-db)
@@ -79,6 +80,7 @@ DHCP Relay Enhancements.
 | 0.2 | 12/2/2019   |   Abhimanyu Devarapalli   | Addressed few review comments.    |
 | 0.3 | 2/13/2020   |   Abhimanyu Devarapalli   | Added link-selection option, source interface selection, max hops, OC-Yang, KLISH CLI. |
 | 0.4 | 4/29/2020   |   Abhimanyu Devarapalli   | Added IPv4 unnumbered support, VRF support, options handling. |
+| 0.5 | 7/23/2020   |   Santosh Doke   | Updated scaling limit and added server-override suboption. |
 
 # About this Manual
 This document provides general information about the DHCP Relay Enhancements implemented in SONiC.
@@ -137,7 +139,12 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 6. Support for KLISH CLI commands using management framework.
 
 ### 1.1.3 Scalability Requirements
-The maximum number of Relay addresses configurable per interface are 4. DHCP relay is qualified to handle up to 2000 DHCP clients.
+1. The maximum number of Relay addresses configurable per interface are 4. 
+2. DHCPv4/v6 relay is qualified to handle up to 2000 DHCP clients.
+3. DHCPv4 relay is qualified to support up to 128 L3 interfaces.
+4. DHCPv6 relay is qualified to support up to 128 L3 interfaces. 
+
+Note that the limit on L3 interfaces is not enforced via configuration, but represents the maximum scale that is qualified/supported.  
 
 ### 1.1.4 Warm Boot Requirements
 DHCP Relay configuration is stateless and hence no state is restored after warm reboot. Any UDP broadcast traffic that is relayed to IP Helper addresses is disrupted/dropped during the duration of the warm reboot or normal reboot.
@@ -654,6 +661,13 @@ To support different network configurations, like cascading relays for example, 
 * `append` - relay agent appends its own set of relay options to the packet, leaving the incoming options intact. If the length of relay agent information exceeds the max limit of 255 bytes, the packet is discarded.
 * `replace` - relay agent removes the incoming options and adds its own set of options to the packet.
 
+### 3.1.11 Server Identifier override sub-option
+
+DHCPv4 relay supports server identifier override sub-option 11 as defined in RFC5107. This sub-option enables relay to act as the DHCPv4 server such that unicast DHCPv4 packets come to the relay agent instead of directly going to server. This enables relay to add appropriate sub-options on the unicast packets too (like RENEW). The server identifier override sub-option is automatically added when link-select sub-option or VSS sub-option is enabled. 
+
+If the DHCPv4 server does not support the server identifier sub-option, then the unicast DHCPv4 packets from client are sent directly to server bypassing the relay agent.
+
+This sub-option is only applicable to DHCPv4 relay agent.
 
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
@@ -880,12 +894,12 @@ Options:
 
 ```
 
-**config interface ip dhcp-relay policy-action [discard|append|replace] <interface_name>**
+**config interface ip dhcp-relay policy-action <interface_name> [discard|append|replace]**
 
 - The above command controls handling of relay agent options on the given interface. The default is to discard incoming packet with agent options. This command is applicable for DHCPv4 packets only.
 
 ```
-Usage: config interface ip dhcp-relay policy-action [discard|append|replace]                                                     <interface_name>
+Usage: config interface ip dhcp-relay policy-action <interface_name> [discard|append|replace]                                                     <interface_name>
 
   Configure the policy for handling of DHCPv4 relay options
 
