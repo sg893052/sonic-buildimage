@@ -34,6 +34,7 @@ Dynamic Port Breakout (DPB)
 | 0.6 | 06/21/2020 | Vishnu Shetty | Update CLI output and review comments |
 | 0.7 | 09/11/2020 | Vishnu Shetty | Update CLI, migration and design details |
 | 0.8 | 09/14/2020 | Vishnu Shetty | Add flow diagram |
+| 0.9 | 09/15/2020 | Vishnu Shetty | Add REST API and examples |
 # About this Manual
 
 This document provides dynamic port break-out feature content.
@@ -45,7 +46,7 @@ This document captures dynamic port break-out requirements and provides design o
 # Definition/Abbreviation
 
 ### Table 1: Abbreviations
-  
+
 | Term | Meaning |
 | ---- | ---- |
 | CONFIG_DB | SONiC configuration database in Redis |
@@ -113,7 +114,7 @@ The management framework generates port configuration dependencies and automatic
 Port breakout are supported on set of ports defined in platform.json file. The platform.json file is prepared by keeping number of platform and device restriction (number of logical port, ports per pipe etc). This may limit number of break-out capable ports.The multiple breakout commands can be (one command per port) requested together. This will be buffered and executed one by one in back end. Each break out command is expensive operation (with default config takes 1 to 1.5 sec). The additional configuration on the port will take more time to complete breakout operation.
 
 ### 1.1.3 Warm Boot Requirements
-  
+
 No change in warm-boot behavior. DPB capable port should support warm-boot feature.
 
 ## 1.2 Design Overview
@@ -128,7 +129,7 @@ Overview:
 2. Transformer gets a dependency list from ConfigValidation module (CVL). The CVL builds dependency list from the SONiC YANG model.
 3. Transformer deletes dependency through DB access.
 4. DB access finally deletes entries in Redis DB.
-  
+
 ### 1.2.1.1 YANG model and port configuration dependency
 
 Few examples in the Sonic YANG model to show port dependencies.
@@ -239,9 +240,9 @@ Few examples in the Sonic YANG model to show port dependencies.
                 }
             }
         }
- ```
+```
 The CVL API "GetDepDataForDelete("PORT|Ethernet7")" will be able to get all the dependent keys for the given port keys. E.g.
- 
+
  ```
         "VLAN_MEMBER" : map[string]interface{} {
             "Vlan21|Ethernet7": map[string] interface{} {
@@ -270,7 +271,7 @@ The CVL API "GetDepDataForDelete("PORT|Ethernet7")" will be able to get all the 
 The CVL API "<font color='blue'>
 GetDepDataForDelete("PORT|Ethernet7")</font>" will be able to get all the dependent keys for the given port keys. E.g.
 
-  
+
  ```
         "VLAN_MEMBER" : map[string]interface{} {
             "Vlan21|Ethernet7": map[string] interface{} {
@@ -292,12 +293,12 @@ GetDepDataForDelete("PORT|Ethernet7")</font>" will be able to get all the depend
                 "ports@": "Ethernet7,Ethernet9",
             },
         }
-``` 
+ ```
 
 In the above keys fetched by CVL, VLAN member table and PORTCHANNEL member table have reference to the port in the keys itself. Transformer infrastructure will be able to delete these keys automatically (no need for special handling). In the ACL table the reference is in the value part of the table.  Transformer will handle the value part as well. 
 
 In the table below, where the key is a leaflist and has multiple references to the port table, during the deletion of Ethernet52 the entire key cannot be deleted but instead the key needs to be updated to have Ethernet52 removed from it and have only "Ethernet50,Ethernet54,Ethernet56". This is difficult to do in the common transformer infrastructure code and needs to be handled by special overloaded functions (custom handling).
-  
+
  ```
 {
 "PORT_QOS_MAP": {
@@ -310,7 +311,7 @@ In the table below, where the key is a leaflist and has multiple references to t
     }
   }
 } 
-```
+ ```
 
 Whether a feature needs special handling or not depends on the schema. Feature team needs to get it reviewed with the management team if it does not fall into a simple case.
 
@@ -334,7 +335,7 @@ Basic Flow
  - SWSS (orchagent) updates ASIC_DB for port delete/create request after port dependent resource cleanup is over (e.g. MAC, VLAN etc).
  - Syncd (syncd) calls SAI api to carry the port operation.
 
-  
+
 ### 1.2.2 Container
 
 Front End - mgmt-framework
@@ -346,7 +347,7 @@ Configuration  Cleanup -  All application containers e.g BGP, LLDP etc
 sai_port_api_t create_port and  remove_port.
 
 # 2 Functionality
-  
+
 
 ## 2.1 Target Deployment Use Cases
 
@@ -354,7 +355,7 @@ sai_port_api_t create_port and  remove_port.
 - After DPB request, when port delete and create is in progress, any configuration on these ports should be avoided. During this period REST/CLI will respond with an error. The DPB status can be queried via CLI.
 
 ## 2.2 Functional Description
-  
+
 Based on hardware platform various port speeds are supported. 
 - As part of DPB operation the port configuration will be cleaned up. The services on DPB involved ports will be down. Newly created ports will be ready for configuration after DPB operation is complete. New ports created will be in default state (admin down). 
 - The port speed change command is unchanged. The port and dependent configuration is unchanged in speed command where as in DPB the port configuration will be deleted.  
@@ -369,9 +370,9 @@ In Broadcom version (Buzznik+) DPB is supported only in management infrastructur
 
 ## 3.2 DB Changes 
 
-  
+
 CONFIG_DB and STATE_DB being updated as part of DPB. Below is an example when default 100G port being broken into 4x10G. Here Ethernet48 is master port.
-  
+
 
 ### 3.2.1 CONFIG DB
 
@@ -411,38 +412,38 @@ CONFIG_DB and STATE_DB being updated as part of DPB. Below is an example when de
 **PORT_BREAKOUT:**
 	
 	"PORT_BREAKOUT|Ethernet48": {
-    "type": "hash", 
-    "value": {
-      "phase": "created", 
-      "status": "Completed"
-    }
+	"type": "hash", 
+	"value": {
+	  "phase": "created", 
+	  "status": "Completed"
+	}
 	"PORT_BREAKOUT|Ethernet49": {
-    "type": "hash", 
-    "value": {
-      "phase": "created"
-    }	
+	"type": "hash", 
+	"value": {
+	  "phase": "created"
+	}	
 	"PORT_BREAKOUT|Ethernet50": {
-    "type": "hash", 
-    "value": {
-      "phase": "created"
-    }
+	"type": "hash", 
+	"value": {
+	  "phase": "created"
+	}
 	"PORT_BREAKOUT|Ethernet51": {
-    "type": "hash", 
-    "value": {
-      "phase": "created"
-    }
-  
+	"type": "hash", 
+	"value": {
+	  "phase": "created"
+	}
+
 
 ### 3.2.4 ASIC DB
 None
-  
+
 
 ### 3.2.5 COUNTER DB 
 
   None
 
  ### 3.2.6 QoS handling multiple interface limitation
- 
+
 -   QoS config via mgmt interfaces (REST/KLISH/gNMI)
         -   Modified sonic-yang model to prevent multiple interfaces
 -   Loading QoS configs in config_db.json at init time or during "config reload"
@@ -463,7 +464,7 @@ None
   From DPB perspective orchagent handles new port creation and deletion based on lane map and maintains reference count for SAI port object. The reference count zero indicates resources are cleaned up.  
 
 ### 3.3.2 Other Process
-  
+
 Portmgr consumes CONFIG_DB port table, port break out table and produces APP_DB to carry out DPB operation. After DPB operation is successful updates STATE_DB port breakout table with completion status.   
 
 ## 3.4 SyncD
@@ -471,7 +472,7 @@ Portmgr consumes CONFIG_DB port table, port break out table and produces APP_DB 
 Refer community HLD.  
 
 ## 3.5 SAI
-  
+
 Added port create and delete API for all supported devices. 
 
 /**
@@ -499,7 +500,7 @@ typedef sai_status_t (*sai_create_port_fn)(
  */
 typedef sai_status_t (*sai_remove_port_fn)(
         _In_ sai_object_id_t port_id);
-  
+
 
 ## 3.6 User Interface
 
@@ -552,14 +553,14 @@ JSON: platform_hwsku.json
     }
 
 JSON: hwsku.json
-   
+
     "BREAKOUT_CFG": {
         "Ethernet0": {
             "brkout_mode": "4x100G", 
             "lanes": "33,34,35,36,37,38,39,40", 
             "port": "1/1"
        } 
-
+    
     "BREAKOUT_PORTS": {
         "Ethernet0": {
             "master": "Ethernet0"
@@ -573,7 +574,7 @@ JSON: hwsku.json
         "Ethernet6": {
             "master": "Ethernet0"
         }
-        
+
 ### 3.6.2 CLI
 
 #### 3.6.2.1 Configuration Commands
@@ -651,44 +652,140 @@ sonic#
 
 #### 3.6.2.3 Debug Commands
 
-  
+
 No specific debug commands available.
-  
+
 
 #### 3.6.2.4 IS-CLI Compliance
 
-  
+
 NA
-  
+
 
 ### 3.6.3 REST API Support
 
-REST request to breakout port 1/1 to 4x25G:
+**The REST request for configuring breakout out:**
 
-```
+PUT /restconf/data/openconfig-platform:components/component
 
-PATCH /restconf/data/openconfig-platform:components/component=1/1/port/openconfig-platform-port:breakout-mode/config
-data={"openconfig-platform-port:config": {"num-channels": 4, "channel-speed": "SPEED_25GB"}}
+curl -X PUT "https://10.59.142.114/restconf/data/openconfig-platform:components/component" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-platform:component\":[{\"name\":\"1/1\",\"port\":{\"openconfig-platform-port:breakout-mode\":{\"config\":{\"num-channels\":4,\"channel-speed\":\"SPEED_10GB\"}}}}]}"
 
-``` 
+Body:
+{
+  "openconfig-platform:component": [
+    {
+      "name": "1/1",
+      "port": {
+        "openconfig-platform-port:breakout-mode": {
+          "config": {
+            "num-channels": 4,
+            "channel-speed": "SPEED_10GB"
+          }
+        }
+      }
+    }
+  ]
+}
 
-REST request to undo breakout port 1/1:
+**The REST request to get the breakout config and state:**
 
-```
+GET /restconf/data/openconfig-platform:components/component=1%2F1/port/openconfig-platform-port:breakout-mode
 
-DELETE /restconf/data/openconfig-platform:components/component=1/1/port/openconfig-platform-port:breakout-mode/config
+curl -X GET "https://10.59.142.114/restconf/data/openconfig-platform:components/component=1%2F1/port/openconfig-platform-port:breakout-mode" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
 
-```
+Output:
+{
+  "openconfig-platform-port:breakout-mode": {
+    "config": {
+      "channel-speed": "openconfig-if-ethernet:SPEED_10GB",
+      "num-channels": 4
+    },
+    "state": {
+      "openconfig-port-breakout-ext:members": [
+        "Ethernet0",
+        "Ethernet1",
+        "Ethernet2",
+        "Ethernet3"
+      ],
+      "openconfig-port-breakout-ext:status": "Completed"
+    }
+  }
+}
+
+**GET at platform component level:**
+
+GET /restconf/data/openconfig-platform:components/component=1/1
+
+curl -X GET "https://10.59.142.114/restconf/data/openconfig-platform:components/component=1%2F1" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+Output:
+{
+  "openconfig-platform:component": [
+    {
+      "name": "1/1",
+     "port": {
+        "openconfig-platform-port:breakout-mode": {
+          "config": {
+            "channel-speed": "openconfig-if-ethernet:SPEED_10GB",
+            "num-channels": 4
+          },
+          "state": {
+            "openconfig-port-breakout-ext:members": [
+              "Ethernet0",
+              "Ethernet1",
+              "Ethernet2",
+              "Ethernet3"
+            ],
+            "openconfig-port-breakout-ext:status": "Completed"
+          }
+        }
+      }
+    }
+  ]
+}
+
+**The REST request to get the breakout configuration:**
+
+GET /restconf/data/openconfig-platform:components/component=1/1/port/openconfig-platform-port:breakout-mode/config
+
+curl -X GET "https://10.59.142.114/restconf/data/openconfig-platform:components/component=1%2F1/port/openconfig-platform-port:breakout-mode/config" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+Output:
+{
+  "openconfig-platform-port:config": {
+    "channel-speed": "openconfig-if-ethernet:SPEED_10GB",
+    "num-channels": 4
+  }
+}
+
+**The REST request to get the state of breakout configurations:**
+
+GET /restconf/data/openconfig-platform:components/component=1/1/port/openconfig-platform-port:breakout-mode/state
+
+curl -X GET "https://10.59.142.114/restconf/data/openconfig-platform:components/component=1%2F1/port/openconfig-platform-port:breakout-mode/state" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+Output:
+{
+  "openconfig-platform-port:state": {
+    "openconfig-port-breakout-ext:members": [
+      "Ethernet0",
+      "Ethernet1",
+      "Ethernet2",
+      "Ethernet3"
+    ],
+    "openconfig-port-breakout-ext:status": "Completed"
+  }
+}
 
 ### 3.6.4 Service and Docker Management
 
   NA
-  
+
 # 4 Flow Diagrams
 ![alt text](images/dpb-flow.png)
 
  DPB Sequence:
- 
+
  1. User: requests DPB command (REST or CLI).
  2. MgmtInfra: issues config delete (port dependent config cleanup).
  3. MgmtInfra: updates PORT, BREAKOUT_CFG, BREAKOUT_PORTS config tables (port entry gets created in CONFIG_DB).
@@ -716,11 +813,11 @@ DB - CONFIG_DB, APP_DB and STATE_DB port break out tables
 portmgrd - DPB operations
 orchagent - dependency removal,  look for reference count
 syncd - SDK and SAI level operation status 
-  
+
 
 # 7 Warm Boot Support
 
-  
+
 There is no direct impact on warm-reboot. As port increases in the system, the dependencies and resources scales up. This will have impact on overall warm-boot time.
 
 
