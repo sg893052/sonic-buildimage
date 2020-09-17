@@ -84,6 +84,7 @@
 | ---- | :--------: | :------------------------------: | ------------------ |
 | 0.1  | 07/17/2020 | Prabhu Sreenivasan               | Initial version    |
 | 0.2  | 08/28/2020 | Prabhu Sreenivasan               | Marked requirement 1.1.1.0 not commited for 3.1 by updating section 1.1.5 as the same not confirmed by marketing |
+| 0.3  | 09/17/2020 | Prabhu Sreenivasan               | Marked requirement 1.1.1.0 partially commited for 3.1 by updating section 1.1.5 as marketing confirmed TD3 and TH3 |
 
 
 # About this Manual
@@ -148,7 +149,7 @@ NA
 
 | Requirement Number | Description | Supported in 3.1 |
 | ------------------ | ------------------------------------------------------------ | ---------------- |
-| 1.1.1.0 | SONiC to set aside a minimum number of exact-match entries to allow drop-monitor feature to work without needing a switch reboot. This impacts L2, L3 and/or ALPM scaling limits as they share a common switch resource. | No |
+| 1.1.1.0 | SONiC to set aside a minimum number of exact-match entries to allow drop-monitor feature to work without needing a switch reboot. This impacts L2, L3 and/or ALPM scaling limits as they share a common switch resource. | Partial (Not enabled by default on TH2) |
 | 1.1.2.2 | It should allow the user to set the value as 'max' to allocate maximum resource to drop-monitor.  | No |
 
 
