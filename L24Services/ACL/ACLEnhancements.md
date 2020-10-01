@@ -978,6 +978,7 @@ The following commands are used to configure Policy based services
 | Change history | SONiC 3.1 - Introduced |
 
 ##### 3.6.2.1.2 Configuring ACL lookup mode using Click CLI (Deprecated)
+
 ```
 root@sonic:/home/admin# config hardware access-list --help
 Usage: config hardware access-list [OPTIONS]
