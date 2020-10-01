@@ -5,7 +5,53 @@ High level design document for ACL enhancements in SONiC.
 Rev 0.1
 
 # Table of Contents
-[TOC]
+- **[List of Tables](#list-of-tables)**
+- **[Revision](#revision)**
+- **[About this Manual](#about-this-manual)**
+- **[Scope](#scope)**
+- **[Definition/Abbreviation](#definition_abbreviation)**
+	- [Table 1: Abbreviations](#table-1-abbreviations)
+- **[1 Feature Overview](#1-feature-overview)**
+	- [1.1 Requirements](#11-requirements)
+		- [1.1.1 Functional Requirements](#111-functional-requirements)
+		- [1.1.2 Configuration and Management Requirements](#112-configuration-and-management-requirements)
+		- [1.1.3 Scalability Requirements](#113-scalability-requirements)
+		- [1.1.4 Warm Boot Requirements](#114-warm-boot-requirements)
+	- [1.2 Design Overview](#12-design-overview)
+		- [1.2.1 Basic Approach](#121-basic-approach)
+		- [1.2.2 Container](#122-container)
+		- [1.2.3 SAI Overview](#123-sai-overview)
+- **[2 Functionality](#2-functionality)**
+	- [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
+	- [2.2 Functional Description](#22-functional-description)
+- **[3 Design](#3-design)**
+	- [3.1 Overview](#31-overview)
+	- [3.2 DB Changes](#32-db-changes)
+		- [3.2.1 CONFIG DB](#321-config-db)
+			- *[3.2.1.1 ACL_TABLE Table](#3211-acl_table-table)*
+			- *[3.2.1.2 ACL_RULE Table for L2 ACL](#3212-acl_rule-table-for-l2-acl)*
+			- *[3.2.1.3 ACL_RULE Table results](#3213-acl_rule-table-results)*
+		- [3.2.2 APP DB](#322-app-db)
+		- [3.2.3 STATE DB](#323-state-db)
+		- [3.2.4 ASIC DB](#324-asic-db)
+		- [3.2.5 COUNTER DB](#325-counter-db)
+	- [3.3 Switch State Service Design](#33-switch-state-service-design)
+		- [3.3.1 Orchestration Agent](#331-orchestration-agent)
+			- *[3.3.1.1 ACL Orchagent](#3311-acl-orchagent)*
+			- *[3.3.1.2 Policer Orchagent](#3312-policer-orchagent)*
+		- [3.3.2 Other Process](#332-other-process)
+	- [3.4 SyncD](#34-syncd)
+	- [3.5 SAI](#35-sai)
+	- [3.6 User Interface](#36-user-interface)
+- **[4 Flow Diagrams](#4-flow-diagrams)**
+	- [4.1 Creating ACL rules with policer](#41-creating-acl-rules-with-policer)
+	- [4.2 Deleting ACL rules with policer](#42-deleting-acl-rules-with-policer)
+- **[5 Error Handling](#5-error-handling)**
+- **[6 Serviceability and Debug](#6-serviceability-and-debug)**
+- **[7 Warm Boot Support](#7-warm-boot-support)**
+- **[8 Scalability](#8-scalability)**
+- **[9 Unit Test](#9-unit-test)**
+- **[10 Internal Design Information](#10-internal-design-information)**
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-abbreviations)
@@ -76,8 +122,6 @@ ACLs are used to filter traffic based on packets L2/L3/L4 header. Currently the 
 # 3 Design
 ## 3.1 Overview
 Following diagram describes a top level overview of the existing SONiC Switch components. ACL and Policer orchestration agents will be enhanced.
-
-![Sonic SwSS components](https://github.com/Azure/SONiC/raw/gh-pages/images/acl_hld/sonic_sub.png)
 
 ## 3.2 DB Changes
 Describe changes to existing DBs or any new DB being added.
@@ -220,7 +264,7 @@ To support policer as one of the actions, ACL orchagent has to interact with Pol
 #### 3.3.1.2 Policer Orchagent
 Policer orchagent will poll the policer counters every 10 seconds. This is not configurable as of now and will be populated in POLICER_COUNTER table.
 
-### 3.3.2 Other Process 
+### 3.3.2 Other Process
 NA
 
 ## 3.4 SyncD
@@ -241,9 +285,11 @@ This enhancement doesn't add any additional flows for L2 ACL support. The flows 
 ## 4.1 Creating ACL rules with policer
 ![Adding Rule with policer](images/RuleAddPolicer.png "Adding Rule with policer")
 
+**Figure 1: Adding Rule with policer**
 ## 4.2 Deleting ACL rules with policer
 ![Deleteing Rule with policer](images/RuleDelPolicer.png "Deleting Rule with policer")
 
+**Figure 2: Deleting Rule with policer**
 # 5 Error Handling
 Errors will logged to syslogs.
 
