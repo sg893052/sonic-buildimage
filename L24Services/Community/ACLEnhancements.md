@@ -29,8 +29,8 @@ Rev 0.1
 	- [3.2 DB Changes](#32-db-changes)
 		- [3.2.1 CONFIG DB](#321-config-db)
 			- *[3.2.1.1 ACL_TABLE Table](#3211-acl_table-table)*
-			- *[3.2.1.2 ACL_RULE Table for L2 ACL](#3212-acl_rule-table-for-l2-acl)*
-			- *[3.2.1.3 ACL_RULE Table results](#3213-acl_rule-table-results)*
+			- *[3.2.1.2 ACL_RULE_TABLE Table for L2 ACL](#3212-acl_rule_table-table-for-l2-acl)*
+			- *[3.2.1.3 ACL_RULE_TABLE Table additional actions](#3213-acl_rule_table-table-additional-actions)*
 		- [3.2.2 APP DB](#322-app-db)
 		- [3.2.3 STATE DB](#323-state-db)
 		- [3.2.4 ASIC DB](#324-asic-db)
@@ -62,9 +62,10 @@ Rev 0.1
 | 0.1  | 09/25/2020 | Abhishek Dharwadkar | Initial version    |
 
 # About this Manual
-This document provides information about the ACL keys and results enhancements feature implementation in SONiC.
+This document provides information about the ACL matches and actions enhancements feature implementation in SONiC.
+
 # Scope
-This document describes the high level design of ACL enhancements feature. This document covers the changes done for orchestration agent and doesn't cover the UI aspects of the configuration.
+This document describes the high level design of ACL enhancements feature. This document covers the changes done for orchestration agent and doesn't cover the UI aspects of the configuration. A follow up HLD will contain the UI related aspects.
 
 # Definition/Abbreviation
 
@@ -85,11 +86,11 @@ Access-control lists (ACLs) are used to filter traffic based on the contents of 
 
 ### 1.1.1 Functional Requirements
 
-The following are the requirements for ACL enhancements and Flow Based Services feature:
+The following are the requirements for ACL enhancements:
 
 1. Support Layer 2 ACL i.e. support match on Layer 2 fields like Source MAC, Destination MAC, PCP, etc.
-2. Support L3 header fields like DSCP, ICMP type and ICMP code for IPv4 and IPv6 ACLs.
-3. Support ACL application at Switch level.
+2. Support L3 header based matches like DSCP, ICMP type and ICMP code for IPv4 and IPv6 ACLs.
+3. Support ACL application at Switch level ie it will be applied to all interfaces ie Ethernet, Lags and Vlans.
 4. Support DSCP, COS Remarking and Policing QoS action.
 
 ### 1.1.2 Configuration and Management Requirements
@@ -117,7 +118,7 @@ Current SAI Specification  https://github.com/opencomputeproject/SAI/blob/master
 2. QoS actions can be used to fine tune traffic by classifying the traffic via ACL fields and taking actions like Remarking, Policing etc.
 
 ## 2.2 Functional Description
-ACLs are used to filter traffic based on packets L2/L3/L4 header. Currently the filtering based on L3 and L4 headers. This enhancement will add the capability to filter traffic based on Layer 2 header and also to take DSCP, PCP remarking and Policing based on ACL.
+ACLs are used to filter traffic based on packets L2/L3/L4 header. Currently the filtering is based on L3 and L4 headers. This enhancement will add the capability to filter traffic based on Layer 2 header and also to take DSCP, PCP remarking and Policing based on ACL.
 
 # 3 Design
 ## 3.1 Overview
@@ -134,17 +135,17 @@ A new ACL type called l2 is introduced to support MAC ACLs. The following shows 
 ```
 key           = ACL_TABLE:name                 ; acl_table_name must be unique
 ;field        = value
-type          = "l2" / "l3" / "l3v6"/ "mirror" ; type of acl table, every type of
+type          = "l2"                           ; type of acl table, every type of
                                                ; table defines the match/action a
                                                ; specific set of match and actions.
 ```
 
-#### 3.2.1.2 ACL_RULE Table for L2 ACL
+#### 3.2.1.2 ACL_RULE_TABLE Table for L2 ACL
 
 The following is the schema changes for L2 ACL rules.
 
 ```
-key = ACL_RULE:table_name:rule_name  ; key of the rule entry in the table,
+key = ACL_RULE_TABLE:table_name:rule_name  ; key of the rule entry in the table,
                                      ; seq is the order of the rules
                                      ; when the packet is filtered by the
                                      ; ACL "policy_name".
@@ -192,12 +193,12 @@ vlan_id      = %x31-39                     ; 1-9
 pcp_val      = %x30-37
 ```
 
-#### 3.2.1.3 ACL_RULE Table results
+#### 3.2.1.3 ACL_RULE_TABLE Table additional actions
 
-The following new results will be added to the ACL_RULE.
+The following new results will be added to the ACL_RULE_TABLE.
 
 ```
-key = ACL_RULE:table_name:rule_name   ; key of the rule entry in the table,
+key = ACL_RULE_TABLE:table_name:rule_name   ; key of the rule entry in the table,
                                       ; seq is the order of the rules
                                       ; when the packet is filtered by the
                                       ; ACL "policy_name".
@@ -206,12 +207,12 @@ key = ACL_RULE:table_name:rule_name   ; key of the rule entry in the table,
 ;field      = value
 SET_DSCP    = DIGIT / %x31-36 %x30-33 ; 0-9 or 10 - 63
 SET_PCP     = %x30-37                 ; 0-7
-SET_POLICER = 1*255VCHAR              ; refer to the POLICER_TABLE
+SET_POLICER = 1*255VCHAR              ; refer to the POLICER
 
 ;value annotations
 ```
 
-POLICER_TABLE schema is defined in https://github.com/Azure/sonic-swss/blob/master/doc/swss-schema.md
+POLICER_TABLE schema is defined in https://github.com/Azure/sonic-swss/blob/master/doc/swss-schema.md will be reused for Configuration DB. The table name will be POLICER in Configuration DB.
 
 ### 3.2.2 APP DB
 No Change
@@ -272,9 +273,9 @@ NA
 
 ## 3.5 SAI
 https://github.com/opencomputeproject/SAI/blob/master/inc/saiacl.h already has the necessary support. No enhancements are necessary. The following QoS Actions will be used 
-SAI_ACL_ENTRY_ATTR_ACTION_SET_OUTER_VLAN_PRI
-SAI_ACL_ENTRY_ATTR_ACTION_SET_DSCP
-SAI_ACL_ENTRY_ATTR_ACTION_SET_POLICER
+- SAI_ACL_ENTRY_ATTR_ACTION_SET_OUTER_VLAN_PRI
+- SAI_ACL_ENTRY_ATTR_ACTION_SET_DSCP
+- SAI_ACL_ENTRY_ATTR_ACTION_SET_POLICER
 
 ## 3.6 User Interface
 NA
@@ -297,10 +298,10 @@ Errors will logged to syslogs.
 Existing commands like "show acl table", "show acl rule" and "aclshow" will show the details of the configuration like match criteria and actions. Syslogs will contain logs generated by ACL and Policer orchestration agent which can be used for debugging.
 
 # 7 Warm Boot Support
-Describe expected behavior and any limitation.
+ACLs applied will be functional across warm reboots.
 
 # 8 Scalability
-Describe key scaling factor and considerations.
+Scalability is silicon dependent.
 
 # 9 Unit Test
 The following tests will be automated using Pytest.
