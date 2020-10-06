@@ -2232,11 +2232,11 @@ The following example shows configuration for Policy to take QoS, Monitoring and
 
 ```
 # Create classifier class0
-SONiC(config)# classifier class0 match-type acl
+SONiC(config)# class-map class0 match-type acl
 SONiC(config-class-map)# match access-group ip l3_ACL_0
 
 # Create classifier class1
-SONiC(config)# classifier class1 match-type acl
+SONiC(config)# class-map class1 match-type acl
 SONiC(config-class-map)# match access-group mac l2_ACL_0
 
 # -------------------------------------
