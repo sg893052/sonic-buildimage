@@ -229,6 +229,21 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 ## 2.0 Platform driver interface
 - SONiC defines Platform APIs, and SONIC 2.0 APIs include support for Watchdog APIs. The HW watchdog feature shall make use of the platform 2.0 API implementation if supported by platforms. 
 - For platforms which do not support 2.0 APIs, a generic API implementation shall be provided to use iTCO driver if supported. No other implementation shall be supported.
+- The 2.0 platform driver interface supports the following watchdog APIs:
+    1. arm()
+        This API enables the Hardware watchdog timer and trigger the watchdog timer to start the count down.
+
+    2. disarm()
+        Stops the count down and disable the watchdog function.
+
+    3. is_armed()
+        Returns the current state the WD function whether it is armed or disarmed.
+
+    4. timeout()
+        This API returns the currently configured WD timeout value which is specific to the hardware platform.  
+    
+    The default value(180s) will be defined in the base class and it can be overridden by the per platform derived class.
+
 
 ## Kdump with watchdog
 - When the kernel is crashed with panic, the watchdog timer shall be extended long enough to take the kernel kdump data. If the system is stuck in panic data collection, the watchdog automatically reboot the system. 
@@ -245,13 +260,11 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 ## Supported Platforms:
 - The hardware watchdog feature is implemented and tested on the following platforms for the current release. 
 	ACCTON:
-		x86_64-accton_as7326_56x-r0
-		x86_64-accton_as7816_64x-r0
-		x86_64-accton_as7726_32x-r0
-		x86_64-accton_as7712_32x-r0
-		x86_64-accton_as9716_32D-r0
-		x86_64-accton_as4630_54pe-r0
-		x86_64-accton_as5712-54x-r0
+		AS7816_64x (Supported only on -OG and -R variant)
+		AS7712_32x
+		AS9716_32D
+		AS4630_54pe
+		AS5712-54x
 
 	QUANTA:
 		QUANTA_BWDE
@@ -265,14 +278,63 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 		5232
 		5248
 
+
+BIOS Upgrade:
+- The watchdog functionality is disabled in some platform because of missing functionaly in BIOS. 
+- In order to support the for watchdog functionality, the following platforms BIOS image should be upgrade with latest version. 
+
+      :----------------|:---------------------
+      |    PLATFORM    |  BIOS VERSION        |    
+      :----------------| :--------------------
+      |  AS7326_56X    |AS7326 V31 20180201   |
+      |  AS7816_64X    |AS7816 V31 20170803   |
+      |  AS7712_32X    |AS7712 V36 20170630   |
+      |  AS9716_32D    |AS9716 V36 20190325   |
+      |  AS7726_32X    |AS7726 V36 10180806   |
+      |  AS5712_54X    |AS5712 V36 20180212   |
+      |  QUANTA_IX4    |IX4 V5.11  20170929   |
+      |  QUANTA_IX7    |IX7 V5.11  20200212   |
+      |  QUANTA_IX8    |IX8 V5.6   20180312   |
+      |  QUANTA_IX9    |IX7 V5.6   20180312   |
+      :----------------|:-------------------------
+
+
+    - AS7816-64X-R: (BIOS is for AS7816-64X-R platform.)
+    https://support.edge-core.com/hc/en-us/articles/900000070403-AS7816-64X-R-BIOS-v36-01-00-01-latest-
+
+    - AS7712-32X:
+    https://support.edge-core.com/hc/en-us/articles/900000087626-AS7712-32X-BIOS-v36-20190624-latest-
+
+    - AS5712-54X
+    https://support.edge-core.com/hc/en-us/articles/900000070583-AS5712-54X-BIOS-v36-20190719-latest-
+
+- Use the below procedure to upgrade the BIOS
+    - Use AMI tool as below link for BIOS upgrade and the tool version is v5.12.03.2074.
+    - URL: https://ami.com/en/download-license-agreement/?DownloadFile=Aptio_V_AMI_Firmware_Update_Utility.zip
+
+- BIOS upgrade steps:
+    1. Load the AMI tool and BIOS image into a USB drive.
+    2. Select the EFI shell as boot option from BIOS boot menu.
+    3. On the EFI shell, run the following command to upgrade the BIOS.
+        shell> AfuEfix64.efi <BIOS image name> /P /B /K /ME
+
+        Example:
+        shell> AfuEfix64.efi AS7712_BIOS_V36_20190624.bin /P /B /K /ME
+
+
 ## Unsupported Hardware Platforms:
 - Some ODM platforms do not support the Watchdog functionality. In such cases, the HW watchdog application service should remain dormant.
+- The watchdog feature is not supported on the following platform.
+		x86_64-accton_as7326_56x-r0 (Not supported)
+		x86_64-accton_as7726_32x-r0 (Not supported)
+        x86_64-accton_as7816_64x-r0 (Not supported other than -OG and -R variant)
+
 
 # Serviceability
 - When the system gets rebooted because of watchdog timeout, the following string gets stored in the reboot cause file.
 
-  # cat /host/reboot-cause/previous-reboot-cause.txt
-    Hardware Watchdog Reset
+    - # cat /host/reboot-cause/previous-reboot-cause.txt
+        Hardware Watchdog Reset
 
 - The reboot cause file is collected as part of tech-support collection. 
 
@@ -284,7 +346,34 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 
 	Example:
 	# show reboot-cause
-	  Hardware Watchdog Reset
+      Hardware Watchdog Reset
+
+    Show reboot cause is shown only if supported.
+        AS4630_54PE
+        AS5835_54X
+
+
+
+# Watchdog support platform matrix
+
+- The following are the platform matrix with watchdog timer support
+
+      :----------------|:--------------------|:------------------------
+      |    PLATFORM    |  Watchdog supported | Reboot Reason Supported |          
+      :----------------|:--------------------|:------------------------
+      |  AS7326_56X    | No                  | No                      |
+      |  AS7816_64X    | Yes(O variant)      | No                      |
+      |  AS7712_32X    | Yes                 | No                      |
+      |  AS9716_32D    | Yes                 | No                      |
+      |  AS7726_32X    | No                  | No                      |
+      |  AS5712_54X    | Yes                 | No                      |
+      |  AS4630_54PE   | Yes                 | Yes                     |
+      |  AS5835_54X    | Yes                 | Yes                     |
+      |  QUANTA_IX4    | Yes                 | No                      |
+      |  QUANTA_IX7    | Yes                 | No                      |
+      |  QUANTA_IX8    | Yes                 | No                      |
+      |  QUANTA_IX9    | Yes                 | No                      |
+      :----------------|:--------------------|:-------------------------
 
 # Unit Test
 
