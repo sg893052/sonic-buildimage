@@ -124,7 +124,7 @@ ACLs are used to filter traffic based on packets L2/L3/L4 header. Currently the 
 ## 3.1 Overview
 Following diagram describes a top level overview of the existing SONiC Switch components. ACL and Policer orchestration agents will be enhanced.
 
-![Sonic SwSS components](https://github.com/Azure/SONiC/raw/gh-pages/images/acl_hld/sonic_sub.png)
+![Sonic SwSS components](images/ACLOverview.png)
 
 ## 3.2 DB Changes
 Describe changes to existing DBs or any new DB being added.
