@@ -231,6 +231,24 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 
 - For non iTCO based platforms, respective platform API should be implemented to update reboot reason. 
 
+- The following table shows the platform list with reboot reason support. 
+
+      :----------------|:------------------------
+      |    PLATFORM    | Reboot Reason Supported |          
+      :----------------|:------------------------
+      |  AS7712_32X    | No                      |
+      |  AS9716_32D    | No                      |
+      |  AS5712_54X    | No                      |
+      |  AS4630_54PE   | Yes                     |
+      |  AS5835_54X    | Yes                     |
+      |  QUANTA_IX4    | No                      |
+      |  QUANTA_IX7    | No                      |
+      |  QUANTA_IX8    | No                      |
+      |  QUANTA_IX9    | No                      |
+      :----------------|:-------------------------
+
+
+
 ## BMC implementation
 
 - BMC, also known as Baseboard Management Controller, is a background controller that is integrated on the motherboard and independent of the CPU and memory. The system can be booted, shut down, etc. through the BMC. At present, the usual practice is to use the ipmi tool to send commands to the BMC to achieve the purpose of obtaining system information. For example, get CPU temperature, status, Power on, Power off system.
@@ -245,16 +263,16 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 - SONiC defines Platform APIs, and SONIC 2.0 APIs include support for Watchdog APIs. The HW watchdog feature shall make use of the platform 2.0 API and implements the per platform watchdog feature if supported by platform. 
 - The 2.0 platform driver interface supports the following watchdog APIs:
     1. arm()
-        This API enables the Hardware watchdog timer and trigger the watchdog timer to start the count down.
+        - This API enables the Hardware watchdog timer and trigger the watchdog timer to start the count down.
 
     2. disarm()
-        Stops the count down and disable the watchdog function.
+        - Stops the count down and disable the watchdog function.
 
     3. is_armed()
-        Returns the current state the WD function whether it is armed or disarmed.
+        - Returns the current state the WD function whether it is armed or disarmed.
 
     4. timeout()
-        This API returns the currently configured WD timeout value which is specific to the hardware platform.  
+        - This API returns the currently configured WD timeout value which is specific to the hardware platform.  
     
     The default value(180s) will be defined in the base class and it can be overridden by the per platform derived class.
 
@@ -283,49 +301,78 @@ The Watchdog timer can detect a fault on an unattended SONiC hardware device and
 
 - Platforms with iTCO based watchdog driver support:
 	ACCTON:
-		AS7816_64x (Supported only on -OG and -R variant)
-		AS7712_32x
-		AS9716_32D
-		AS4630_54pe
-		AS5712-54x
+
+      :---------------------------------------------------
+      | AS7712_32X                                        |
+      | AS9716_32D                                        |
+      | AS5712-54X                                        |
+      | AS4630_54PE                                       |
+      | AS5835_54X                                        |
+      |:---------------------------------------------------
 
 	QUANTA:
-		QUANTA_BWDE
-		QuantaIX4
-		QuantaIX8
-		QuantaIX9
+
+      :---------------
+	  | IX4-64X       |
+	  | IX7-BWDE-32X  |
+	  | IX8-56X       |
+	  | IX9-32X       |
+      |:--------------
 
 - Platforms with FPGA(non-iTCO)based watchdog driver support:
 	DELL:
-		9264
-		9332
-		5232
-		5248
+
+       :--------
+	   | 9264  |
+	   | 9332  |
+	   | 5232  |
+	   | 5248  |
+       |:-------
+
+### Watchdog support platform matrix
+- The following are the platform matrix with iTCO watchdog timer support
+
+      :----------------|:--------------------|:------------------------
+      |    PLATFORM    |  Watchdog supported | Reboot Reason Supported |          
+      :----------------|:--------------------|:------------------------
+      |  AS7326_56X    | No                  | No                      |
+      |  AS7816_64X    | No                  | No                      |
+      |  AS7712_32X    | Yes                 | No                      |
+      |  AS9716_32D    | Yes                 | No                      |
+      |  AS7726_32X    | No                  | No                      |
+      |  AS5712_54X    | Yes                 | No                      |
+      |  AS4630_54PE   | Yes                 | Yes                     |
+      |  AS5835_54X    | Yes                 | Yes                     |
+      |  QIX4-64X      | Yes                 | No                      |
+      |  QIX7-BWDE-32X | Yes                 | No                      |
+      |  QIX8-56X      | Yes                 | No                      |
+      |  QIX9-32X      | Yes                 | No                      |
+      :----------------|:--------------------|:-------------------------
 
 
-BIOS Upgrade:
+
+# BIOS Upgrade:
 - The watchdog functionality might be disabled in some platform because of missing functionaly in BIOS. 
 - In order to support the for watchdog functionality, the platform BIOS image should be upgraded with latest version. 
 - Following are the BIOS versoin for respective platform
 
-      :----------------|:---------------------
-      |    PLATFORM    |  BIOS VERSION        |    
-      :----------------| :--------------------
-      |  AS7326_56X    |AS7326 V31 20180201   |
-      |  AS7816_64X    |AS7816 V31 20170803   |
-      |  AS7712_32X    |AS7712 V36 20170630   |
-      |  AS9716_32D    |AS9716 V36 20190325   |
-      |  AS7726_32X    |AS7726 V36 10180806   |
-      |  AS5712_54X    |AS5712 V36 20180212   |
-      |  QUANTA_IX4    |IX4 V5.11  20170929   |
-      |  QUANTA_IX7    |IX7 V5.11  20200212   |
-      |  QUANTA_IX8    |IX8 V5.6   20180312   |
-      |  QUANTA_IX9    |IX7 V5.6   20180312   |
-      :----------------|:-------------------------
+      :----------------|:-----------------------
+      |    PLATFORM    |  BIOS VERSION         |    
+      :----------------| :----------------------
+      |  AS7326_56X    |AS7326 V31  20180201   |
+      |  AS7816_64X    |AS7816 V31  20170803   |
+      |  AS7712_32X    |AS7712 V36  20170630   |
+      |  AS9716_32D    |AS9716 V36  20190325   |
+      |  AS7726_32X    |AS7726 V36  10180806   |
+      |  AS5712_54X    |AS5712 V36  20180212   |
+      |  AS4630_54PE   |AS4630 V513 20190924   |
+      |  AS5835_54X    |AS5835 V36  20180212   |
+      |  IX4-64X       |IX4 V5.11   20170929   |
+      |  IX7-BWDE-32X  |IX7 V5.11   20200212   |
+      |  IX8-56X       |IX8 V5.6    20180312   |
+      |  IX9-32X       |IX7 V5.6    20180312   |
+      :----------------|:-----------------------
 
-
-    - AS7816-64X-R: (BIOS is for AS7816-64X-R platform.)
-    https://support.edge-core.com/hc/en-us/articles/900000070403-AS7816-64X-R-BIOS-v36-01-00-01-latest-
 
     - AS7712-32X:
     https://support.edge-core.com/hc/en-us/articles/900000087626-AS7712-32X-BIOS-v36-20190624-latest-
@@ -351,10 +398,14 @@ BIOS Upgrade:
 
 - Some ODM platforms do not support the Watchdog functionality. In such cases, the HW watchdog application service should remain dormant.
 - The watchdog feature is not supported on the following platform.
-		x86_64-accton_as7326_56x-r0 (Not supported)
-		x86_64-accton_as7726_32x-r0 (Not supported)
-        x86_64-accton_as7816_64x-r0 (Not supported other than -OG and -R variant)
 
+      :------------------------------
+	  | AS7326_56X (Not supported)  |
+	  | AS7726_32X (Not supported)  |
+	  | AS7816_64X (Not supported)  |
+      |:-----------------------------
+
+- For Dell platforms, it is disabled due to insufficient timeout value supported. It will be enabled when they support new FPGA and the new timeout value.
 
 # Serviceability
 - When the system gets rebooted because of watchdog timeout, the following string gets stored in the reboot cause file.
@@ -374,44 +425,32 @@ BIOS Upgrade:
 	# show reboot-cause
       Hardware Watchdog Reset
 
-    Show reboot cause is shown only if supported.
-        AS4630_54PE
-        AS5835_54X
+    Show reboot cause is shown only if platform supports it. For the current releaes, the following platform supports the reboot reason. 
+
+       |:--------------
+       |  AS4630_54PE  |
+       |  AS5835_54X   |
+       |:--------------
 
 
-
-# Watchdog support platform matrix
-
-- The following are the platform matrix with iTCO watchdog timer support
-
-      :----------------|:--------------------|:------------------------
-      |    PLATFORM    |  Watchdog supported | Reboot Reason Supported |          
-      :----------------|:--------------------|:------------------------
-      |  AS7326_56X    | No                  | No                      |
-      |  AS7816_64X    | Yes(O variant)      | No                      |
-      |  AS7712_32X    | Yes                 | No                      |
-      |  AS9716_32D    | Yes                 | No                      |
-      |  AS7726_32X    | No                  | No                      |
-      |  AS5712_54X    | Yes                 | No                      |
-      |  AS4630_54PE   | Yes                 | Yes                     |
-      |  AS5835_54X    | Yes                 | Yes                     |
-      |  QUANTA_IX4    | Yes                 | No                      |
-      |  QUANTA_IX7    | Yes                 | No                      |
-      |  QUANTA_IX8    | Yes                 | No                      |
-      |  QUANTA_IX9    | Yes                 | No                      |
-      :----------------|:--------------------|:-------------------------
 
 # Unit Test
 
 
   | SNO |  Unit Testcase 
  :------| :----------------------------------------------------
-	1 | Verify the watchdog reset by killing the watchdog daemon process/hardware hung simulation.
-	2 | Verify the reboot reason when system reboots because of watchdog timeout. 
-	3 | Verify the watchdog enable/disable support .
-	4 | Verify the watchdog disable during kdump collection.
-	5 | Verify the watchdog reading of watchdog timeout value.
-	6 | Verify the 2.0 API interface.
-	7 | Verify the non 2.0 API interface.
+	 1 | Verify the watchdog reset by killing the watchdog daemon process/hardware hung simulation.
+	 2 | Verify the reboot reason when system reboots because of watchdog timeout. 
+	 3 | Verify the watchdog enable/disable support .
+	 4 | Verify the watchdog with kdump collection.
+	 5 | Verify the watchdog reading of watchdog timeout value.
+	 6 | Verify the watchdog status when platform that doesn't support 180s timeout.
+	 7 | Verify the watchdog status when platform that doesn't support watchdog feature.
+	 8 | Verify the cold reboot when watchdog timer is enabled.
+	 9 | Verify the warm/fast reboot when watchdog timer is enabled.
+	10 | Verify the verify the watchdogutil command line interface.
+	11 | Verify the watchdog service auto start during boot and killing the watchdog daemon.
+	12 | Verify the 2.0 API interface.
+	13 | Verify the non 2.0 API interface.
 
 
