@@ -579,7 +579,7 @@ sonic (config-tam)# enterprise-id 4434
 
 ; setup the collector
 
-collector ifacol1 type ipv4 ip 20.20.20.4 port 9090 protocol UDP
+sonic (config-tam)# collector ifacol1 type ipv4 ip 20.20.20.4 port 9090 protocol UDP
 
 ; create the flowgroup
 
