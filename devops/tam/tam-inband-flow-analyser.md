@@ -540,7 +540,7 @@ sonic (config-tam)# sampler websamp rate 1000
 
 sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6
 
-# associate the ingress interface to the flowgroup
+; associate the ingress interface to the flowgroup
 
 sonic (config) # interface Ethernet 44
 sonic (config-if-Ethernet44)# flow-group websrvflows
