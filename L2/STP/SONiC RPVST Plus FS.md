@@ -278,13 +278,13 @@ Use the no form of this command to return to the default setting.
 **Command Mode**: Global Config
 
 Note: 
-1) When global PVST or RPVST mode is enabled, by default, spanning tree will be enabled on the first 255 VLANs. For rest of the VLANs, spanning tree is disabled.
-The 255 VLANs are selected in the following order:
-1. If spanning tree instances are configured first followed by VLANs, configuration order is used to count the first 255 spanning tree instances.
-2. If VLANs are configured first followed by spanning tree instances, then VLANs are sorted by VLAN Id and first 255 VLAN Ids are used.
 
+1) When global PVST or RPVST mode is enabled,
+    1. If total number of VLANs in the system is less than or equal to "MAX_STP_INSTANCES".
+        - Enable spanning tree on all the VLANs in the system,
+    2. If total number of VLANs in the system is greater than "MAX_STP_INSTANCES".
+        - Throw an error
 2) Only one mode can be enabled at any given point of time.
-
 
 #### 3.6.2.1.2 Per VLAN spanning-tree  ####
 
@@ -292,15 +292,15 @@ This command allows enabling or disabling spanning-tree on a VLAN. Use this comm
 
 Use the no form of this command to return to the default setting.
 
-**spanning-tree vlan <vlan-id> **
+**spanning-tree vlan <vlan-id/vlan-range> **
 
-**no spanning-tree vlan <vlan-id> **
+**no spanning-tree vlan <vlan-id/vlan-range> **
 
 **Syntax Description**:
 
 | Keyword        | Description                                                                                                                                                                                         |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vlan <vlan-id> | Configure spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
+| vlan <vlan-id/vlan-range> | Configure spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
 
 **Default**: Spanning tree is enabled on all VLANs subject to scaling limits.
 
@@ -312,9 +312,9 @@ Use the no form of this command to return to the default setting.
 
 This command allows configuring the forward delay time in seconds.
 
-** spanning-tree [vlan <vlan-id>] forward-time <seconds\>**
+** spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds\>**
 
-** no spanning-tree [vlan <vlan-id>] forward-time **
+** no spanning-tree [vlan <vlan-id/vlan-range>] forward-time **
 
 **Syntax description**: 
 
@@ -330,9 +330,9 @@ This command allows configuring the forward delay time in seconds.
 
 This command allows configuring the hello interval in seconds for transmission of BPDUs.
 
-**spanning-tree [vlan <vlan-id>] hello-time <seconds\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] hello-time <seconds\>**
 
-**no spanning-tree [vlan <vlan-id>] hello-time **
+**no spanning-tree [vlan <vlan-id/vlan-range>] hello-time **
 
 **Syntax description**: 
 
@@ -348,9 +348,9 @@ This command allows configuring the hello interval in seconds for transmission o
 
 This command allows configuring the maximum time to listen for root bridge in seconds.
 
-**spanning-tree [vlan <vlan-id>] max-age <seconds\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] max-age <seconds\>**
 
-**no spanning-tree [vlan <vlan-id>] max-age **
+**no spanning-tree [vlan <vlan-id/vlan-range>] max-age **
 
 **Syntax description**: 
 
@@ -366,9 +366,9 @@ Default: The max-age is 20 seconds
 
 This command allows configuring the bridge priority in increments of 4096 (default = 32768), range 0-61440.
 
-**spanning-tree [vlan <vlan-id>] priority <value\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] priority <value\>**
 
-**no spanning-tree [vlan <vlan-id>] priority **
+**no spanning-tree [vlan <vlan-id/vlan-range>] priority **
 
 **Syntax description**: 
 
@@ -408,9 +408,9 @@ Below configurations allow STP parameters to be configured on per VLAN, interfac
 
 This command allows to configure the port level cost value for a VLAN, range 1 - 200000000.
 
-**spanning-tree [vlan <vlan-id>] cost <value\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] cost <value\>**
 
-**no spanning-tree [vlan <vlan-id>] cost **
+**no spanning-tree [vlan <vlan-id/vlan-range>] cost **
 
 
 **Syntax description**: 
@@ -440,9 +440,9 @@ This command allows to configure the port level cost value for a VLAN, range 1 -
 ### 3.6.2.3.2 Port priority
 This command allows to configure the port level priority value for a VLAN.
 
-**spanning-tree [vlan <vlan-id>] port-priority <value\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] port-priority <value\>**
 
-**no spanning-tree [vlan <vlan-id>] port-priority **
+**no spanning-tree [vlan <vlan-id/vlan-range>] port-priority **
 
 **Syntax description**: 
 
@@ -539,13 +539,13 @@ This command allows configuring loop guard or root guard on an interface.
 
 Display spanning-tree information on the given vlan.
 
-**show spanning-tree vlan <vlan\>**
+**show spanning-tree vlan <vlan-id/vlan-range\>**
 
 Syntax Description:
 
 | Keyword        | Description                                                                                                                                                                                         |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vlan <vlan-id> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
+| vlan <vlan-id/vlan-range> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
 
 **Command Mode**: User EXEC
 
@@ -575,7 +575,7 @@ Example:
 
 **show spanning-tree counters**
 
-**show spanning-tree counters vlan <vlanid\>** 
+**show spanning-tree counters vlan <vlan-id/vlan-range\>** 
 
 This command displays the spanning-tree counters. counters will be synced to APP DB every 10 seconds.
 
@@ -583,7 +583,7 @@ Syntax Description:
 
 | Keyword        | Description                                                                                                                                                                                         |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vlan <vlan-id> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
+| vlan <vlan-id/vlan-range> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
 
 **Command Mode**: User EXEC
 
