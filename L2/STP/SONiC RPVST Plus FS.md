@@ -263,6 +263,7 @@ This command allows enabling the spanning tree mode for the device. Use this Glo
 Use the no form of this command to return to the default setting.
 
 **spanning-tree mode {pvst | rapid-pvst}**
+
 **no spanning-tree mode**
 
 Eg:
@@ -564,6 +565,7 @@ Can be set to point-to-point or shared. Port is connected to another port throug
 - NOTE: Do not configure shared media such as Hubs as point-to-point links.
 
 **spanning-tree link-type {point-to-point | shared}**
+
 **no spanning-tree link-type**
 
 **Syntax description**: 
@@ -583,6 +585,7 @@ Can be set to point-to-point or shared. Port is connected to another port throug
 This command allows configuring loop guard or root guard on an interface.
 
 **spanning-tree guard {loop | root | none}**
+
 **no spanning-tree guard**
 
 **Syntax description**: 
@@ -640,6 +643,7 @@ Example:
 #### 3.6.3.2 show spanning-tree counters vlan ####
 
 **show spanning-tree counters**
+
 **show spanning-tree counters vlan <vlan-id/vlan-range\>** 
 
 This command displays the spanning-tree counters. counters will be synced to APP DB every 10 seconds.
