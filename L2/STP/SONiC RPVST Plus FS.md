@@ -294,9 +294,11 @@ Note:
 #### 3.6.2.1.2 Per VLAN spanning-tree  ####
 
 This command allows enabling or disabling spanning-tree on a VLAN. Use this command to disable or enable PVST / RPVST+ on a VLAN. Changing the PVST+ / RPVST+ state in a VLAN affects only that VLAN. This command enables PVST+ / RPVST+ for all ports in a VLAN.
+
 Use the no form of this command to disable STP for a VLAN. 
 
 **spanning-tree vlan <vlan-id/vlan-range>**
+
 **no spanning-tree vlan <vlan-id/vlan-range>**
 
 Eg:
@@ -320,9 +322,11 @@ no spanning-tree vlan 75-90,200,1100-1150
 #### 3.6.2.1.3 Forward delay ####
 
 This command allows configuring the forward delay time in seconds.
+
 Use the no form of this command to return to the default setting.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds\>**
+
 **no spanning-tree [vlan <vlan-id/vlan-range>] forward-time**
 
 Eg:
@@ -347,7 +351,10 @@ no spanning-tree vlan 75-90,200,1100-1150 forward-time
 This command allows configuring the hello interval in seconds for transmission of BPDUs.
 Use the no form of this command to return to the default setting.
 
+Use the no form of this command to return to the default setting.
+
 **spanning-tree [vlan <vlan-id/vlan-range>] hello-time <seconds\>**
+
 **no spanning-tree [vlan <vlan-id/vlan-range>] hello-time**
 
 Eg:
@@ -372,7 +379,10 @@ no spanning-tree vlan 75-90,200,1100-1150 hello-time
 This command allows configuring the maximum time to listen for root bridge in seconds.
 Use the no form of this command to return to the default setting.
 
+Use the no form of this command to return to the default setting.
+
 **spanning-tree [vlan <vlan-id/vlan-range>] max-age <seconds\>**
+
 **no spanning-tree [vlan <vlan-id/vlan-range>] max-age**
 
 Eg:
@@ -397,7 +407,10 @@ Default: The max-age is 20 seconds
 This command allows configuring the bridge priority in increments of 4096 (default = 32768), range 0-61440.
 Use the no form of this command to return to the default setting.
 
+Use the no form of this command to return to the default setting.
+
 **spanning-tree [vlan <vlan-id/vlan-range>] priority <value\>**
+
 **no spanning-tree [vlan <vlan-id/vlan-range>] priority**
 
 Eg:
@@ -424,7 +437,10 @@ This command allows configuring the loop guard on all the ports.
 By default, when spanning-tree stops receiving the BPDUs on a blocking port, it transitions to forwarding state which can result in a loop in the network. Loop guard feature when enabled, avoids this transition of non-designated ports to forwarding state and instead moves the port to a loop inconsistent state where the port continues to block the traffic to avoid the loop.
 Use the no form of this command to disable loopguard by default on all the ports.
 
+Use the no form of this command to disable loopguard by default on all the ports.
+
 **spanning-tree loopguard default**
+
 **no spanning-tree loopguard default**
 
 **Syntax description**: 
@@ -444,9 +460,11 @@ Below configurations allow STP parameters to be configured on per VLAN, interfac
 ### 3.6.2.3.1 Path Cost
 
 This command allows to configure the port level cost value for a VLAN, range 1 - 200000000.
+
 Use the no form of this command to return to the default setting.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] cost <value\>**
+
 **no spanning-tree [vlan <vlan-id/vlan-range>] cost**
 
 Eg:
@@ -484,6 +502,7 @@ no spanning-tree vlan 75-90,200,1100-1150 cost
 This command allows to configure the port level priority value for a VLAN.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] port-priority <value\>**
+
 **no spanning-tree [vlan <vlan-id/vlan-range>] port-priority**
 
 Eg:
@@ -510,6 +529,7 @@ no spanning-tree vlan 75-90,200,1100-1150 port-priority
 This command allows enabling or disabling of STP on an interface.
 
 **spanning-tree enable**
+
 **no spanning-tree enable** 
 
 **Syntax description**:
@@ -524,6 +544,7 @@ This command has no arguments or keywords.
 Can be set to enabled or disabled. The port becomes an edge port in the domain when set to enabled. Enabling edge port transitions the port quickly to spanning tree forwarding state without passing through blocking or learning states.
 
 **spanning-tree port type edge**
+
 **no spanning-tree port type**
 
 **Syntax description**: 
