@@ -263,8 +263,13 @@ This command allows enabling the spanning tree mode for the device. Use this Glo
 Use the no form of this command to return to the default setting.
 
 **spanning-tree mode {pvst | rapid-pvst}**
-
 **no spanning-tree mode**
+
+Eg:
+```
+spanning-tree mode pvst
+no spanning-tree mode
+```
 
 **Syntax Description:**
 
@@ -289,12 +294,17 @@ Note:
 #### 3.6.2.1.2 Per VLAN spanning-tree  ####
 
 This command allows enabling or disabling spanning-tree on a VLAN. Use this command to disable or enable PVST / RPVST+ on a VLAN. Changing the PVST+ / RPVST+ state in a VLAN affects only that VLAN. This command enables PVST+ / RPVST+ for all ports in a VLAN.
+Use the no form of this command to disable STP for a VLAN. 
 
-Use the no form of this command to return to the default setting.
+**spanning-tree vlan <vlan-id/vlan-range>**
+**no spanning-tree vlan <vlan-id/vlan-range>**
 
-**spanning-tree vlan <vlan-id/vlan-range> **
-
-**no spanning-tree vlan <vlan-id/vlan-range> **
+Eg:
+```
+spanning-tree vlan 2
+spanning-tree vlan 3,50-100,200,1000-1200
+no spanning-tree vlan 75-90,200,1100-1150
+```
 
 **Syntax Description**:
 
@@ -306,15 +316,21 @@ Use the no form of this command to return to the default setting.
 
 **Command Mode**: Global Config
 
-
 #### 3.6.2.1.3 Changing RPVST+ bridge parameters ####
 #### 3.6.2.1.3 Forward delay ####
 
 This command allows configuring the forward delay time in seconds.
+Use the no form of this command to return to the default setting.
 
-** spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds\>**
+**no spanning-tree [vlan <vlan-id/vlan-range>] forward-time**
 
-** no spanning-tree [vlan <vlan-id/vlan-range>] forward-time **
+Eg:
+```
+spanning-tree vlan 2 forward-time 5
+spanning-tree vlan 3,50-100,200,1000-1200 forward-time 6
+no spanning-tree vlan 75-90,200,1100-1150 forward-time
+```
 
 **Syntax description**: 
 
@@ -329,10 +345,17 @@ This command allows configuring the forward delay time in seconds.
 #### 3.6.2.1.4 Hello time ####
 
 This command allows configuring the hello interval in seconds for transmission of BPDUs.
+Use the no form of this command to return to the default setting.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] hello-time <seconds\>**
+**no spanning-tree [vlan <vlan-id/vlan-range>] hello-time**
 
-**no spanning-tree [vlan <vlan-id/vlan-range>] hello-time **
+Eg:
+```
+spanning-tree vlan 2 hello-time 1
+spanning-tree vlan 3,50-100,200,1000-1200 hello-time 3
+no spanning-tree vlan 75-90,200,1100-1150 hello-time
+```
 
 **Syntax description**: 
 
@@ -347,10 +370,17 @@ This command allows configuring the hello interval in seconds for transmission o
 #### 3.6.2.1.5 Max-age ####
 
 This command allows configuring the maximum time to listen for root bridge in seconds.
+Use the no form of this command to return to the default setting.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] max-age <seconds\>**
+**no spanning-tree [vlan <vlan-id/vlan-range>] max-age**
 
-**no spanning-tree [vlan <vlan-id/vlan-range>] max-age **
+Eg:
+```
+spanning-tree vlan 2 max-age 6
+spanning-tree vlan 3,50-100,200,1000-1200 max-age 7
+no spanning-tree vlan 75-90,200,1100-1150 max-age
+```
 
 **Syntax description**: 
 
@@ -365,10 +395,17 @@ Default: The max-age is 20 seconds
 #### 3.6.2.1.6 Priority ####
 
 This command allows configuring the bridge priority in increments of 4096 (default = 32768), range 0-61440.
+Use the no form of this command to return to the default setting.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] priority <value\>**
+**no spanning-tree [vlan <vlan-id/vlan-range>] priority**
 
-**no spanning-tree [vlan <vlan-id/vlan-range>] priority **
+Eg:
+```
+spanning-tree vlan 2 priority 0
+spanning-tree vlan 3,50-100,200,1000-1200 priority 4096
+no spanning-tree vlan 75-90,200,1100-1150 priority
+```
 
 **Syntax description**: 
 
@@ -385,10 +422,10 @@ This command allows configuring the bridge priority in increments of 4096 (defau
 This command allows configuring the loop guard on all the ports. 
 
 By default, when spanning-tree stops receiving the BPDUs on a blocking port, it transitions to forwarding state which can result in a loop in the network. Loop guard feature when enabled, avoids this transition of non-designated ports to forwarding state and instead moves the port to a loop inconsistent state where the port continues to block the traffic to avoid the loop.
+Use the no form of this command to disable loopguard by default on all the ports.
 
 **spanning-tree loopguard default**
-
-**no spanning-tree loopguard default **
+**no spanning-tree loopguard default**
 
 **Syntax description**: 
 
@@ -407,11 +444,17 @@ Below configurations allow STP parameters to be configured on per VLAN, interfac
 ### 3.6.2.3.1 Path Cost
 
 This command allows to configure the port level cost value for a VLAN, range 1 - 200000000.
+Use the no form of this command to return to the default setting.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] cost <value\>**
+**no spanning-tree [vlan <vlan-id/vlan-range>] cost**
 
-**no spanning-tree [vlan <vlan-id/vlan-range>] cost **
-
+Eg:
+```
+spanning-tree vlan 2 cost 1
+spanning-tree vlan 3,50-100,200,1000-1200 cost 100
+no spanning-tree vlan 75-90,200,1100-1150 cost
+```
 
 **Syntax description**: 
 
@@ -441,8 +484,14 @@ This command allows to configure the port level cost value for a VLAN, range 1 -
 This command allows to configure the port level priority value for a VLAN.
 
 **spanning-tree [vlan <vlan-id/vlan-range>] port-priority <value\>**
+**no spanning-tree [vlan <vlan-id/vlan-range>] port-priority**
 
-**no spanning-tree [vlan <vlan-id/vlan-range>] port-priority **
+Eg:
+```
+spanning-tree vlan 2 port-priority 0
+spanning-tree vlan 3,50-100,200,1000-1200 port-priority 1
+no spanning-tree vlan 75-90,200,1100-1150 port-priority
+```
 
 **Syntax description**: 
 
@@ -460,9 +509,8 @@ This command allows to configure the port level priority value for a VLAN.
 
 This command allows enabling or disabling of STP on an interface.
 
-**spanning-tree enable **
-
-**no spanning-tree enable ** 
+**spanning-tree enable**
+**no spanning-tree enable** 
 
 **Syntax description**:
 This command has no arguments or keywords. 
@@ -475,9 +523,8 @@ This command has no arguments or keywords.
 
 Can be set to enabled or disabled. The port becomes an edge port in the domain when set to enabled. Enabling edge port transitions the port quickly to spanning tree forwarding state without passing through blocking or learning states.
 
-**spanning-tree port type edge **
-
-**no spanning-tree port type **
+**spanning-tree port type edge**
+**no spanning-tree port type**
 
 **Syntax description**: 
 
@@ -496,7 +543,6 @@ Can be set to point-to-point or shared. Port is connected to another port throug
 - NOTE: Do not configure shared media such as Hubs as point-to-point links.
 
 **spanning-tree link-type {point-to-point | shared}**
-
 **no spanning-tree link-type**
 
 **Syntax description**: 
@@ -516,7 +562,6 @@ Can be set to point-to-point or shared. Port is connected to another port throug
 This command allows configuring loop guard or root guard on an interface.
 
 **spanning-tree guard {loop | root | none}**
-
 **no spanning-tree guard**
 
 **Syntax description**: 
@@ -574,7 +619,6 @@ Example:
 #### 3.6.3.2 show spanning-tree counters vlan ####
 
 **show spanning-tree counters**
-
 **show spanning-tree counters vlan <vlan-id/vlan-range\>** 
 
 This command displays the spanning-tree counters. counters will be synced to APP DB every 10 seconds.
