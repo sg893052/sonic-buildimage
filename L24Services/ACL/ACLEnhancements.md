@@ -13,6 +13,7 @@ High level design document version 0.4
 - **[1 Feature Overview](#1-feature-overview)**
 	- [1.1 Access control Lists](#11-access-control-lists)
 	- [1.2 Flow Based Services](#12-flow-based-services)
+        - [1.2.1 Forwarding flow based services](#121-forwarding-flow-based-services)
 	- [1.3 Requirements](#13-requirements)
 		- [1.3.1 Functional Requirements](#131-functional-requirements)
 		- [1.3.2 Configuration and Management Requirements](#132-configuration-and-management-requirements)
@@ -270,6 +271,9 @@ Example features might be: -
 3. Forwarding (e.g. PBR, L2 redirect)
 
 This feature provides a common infrastructure service for such features. The common infrastructure service can itself use the SONiC ACL feature for packet match rule definition, or can use it's own UI for more sophisticated classifiers. 
+
+### 1.2.1 Forwarding flow based services
+Forwarding policies allows the user to define a set of classification that when meet cause a packet to be forwarded to a predetermined next hop or interface bypassing the path determined by normal routing/forwarding. It is possible for the user to define multiple match and egress interface/next-hop specifications on the same policy. Forwarding policies can be applied to Switch or Routed traffic. For routing, traffic can be routed to the same VRF as that of ingress interface or a different VRF.
 
 ## 1.3 Requirements
 
