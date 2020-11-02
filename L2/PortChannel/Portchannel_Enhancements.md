@@ -2,7 +2,7 @@
 ### Portchannel Enhancements in SONiC
 
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -62,6 +62,7 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/22/2020  |      Madhukar K    | Initial version                   |
+| 0.2 | 07/25/2020  |      Madhukar K    | Adding portchannel level commands |
 
 # About this Manual
 This document provides details on Port Channel enhancements in SONiC.
@@ -84,7 +85,7 @@ This document describes the high level design of Port Channel enhancements in SO
     - Upon enabling PortChannel graceful shutdown mode, all the portchannels in the system should be operationally down and stop traffic transmission and reception.
 
 ### 1.1.2 Configuration and Management Requirements
-Provide configuration to enable/disable Port Channel graceful shutdown mode with the KLISH and click CLI.
+Provide configuration to enable/disable Port Channel graceful shutdown mode globally and at portchannel level with the KLISH and click CLI.
 
 ### 1.1.3 Scalability Requirements
 All the supported portchannels in the device should enable/disable graceful shutdown mode upon user trigger.
@@ -108,13 +109,14 @@ In MCLAG topologies, one of the two MCLAG nodes is put into graceful shutdown mo
 
 ## 2.2 Functional Description
 In MCLAG topologies, the Port Channel graceful shutdown mode allows users to upgrade the switch software by forwarding the data through the peer MCLAG switch. The goal is to maintain the data connectivity while the software is being upgraded on one of the MCLAG nodes. In order to achieve this, all the portchannels in that MCLAG node are brought down operationally when the device enters the Port Channel graceful shutdown mode.
-In the Port Channel graceful shutdown mode
+In the Port Channel graceful shutdown mode:
 
   - any newly created portchannel will be operationally down
   - existing portchannel memberships(of the ports) can be changed by the user
   - existing portchannels can be deleted by the user
 
-The Port Channel graceful shutdown mode cannot be enabled/disabled for individual portchannels; it applies to all the portchannels present in the system.
+The Port Channel graceful shutdown mode can be enabled/disabled for individual portchannels; portchannel level configuration is applicable only if Port Channel graceful shutdown is enabled globally.
+Note: User should disable the Port Channel graceful shutdown at the portchannel level before enabling globally, if a given portchannel is desired to be operationally up.
 
 # 3 Design
 
@@ -126,11 +128,21 @@ On SONiC device, when user wants to upgrade the firmware or resolve any issue on
   - since the LACP state machine for all the member ports is stopped, the portchannels that are operationally up become down
   - LACPDUs received on the member ports of the portchannels are silently discarded
   - If user triggers a config save followed with a reload (config-reload or cold-reboot) - after reload, the device will come up with all the configured portchannels in graceful shutdown mode. The portchannels will be operationally down.
+  - the portchannels that have portchannel level graceful shutdown disabled are not altered; they continue to be in the same operational status
 
 Upon exiting the Port Channel graceful shutdown mode:
   - LACP state machine is started afresh for all the portchannel member ports that are link up
   - LACPDUs are transmitted and received on the all the portchannel member ports that are link up
   - Portchannels will be operationally up if the LACP convergence succeeds
+
+If the graceful-shutdown is enabled globally:
+  - If there is no configuration at the portchannel level - all the portchannels in the system are brought DOWN
+      - If graceful-shutdown is disabled on a given portchannel(say PortChannel5) - all the portchannels except PortChannel5 are brought DOWN
+          - enable graceful-shutdown on the portchannel which had graceful-shutdown disabled - PortChannel5 is brought DOWN
+
+If the graceful-shutdown is disabled globally:
+    - If graceful-shutdown is enabled at a portchannel level - this is a NO-OP; the portchannel continues to be UP
+    - If graceful-shutdown is disabled at a portchannel level - this is a NO-OP; the portchannel continues to be UP
 
 ### 3.1.1 Teamd configuration
 The user will be able to enable/disable the Port Channel graceful shutdown mode.
@@ -143,8 +155,12 @@ Team Manager listens to the enable/disable modes of the Port Channel graceful sh
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
 A new table PORTCHANNEL_GLOBAL is introduced. In the PORTCHANNEL_GLOBAL table:
-  - the "graceful_shutdown_mode" field is set to "enable" if user enables the Port Channel graceful shutdown mode
-  - the "graceful_shutdown_mode" field is set to "disable" if user disables the Port Channel graceful shutdown mode
+  - the "graceful_shutdown_mode" field is set to "enable" if user enables the Port Channel graceful shutdown mode globally
+  - the "graceful_shutdown_mode" field is set to "disable" if user disables the Port Channel graceful shutdown mode globally
+
+In the PORTCHANNEL table:
+- the "graceful_shutdown_mode" field is set to "enable" if user enables the Port Channel graceful shutdown mode at the portchannel level
+- the "graceful_shutdown_mode" field is set to "disable" if user disables the Port Channel graceful shutdown mode at the portchannel level
 
 ### 3.2.2 APP DB
 No new tables are needed.
@@ -182,21 +198,38 @@ Not applicable.
 
 Click CLI
 
-Enable/disable the Port Channel graceful shutdown mode.
+Enable/disable the Port Channel graceful shutdown mode globally:
 ```
 root@sonic:/home/admin# config portchannel graceful-shutdown <enable/disable>
 ```
 
+Enable/disable the Port Channel graceful shutdown mode for a given portchannel:
+```
+root@sonic:/home/admin# config portchannel graceful-shutdown <enable/disable> <portchannel-name>
+```
+
 KLISH CLI
 
-Enable PortChannel graceful shutdown mode:
+Enable PortChannel graceful shutdown mode globally:
 ```
 sonic(config)# portchannel graceful-shutdown
 ```
 
-Disable PortChannel graceful shutdown mode:
+Enable PortChannel graceful shutdown mode for a given portchannel:
+```
+sonic(config)# interface PortChannel  6
+sonic(conf-if-po6)# graceful-shutdown
+```
+
+Disable PortChannel graceful shutdown mode globally:
 ```
 sonic(config)# no portchannel graceful-shutdown
+```
+
+Disable PortChannel graceful shutdown mode for a given portchannel:
+```
+sonic(config)# interface PortChannel  6
+sonic(conf-if-po6)# no graceful-shutdown
 ```
 
 ### 3.6.4 Show Commands
@@ -206,7 +239,7 @@ The output of show interface portchannel is modified to display:
 1. Portchannel graceful shutdown mode
 2. LACP Fallback operational status, if fallback is enabled.
 
-Graceful shutdown is disabled. Fallback config is enabled; it is non-operational.
+Graceful shutdown is disabled. Fallback config is enabled; it is non-operational:
 ```
 sonic# show interface PortChannel
 PortChannel5 is up, line protocol is down, mode LACP
@@ -232,7 +265,7 @@ sonic#
 
 ```
 
-Graceful shutdown is disabled. Fallback config is enabled; it is operational.
+Graceful shutdown is disabled. Fallback config is enabled; it is operational:
 ```
 sonic# show interface PortChannel
 PortChannel5 is up, line protocol is up, mode LACP
@@ -258,7 +291,7 @@ sonic#
 
 ```
 
-Graceful shutdown is enabled. Fallback is disabled.
+Graceful shutdown is enabled. Fallback is disabled:
 ```
 sonic# show interface PortChannel
 PortChannel5 is up, line protocol is down, mode LACP
@@ -289,16 +322,26 @@ No new debug commands are added.
 ### 3.6.6 Rest API Support
 PATCH
 
-Enable graceful shutdown mode:
+Enable graceful shutdown mode globally:
 ```
 /openconfig-aggregate-ext:aggregate/config/graceful-shutdown-mode
+```
+
+Enable graceful shutdown mode for a given portchannel:
+```
+/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/config/openconfig-interfaces-ext:graceful-shutdown-mode
 ```
 
 GET
 
-Get graceful shutdown mode:
+Get global graceful shutdown mode:
 ```
 /openconfig-aggregate-ext:aggregate/config/graceful-shutdown-mode
+```
+
+Get graceful shutdown mode for a given portchannel:
+```
+/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/config/openconfig-interfaces-ext:graceful-shutdown-mode
 ```
 
 Get LACP fallback operational status:
