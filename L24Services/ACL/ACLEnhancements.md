@@ -8,11 +8,12 @@ High level design document version 0.4
 - **[Revision](#revision)**
 - **[About this Manual](#about-this-manual)**
 - **[Scope](#scope)**
-- **[Definition/Abbreviation](#definition_abbreviation)**
+- **[Definition / Abbreviation](#definition-_-abbreviation)**
 	- [Table 1 Abbreviations](#table-1-abbreviations)
 - **[1 Feature Overview](#1-feature-overview)**
 	- [1.1 Access control Lists](#11-access-control-lists)
 	- [1.2 Flow Based Services](#12-flow-based-services)
+        - [1.2.1 Forwarding flow based services](#121-forwarding-flow-based-services)
 	- [1.3 Requirements](#13-requirements)
 		- [1.3.1 Functional Requirements](#131-functional-requirements)
 		- [1.3.2 Configuration and Management Requirements](#132-configuration-and-management-requirements)
@@ -35,7 +36,7 @@ High level design document version 0.4
 			- [2.2.1.5 ACL Lookup mode](#2215-acl-lookup-mode)
 			- [2.2.1.6 Default rule for ACL tables of type l2, l3 and l3v6](#2216-default-rule-for-acl-tables-of-type-l2-l3-and-l3v6)
 			- [2.2.1.7 Evaluation of ACLs applied on different interfaces](#2217-evaluation-of-acls-applied-on-different-interfaces)
-			- [2.2.1.8 Interaction of L2 and IPv4/IPv6 ACLs](#2218-interaction-of-l2-and-ipv4_ipv6-acls)
+			- [2.2.1.8 Interaction of L2 and IPv4 / IPv6 ACLs](#2218-interaction-of-l2-and-ipv4-_-ipv6-acls)
 		- [2.2.2 Flow based services](#222-flow-based-services)
 			- [2.2.2.1 Classifiers](#2221-classifiers)
 				- *[2.2.2.1.1 Classification using ACLs](#22211-classification-using-acls)*
@@ -91,8 +92,8 @@ High level design document version 0.4
 		- [3.6.2 Configuration Commands](#362-configuration-commands)
 			- [3.6.2.1 Configuring ACL Counter mode](#3621-configuring-acl-counter-mode)
 				- *[3.6.2.1.1 Configuring ACL Counter mode using Sonic-CLI](#36211-configuring-acl-counter-mode-using-sonic-cli)*
-				- *[3.6.2.1.2 Configuring ACL lookup mode using Click CLI (Depreciated)](#36212-configuring-acl-lookup-mode-using-click-cli-depreciated)*
-			- [3.6.2.2 Creating/Deleting a MAC / IPv4 / IPv6 ACL](#3622-creating_deleting-a-mac-_-ipv4-_-ipv6-acl)
+				- *[3.6.2.1.2 Configuring ACL lookup mode using Click CLI (Deprecated)](#36212-configuring-acl-lookup-mode-using-click-cli-deprecated)*
+			- [3.6.2.2 Creating/Deleting a MAC/IPv4/IPv6 ACL](#3622-creating_deleting-a-mac_ipv4_ipv6-acl)
 			- [3.6.2.3 Creating/Deleting a MAC ACL Rule](#3623-creating_deleting-a-mac-acl-rule)
 			- [3.6.2.4 Creating/Deleting a IP ACL Rule](#3624-creating_deleting-a-ip-acl-rule)
 			- [3.6.2.5 Creating/Deleting a IPv6 ACL Rule](#3625-creating_deleting-a-ipv6-acl-rule)
@@ -104,7 +105,7 @@ High level design document version 0.4
 				- *[3.6.2.8.3 Applying ACL to Control Plane](#36283-applying-acl-to-control-plane)*
 			- [3.6.2.9 Create classifier](#3629-create-classifier)
 				- *[3.6.2.9.1 Creating classifier through Sonic-CLI](#36291-creating-classifier-through-sonic-cli)*
-				- *[3.6.2.9.2 Creating classifier through click cli (Depreciated)](#36292-creating-classifier-through-click-cli-depreciated)*
+				- *[3.6.2.9.2 Creating classifier through click cli (Deprecated)](#36292-creating-classifier-through-click-cli-deprecated)*
 			- [3.6.2.10 Update classifier match parameters](#36210-update-classifier-match-parameters)
 				- *[3.6.2.10.1 Update classifier match parameters using Sonic-CLI](#362101-update-classifier-match-parameters-using-sonic-cli)*
 					- *[3.6.2.10.1.1 Add or delete match ACL to classifier](#3621011-add-or-delete-match-acl-to-classifier)*
@@ -121,26 +122,26 @@ High level design document version 0.4
 					- *[3.6.2.10.1.12 Add or delete match on source TCP or UDP Port](#36210112-add-or-delete-match-on-source-tcp-or-udp-port)*
 					- *[3.6.2.10.1.13 Add or delete match on destination TCP or UDP Port](#36210113-add-or-delete-match-on-destination-tcp-or-udp-port)*
 					- *[3.6.2.10.1.14 Add or delete match on TCP flags](#36210114-add-or-delete-match-on-tcp-flags)*
-				- *[3.6.2.10.2 Update classifier match parameters using Click CLI (Depreciated)](#362102-update-classifier-match-parameters-using-click-cli-depreciated)*
-			- [3.6.2.11 Add or delete classifier description](#36211-add-or-delete-classifier-description)
+				- *[3.6.2.10.2 Update classifier match parameters using Click CLI (Deprecated)](#362102-update-classifier-match-parameters-using-click-cli-deprecated)*
+			- [3.6.2.11 Add classifier description](#36211-add-classifier-description)
 			- [3.6.2.12 Delete classifier description](#36212-delete-classifier-description)
 			- [3.6.2.13 Delete classifier](#36213-delete-classifier)
 				- *[3.6.2.13.1 Delete classifier using Sonic-CLI](#362131-delete-classifier-using-sonic-cli)*
-				- *[3.6.2.13.2 Delete classifier using Click CLI (Depreciated)](#362132-delete-classifier-using-click-cli-depreciated)*
+				- *[3.6.2.13.2 Delete classifier using Click CLI (Deprecated)](#362132-delete-classifier-using-click-cli-deprecated)*
 			- [3.6.2.14 Add policy](#36214-add-policy)
 				- *[3.6.2.14.1 Add policy using Sonic-CLI](#362141-add-policy-using-sonic-cli)*
-				- *[3.6.2.14.2 Add policy using Click CLI (Depreciated)](#362142-add-policy-using-click-cli-depreciated)*
+				- *[3.6.2.14.2 Add policy using Click CLI (Deprecated)](#362142-add-policy-using-click-cli-deprecated)*
 			- [3.6.2.15 Delete policy](#36215-delete-policy)
 				- *[3.6.2.15.1 Deleting policy using Sonic-CLI](#362151-deleting-policy-using-sonic-cli)*
-				- *[3.6.2.15.2 Deleting policy using Click CLI (Depreciated)](#362152-deleting-policy-using-click-cli-depreciated)*
+				- *[3.6.2.15.2 Deleting policy using Click CLI (Deprecated)](#362152-deleting-policy-using-click-cli-deprecated)*
 			- [3.6.2.16 Add policy description](#36216-add-policy-description)
 			- [3.6.2.17 Delete policy description](#36217-delete-policy-description)
 			- [3.6.2.18 Add flow identified by a classifier to a policy](#36218-add-flow-identified-by-a-classifier-to-a-policy)
 				- *[3.6.2.18.1 Add flow using Sonic-CLI](#362181-add-flow-using-sonic-cli)*
-				- *[3.6.2.18.2 Add flow using Click CLI (Depreciated)](#362182-add-flow-using-click-cli-depreciated)*
+				- *[3.6.2.18.2 Add flow using Click CLI (Deprecated)](#362182-add-flow-using-click-cli-deprecated)*
 			- [3.6.2.19 Delete flow identified by a classifier to a policy](#36219-delete-flow-identified-by-a-classifier-to-a-policy)
 			- [3.6.2.20 Deleting flow using Sonic-CLI](#36220-deleting-flow-using-sonic-cli)
-			- [3.6.2.21 Deleting flow using Click CLI (Depreciated)](#36221-deleting-flow-using-click-cli-depreciated)
+			- [3.6.2.21 Deleting flow using Click CLI (Deprecated)](#36221-deleting-flow-using-click-cli-deprecated)
 			- [3.6.2.22 Add flow description](#36222-add-flow-description)
 			- [3.6.2.23 Delete flow description](#36223-delete-flow-description)
 			- [3.6.2.24 Add action(s) to flows](#36224-add-actions-to-flows)
@@ -151,6 +152,8 @@ High level design document version 0.4
 					- *[3.6.2.24.1.4 Delete PCP remarking action](#3622414-delete-pcp-remarking-action)*
 					- *[3.6.2.24.1.5 Add policer action](#3622415-add-policer-action)*
 					- *[3.6.2.24.1.6 Delete policer action](#3622416-delete-policer-action)*
+					- *[3.6.2.24.1.7 Add set traffic-class action](#3622417-add-set-traffic-class-action)*
+					- *[3.6.2.24.1.8 Delete set traffic-class action](#3622418-delete-set-traffic-class-action)*
 				- *[3.6.2.24.2 Adding monitoring actions to the flow](#362242-adding-monitoring-actions-to-the-flow)*
 					- *[3.6.2.24.2.1 Adding mirror session action](#3622421-adding-mirror-session-action)*
 					- *[3.6.2.24.2.2 Deleting mirror session action](#3622422-deleting-mirror-session-action)*
@@ -159,32 +162,32 @@ High level design document version 0.4
 					- *[3.6.2.24.3.2 Adding / Deleting IPv6 next-hop](#3622432-adding-_-deleting-ipv6-next-hop)*
 					- *[3.6.2.24.3.3 Adding / Deleting egress interface](#3622433-adding-_-deleting-egress-interface)*
 					- *[3.6.2.24.3.4 Adding default drop action](#3622434-adding-default-drop-action)*
-				- *[3.6.2.24.4 Add flow actions using Click CLIs (Depreciated)](#362244-add-flow-actions-using-click-clis-depreciated)*
+				- *[3.6.2.24.4 Add flow actions using Click CLIs (Deprecated)](#362244-add-flow-actions-using-click-clis-deprecated)*
 			- [3.6.2.25 Applying the policy to an interface](#36225-applying-the-policy-to-an-interface)
 				- *[3.6.2.25.1 Applying policy to an interface using Sonic-CLI](#362251-applying-policy-to-an-interface-using-sonic-cli)*
-				- *[3.6.2.25.2 Applying policy to an interface using Click CLI (Depreciated)](#362252-applying-policy-to-an-interface-using-click-cli-depreciated)*
+				- *[3.6.2.25.2 Applying policy to an interface using Click CLI (Deprecated)](#362252-applying-policy-to-an-interface-using-click-cli-deprecated)*
 			- [3.6.2.26 Removing policy from an interface](#36226-removing-policy-from-an-interface)
 				- *[3.6.2.26.1 Removing policy from an interface using Sonic-CLI](#362261-removing-policy-from-an-interface-using-sonic-cli)*
-				- *[3.6.2.26.2 Removing policy from an interface using Click CLI (Depreciated)](#362262-removing-policy-from-an-interface-using-click-cli-depreciated)*
+				- *[3.6.2.26.2 Removing policy from an interface using Click CLI (Deprecated)](#362262-removing-policy-from-an-interface-using-click-cli-deprecated)*
 		- [3.6.3 Show Commands](#363-show-commands)
 			- [3.6.3.1 Show ACL binding summary](#3631-show-acl-binding-summary)
 			- [3.6.3.2 Show ACL Rules and statistics](#3632-show-acl-rules-and-statistics)
 			- [3.6.3.3 Clear ACL statistics](#3633-clear-acl-statistics)
 			- [3.6.3.4 Show classifier details](#3634-show-classifier-details)
 				- *[3.6.3.4.1 Show classifier details using Sonic-CLI](#36341-show-classifier-details-using-sonic-cli)*
-				- *[3.6.3.4.2 Show classifier details using Click CLI (Depreciated)](#36342-show-classifier-details-using-click-cli-depreciated)*
+				- *[3.6.3.4.2 Show classifier details using Click CLI (Deprecated)](#36342-show-classifier-details-using-click-cli-deprecated)*
 				- *[3.6.3.4.3 Show classifier sample output](#36343-show-classifier-sample-output)*
 			- [3.6.3.5 Show policy details](#3635-show-policy-details)
 				- *[3.6.3.5.1 Show policy details using Sonic-CLI](#36351-show-policy-details-using-sonic-cli)*
-				- *[3.6.3.5.2 Show policy details using Click-CLI (Depreciated)](#36352-show-policy-details-using-click-cli-depreciated)*
+				- *[3.6.3.5.2 Show policy details using Click-CLI (Deprecated)](#36352-show-policy-details-using-click-cli-deprecated)*
 				- *[3.6.3.5.3 Sample output](#36353-sample-output)*
 			- [3.6.3.6 Show policy binding summary](#3636-show-policy-binding-summary)
 				- *[3.6.3.6.1 Show policy binding summary using Sonic-CLI](#36361-show-policy-binding-summary-using-sonic-cli)*
-				- *[3.6.3.6.2 Show policy binding summary using Click CLI (Depreciated)](#36362-show-policy-binding-summary-using-click-cli-depreciated)*
+				- *[3.6.3.6.2 Show policy binding summary using Click CLI (Deprecated)](#36362-show-policy-binding-summary-using-click-cli-deprecated)*
 				- *[3.6.3.6.3 Show policy binding summary sample output](#36363-show-policy-binding-summary-sample-output)*
 			- [3.6.3.7 Show/Clear policy binding and counters for an interface](#3637-show_clear-policy-binding-and-counters-for-an-interface)
 				- *[3.6.3.7.1 Show/Clear policy binding and counters using SONiC-CLI](#36371-show_clear-policy-binding-and-counters-using-sonic-cli)*
-				- *[3.6.3.7.2 Show/Clear policy binding and counters using Click CLI (Depreciated)](#36372-show_clear-policy-binding-and-counters-using-click-cli-depreciated)*
+				- *[3.6.3.7.2 Show/Clear policy binding and counters using Click CLI (Deprecated)](#36372-show_clear-policy-binding-and-counters-using-click-cli-deprecated)*
 				- *[3.6.3.7.3 Show policy binding and counters sample output](#36373-show-policy-binding-and-counters-sample-output)*
 			- [3.6.3.8 TCAM Allocation](#3638-tcam-allocation)
 				- *[3.6.3.8.1 Available predefined TCAM profiles](#36381-available-predefined-tcam-profiles)*
@@ -194,7 +197,6 @@ High level design document version 0.4
 				- *[3.6.3.8.5 Clearing the TCAM Allocation scheme.](#36385-clearing-the-tcam-allocation-scheme)*
 				- *[3.6.3.8.6 Modifying the current TCAM allocation](#36386-modifying-the-current-tcam-allocation)*
 				- *[3.6.3.8.7 Setting a custom TCAM allocation](#36387-setting-a-custom-tcam-allocation)*
-		- [3.6.4 REST / gNMI / IS CLI API Support](#364-rest-_-gnmi-_-is-cli-api-support)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 	- [4.1 Create a Classifier](#41-create-a-classifier)
 	- [4.2 Create a QoS Policy and Section](#42-create-a-qos-policy-and-section)
@@ -230,7 +232,7 @@ This document provides general information about the ACL enhancements and Flow B
 # Scope
 This document provides general information about the ACL enhancements and Flow Based Services feature implementation in SONiC.
 
-# Definition/Abbreviation
+# Definition / Abbreviation
 
 ## Table 1 Abbreviations
 | **Term** | **Meaning**          |
@@ -241,9 +243,9 @@ This document provides general information about the ACL enhancements and Flow B
 | sFlow    | Sampled flow         |
 | MQC      | Modular QoS CLIs     |
 | CIR      | Commited Information Rate |
-| CBS      | Commited Bucket Size |
+| CBS      | Commited Burst Size |
 | PIR      | Peak Information Rate |
-| PBS      | Peak Bucket Size |
+| PBS      | Peak Burst Size |
 
 # 1 Feature Overview
 
@@ -269,6 +271,9 @@ Example features might be: -
 3. Forwarding (e.g. PBR, L2 redirect)
 
 This feature provides a common infrastructure service for such features. The common infrastructure service can itself use the SONiC ACL feature for packet match rule definition, or can use it's own UI for more sophisticated classifiers. 
+
+### 1.2.1 Forwarding flow based services
+Forwarding policies allows the user to define a set of classification that when meet cause a packet to be forwarded to a predetermined next hop or interface bypassing the path determined by normal routing/forwarding. It is possible for the user to define multiple match and egress interface/next-hop specifications on the same policy. Forwarding policies can be applied to Switch or Routed traffic. For routing, traffic can be routed to the same VRF as that of ingress interface or a different VRF.
 
 ## 1.3 Requirements
 
@@ -363,15 +368,20 @@ The following diagram shows the different ACLs supported and the location where 
 
 **Figure 1: ACL application at different stages**
 
-The following diagram shows the evaluation order for datapath ACLs. The same is applicable for Flow based services also and will be captured in upcoming sections. datapath ACLs have a default deny any rule. This rule will be applied only after user configured ACL rules are evaluated at Port/LAG, VLAN and Switch Level. 
+The following diagram shows the evaluation order for datapath ACLs. The same is applicable for Flow based services also and will be captured in upcoming sections. Datapath ACLs have a default deny any rule. This rule will be applied only after user configured ACL rules are evaluated at Port/LAG, VLAN and Switch Level.
 
 ![ACL Evaluation order](images/ACLEvalMultiIntf.png "ACL Evaluation order")
 
 **Figure 2: ACL Evaluation order**
 
-#### 2.2.1.8 Interaction of L2 and IPv4/IPv6 ACLs
+#### 2.2.1.8 Interaction of L2 and IPv4 / IPv6 ACLs
 
-An incoming traffic can match both L2 and L3 (IPv4/IPv6) datapath ACLs. The traffic will be dropped when either of the ACL gives a result of drop. The counters for both ACLs will be incremented to indicate the match.
+Security ACL match can result the following actions
+
+**Permit** : This action allows forwarding in data plane and trap to CPU. 
+**Deny** : This action disallows forwarding in data plane but allows traps to CPU.
+
+An incoming traffic can match both L2 and L3 (IPv4/IPv6) datapath ACLs. The following table shows the combined result. The counters for both ACLs will be incremented to indicate the match.
 
 | Result from L2 ACL | Result from L3 ACL (IPv4 or IPv6) | Final Result |
 | ------------------ | --------------------------------- | ------------ |
@@ -379,6 +389,8 @@ An incoming traffic can match both L2 and L3 (IPv4/IPv6) datapath ACLs. The traf
 | DROP               | FORWARD                           | DROP         |
 | FORWARD            | DROP                              | DROP         |
 | DROP               | DROP                              | DROP         |
+
+Please note that in the above table, its assumed that the L2ACL result is also applicable for L3 traffic. 
 
 ### 2.2.2 Flow based services
 Flow based services provide a modular and extensible framework to classify traffic  and take appropriate action for the traffic. Flow based services can be used for different features like QoS, Forwarding and Monitoring. 
@@ -526,9 +538,10 @@ Policies of different types are designed to take specific actions. QoS Polices a
 
 | Feature              | Release supported |
 | -------------------- | ----------------- |
-| IPv4 / IPv6 Next Hop | SONiC 3.1         |
-| L2 Egress interface  | SONiC 3.1         |
-| Default drop action  | SONiC 3.1         |
+| IPv4 / IPv6 underlay next Hop | SONiC 3.1 |
+| IPv4 / IPv6 overlay next hop | SONiC 3.1.1 |
+| L2 Egress interface  | SONiC 3.1 |
+| Default drop action  | SONiC 3.1 |
 
 
 # 3 Design
@@ -752,6 +765,7 @@ PRIORITY           = 1*4DIGIT     ; Valid Range is 0-1023
 DESCRIPTION        = 1*255VCHAR   ; Policy Description
 SET_DSCP           = dscp_val     ; Valid only when policy is of type "qos"
 SET_PCP            = pcp_val      ; Valid only when policy is of type "qos"
+SET_TC             = tc_val       ; Valid only when policy is of type "qos"
 SET_POLICER_CIR    = 1*12DIGIT    ; Valid only when policy is of type "qos"
 SET_POLICER_CBS    = 1*12DIGIT    ; Valid only when policy is of type "qos"
 SET_POLICER_PIR    = 1*12DIGIT    ; Valid only when policy is of type "qos"
@@ -765,6 +779,7 @@ DEFAULT_PACKET_ACTION = "DROP" / "FORWARD" ; Valid only when policy is of type "
 ;value annotations
 dscp_val = DIGIT / %x31-36 %x30-33
 pcp_val  = %x30-37
+tc_val   = %x30-37
 d8       =   DIGIT               ; 0-9
            / %x31-39 DIGIT       ; 10-99
            / "1" 2DIGIT          ; 100-199
@@ -952,7 +967,7 @@ No change to SAI.
 ## 3.6 Manageability
 
 ### 3.6.1 Data Models
-Openconfig ACL and Openconfig Flow based services model support. Openconfig QoS and Openconfig Policy Forwarding model are not supported.
+Openconfig ACL and Openconfig Flow based services models are supported. Openconfig flow based services is a proprietary yang model following openconfig style. Openconfig QoS and Openconfig Policy Forwarding model are not supported as they do not support all SONiC functionality like Flow prioritization, Match on ACL, Layer 2 forwarding etc.
 
 ### 3.6.2 Configuration Commands
 
@@ -963,10 +978,11 @@ The following commands are used to configure Policy based services
 ##### 3.6.2.1.1 Configuring ACL Counter mode using Sonic-CLI
 | Mode | Config |
 | ---- | ------ |
-| Syntax | sonic(config)# **hardware**<br/>sonic(config-hardware)# **access-list**<br/>sonic(config-hardware-acl)# **counters** { **per-entry** \| **per-interface-entry** } |
+| Syntax | sonic(config)# **hardware**<br/>sonic(config-hardware)# **access-list**<br/>sonic(config-hardware-acl)# **counters** { **per-entry** \| **per-interface-entry** } <br/>&nbsp;***per-entry*** : ACL counters are aggregated over all interfaces, and reported only per ACL entry. <br/>&nbsp;***per-interface-entry*** : ACL counters are reported per ACL entry and per interface for all ACL bindings. |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.1.2 Configuring ACL lookup mode using Click CLI (Depreciated)
+##### 3.6.2.1.2 Configuring ACL lookup mode using Click CLI (Deprecated)
+
 ```
 root@sonic:/home/admin# config hardware access-list --help
 Usage: config hardware access-list [OPTIONS]
@@ -981,7 +997,7 @@ Options:
   -?, -h, --help                Show this message and exit.
 ```
 
-#### 3.6.2.2 Creating/Deleting a MAC / IPv4 / IPv6 ACL
+#### 3.6.2.2 Creating/Deleting a MAC/IPv4/IPv6 ACL
 | Mode | Config |
 | ---- | ------ |
 | Syntax | \[no\] { **mac** \| **ip** \| **ipv6** } **access-list** *NAME* |
@@ -999,14 +1015,14 @@ Options:
 #### 3.6.2.4 Creating/Deleting a IP ACL Rule
 | Mode | ACL |
 | ---- | ------ |
-| Syntax | sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **fin** \| **syn** \| **rst** \| **psh** \| **ack** \| **urg** \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } { **ip** \| *IP_PROTOCOL* } { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-mac-acl)# **no seq** *<1-65535>* |
+| Syntax | sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **fin** \| **syn** \| **rst** \| **psh** \| **ack** \| **urg** \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } { **ip** \| *IP_PROTOCOL* } { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ip-acl)# **no seq** *<1-65535>* |
 | Arguments | ***IP_PROTOCOL***: IP Protocol value in decimal format<br/>***SIP***: Source IPv4 address<br/>***SIP_PREFIX_LEN***: Source IPv4 address prefix length<br/>***DIP***: Destination IPv4 address<br/>***DIP_PREFIX_LEN***: Destination IPv4 address prefix length<br/>***PORT, BEGIN, END***: TCP or UDP Port number in decimal format. END > BEGIN. Valid only when IP_PROTOCOL is 6, 17 ie TCP or UDP<br/>***DSCP_VAL***: DSCP value in decimal format<br/>***ICMP_TYPE***: ICMP type in decimal format. Valid only when IP_PROTOCOL is 1 i.e. ICMP<br/>***ICMP_CODE***: ICMP code in decimal format. Valid only when IP_PROTOCOL is 1 i.e. ICMP<br/>***VLANID***: VLAN ID in range 1-4094 in decimal format<br/>***DESCRIPTION***: A string describing the rule. Must be in double quotes if it contains spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.5 Creating/Deleting a IPv6 ACL Rule
 | Mode | ACL |
 | ---- | ------ |
-| Syntax | sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **fin** \| **syn** \| **rst** \| **psh** \| **ack** \| **urg** \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } *IPV6_PROTOCOL* { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-mac-acl)# **no seq** *<1-65535>* |
+| Syntax | sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **fin** \| **syn** \| **rst** \| **psh** \| **ack** \| **urg** \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } *IPV6_PROTOCOL* { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **no seq** *<1-65535>* |
 | Arguments | ***IPV6_PROTOCOL***: IPv6 Protocol value in decimal format<br/>***SIPV6***: Source IPv6 address<br/>***SIPV6_PREFIX_LEN***: Source IPv6 address prefix length<br/>***DIPV6***: Destination IPv6 address<br/>***DIPV6_PREFIX_LEN***: Destination IPv6 address prefix length<br/>***PORT, BEGIN, END***: TCP or UDP Port number in decimal format. END > BEGIN. Valid only when IP_PROTOCOL is 6, 17 ie TCP or UDP<br/>***DSCP_VAL***: DSCP value in decimal format<br/>***ICMP_TYPE***: ICMP type in decimal format. Valid only when IP_PROTOCOL is 58 i.e. ICMPv6<br/>***ICMP_CODE***: ICMP code in decimal format. Valid only when IP_PROTOCOL is 58 i.e. ICMPv6<br/>***VLANID***: VLAN ID in range 1-4094 in decimal format<br/>***DESCRIPTION***: A string describing the rule. Must be in double quotes if it contains spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1049,12 +1065,12 @@ Options:
 
 | Mode | Config |
 | ---- | --------------------------------------------------- |
-| Syntax         | SONiC(config)# **classifier** *NAME* **match-type** **acl**  |
-| Syntax         | SONiC(config)# **classifier** *NAME* **match-type** **fields** **match-all** |
+| Syntax         | SONiC(config)# **class-map** *NAME* **match-type** **acl**  |
+| Syntax         | SONiC(config)# **class-map** *NAME* **match-type** **fields** **match-all** |
 | Arguments      | ***NAME***: String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced       |
 
-##### 3.6.2.9.2 Creating classifier through click cli (Depreciated)
+##### 3.6.2.9.2 Creating classifier through click cli (Deprecated)
 
 ```
 root@sonic:~# config classifier add --help
@@ -1076,99 +1092,99 @@ Options:
 
 ###### 3.6.2.10.1.1 Add or delete match ACL to classifier
 
-| Mode   | Classifier                                              |
-| ------ | ------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match access-group** { **mac** \| **ip** \| **ipv6** } *NAME* |
-| Syntax | SONiC(config-classifier)# **no match access-group** |
+| Mode   | Classifier |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match access-group** { **mac** \| **ip** \| **ipv6** } *NAME* |
+| Syntax | SONiC(config-class-map)# **no match access-group** |
 | Arguments | ***NAME***: String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.2 Add or delete match on source MAC
 
-| Mode   | Classifier                                                   |
-| ------ | ------------------------------------------------------------ |
-| Syntax | SONiC(config-classifier)# **match source-address mac** *MAC* [ / *MAC_MASK*] |
-| Syntax | SONiC(config-classifier)# **no match source-address mac** |
+| Mode   | Classifier |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match source-address mac** *MAC* [ / *MAC_MASK*] |
+| Syntax | SONiC(config-class-map)# **no match source-address mac** |
 | Arguments | ***MAC***: MAC address in xxxx.xxxx.xxxx or xx:xx:xx:xx:xx:xx format <br/>***MAC_MASK***: MAC address mask in xxxx.xxxx.xxxx or xx:xx:xx:xx:xx:xx format |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.3 Add or delete match on destination MAC
 
-| Mode   | Classifier                                                   |
-| ------ | ------------------------------------------------------------ |
-| Syntax | SONiC(config-classifier)# **match destination-address mac** *MAC* [ / *MAC_MASK*] |
-| Syntax | SONiC(config-classifier)# **no match destination-mac** |
+| Mode   | Classifier |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match destination-address mac** *MAC* [ / *MAC_MASK*] |
+| Syntax | SONiC(config-class-map)# **no match destination-mac** |
 | Arguments | ***MAC***: MAC address in xxxx.xxxx.xxxx or xx:xx:xx:xx:xx:xx format <br/>***MAC_MASK***: MAC address mask in xxxx.xxxx.xxxx or xx:xx:xx:xx:xx:xx format |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.4 Add or delete match on ethertype
 
-| Mode   | Classifier                                                   |
-| ------ | ------------------------------------------------------------ |
-| Syntax | SONiC(config-classifier)# **match ether-type** { **ip** \| **ipv6** \| *ETHER_TYPE* } |
-| Syntax | SONiC(config-classifier)# **no match ether-type** |
+| Mode   | Classifier |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match ether-type** { **ip** \| **ipv6** \| *ETHER_TYPE* } |
+| Syntax | SONiC(config-class-map)# **no match ether-type** |
 | Arguments | ***ETHER_TYPE***: Ethertype value in hex format in range 0x600 - 0xFFFF |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.5 Add or delete match on PCP
 
-| Mode           | Classifier                                                   |
-| -------------- | ------------------------------------------------------------ |
-| Syntax         | SONiC(config-classifier)# **match pcp** { **be** \| **bk** \| **ee** \| **ca** \| **vi** \| **vo** \| **ic** \| **nc** \| *PCP_VAL* } |
-| Syntax         | SONiC(config-classifier)# **no match pcp**                   |
+| Mode           | Classifier |
+| -------------- | ---------- |
+| Syntax         | SONiC(config-class-map)# **match pcp** { **be** \| **bk** \| **ee** \| **ca** \| **vi** \| **vo** \| **ic** \| **nc** \| *PCP_VAL* } |
+| Syntax         | SONiC(config-class-map)# **no match pcp**                   |
 | Arguments      | ***be***: Best effort (0)<br/>***bk***: Background (1)<br/>***ee***: Excellent effort (2)<br/>***ca***: Critical applications (3)<br/>***vi***: Video, < 100 ms latency and jitter (4)<br/>***vo***: Voice, < 10 ms latency and jitter (5)<br/>***ic***: Internetwork control (6)<br/>***nc***: Network control (7)<br/>***PCP_VAL***: PCP Value in range 0-7 |
 | Change history | SONiC 3.1 - Introduced                                       |
 
 ###### 3.6.2.10.1.6 Add or delete match on VLAN ID
-| Mode   | Classifier|
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match vlan** *VLAN_ID* |
-| Syntax | SONiC(config-classifier)# **no match vlan** |
+| Mode   | Classifier |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match vlan** *VLAN_ID* |
+| Syntax | SONiC(config-class-map)# **no match vlan** |
 | Arguments | ***VLAN_ID***: VLAN ID in range 1-4094 |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.7 Add or delete match on source IPv4 Address
 
 | Mode   | Classifier |
-| ------ | ---------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match source-address ip** { **host** *IP_ADDR* \| *IP_ADDR/PREFIX* } |
-| Syntax | SONiC(config-classifier)# **no match source-address ip** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match source-address ip** { **host** *IP_ADDR* \| *IP_ADDR/PREFIX* } |
+| Syntax | SONiC(config-class-map)# **no match source-address ip** |
 | Arguments | ***IP_ADDR***: IPv4 address<br/>***PREFIX***: Prefix in range 1-31 |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.8 Add or delete match on destination IPv4 Address
 
 | Mode   | Classifier |
-| ------ | ---------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match destination-address ip** { **host** *IP_ADDR* \| *IP_ADDR/PREFIX* } |
-| Syntax | SONiC(config-classifier)# **no match destination-address ip** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match destination-address ip** { **host** *IP_ADDR* \| *IP_ADDR/PREFIX* } |
+| Syntax | SONiC(config-class-map)# **no match destination-address ip** |
 | Arguments | ***IP_ADDR***: IPv4 address<br/>***PREFIX***: Prefix in range 1-31 |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.9 Add or delete match on source IPv6 Address
 
 | Mode   | Classifier |
-| ------ | ---------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match source-address ipv6** { **host** *IPV6_ADDR* \| *IPV6_ADDR/PREFIX* } |
-| Syntax | SONiC(config-classifier)# **no match source-address ipv6** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match source-address ipv6** { **host** *IPV6_ADDR* \| *IPV6_ADDR/PREFIX* } |
+| Syntax | SONiC(config-class-map)# **no match source-address ipv6** |
 | Arguments | ***IPV6_ADDR***: IPv6 address<br/>***PREFIX***: Prefix in range 1-127 |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.10 Add or delete match on destination IPv4 Address
 
 | Mode   | Classifier |
-| ------ | ---------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match destination-address ipv6** { **host** *IPV6_ADDR* \| *IPV6_ADDR/PREFIX* } |
-| Syntax | SONiC(config-classifier)# **no match destination-address ipv6** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match destination-address ipv6** { **host** *IPV6_ADDR* \| *IPV6_ADDR/PREFIX* } |
+| Syntax | SONiC(config-class-map)# **no match destination-address ipv6** |
 | Arguments | ***IPV6_ADDR***: IPv6 address<br/>***PREFIX***: Prefix in range 1-127 |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.10.1.11 Add or delete match on IP Protocol
 
 | Mode   | Classifier |
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match ip protocol** { **tcp** \| **udp** \| **icmp** \| **icmpv6** \| *NUMBER* } |
-| Syntax | SONiC(config-classifier)# **no match protocol** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match ip protocol** { **tcp** \| **udp** \| **icmp** \| **icmpv6** \| *NUMBER* } |
+| Syntax | SONiC(config-class-map)# **no match protocol** |
 | Arguments | ***NUMBER***: IP Protocol number in range 0-255 |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1176,9 +1192,9 @@ Options:
 Match on source port is allowed only when IP protocol is set to TCP or UDP.
 
 | Mode   | Classifier |
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match l4-port source** { **eq** *NUMBER* \| **range** *BEGIN* *END*} |
-| Syntax | SONiC(config-classifier)# **no match l4-port source** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match l4-port source** { **eq** *NUMBER* \| **range** *BEGIN* *END*} |
+| Syntax | SONiC(config-class-map)# **no match l4-port source** |
 | Arguments | ***NUMBER***: Port number 0-65535<br/>***BEGIN***,***END***: Port number 0-65535. END must be greater than BEGIN |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1186,9 +1202,9 @@ Match on source port is allowed only when IP protocol is set to TCP or UDP.
 Match on destination port is allowed only when IP protocol is set to TCP or UDP.
 
 | Mode   | Classifier |
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match l4-port destination** { **eq** *NUMBER* \| **range** *BEGIN* *END*} |
-| Syntax | SONiC(config-classifier)# **no match l4-port destination** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match l4-port destination** { **eq** *NUMBER* \| **range** *BEGIN* *END*} |
+| Syntax | SONiC(config-class-map)# **no match l4-port destination** |
 | Arguments | ***NUMBER***: Port number 0-65535<br/>***BEGIN***,***END***: Port number 0-65535. END must be greater than BEGIN |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1196,12 +1212,12 @@ Match on destination port is allowed only when IP protocol is set to TCP or UDP.
 Match on TCP flags is allowed only when IP protocol is set to TCP. `not-xxx` keyword can be used to match the corresponding flag set to 0.
 
 | Mode   | Classifier |
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **match tcp-flags** { **syn** \| **not-syn** } { **ack** \| **not-ack** } { **fin** \| **not-fin** } { **ack** \| **not-ack** } { **psh** \| **not-psh** } { **urg** \| **not-urg** } |
-| Syntax | SONiC(config-classifier)# **no** **match tcp-flags** [ { **syn** \| **not-syn** } { **ack** \| **not-ack** } { **fin** \| **not-fin** } { **ack** \| **not-ack** } { **psh** \| **not-psh** } { **urg** \| **not-urg** } ] |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **match tcp-flags** { **syn** \| **not-syn** } { **ack** \| **not-ack** } { **fin** \| **not-fin** } { **ack** \| **not-ack** } { **psh** \| **not-psh** } { **urg** \| **not-urg** } |
+| Syntax | SONiC(config-class-map)# **no** **match tcp-flags** [ { **syn** \| **not-syn** } { **ack** \| **not-ack** } { **fin** \| **not-fin** } { **ack** \| **not-ack** } { **psh** \| **not-psh** } { **urg** \| **not-urg** } ] |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.10.2 Update classifier match parameters using Click CLI (Depreciated)
+##### 3.6.2.10.2 Update classifier match parameters using Click CLI (Deprecated)
 ```
 root@sonic:~# config classifier update --help
 Usage: config classifier update [OPTIONS] <name>
@@ -1258,19 +1274,19 @@ Options:
   -d, --description <description>
   --help                          Show this message and exit.
 ```
-#### 3.6.2.11 Add or delete classifier description
+#### 3.6.2.11 Add classifier description
 
 | Mode   | Classifier |
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **description** *STRING* |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **description** *STRING* |
 | Arguments | ***STRING***: A string describing the classifier. Max 256 characters. Description should be in double quotes if it has spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.12 Delete classifier description
 
 | Mode   | Classifier |
-| ------ | ----------------------------------------------------------- |
-| Syntax | SONiC(config-classifier)# **no description** |
+| ------ | ---------- |
+| Syntax | SONiC(config-class-map)# **no description** |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.13 Delete classifier
@@ -1278,12 +1294,12 @@ Options:
 ##### 3.6.2.13.1 Delete classifier using Sonic-CLI
 
 | Mode | Config |
-| ---- | --------------------------------------------------- |
+| ---- | ------ |
 | Syntax | SONiC(config)# **no classifier** *NAME* |
 | Arguments | ***NAME***: String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced       |
 
-##### 3.6.2.13.2 Delete classifier using Click CLI (Depreciated)
+##### 3.6.2.13.2 Delete classifier using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config classifier del --help
@@ -1301,13 +1317,13 @@ Options:
 
 | Mode | Config |
 | ---- | ------ |
-| Syntax | SONiC(config)# **policy** *NAME* **type** { **qos** \| **monitoring** \| **forwarding** } |
+| Syntax | SONiC(config)# **policy-map** *NAME* **type** { **qos** \| **monitoring** \| **forwarding** } |
 | Arguments | ***NAME***: Name of the policy to be created. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced       |
 
 NOTE: **forwarding** policies can be created only using Sonic-CLI.
 
-##### 3.6.2.14.2 Add policy using Click CLI (Depreciated)
+##### 3.6.2.14.2 Add policy using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config policy add --help
@@ -1327,11 +1343,11 @@ Options:
 ##### 3.6.2.15.1 Deleting policy using Sonic-CLI
 | Mode | Config |
 | ---- | ------ |
-| Syntax | SONiC(config)# **no policy** *NAME* |
+| Syntax | SONiC(config)# **no policy-map** *NAME* |
 | Arguments | ***NAME***: Name of the policy to be deleted. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.15.2 Deleting policy using Click CLI (Depreciated)
+##### 3.6.2.15.2 Deleting policy using Click CLI (Deprecated)
 ```
 root@sonic:~# config policy del --help
 Usage: config policy del [OPTIONS] <name>
@@ -1346,7 +1362,7 @@ Options:
 
 | Mode   | Policy |
 | ------ | ------ |
-| Syntax | SONiC(config-classifier)# **description** *STRING* |
+| Syntax | SONiC(config-policy-map)# **description** *STRING* |
 | Arguments | ***STRING***: A string describing the policy. Max 256 characters. Description should be in double quotes if it has spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1354,7 +1370,7 @@ Options:
 
 | Mode   | Policy |
 | ------ | ------ |
-| Syntax | SONiC(config-classifier)# **no description** |
+| Syntax | SONiC(config-policy-map)# **no description** |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.18 Add flow identified by a classifier to a policy
@@ -1363,11 +1379,11 @@ Options:
 
 | Mode   | Policy |
 | ------ | ------ |
-| Syntax | SONiC(config-policy)# **class** *NAME* **priority** *PRIORITY* |
+| Syntax | SONiC(config-policy-map)# **class** *NAME* **priority** *PRIORITY* |
 | Arguments | ***NAME***: Classifier name. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_).<br/>***PRIORITY***: Priority number in range 0-1023 |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.18.2 Add flow using Click CLI (Depreciated)
+##### 3.6.2.18.2 Add flow using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config flow add --help
@@ -1388,11 +1404,11 @@ Options:
 
 | Mode   | Policy |
 | ------ | ------ |
-| Syntax | SONiC(config-policy)# **no class** *NAME* |
+| Syntax | SONiC(config-policy-map)# **no class** *NAME* |
 | Arguments | ***NAME***: Classifier name. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced |
 
-#### 3.6.2.21 Deleting flow using Click CLI (Depreciated)
+#### 3.6.2.21 Deleting flow using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config flow del --help
@@ -1407,7 +1423,7 @@ Options:
 
 | Mode   | Flow |
 | ------ | ------ |
-| Syntax | SONiC(config-classifier)# **description** *STRING* |
+| Syntax | SONiC(config-class-map)# **description** *STRING* |
 | Arguments | *STRING*: A string describing the flow. Max 256 characters. Description should be in double quotes if it has spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1415,7 +1431,7 @@ Options:
 
 | Mode   | Flow |
 | ------ | ------ |
-| Syntax | SONiC(config-classifier)# **no description** |
+| Syntax | SONiC(config-class-map)# **no description** |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.24 Add action(s) to flows
@@ -1427,36 +1443,36 @@ The following QoS actions can be added to the flow. QoS actions can be added/ena
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **set dscp** *\<0-63\>* |
+| Syntax | SONiC(config-policy-map-flow)# **set dscp** *\<0-63\>* |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.24.1.2 Delete DSCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **no set dscp** |
+| Syntax | SONiC(config-policy-map-flow)# **no set dscp** |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.24.1.3 Add PCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **set pcp** *\<0-7\>* |
+| Syntax | SONiC(config-policy-map-flow)# **set pcp** *\<0-7\>* |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.24.1.4 Delete PCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **no set pcp** |
+| Syntax | SONiC(config-policy-map-flow)# **no set pcp** |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.24.1.5 Add policer action
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **police cir** *CIR* \[**cbs** *CBS* \] \[**pir** *PIR* \] \[**pbs** *PBS* \] |
-| Arguments | ***CIR***: Committed information rate in bits per second. CIR is mandatory. The value can be optionally suffixed with kbps(1000), mbps(1000000), gbps (1000000000) or tbps (1000000000000).<br/>***CBS***: Committed bucket size in bytes. The value can be suffixed with KB(1000), MB(1000000), GB(1000000000) or TB(1000000000000). The default value is 20% of the CIR in bytes. If configured by the user, it must be greater than or equal to CIR in bytes.<br/>***PIR***: Peak information rate in bits per second. The value can be optionally suffixed with kbps(1000), mbps(1000000), gbps (1000000000) or tbps (1000000000000). If configured by the user, it must be greater than CIR<br/>***PBS***: Peak bucket size. The value can be suffixed with KB(1000), MB(1000000), GB(1000000000) or TB(1000000000000). The default value is 20% of the PIR value in bytes. If configured by the user, it must be greater than PIR value in bytes and also CBS value. |
+| Syntax | SONiC(config-policy-map-flow)# **police cir** *CIR* \[**bc** *CBS* \] \[**pir** *PIR* \] \[**be** *PBS* \] |
+| Arguments | ***CIR***: Committed information rate in bits per second. CIR is mandatory. The value can be optionally suffixed with kbps(1000), mbps(1000000), gbps (1000000000) or tbps (1000000000000).<br/>***CBS***: Committed burst size in bytes. The value can be suffixed with KB(1000), MB(1000000), GB(1000000000) or TB(1000000000000). The default value is 20% of the CIR in bytes. If configured by the user, it must be greater than or equal to CIR in bytes.<br/>***PIR***: Peak information rate in bits per second. The value can be optionally suffixed with kbps(1000), mbps(1000000), gbps (1000000000) or tbps (1000000000000). If configured by the user, it must be greater than CIR<br/>***PBS***: Peak burst size. The value can be suffixed with KB(1000), MB(1000000), GB(1000000000) or TB(1000000000000). The default value is 20% of the PIR value in bytes. If configured by the user, it must be greater than PIR value in bytes and also CBS value. |
 | Change history | SONiC 3.1 - Introduced |
 
 If only CIR is configured, then its 1 rate, 2 color policer. Any traffic exceeding CIR value will be marked as red and will be dropped.
@@ -1466,7 +1482,21 @@ If both CIR and PIR is configured, then is 2 rate 3 color policer. Any traffic t
 ###### 3.6.2.24.1.6 Delete policer action
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **no police** \[ **cir** \] \[**cbs** \] \[**pir** \] \[**pbs** \] |
+| Syntax | SONiC(config-policy-map-flow)# **no police** \[ **cir** \] \[**cbs** \] \[**pir** \] \[**pbs** \] |
+| Change history | SONiC 3.1 - Introduced |
+
+###### 3.6.2.24.1.7 Add set traffic-class action
+
+| Mode   | Flow |
+| ------ | ---- |
+| Syntax | SONiC(config-policy-map-flow)# **set traffic-class** *\<0-7\>* |
+| Change history | SONiC 3.1 - Introduced |
+
+###### 3.6.2.24.1.8 Delete set traffic-class action
+
+| Mode   | Flow |
+| ------ | ---- |
+| Syntax | SONiC(config-policy-map-flow)# **no set traffic-class** |
 | Change history | SONiC 3.1 - Introduced |
 
 ##### 3.6.2.24.2 Adding monitoring actions to the flow
@@ -1475,14 +1505,14 @@ The following monitoring actions can be added to the flow. Monitoring actions ca
 ###### 3.6.2.24.2.1 Adding mirror session action
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **set mirror-session** *SESSION_NAME* |
+| Syntax | SONiC(config-policy-map-flow)# **set mirror-session** *SESSION_NAME* |
 | Arguments | *SESSION_NAME*: Mirror session name |
 | Change history | SONiC 3.1 - Introduced |
 
 ###### 3.6.2.24.2.2 Deleting mirror session action
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# **no set mirror-session** |
+| Syntax | SONiC(config-policy-map-flow)# **no set mirror-session** |
 | Change history | SONiC 3.1 - Introduced |
 
 ##### 3.6.2.24.3 Adding forwarding actions to the flow
@@ -1491,8 +1521,8 @@ The following forwarding actions can be added to the flow. Forwarding actions ca
 ###### 3.6.2.24.3.1 Adding / Deleting IPv4 next-hop
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# \[ **no** \] **set ip next-hop** *IP_ADDR* \[ vrf *VRF_NAME* \] \[ priority *PRIORITY* \] |
-| Arguments | ***IP_ADDR***: IPv4 Address<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The next-hop with the higher priority will be picked up for forwarding first. If more than 1 next-hops have the same priority then the next-hop which is configured first will be used. |
+| Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set ip next-hop** *IP_ADDR* \[ vrf *VRF_NAME* \] \[ priority *PRIORITY* \] |
+| Arguments | ***IP_ADDR***: IPv4 Address of the next-hop. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The next-hop with the higher priority will be picked up for forwarding first. If more than 1 next-hops have the same priority then the next-hop which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
 IPv4 next-hops are valid only if the classifier uses IPv4 ACL for match. Only IPv4 routed traffic will be forwarded to the configured next-hop. Combining IPv4 next-hops with IPv6 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally.
@@ -1500,8 +1530,8 @@ IPv4 next-hops are valid only if the classifier uses IPv4 ACL for match. Only IP
 ###### 3.6.2.24.3.2 Adding / Deleting IPv6 next-hop
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# \[ **no** \] **set ipv6 next-hop** *IPV6_ADDR* \[ vrf *VRF_NAME* \] \[ priority *PRIORITY* \] |
-| Arguments | ***IPV6_ADDR***: IPv6 Address<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The next-hop with the higher priority will be picked up for forwarding first. If more than 1 next-hops have the same priority then the next-hop which is configured first will be used. |
+| Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set ipv6 next-hop** *IPV6_ADDR* \[ vrf *VRF_NAME* \] \[ priority *PRIORITY* \] |
+| Arguments | ***IPV6_ADDR***: IPv6 Address. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The next-hop with the higher priority will be picked up for forwarding first. If more than 1 next-hops have the same priority then the next-hop which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
 IPv6 next-hops are valid only if the classifier uses IPv6 ACL for match. Only IPv6 routed traffic will be forwarded to the configured next-hop. Combining IPv6 next-hops with IPv4 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally.
@@ -1510,7 +1540,7 @@ IPv6 next-hops are valid only if the classifier uses IPv6 ACL for match. Only IP
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# \[ **no** \] **set interface** { **Ethernet***ID* \| **PortChannel***ID* } \[ priority *PRIORITY* \] |
+| Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set interface** { **Ethernet***ID* \| **PortChannel***ID* } \[ priority *PRIORITY* \] |
 | Arguments | ***ID***: Ethernet or PortChannel number.<br/>***PRIORITY***: Priority of the egress port. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The port with the higher priority will be picked up for forwarding first. If more than 1 ports have the same priority then the port which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
@@ -1520,12 +1550,12 @@ Egress interfaces configuration is valid only if the classifier uses MAC/L2 ACL 
 
 | Mode   | Flow |
 | ------ | ---- |
-| Syntax | SONiC(config-policy-flow)# \[ **no** \] **set interface null** |
+| Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set interface null** |
 | Change history | SONiC 3.1 - Introduced |
 
 Drop action if configured will be of the lowest priority and will be chosen if none of the configured next-hops or egress interfaces can be used for forwarding.
 
-##### 3.6.2.24.4 Add flow actions using Click CLIs (Depreciated)
+##### 3.6.2.24.4 Add flow actions using Click CLIs (Deprecated)
 
 ```
 root@sonic:~# config flow update --help
@@ -1572,7 +1602,7 @@ Forwarding actions are supported only in Sonic-CLI.
 NOTE: Forwarding policy can be applied only using Sonic-CLI. When a forwarding policy is applied globally, the next-hops
 are assumed to be in default VRF unless user has specified the VRF explicitly.
 
-##### 3.6.2.25.2 Applying policy to an interface using Click CLI (Depreciated)
+##### 3.6.2.25.2 Applying policy to an interface using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config service-policy bind --help
@@ -1595,7 +1625,7 @@ Options:
 
 NOTE: Forwarding policy can be removed only using Sonic-CLI.
 
-##### 3.6.2.26.2 Removing policy from an interface using Click CLI (Depreciated)
+##### 3.6.2.26.2 Removing policy from an interface using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config service-policy unbind --help
@@ -1654,10 +1684,10 @@ ip access-list ipacl
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show classifier** [ *NAME* \| **match-type** { **acl** \| **fields** } ] |
+| Syntax | SONiC# **show class-map** [ *NAME* \| **match-type** { **acl** \| **fields** } ] |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.3.4.2 Show classifier details using Click CLI (Depreciated)
+##### 3.6.3.4.2 Show classifier details using Click CLI (Deprecated)
 
 ```
 root@sonic:~# show classifier --help
@@ -1674,14 +1704,14 @@ Options:
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
-| Sonic-CLI | SONiC# show classifier class0 |
-| Click-CLI *(Depreciated)* | root@sonic:~# show classifier class0 |
+| Sonic-CLI | SONiC# show class-map class0 |
+| Click-CLI *(Deprecated)* | root@sonic:~# show classifier class0 |
 | Sample Output | Classifier class0 match-type acl<br/>&nbsp;&nbsp;match-acl l3_ACL_0<br/>&nbsp;&nbsp;&nbsp;&nbsp;Referenced in flows:<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;policy policy0 at priority 200 |
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
-| Sonic-CLI | SONiC# show classifier match-type fields |
-| Click-CLI *(Depreciated)* | root@sonic:~# show classifier -m fields |
+| Sonic-CLI | SONiC# show class-map match-type fields |
+| Click-CLI *(Deprecated)* | root@sonic:~# show classifier -m fields |
 | Sample Output | Classifier fields_class_0 match-type fields<br/>&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;Match:<br/>&nbsp;&nbsp;&nbsp;&nbsp;src-ip 40.1.1.100/32<br/>&nbsp;&nbsp;Referenced in flows:<br/>&nbsp;&nbsp;&nbsp;&nbsp;policy mon_policy_0 at priority 999<br/>&nbsp;&nbsp;&nbsp;&nbsp;policy qos_policy_0 at priority 999 |
 
 #### 3.6.3.5 Show policy details
@@ -1689,10 +1719,10 @@ Options:
 ##### 3.6.3.5.1 Show policy details using Sonic-CLI
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show policy** [ *NAME* \| **type** { **qos** \| **monitoring** \| **forwarding** } ] |
+| Syntax | SONiC# **show policy-map** [ *NAME* \| **type** { **qos** \| **monitoring** \| **forwarding** } ] |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.3.5.2 Show policy details using Click-CLI (Depreciated)
+##### 3.6.3.5.2 Show policy details using Click-CLI (Deprecated)
 
 ```
 root@sonic:~# show policy --help
@@ -1710,15 +1740,15 @@ Options:
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
-| Sonic-CLI | SONiC# show policy qos_policy_0 |
-| Click-CLI (Depreciated) | root@sonic~# show policy qos_policy_0 |
+| Sonic-CLI | SONiC# show policy-map qos_policy_0 |
+| Click-CLI (Deprecated) | root@sonic~# show policy qos_policy_0 |
 | Sample Output | Policy qos_policy_0 Type qos<br/>&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;Flow fields_class_0 at priority 999<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 1<br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 1<br/>&nbsp;&nbsp;&nbsp;&nbsp;police cir 10000000 cbs 1000000 pir 0 pbs 0<br/>&nbsp;&nbsp;Flow fields_class_1 at priority 998<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 2<br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 2<br/>&nbsp;&nbsp;&nbsp;&nbsp;police cir 20000000 cbs 2000000 pir 0 pbs 0<br/>&nbsp;&nbsp;Flow fields_class_2 at priority 997<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 3<br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 3<br/>&nbsp;&nbsp;&nbsp;&nbsp;police cir 30000000 cbs 3000000 pir 0 pbs 0<br/>&nbsp;&nbsp;Flow fields_class_3 at priority 996<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 4<br/>&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 4<br/>&nbsp;&nbsp;&nbsp;&nbsp;police cir 40000000 cbs 4000000 pir 0 pbs 0<br/>&nbsp;&nbsp;Applied to:<br/>&nbsp;&nbsp;&nbsp;&nbsp;Ethernet0 at ingress |
 
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
-| Sonic-CLI | SONiC# show policy type monitoring |
-| Click-CLI (Depreciated) | root@sonic~# show policy -t monitoring |
+| Sonic-CLI | SONiC# show policy-map type monitoring |
+| Click-CLI (Deprecated) | root@sonic~# show policy -t monitoring |
 | Sample Output | Policy mon_policy_0 Type monitoring<br/>&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;Flow fields_class_0 at priority 999<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_50.1.1.2<br/>&nbsp;&nbsp;Flow fields_class_1 at priority 998<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_60.1.1.2<br/>&nbsp;&nbsp;Flow fields_class_2 at priority 997<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_50.1.1.2<br/>&nbsp;&nbsp;Flow fields_class_3 at priority 996<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_60.1.1.2<br/>&nbsp;&nbsp;Applied to:<br/>&nbsp;&nbsp;&nbsp;&nbsp;Ethernet0 at ingress |
 
 #### 3.6.3.6 Show policy binding summary
@@ -1731,7 +1761,7 @@ Options:
 | Arguments | *ID*: Number of Ethernet or PortChannel or Vlan |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.3.6.2 Show policy binding summary using Click CLI (Depreciated)
+##### 3.6.3.6.2 Show policy binding summary using Click CLI (Deprecated)
 
 ```
 root@sonic:~# show service-policy summary --help
@@ -1750,7 +1780,7 @@ Options:
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
 | Sonic-CLI | SONiC# show service-policy summary |
-| Click-CLI (Depreciated) | root@sonic~# show service-policy summary |
+| Click-CLI (Deprecated) | root@sonic~# show service-policy summary |
 | Sample Output | Ethernet0<br/>&nbsp;&nbsp;qos policy qos_policy0 at ingress<br/>&nbsp;&nbsp;monitoring policy mon_policy_0 at ingress<br/>PortChannel100<br/>&nbsp;&nbsp;qos policy policy0 at egress<br/>Vlan100<br/>&nbsp;&nbsp;forwarding policy pbr0 at ingress |
 
 #### 3.6.3.7 Show/Clear policy binding and counters for an interface
@@ -1758,11 +1788,11 @@ Options:
 ##### 3.6.3.7.1 Show/Clear policy binding and counters using SONiC-CLI
 | Mode      | Exec |
 | --------- | ---- |
-| Syntax    | SONiC# **show service-policy** { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** } \[ **type** { **qos** \| **monitoring** \| **forwarding** } \] \| **policy** *NAME* \[ **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** \] } <br/><br/>SONiC# **clear counters service-policy** { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** } \[ **type** { **qos** \| **monitoring** \| **forwarding** } \] \| **policy** *NAME* \[ **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** \] } |
+| Syntax    | SONiC# **show service-policy** { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** } \[ **type** { **qos** \| **monitoring** \| **forwarding** } \] \| **policy-map** *NAME* \[ **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** \] } <br/><br/>SONiC# **clear counters service-policy** { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** } \[ **type** { **qos** \| **monitoring** \| **forwarding** } \] \| **policy-map** *NAME* \[ **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Switch** \] } |
 | Arguments | *ID*: Number of Ethernet or PortChannel or Vlan<br/>*NAME*: Name of the policy applied. |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.3.7.2 Show/Clear policy binding and counters using Click CLI (Depreciated)
+##### 3.6.3.7.2 Show/Clear policy binding and counters using Click CLI (Deprecated)
 
 ```
 root@sonic:~# show service-policy interface --help
@@ -1793,15 +1823,15 @@ Options:
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
 | Sonic-CLI | SONiC# show service-policy interface Ethernet0 |
-| Click-CLI (Depreciated) | root@sonic:~# show service-policy interface Ethernet0 |
+| Click-CLI (Deprecated) | root@sonic:~# show service-policy interface Ethernet0 |
 | Sample Output | Ethernet0<br/>&nbsp;&nbsp;Policy qos_policy_0 Type qos at ingress<br/>&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow fields_class_3 at priority 996 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 4<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set-dscp 4<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;police: cir 40000000 cbs 4000000 pir 0 pbs 0<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type bytes mode color-blind<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;operational cir 40000000 cbs 4000000 pir 0 pbs 0<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;conformed 0 packets 0 bytes action forward<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exceed 0 frames 0 bytes action forward<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;violated 0 frames 0 bytes action drop<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes<br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow fields_class_2 at priority 997 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set-pcp 3<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set-dscp 3<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;police: cir 30000000 cbs 3000000 pir 0 pbs 0<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type bytes mode color-blind<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;operational cir 30000000 cbs 3000000 pir 0 pbs 0<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;conformed 0 packets 0 bytes action forward<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exceed 0 frames 0 bytes action forward<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;violated 0 frames 0 bytes action drop<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes |
 
 
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
-| Sonic-CLI | SONiC# show service-policy policy mon_policy_0 |
-| Click-CLI (Depreciated) | root@sonic:~# show service-policy policy mon_policy_0 |
+| Sonic-CLI | SONiC# show service-policy policy-map mon_policy_0 |
+| Click-CLI (Deprecated) | root@sonic:~# show service-policy policy mon_policy_0 |
 | Sample Output | Ethernet0<br/>&nbsp;&nbsp;Policy mon_policy_0 Type monitoring at ingress<br/>&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow fields_class_3 at priority 996 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_60.1.1.2<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes<br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow fields_class_2 at priority 997 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_50.1.1.2<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes<br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow fields_class_1 at priority 998 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_60.1.1.2<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes<br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow fields_class_0 at priority 999 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_50.1.1.2<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes |
 
 
@@ -1873,12 +1903,10 @@ Total 9 TCAM slices of 9 allocated. Each slice has 256 entries
              l2-acl  160bit(1)  1x512   MAC ACLs
            ipv4-acl  160bit(1)  0x0     IPv4 ACLs
            ipv6-acl  320bit(2)  0x0     IPv6 ACLs
-             ip-acl  320bit(2)  0x0     IPv4 and IPv6 ACLs
            l2-fbqos  160bit(1)  0x0     Flow based QoS using MAC ACL/fields
          ipv4-fbqos  160bit(1)  0x0     Flow based QoS using IPv4 ACL/fields
          ipv6-fbqos  320bit(2)  0x0     Flow based QoS using IPv6 ACL/fields
        l2ipv4-fbqos  320bit(2)  0x0     Flow based QoS using MAC and IPv4 ACL/fields
-           ip-fbqos  320bit(2)  0x0     Flow based QoS using IPv4 and IPv6 ACL/fields
               pfcwd  160bit(1)  0x0     PFC Watchdog
 -----------------------------------------------------------------------------------------------
 Total 2 TCAM slices of 2 allocated. Each slice has 256 entries
@@ -1932,12 +1960,10 @@ Total 9 TCAM slices of 9 allocated. Each slice has 256 entries
              l2-acl  160bit(1)  1x512   MAC ACLs
            ipv4-acl  160bit(1)  0x0     IPv4 ACLs
            ipv6-acl  320bit(2)  0x0     IPv6 ACLs
-             ip-acl  320bit(2)  0x0     IPv4 and IPv6 ACLs
            l2-fbqos  160bit(1)  0x0     Flow based QoS using MAC ACL/fields
          ipv4-fbqos  160bit(1)  0x0     Flow based QoS using IPv4 ACL/fields
          ipv6-fbqos  320bit(2)  0x0     Flow based QoS using IPv6 ACL/fields
        l2ipv4-fbqos  320bit(2)  0x0     Flow based QoS using MAC and IPv4 ACL/fields
-           ip-fbqos  320bit(2)  0x0     Flow based QoS using IPv4 and IPv6 ACL/fields
               pfcwd  160bit(1)  0x0     PFC Watchdog
 -----------------------------------------------------------------------------------------
 Total 2 TCAM slices of 2 allocated. Each slice has 256 entries
@@ -1959,6 +1985,46 @@ The following command is used to modify the current TCAM allocation scheme. A `-
 
 ```
 admin@sonic:~$ sudo tcamutil modify {ingress,egress,both} ...
+
+
+admin@sonic:~$ sudo tcamutil modify ingress --help
+usage: tcamutil modify ingress [-h] [--startup] [-f] [--l2-acl SIZE]
+                               [--ipv4-acl SIZE] [--ipv6-acl SIZE]
+                               [--ip-acl SIZE] [--l2-fbqos SIZE]
+                               [--ipv4-fbqos SIZE] [--ipv6-fbqos SIZE]
+                               [--l2ipv4-fbqos SIZE] [--ip-fbqos SIZE]
+                               [--l2-fbmonitoring SIZE]
+                               [--ipv4-fbmonitoring SIZE]
+                               [--ipv6-fbmonitoring SIZE]
+                               [--l2ipv4-fbmonitoring SIZE]
+                               [--ip-fbmonitoring SIZE] [--tam SIZE]
+                               [--mclag SIZE] [--ip-helper SIZE]
+
+
+
+admin@Belgrade2:~$ sudo tcamutil modify egress --help
+usage: tcamutil modify egress [-h] [--startup] [-f] [--l2-acl SIZE]
+                              [--ipv4-acl SIZE] [--ipv6-acl SIZE]
+                              [--l2-fbqos SIZE] [--ipv4-fbqos SIZE] 
+                              [--ipv6-fbqos SIZE] [--l2ipv4-fbqos SIZE]
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --startup            Modify startup config. (Requires reboot/config reload
+                       for changes to take effect).
+  -f, --force          Force TCAM allocation modification even when TCAM based
+                       features are configured
+  --l2-acl SIZE        MAC ACLs
+  --ipv4-acl SIZE      IPv4 ACLs
+  --ipv6-acl SIZE      IPv6 ACLs
+  --l2-fbqos SIZE      Flow based QoS using MAC ACL/fields
+  --ipv4-fbqos SIZE    Flow based QoS using IPv4 ACL/fields
+  --ipv6-fbqos SIZE    Flow based QoS using IPv6 ACL/fields
+  --l2ipv4-fbqos SIZE  Flow based QoS using MAC and IPv4 ACL/fields
+
+SIZE should be in format NumTablesxNumEntries if the feature supports multiple
+tables or NumEntries if the feature supports single table. Example 2x256 or
+256
 ```
 
 A TCAM allocation must be set currently to modify it. If no current TCAM allocation is set then use the **set** option described below.
@@ -2015,28 +2081,23 @@ tables or NumEntries if the feature supports single table. Example 2x256 or
 ```
 
 
-
 ```
 
 admin@sonic:~$ sudo tcamutil set allocation egress --help
 usage: tcamutil set allocation egress [-h] [--l2-acl SIZE] [--ipv4-acl SIZE]
-                                      [--ipv6-acl SIZE] [--ip-acl SIZE]
-                                      [--l2-fbqos SIZE] [--ipv4-fbqos SIZE]
-                                      [--ipv6-fbqos SIZE]
-                                      [--l2ipv4-fbqos SIZE] [--ip-fbqos SIZE]
-                                      [--startup] [-f]
+                                      [--ipv6-acl SIZE] [--l2-fbqos SIZE] 
+                                      [--ipv4-fbqos SIZE] [--ipv6-fbqos SIZE]
+                                      [--l2ipv4-fbqos SIZE] [--startup] [-f]
 
 optional arguments:
   -h, --help           show this help message and exit
   --l2-acl SIZE        MAC ACLs
   --ipv4-acl SIZE      IPv4 ACLs
   --ipv6-acl SIZE      IPv6 ACLs
-  --ip-acl SIZE        IPv4 and IPv6 ACLs
   --l2-fbqos SIZE      Flow based QoS using MAC ACL/fields
   --ipv4-fbqos SIZE    Flow based QoS using IPv4 ACL/fields
   --ipv6-fbqos SIZE    Flow based QoS using IPv6 ACL/fields
   --l2ipv4-fbqos SIZE  Flow based QoS using MAC and IPv4 ACL/fields
-  --ip-fbqos SIZE      Flow based QoS using IPv4 and IPv6 ACL/fields
   --startup            Modify startup config. (Requires reboot/config reload
                        for changes to take effect).
   -f, --force          Force TCAM allocation modification even when TCAM based
@@ -2063,12 +2124,6 @@ optional arguments:
 SIZE should be in format NumTablesxNumEntries if the feature supports multiple
 tables or NumEntries if the feature supports single table. Example 2x256 or
 ```
-
-### 3.6.4 REST / gNMI / IS CLI API Support
-
-Flow based services does not support Rest / gNMI / IS CLIs.
-
-L2 ACLs doesn't support Rest / gNMI / IS CLIs.
 
 # 4 Flow Diagrams
 
@@ -2181,12 +2236,12 @@ The following example shows configuration for Policy to take QoS, Monitoring and
 
 ```
 # Create classifier class0
-SONiC(config)# classifier class0 match-type acl
-SONiC(config-classifier)# match access-group ip l3_ACL_0
+SONiC(config)# class-map class0 match-type acl
+SONiC(config-class-map)# match access-group ip l3_ACL_0
 
 # Create classifier class1
-SONiC(config)# classifier class1 match-type acl
-SONiC(config-classifier)# match access-group mac l2_ACL_0
+SONiC(config)# class-map class1 match-type acl
+SONiC(config-class-map)# match access-group mac l2_ACL_0
 
 # -------------------------------------
 # Create policy policy0 for QoS actions
@@ -2194,13 +2249,13 @@ SONiC(config-classifier)# match access-group mac l2_ACL_0
 SONiC(config)# policy policy0 type qos 
 
 # Create flow using classifier class0 and set results
-SONiC(config-policy)# class class0 priority 200 
-SONiC(config-policy-flow)# set pcp 5
-SONiC(config-policy-flow)# set dscp 15
+SONiC(config-policy-map)# class class0 priority 200 
+SONiC(config-policy-map-flow)# set pcp 5
+SONiC(config-policy-map-flow)# set dscp 15
 
 # Create flow using classifier class0 and set results
-SONiC(config-policy)# class class1 priority 100 
-SONiC(config-policy-flow)# police cir 10mbps cbs 20MB pir 50mbps pbs 100MB
+SONiC(config-policy-map)# class class1 priority 100 
+SONiC(config-policy-map-flow)# police cir 10mbps cbs 20MB pir 50mbps pbs 100MB
 
 
 # --------------------------------------------
@@ -2209,20 +2264,20 @@ SONiC(config-policy-flow)# police cir 10mbps cbs 20MB pir 50mbps pbs 100MB
 SONiC(config)# policy policy1 type monitoring
 
 # Create flow using class1 and set results
-SONiC(config-policy)# class class1 priority 100
-SONiC(config-policy-flow)# set mirror-sesion test_session
+SONiC(config-policy-map)# class class1 priority 100
+SONiC(config-policy-map-flow)# set mirror-sesion test_session
 
 
 # ------------------------------------
 # Create policy policy2 for Forwarding
 # ------------------------------------
 SONiC(config)# policy policy2 type forwarding
-SONiC(config-policy)# class class0 priority 100
-SONiC(config-policy-flow)# set ip next-hop 10.1.1.1 priority 900
-SONiC(config-policy-flow)# set ip next-hop 100.1.1.1 vrf default priority 800
-SONiC(config-policy-flow)# set ip next-hop 132.45.2.100 vrf VrfOrange priority 700
-SONiC(config-policy-flow)# set ip next-hop 100.10.20.30
-SONiC(config-policy-flow)# set interface null
+SONiC(config-policy-map)# class class0 priority 100
+SONiC(config-policy-map-flow)# set ip next-hop 10.1.1.1 priority 900
+SONiC(config-policy-map-flow)# set ip next-hop 100.1.1.1 vrf default priority 800
+SONiC(config-policy-map-flow)# set ip next-hop 132.45.2.100 vrf VrfOrange priority 700
+SONiC(config-policy-map-flow)# set ip next-hop 100.10.20.30
+SONiC(config-policy-map-flow)# set interface null
 
 
 # ------------------------------------
