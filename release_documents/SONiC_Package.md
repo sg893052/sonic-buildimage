@@ -25,12 +25,12 @@ A SONiC installer image (e.g sonic-broadcom-cloud-base.bin) is a self extracting
 
 However, some customers who receive just the binary image from Broadcom would want some flexibility to influence some changes to the SONiC installer file.
 
-This is made possible by creating a SONiC package which is also a self extracting binary image. The SONiC package file can be used to install SONIC image using ONIE and the sonic\_installer command just like the SONiC installer file. SONiC package file is typically named with *.pkg* file extension (e.g sonic-cloud-base.pkg)*.*
+This is made possible by creating a SONiC package which is also a self extracting binary image. The SONiC package file can be used to install SONIC image using ONIE and the sonic\_installer command just like the SONiC installer file. SONiC package file is typically named with *.pkg* file extension (e.g sonic-broadcom-cloud-base.pkg)*.*
 
 A new tool *build\_pkg.sh* is available to create a SONiC package file. The *build\_pkg.sh* is available in the source code as
 *sonic-buildimage/build\_pkg.sh.*
 
-Below is an example to create a SONiC package file to include a user provided *sonic\_branding.yml* which contains user defined Product Name.
+Below is an example to create a SONiC package file to include a user provided *sonic\_branding.yml* which contains user defined Product Name and software version.
 
 **Command Usage:**
 
