@@ -3,9 +3,12 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC
+
+# Enterprise SONiC
+
 ### Package Customization Guide 
-#### Version 1.0
+
+#### Version 1.1
 <br>
 <br>
 <br>
@@ -40,10 +43,11 @@ build_pkg.sh target/sonic-broadcom-cloud-base.bin sonic_branding.yml
 ```
 bash-4.2$ cat sonic_branding.yml
 product_name: SONiC by ACME Corporation Cloud Standard
+build_version: 'acme-p.q.r'
 
 bash-4.2$ build_pkg.sh target/sonic-broadcom-cloud-base.bin sonic_branding.yml
 Creating a package file to combine target/sonic-broadcom-cloud-base.bin and sonic_branding.yml
 Successfully created package file: sonic-broadcom-cloud-base.pkg
 ```
 When user installs the sonic-broadcom-cloud-base.pkg, the sonic\_branding.yml in /etc/sonic directory of the image is replaced with the one provided by user and thus *show version* shows the product
-name chosen by the user.
+name and version string chosen by the user.
