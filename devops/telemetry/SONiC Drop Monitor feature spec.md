@@ -131,7 +131,7 @@ The drop monitor feature detects and reports specific packet drops on a per-flow
 
 2.0.12 A management IP on the device is mandatory for drop monitor configuration. The IP is used as the SRC IP for reports sent to the collector.
 
-3.0 The drop-monitor feature will be supported on all silicon with appropriate SAI TAM support. The feature will be initially tested out on Broadcom silicon TD3. 
+3.0 The drop-monitor feature will be supported on all silicon with appropriate SAI TAM support. The feature will be validated on Broadcom silicon TD3, TH2 and TH3. 
 
 ### 1.1.2 Configuration and Management Requirements
 
@@ -948,7 +948,7 @@ N/A
 
 # 10 Internal Design Information
 
-Broadcom silicon TD3 supports drop-monitoring functionality via a special firmware running on an R5 ARM core within the silicon. SAI configures the SDK and R5 ARM core for monitoring drops on configured flows and report them via protobuf reports to an external collector. The R5 ARM core monitors the drops on a flow, collates information about drop events and sends the protobuf reports to the configured external collector.
+Broadcom silicon TD3, TH2 and TH3 support drop-monitoring functionality via a special firmware running on an R5 ARM core within the silicon. SAI configures the SDK and R5 ARM core for monitoring drops on configured flows and report them via protobuf reports to an external collector. The R5 ARM core monitors the drops on a flow, collates information about drop events and sends the protobuf reports to the configured external collector.
 
 Three types of drop events are sent by the R5 core for a flow:
 

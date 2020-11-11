@@ -99,7 +99,8 @@ The pair of leaf nodes forming Logical VTEP advertise all of the EVPN routes wit
 
 Scenarios (2) and (3) are shown in the diagram below.
 
-<figure><img src="C:\Users\sr407497\Downloads\advertise_pip_images/advertise_pip_1.jpg" align="center" desc="Figure1"><figcaption align="center">Figure 1: Sub-optimal traffic forwarding in Logical VTEP</figcaption></figure></img></figure>
+<figure><img src="advertise_pip_images/advertise_pip_1.jpg" align="center" desc="Figure1"><figcaption align="center">Figure 1: Sub-optimal traffic forwarding in Logical VTEP</figcaption></figure></img></figure>
+
 
 
 
@@ -153,7 +154,8 @@ The basic approach of `advertise-pip` feature is to advertise Type-5 routes with
 
 
 
-<figure><img src="C:\Users\sr407497\Downloads\advertise_pip_images\advertise_pip_2.JPG" align="center"><figcaption align="center">Figure 2: Traffic forwarding after orphan subnets advertised with primary VTEP IP</figcaption></img></figure>
+
+<figure><img src="advertise_pip_images/advertise_pip_2.jpg" align="center"><figcaption align="center">Figure 2: Traffic forwarding after orphan subnets advertised with primary VTEP IP</figcaption></img></figure>
 
 In the diagram above, subnet/MAC of multi-homed MCLAG-host-1 is advertised with LVTEP (VIP) IP address and <span style="color:green">green</span> traffic flow can land on `Leaf-1` or `Leaf-2`. Whereas, subnet/MAC of single-homed `Orphan-host-2` is advertised with VTEP IP address of `Leaf-2`, and <span style="color:red">red</span> traffic flow will be forwarded by `Spine` only to `Leaf-2`. Similarly, yellow traffic flow to `Orphan-host-1` will be forwarded by `Spine` only to `Leaf-1`.
 
@@ -165,6 +167,7 @@ FRR supports `advertise-pip` feature in FRR 7.4 and available only for:
 2. Type-2 routes for IP addresses configured on local interface(s).
 
 PIP for Type-2 routes corresponding to hosts' MAC/MACIP is not supported.
+
 
 Following is the behavior for picking the VTEP IP and router-mac addresses for Type-5 routes in FRR:
 
@@ -256,6 +259,7 @@ sonic(config-router-bgp)# address-family l2vpn evpn
 sonic(config-router-bgp-af)# advertise-pip ip 2.2.2.2 peer-ip 1.1.1.1
 - or -
 sonic(config-router-bgp-af)# advertise-pip peer-ip 1.1.1.1
+
 ```
 
 
@@ -351,6 +355,7 @@ Following is the high level behavior of bgpd:
 1. BGP will advertise Type-2 routes with PIP next-hop for the MAC/MACIP updates received with PIP-flag. For the rest, type-2 routes will be advertised with VIP as next-hop.
 2. BGP will discard Type-2 routes received from the peer-ip configured.
 
+
 ### 1.2.3 Container
 No new container is added by this feature.
 
@@ -397,8 +402,6 @@ sonic(config)# router bgp 10 vrf Vrf-green
 sonic(config-router)# address-family l2vpn evpn
 sonic(config-router-af)# advertise-pip
 ```
-
-
 
 ### 2.2.2 `advertise-pip` for Type-2 routes
 
@@ -509,7 +512,6 @@ sonic(conf-if-vxlan-vtep-1)# no primary-ip
 
 ```
 
-
 Following BGP configuration commands would be available under default BGP VRF instance:
 
 ```
@@ -531,7 +533,6 @@ sonic(config-router-af)# advertise-pip [ip A.B.C.D [mac XX:XX:XX:XX:XX:XX]]
 
 
 #### 3.5.3.2 Click commands
-
 The following commands will be used to configure secondary IP address for VxLAN.
 
 ```
@@ -587,8 +588,8 @@ sonic#
 
 
 ### 3.5.5 Debug Commands
-
 Existing show and debug commands are available to check with what next-hop and router-mac routes are advertised.
+
 
 ### 3.5.6 REST API Support
 << Required >> TBD
@@ -598,6 +599,7 @@ Existing show and debug commands are available to check with what next-hop and r
 
 ### 4.1.1 Configure sequence of advertise-pip
 Below flow diagram shows sample sequence of config of advertise-pip (TBD)
+
 ```mermaid
 sequenceDiagram
     participant config_db
@@ -625,7 +627,6 @@ No explicit error handling requirement introduced due to this feature.
 
 
 
-
 # 6 Serviceability and Debug
 Existing serviceability and debug applicable to this feature. No new debugging commands are added.
 
@@ -645,7 +646,6 @@ No impact to scalability. Existing scale numbers will be supported with this fea
 # 9 Unit Test
 
 ## 9.1 Functional Test Cases
-
 Type-5 and self Type-2 routes tests:
 
 1. Configure advertise-pip under L3VNI BGP VRF instance and check Type-5 and self Type-2 routes are advertised with PIP next-hop same as BGP router-id.
@@ -709,5 +709,3 @@ sonic(config)# router bgp 10 vrf Vrf-red
 sonic(config-router)# address-family l2vpn evpn
 sonic(config-router-af)# advertise-pip
 ```
-
-​        
