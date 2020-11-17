@@ -74,7 +74,6 @@ Each application inside the Docker should be set up to trigger a docker exit whe
 ## Configuring Docker Limits
 
 To implement the above scheme the following changes need to be implemented.
-<<<<<<< HEAD
 All docker limit values will be centralized in a JSON file under /etc/sonic/docker_limits.json. See Appendix for details.
 Assign cpu-shares value for each Docker.
 A wrapper script (sonic-dockerlimits) will return the limits in a string that can directly be used with the ‘docker create’ or 'docker update' command.  
@@ -112,7 +111,6 @@ SONiC already has systemd / supervisord based restartability for both Docker and
 These changes have to be done for all Dockers/processes. 
 
 Scope of changes for Docker restart
-<<<<<<< HEAD
 The below gerrit change was done for ICCPD.  This can be used as a reference to make the config changes:
      
    
@@ -316,7 +314,6 @@ To induce high CPU consumption from within a docker the following can be done:
 
 The following utils can be used to induce CPU and memory usage.  The REAMDE has info on how to use these utils:
 ```
-<<<<<<< HEAD
 sonic-buildimage/files/rlimits/test-utils> ls -l
 total 21
 -rwxr-xr-x 1 gh891339 users  614 Oct 15 15:01 cpuhog.c
