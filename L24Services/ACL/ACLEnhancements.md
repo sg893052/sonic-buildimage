@@ -656,6 +656,7 @@ VLAN          = vlan_id              ; VLAN ID. Supported range is 1-4094. This 
                                      ; valid only if the ACL is applied to Port or
                                      ; LAG or Switch. For VLAN binding this will be
                                      ; ignored.
+TCP_FLAGS     = [1-2]*tcp-flags
 
 ;value annotations
 dscp_val    = DIGIT / %x31-36 %x30-33
@@ -669,6 +670,7 @@ vlan_id      = %x31-39                     ; 1-9
                / %x31-39 2DIGIT            ; 100-999
                / %x31-33 3DIGIT            ; 1000-3999
                / %x34 %x30 %x30-39 %x30-34 ; 4000 - 4094
+tcp-flags   = h8/h8
 ```
 
 #### 3.2.1.5 Classifier table
@@ -821,6 +823,16 @@ EGRESS_QOS_POLICY          = 1*63VCHAR
 
 ;value annotations
 ```
+
+#### 3.2.1.4 Config DB schema changes history
+
+The following table shows the DB schema changes and the details of the DB migration
+
+##### Schema changes in SONiC 3.1.1
+
+| Table name | Field name | Details of the change                                        | Upgrade                                                      | Downgrade                                                    |
+| ---------- | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ACL_RULE   | TCP_FLAGS  | The field is converted to a list to support "established" keyword support for TCP session. The ACL rules match uses OR construct ie its considered as a match when the incoming packet matches any value in the list. | During upgrade,  TCP flag value will be converted into a list of 1 element. ACL functionality will be same as before upgrade. | During downgrade, if the TCP flags list has more than 1 value then that rule will be deleted. If the list has only 1 element then it will be converted to value format used by earlier versions of the software. ACL functionality for rules which are supported by previous versions will not be impacted. |
 
 ### 3.2.2 App DB
 
@@ -1015,15 +1027,15 @@ Options:
 #### 3.6.2.4 Creating/Deleting a IP ACL Rule
 | Mode | ACL |
 | ---- | ------ |
-| Syntax | sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **fin** \| **syn** \| **rst** \| **psh** \| **ack** \| **urg** \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } { **ip** \| *IP_PROTOCOL* } { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ip-acl)# **no seq** *<1-65535>* |
-| Arguments | ***IP_PROTOCOL***: IP Protocol value in decimal format<br/>***SIP***: Source IPv4 address<br/>***SIP_PREFIX_LEN***: Source IPv4 address prefix length<br/>***DIP***: Destination IPv4 address<br/>***DIP_PREFIX_LEN***: Destination IPv4 address prefix length<br/>***PORT, BEGIN, END***: TCP or UDP Port number in decimal format. END > BEGIN. Valid only when IP_PROTOCOL is 6, 17 ie TCP or UDP<br/>***DSCP_VAL***: DSCP value in decimal format<br/>***ICMP_TYPE***: ICMP type in decimal format. Valid only when IP_PROTOCOL is 1 i.e. ICMP<br/>***ICMP_CODE***: ICMP code in decimal format. Valid only when IP_PROTOCOL is 1 i.e. ICMP<br/>***VLANID***: VLAN ID in range 1-4094 in decimal format<br/>***DESCRIPTION***: A string describing the rule. Must be in double quotes if it contains spaces. |
+| Syntax | sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **established** \| \[ **fin** \| **not-fin** \] \[ **syn** \| **not-syn** \] \[ **rst** \| **not-rst** \] \[ **psh** \| **not-psh** \] \[ **ack** \| **not-ack** \] \[ **urg** \| **not-urg** \] \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv4-acl)# **seq** *<1-65535>* { **permit** \| **deny** } { **ip** \| *IP_PROTOCOL* } { **any** \| **host** *SIP* \| *SIP* \[ / *SIP_PREFIX_LEN* \] } { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ip-acl)# **no seq** *<1-65535>* |
+| Arguments | ***IP_PROTOCOL***: IP Protocol value in decimal format<br/>***SIP***: Source IPv4 address<br/>***SIP_PREFIX_LEN***: Source IPv4 address prefix length<br/>***DIP***: Destination IPv4 address<br/>***DIP_PREFIX_LEN***: Destination IPv4 address prefix length<br/>***PORT, BEGIN, END***: TCP or UDP Port number in decimal format. END > BEGIN. Valid only when IP_PROTOCOL is 6, 17 ie TCP or UDP<br/>***DSCP_VAL***: DSCP value in decimal format<br/>**TCP Flags**: TCP flags are applicable when IP protocol is configured as 6 or TCP. ***established*** and other TCP flags like ***syn*** are mutually exclusive. Using ***not-*** form of the TCP flag will match the flag bit cleared ie 0. When multiple TCP flags are specified they all must match ie they are considered as *AND*. <br/>***ICMP_TYPE***: ICMP type in decimal format. Valid only when IP_PROTOCOL is 1 i.e. ICMP<br/>***ICMP_CODE***: ICMP code in decimal format. Valid only when IP_PROTOCOL is 1 i.e. ICMP<br/>***VLANID***: VLAN ID in range 1-4094 in decimal format<br/>***DESCRIPTION***: A string describing the rule. Must be in double quotes if it contains spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.5 Creating/Deleting a IPv6 ACL Rule
 | Mode | ACL |
 | ---- | ------ |
-| Syntax | sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **fin** \| **syn** \| **rst** \| **psh** \| **ack** \| **urg** \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } *IPV6_PROTOCOL* { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **no seq** *<1-65535>* |
-| Arguments | ***IPV6_PROTOCOL***: IPv6 Protocol value in decimal format<br/>***SIPV6***: Source IPv6 address<br/>***SIPV6_PREFIX_LEN***: Source IPv6 address prefix length<br/>***DIPV6***: Destination IPv6 address<br/>***DIPV6_PREFIX_LEN***: Destination IPv6 address prefix length<br/>***PORT, BEGIN, END***: TCP or UDP Port number in decimal format. END > BEGIN. Valid only when IP_PROTOCOL is 6, 17 ie TCP or UDP<br/>***DSCP_VAL***: DSCP value in decimal format<br/>***ICMP_TYPE***: ICMP type in decimal format. Valid only when IP_PROTOCOL is 58 i.e. ICMPv6<br/>***ICMP_CODE***: ICMP code in decimal format. Valid only when IP_PROTOCOL is 58 i.e. ICMPv6<br/>***VLANID***: VLAN ID in range 1-4094 in decimal format<br/>***DESCRIPTION***: A string describing the rule. Must be in double quotes if it contains spaces. |
+| Syntax | sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **tcp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIP* \| *DIP* \[ / *DIP_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **established** \| \[ **fin** \] \[ **syn** \| **not-syn** \] \[ **rst** \| **not-rst** \] \[ **psh** \| **not-psh** \] \[ **ack** \| **not-ack** \] \[ **urg** \| **not-urg** \] \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **udp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ { **eq** \| **gt** \| **lt** } *PORT* \| **range** *BEGIN* *END* } \] \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } **icmp** { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **type** *ICMP_TYPE* \] \[ **code** *ICMP_CODE* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **seq** *<1-65535>* { **permit** \| **deny** } *IPV6_PROTOCOL* { **any** \| **host** *SIPV6* \| *SIPV6* \[ / *SIPV6_PREFIX_LEN* \] } { **any** \| **host** *DIPV6* \| *DIPV6* \[ / *DIPV6_PREFIX_LEN* \] } \[ **dscp** *DSCP_VAL* \] \[ **vlan** *VLANID* \] [ **remark** *DESCRIPTION* ]<br/><br/>sonic(config-ipv6-acl)# **no seq** *<1-65535>* |
+| Arguments | ***IPV6_PROTOCOL***: IPv6 Protocol value in decimal format<br/>***SIPV6***: Source IPv6 address<br/>***SIPV6_PREFIX_LEN***: Source IPv6 address prefix length<br/>***DIPV6***: Destination IPv6 address<br/>***DIPV6_PREFIX_LEN***: Destination IPv6 address prefix length<br/>***PORT, BEGIN, END***: TCP or UDP Port number in decimal format. END > BEGIN. Valid only when IP_PROTOCOL is 6, 17 ie TCP or UDP<br/>***DSCP_VAL***: DSCP value in decimal format<br/>**TCP Flags**: TCP flags are applicable when IP protocol is configured as 6 or TCP. ***established*** and other TCP flags like ***syn*** are mutually exclusive. Using ***not-*** form of the TCP flag will match the flag bit cleared ie 0. When multiple TCP flags are specified they all must match ie they are considered as *AND*. ***ICMP_TYPE***: ICMP type in decimal format. Valid only when IP_PROTOCOL is 58 i.e. ICMPv6<br/>***ICMP_CODE***: ICMP code in decimal format. Valid only when IP_PROTOCOL is 58 i.e. ICMPv6<br/>***VLANID***: VLAN ID in range 1-4094 in decimal format<br/>***DESCRIPTION***: A string describing the rule. Must be in double quotes if it contains spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
 #### 3.6.2.6 Adding/Deleting ACL remark
@@ -1525,7 +1537,7 @@ The following forwarding actions can be added to the flow. Forwarding actions ca
 | Arguments | ***IP_ADDR***: IPv4 Address of the next-hop. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The next-hop with the higher priority will be picked up for forwarding first. If more than 1 next-hops have the same priority then the next-hop which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
-IPv4 next-hops are valid only if the classifier uses IPv4 ACL for match. Only IPv4 routed traffic will be forwarded to the configured next-hop. Combining IPv4 next-hops with IPv6 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally.
+IPv4 next-hops are valid only if the classifier uses IPv4 ACL or IPv4 header fields for match. MAC header can be used in additional to IPv4 header fields. Only IPv4 routed traffic will be forwarded to the configured next-hop. Combining IPv4 next-hops with IPv6 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally. The next-hop IP should not be that of any local interface. Forwarding policies can only forward the traffic and not trap/switch/route to CPU.
 
 ###### 3.6.2.24.3.2 Adding / Deleting IPv6 next-hop
 | Mode   | Flow |
@@ -1534,7 +1546,7 @@ IPv4 next-hops are valid only if the classifier uses IPv4 ACL for match. Only IP
 | Arguments | ***IPV6_ADDR***: IPv6 Address. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The next-hop with the higher priority will be picked up for forwarding first. If more than 1 next-hops have the same priority then the next-hop which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
-IPv6 next-hops are valid only if the classifier uses IPv6 ACL for match. Only IPv6 routed traffic will be forwarded to the configured next-hop. Combining IPv6 next-hops with IPv4 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally.
+IPv6 next-hops are valid only if the classifier uses IPv6 ACL or IPv6 header fields for match. MAC header can be used in additional to IPv4 header fields. Only IPv6 routed traffic will be forwarded to the configured next-hop. Combining IPv6 next-hops with IPv4 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally. The next-hop IP should not be that of any local interface. Forwarding policies can only forward the traffic and not trap/switch/route to CPU.
 
 ###### 3.6.2.24.3.3 Adding / Deleting egress interface
 
@@ -1544,7 +1556,7 @@ IPv6 next-hops are valid only if the classifier uses IPv6 ACL for match. Only IP
 | Arguments | ***ID***: Ethernet or PortChannel number.<br/>***PRIORITY***: Priority of the egress port. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The port with the higher priority will be picked up for forwarding first. If more than 1 ports have the same priority then the port which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
-Egress interfaces configuration is valid only if the classifier uses MAC/L2 ACL for match. Only L2 switched traffic will be forwarded to the configured egress interface. Combining egress interface with IPv4 or IPv6 next-hops is not permitted. The egress interface must be a switchport and online for it to be selectable for forwarding, else it will be forward referenced. User is expected to make sure egress interface is part of necessary VLANs. NULL egress can be configured to select drop as egress action if none of the egress interfaces are online. If NULL egress is not configured then the traffic will be forwarded normally.
+Egress interfaces configuration is valid only if the classifier uses MAC/L2 ACL for match. Only L2 switched traffic will be forwarded to the configured egress interface. Combining egress interface with IPv4 or IPv6 next-hops is not permitted. The egress interface must be a switchport and online for it to be selectable for forwarding, else it will be forward referenced. User is expected to make sure egress interface is part of necessary VLANs. NULL egress can be configured to select drop as egress action if none of the egress interfaces are online. If NULL egress is not configured then the traffic will be forwarded normally. 
 
 ###### 3.6.2.24.3.4 Adding default drop action
 
@@ -2190,17 +2202,24 @@ The applied policies will share the ACL resources of data path ACLs. Details on 
 
 The following the ASIC limitations that must be noted when configuring the policies.
 
-1. Only the following combination of ACLs are supported in a policy due to key width limitations at ingress
+1. Only the following combination of ACLs or header fields are supported in a policy due to key width limitations at ingress
    1. L2 + IPv4
    2. IPv4 + IPv6
-2. At egress all sections of the policy must have the same type of ACLs ie L2 or IPv4 or IPv6. Applying a policy which has different combinations will be inactive.
-3. All applied policies of the same type must have the same ACL key combinations across all interfaces. Example its not valid to apply QoS Policy P1 on Ethernet0 which uses L2 ACL1 and IPv4 ACL2 and QoS Policy P2 on Ethernet4 which uses IPv4 ACL3 and IPv6 ACL4.
+2. At egress all sections of the policy must have the same type of ACLs or header fields ie L2 or IPv4 or IPv6. Applying a policy which has different combinations will render the policy inactive.
+3. All applied policies of the same type must have the same ACL type combinations or header fields from the same packet layer across all interfaces. Having some policies use a subset of other policy ACL/header fields is allowed. Example its not valid to apply QoS Policy P1 on Ethernet0 which uses L2 ACL1 and IPv4 ACL2 and QoS Policy P2 on Ethernet4 which uses IPv4 ACL3 and IPv6 ACL4. QoS Policy P3 on Ethernet8 which uses just IPv6 ACL is not proper as well as it needs Layer 2 and IPv6 combination which is not supported, but only QoS policy P4 on Ethernet12 with just IPv4 ACL or IPv4 header fields is OK as it uses only a subset (IPv4) of ACL types/header fields used by P1 (L2+IPv4).
 4. Flow counters are not available for QoS Policies at egress. 
 5. Only policer Green and Red counters will be supported due to ASIC limitation at egress.
 6. BCM56980 (TH3) ASIC based platform does not support egress policers.
 7. For Trident2 based platforms, QoS policies do not support Match counters. Only Red and Green counters are supported.
 
-# 10 Unit Test
+# 10 Upgrade / Downgrade considerations
+
+| Source Release | Target Release  | Details                                                      |
+| --- | --- | --- |
+| SONiC 3.1.1 | Pre SONiC 3.1.1 | On downgrade from SONiC 3.1.1 to previous releases, if the IP / IPv6 ACL rules are configured with "established" keyword then such rules will be deleted during downgrade. |
+
+# 11 Unit Test
+
 1. Verify Classifier creation with ACL
 2. Verify classifier creation with Header fields
 3. Verify Policy creation of Type QoS
@@ -2228,7 +2247,7 @@ The following the ASIC limitations that must be noted when configuring the polic
 25. Verify monitoring policy with active mirror session and verify deactivate and reactivate
 
 
-# 11 Appendix: Sample configuration
+# 12 Appendix: Sample configuration
 
 The following example shows configuration for Policy to take QoS, Monitoring and Forwarding actions.
 
@@ -2297,11 +2316,11 @@ SONiC(config)# interface Ethernet 8
 SONiC(conf-if-Ethernet8)# service-policy type forwarding in policy2
 ```
 
-# 12 Internal Design Information
+# 13 Internal Design Information
 
 Internal BRCM information to be removed before sharing with the community
 
-## 12.1 Future Design Enhancements
+## 13.1 Future Design Enhancements
 
 1. Once ACLs supports UDF, provide an option to use UDF also as part of fields classifier.
 2. Use monitoring policy for more actions like sFlow etc.
