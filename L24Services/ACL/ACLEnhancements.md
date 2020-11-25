@@ -1,7 +1,7 @@
 
 # ACL and Flow Based Services in SONiC
 
-High level design document version 0.4
+High level design document version 0.5
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -13,7 +13,7 @@ High level design document version 0.4
 - **[1 Feature Overview](#1-feature-overview)**
 	- [1.1 Access control Lists](#11-access-control-lists)
 	- [1.2 Flow Based Services](#12-flow-based-services)
-        - [1.2.1 Forwarding flow based services](#121-forwarding-flow-based-services)
+		- [1.2.1 Forwarding flow based services](#121-forwarding-flow-based-services)
 	- [1.3 Requirements](#13-requirements)
 		- [1.3.1 Functional Requirements](#131-functional-requirements)
 		- [1.3.2 Configuration and Management Requirements](#132-configuration-and-management-requirements)
@@ -70,6 +70,8 @@ High level design document version 0.4
 			- [3.2.1.6 Policy table](#3216-policy-table)
 			- [3.2.1.7 Policy sections table](#3217-policy-sections-table)
 			- [3.2.1.8 Policy binding table](#3218-policy-binding-table)
+			- [3.2.1.9 Config DB schema changes history](#3219-config-db-schema-changes-history)
+				- *[3.2.1.9.1 Schema changes in SONiC 3.1.1](#32191-schema-changes-in-sonic-311)*
 		- [3.2.2 App DB](#322-app-db)
 			- [3.2.2.1 ACL Table](#3221-acl-table)
 			- [3.2.2.2 ACL Rule Table](#3222-acl-rule-table)
@@ -210,10 +212,11 @@ High level design document version 0.4
 	- [8.1 Software scalability](#81-software-scalability)
 	- [8.2 ACL Table Scalability](#82-acl-table-scalability)
 - **[9 Limitation](#9-limitation)**
-- **[10 Unit Test](#10-unit-test)**
-- **[11 Appendix: Sample configuration](#11-appendix-sample-configuration)**
-- **[12 Internal Design Information](#12-internal-design-information)**
-	- [12.1 Future Design Enhancements](#121-future-design-enhancements)
+- **[10 Upgrade / Downgrade considerations](#10-upgrade-_-downgrade-considerations)**
+- **[11 Unit Test](#11-unit-test)**
+- **[12 Appendix: Sample configuration](#12-appendix-sample-configuration)**
+- **[13 Internal Design Information](#13-internal-design-information)**
+	- [13.1 Future Design Enhancements](#131-future-design-enhancements)
 
 # List of Tables
 [Table 1 Abbreviations](#table-1-abbreviations)
@@ -225,6 +228,7 @@ High level design document version 0.4
 | 0.2  | 10/15/2019 | Abhishek Dharwadkar | Add ACL enhancement and policing details |
 | 0.3  | 11/10/2019 | Abhishek Dharwadkar | Add FBS support for mirroring            |
 | 0.4  | 03/25/2020 | Abhishek Dharwadkar | Add FBS support for forwarding           |
+| 0.5  | 11/25/2020 | Abhishek Dharwadkar | Add *established* keyword support for ACL |
 
 # About this Manual
 This document provides general information about the ACL enhancements and Flow Based Services feature in SONiC.
@@ -824,11 +828,11 @@ EGRESS_QOS_POLICY          = 1*63VCHAR
 ;value annotations
 ```
 
-#### 3.2.1.4 Config DB schema changes history
+#### 3.2.1.9 Config DB schema changes history
 
 The following table shows the DB schema changes and the details of the DB migration
 
-##### Schema changes in SONiC 3.1.1
+##### 3.2.1.9.1 Schema changes in SONiC 3.1.1
 
 | Table name | Field name | Details of the change                                        | Upgrade                                                      | Downgrade                                                    |
 | ---------- | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
