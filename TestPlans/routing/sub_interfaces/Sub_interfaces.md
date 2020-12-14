@@ -72,14 +72,45 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
   A sub port interface shall support the following features:
 
-  - L3 forwarding
-  - BGP
-  - ARP and NDP
-  - VRF
-  - RIF counters
-  - QoS setting inherited from parent physical port or port channel
-  - mtu inherited from parent physical port or port channel
-  - Per sub port interface admin status config
+  BGP
+
+  OSPF
+
+  Ping/Traceroute
+
+  BFDDHCP Relay
+
+  PIM
+
+  IPv4 unnumbered
+
+  ARP/ND
+
+  NTP
+
+  Static Route
+
+  Route-map
+
+  LAGMCLAG - Po subintf arp.nd sync 
+
+  Interface holdown
+
+  MCLAG - ICL could use a sub-interface
+
+  Disable all non-applicable L2 protocolsSpeed/bandwidth of the sub-interface
+
+   QoS/ACL Policer, mirroring, and PBR
+
+  Syslog parsing/replacing Parent interface RIF
+
+  Mirroring/ERSPAN
+
+  Radius, LDAP
+
+  TACACS
+
+  DNS
 
 ## 2 Topologies
 
@@ -210,7 +241,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify port admin status flap for sub interfaces**      |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure multiple sub interfaces on both physical and Portchannel parent ports <br/>2)Verify admin down of parent port brings down all sub interfaces<br/>3)Verify admin up of parent interfaces brings all sub interfaces to admin up<br/>4)Verify sub interface state can be administratively controlled separately and it does not affect parent port state and other sub interfaces on the same parent port<br/>5)Verify sub interfaces goes oper down when parent port goes oper down<br/>6)Bring back all parent and sub interfaces  and verify all ports are Oper-up<br/>7)Bring down the parent interface oper-down by shutting the link on remote DUT<br/>8)Verify  parent and sub interface state goes oper-down<br/>9) Configure Portchannel minimum link to  3 for the parent interface and verify both parent and sub interfaces goes oper down |
+| **Steps**      | 1) Configure multiple sub interfaces on both physical and Portchannel parent ports <br/>2)Verify admin down of parent port brings down all sub interfaces<br/>3)Verify admin up of parent interfaces brings all sub interfaces to admin up<br/>4)Verify sub interface state can be administratively controlled separately and it does not affect parent port state and other sub interfaces on the same parent port<br/>5)Verify sub interfaces goes oper down when parent port goes oper down<br/>6)Bring back all parent and sub interfaces  and verify all ports are Oper-up<br/>7)Bring down the parent interface oper-down by shutting the link on remote DUT<br/>8)Verify  parent and sub interface state goes oper-down<br/>9) Configure Portchannel minimum link to  3 for the parent interface and verify both parent and sub interfaces goes oper down<br/> |
 
 
 
@@ -466,7 +497,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify qos service-policy  on sub interfaces**          |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure a qos policy-map to match source ip address,source ipv6 address and define set actions like dscp,traffic-class<br>2)Attach the service policy to parent interface<br/>3)Verify service-policy gets inherited to sub interfaces<br/>4)Send traffic matching the classifier fields and verify sub interface applies the qos service-policy at ingress as well as egress directions<br/>5)Verify mapping a different policy-map directly to sub interface and verify<br/> |
+| **Steps**      | 1)Configure a qos policy-map to match source ip address,source ipv6 address and define set actions like dscp,traffic-class<br>2)Attach the service policy to parent interface and sub interfaces<br/>3)Verify service-policy gets inherited to sub interfaces<br/>4)Send traffic matching the classifier fields and verify sub interface applies the qos service-policy at ingress as well as egress directions<br/>5)Verify mapping a different policy-map directly to sub interface and verify<br/> |
 
 
 
@@ -477,7 +508,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify PBR service-policy on sub interfaces**           |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure SUb interfaces over phy and lag interfaces <br/>2)Bind sub interfaces over phy interface on Vrf1 and sub interfaces over lag interface on Vrf2<br/>3)Configure policy map and set the nexthop pointing to lag sub interface on Vrf2<br/>4)Bind the service policy  on  phy interface and verify it gets inherited to sub interfaces<br/>5)Upon receiving the L3 traffic on Vrf1 , traffic should be routed to sub interface over lag interface on Vrf2 <br/>6)Verify null interface on policy map drops the traffic<br/> |
+| **Steps**      | 1)Configure SUb interfaces over phy and lag interfaces <br/>2)Bind sub interfaces over phy interface on Vrf1 and sub interfaces over lag interface on Vrf2<br/>3)Configure policy map and set the nexthop pointing to lag sub interface on Vrf2<br/>4)Bind the service policy  on  sub interfaces<br/>5)Upon receiving the L3 traffic on Vrf1 , traffic should be routed to sub interface over lag interface on Vrf2 <br/>6)Verify null interface on policy map drops the traffic<br/> |
 
 
 
@@ -488,7 +519,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify port mirroring on parent and sub interfaces**    |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure Sub interfaces over phy and lag interfaces <br/>2)Configure parent interface as mirroring destination port <br/>3)Verify port ingressing on source port gets mirrored to parent interface<br/>4) Configure sub interface as destination port and verify port mirroring works<br/>5)Repeat the test steps with parent and sub interface as source port and verify packet ingressing on sub interfaces gets mirrored |
+| **Steps**      | 1)Configure Sub interfaces over phy and lag interfaces <br/>2)Configure sub interface as mirroring destination port <br/>3)Verify port ingressing on source port gets mirrored to parent interface<br/>4) Configure sub interface as destination port and verify port mirroring works<br/>5)Repeat the test steps with parent and sub interface as source port and verify packet ingressing on sub interfaces gets mirrored |
 
 ### 3.2.35  To Verify L3 acl functionality applied on sub interfaces
 
@@ -606,7 +637,31 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Configure Portchannel on DUT1<br/>2) Configure sub interface over Portchennel using long-interface name as PortChannelXXXX and verify sub interface gets created |
 
-### **3.3 Reboot Test Cases**
+
+
+### 3.2.46 To Verify PIM functionality over sub interfaces
+
+| **Test ID**    | **FtRoSubIntfFunc046**                                       |
+| -------------- | ------------------------------------------------------------ |
+| **Test Name**  | **To  Verify PIM functionality over sub interfaces**         |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure sub interfaces between Dut1 and Dut2 over physical and Lag interface<br/>2) Enable PIM on sub interfaces<br/>3)Verify PIM neighbors comes up<br/>4)Send IGMPv3 (S,G) join and verify Mroute entries are programmed with IIF and OIF as sub interfaces<br/>5)Verify Multicast data forwarding<br/>6)Send IGMPv3 Leave and verify mroute entries are deleted |
+
+
+
+### 3.2.46 To Verify Radius/LDAP authentication over sub interfaces
+
+| **Test ID**    | **FtRoSubIntfFunc046**                                       |
+| -------------- | ------------------------------------------------------------ |
+| **Test Name**  | **To  Verify Radius/LDAP authentication over sub interfaces** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure sub interfaces between Dut1 and Dut2 over physical and Lag interface<br/>2)Configure RADIUS authentication on sub interface<br/>3)Verify ssh to sub interface IP/IPv6 works with Radius authentication enabled<br/>4) Repeat the test with LDPA authentication |
+
+
+
+### 3.3 Reboot Test Cases**
 
 ### 3.3.1 To verify routing over sub interfaces with config reload  ###
 
@@ -615,7 +670,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify routing over sub interfaces with config reload** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchannel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform config reload<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding |
+| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchannel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform config reload<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding and measure Traffic convergence time |
 
 
 ### 3.3.2 To verify routing over sub interfaces with Coldboot
@@ -625,7 +680,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify routing over sub interfaces with Coldboot**      |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform coldboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding<br/> |
+| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform coldboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding and measure Traffic convergence time<br/> |
 
 
 
@@ -637,7 +692,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify routing over sub interfaces with Fastboot**      |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform Fastboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding<br/> |
+| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform Fastboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding and measure Traffic convergence time<br/> |
 
 
 
