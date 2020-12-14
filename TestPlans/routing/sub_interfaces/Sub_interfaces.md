@@ -93,7 +93,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.1.1 Verify all the config/show CLIs for sub interface
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfCli001**                                        |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify all the config/show CLIs for sub interface**        |
 | **Test Setup** | **Topology1**                                                |
@@ -102,7 +102,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.1.2 Verify all the Sub interface CLIs using OCI Yang/Rest api's.
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfCli002**                                        |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify all the Sub interface CLIs using OCI Yang/Rest api's.** |
 | **Test Setup** | **Topology1**                                                |
@@ -126,7 +126,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.1 To verify basic sub interface routing created over physical port
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc001**                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify basic sub interface routing created over physical port |
 | **Test Setup** | **Topology1**                                                |
@@ -137,7 +137,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc002**                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify basic sub interface routing created over Lag port** |
 | **Test Setup** | **Topology1**                                                |
@@ -148,9 +148,11 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
+
+
 ### 3.2.3  To verify sub port from different physical/lag ports can map to same vrf
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc003**                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify sub port from different physical/lag ports can map to same vrf** |
 | **Test Setup** | **Topology1**                                                |
@@ -159,7 +161,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.4  To verify sub port from same parent port map to different VRFs
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc004**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To verify sub port from same parent port map to different VRFs** |
 | **Test Setup** | **Topology1**                                                |
@@ -170,7 +172,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.5  To verify same sub port from different parent ports map to different VRFs
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc005**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To verify same sub port from different parent ports map to different VRFs** |
 | **Test Setup** | **Topology1**                                                |
@@ -181,7 +183,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.6  To Verify sub ports on different parent ports can have same encapsulation id with BUM traffic
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc006**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify sub ports on different phy/lag ports can have same encapsulation id** |
 | **Test Setup** | **Topology1**                                                |
@@ -192,7 +194,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.7  To Verify creating sub interface with port id  and encapsulation id different
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc007**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify creating sub interface with port id  and encapsulation id different** |
 | **Test Setup** | **Topology1**                                                |
@@ -203,7 +205,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.8  To Verify port admin status flap for sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc008**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify port admin status flap for sub interfaces**      |
 | **Test Setup** | **Topology1**                                                |
@@ -214,7 +216,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.9  To Verify parent physical/lag port shows aggregate stats of sub ports
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc009**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify parent physical/lag port shows aggregate stats of sub ports** |
 | **Test Setup** | **Topology1**                                                |
@@ -225,7 +227,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.10  To Verify interface stats at sub interface level
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc010**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify interface stats at sub interface level**         |
 | **Test Setup** | **Topology1**                                                |
@@ -234,7 +236,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.11  To Verify primary and secondary  ip and ipv6 address configs on sub interfaces 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc011**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify primary and secondary  ip and ipv6 address configs on sub interfaces** |
 | **Test Setup** | **Topology1**                                                |
@@ -243,7 +245,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.12  To Verify ipv6 disable/enable and verify link-local assignment on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc012**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify ipv6 disable/enable and verify link-local assignment on sub interfaces** |
 | **Test Setup** | **Topology1**                                                |
@@ -254,7 +256,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.13  To Verify functionality of switching from user-vrf to default for sub interfaces and parent interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc013**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify Verify functionality of switching from user-vrf to default for sub interfaces** |
 | **Test Setup** | **Topology1**                                                |
@@ -265,7 +267,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.14  To Verify IP unnumbered on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc014**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify IP unnumbered on sub interfaces**                |
 | **Test Setup** | **Topology1**                                                |
@@ -276,7 +278,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.15  To Verify MTU configs on parent and sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc015**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify MTU configs on sub interfaces**                  |
 | **Test Setup** | **Topology1**                                                |
@@ -285,7 +287,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.16  To Verify static and dynamic  ARP/ND on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc016**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify static and dynamic ARP/ND on sub interfaces**    |
 | **Test Setup** | **Topology1**                                                |
@@ -296,7 +298,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.17  To Verify ping and traceroute towards from and to IP/IPv6s configured on Sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc017**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify ping and traceroute towards from and to IP/IPv6s configured on Sub interfaces** |
 | **Test Setup** | **Topology1**                                                |
@@ -307,7 +309,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.18 To Verify multiple BGP sessions on sub interfaces and parent  interfaces with ECMP
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc018**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify multiple BGP sessions on sub interfaces and parent interfaces with ECMP** |
 | **Test Setup** | **Topology1**                                                |
@@ -320,7 +322,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc019**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify BGP 5549 unnumbered over sub interfaces**        |
 | **Test Setup** | **Topology1**                                                |
@@ -333,7 +335,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.20  To Verify OSPFv2 /OSPFv3 neighbors over sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc020**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify OSPFv2 /OSPFv3 neighbors over sub interfaces**   |
 | **Test Setup** | **Topology1**                                                |
@@ -344,7 +346,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.21  To Verify ICMP SLAs with sub interface as source-interface
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc021**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify ICMP SLAs with sub interface as source-interface** |
 | **Test Setup** | **Topology1**                                                |
@@ -353,7 +355,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.22  To Verify TCP SLAs with sub interface as source-interface
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc022**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify ICMP SLAs with sub interface as source-interface** |
 | **Test Setup** | **Topology1**                                                |
@@ -364,7 +366,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.23  To Verify DHCP relay over sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc023**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify DHCP relay over sub interfaces**                 |
 | **Test Setup** | **Topology1**                                                |
@@ -375,7 +377,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.24 To Verify VRRP functionality over sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc024**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify Verify VRRP functionality over sub interfaces**  |
 | **Test Setup** | **Topology1**                                                |
@@ -386,7 +388,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.25 To Verify Static routes with sub interface as next hop interface
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc025**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify Static routes with sub interface as next hop interface** |
 | **Test Setup** | **Topology1**                                                |
@@ -395,7 +397,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.26 To Verify Static route leak reachable via sub interface on default,user and management vrf
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc026**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify Static route leak reachable via sub interface default,user and management vrf** |
 | **Test Setup** | **Topology1**                                                |
@@ -406,7 +408,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.27 To Verify BFD peers over sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc027**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify BFD peers over sub interfaces**                  |
 | **Test Setup** | **Topology1**                                                |
@@ -417,7 +419,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.28 To Verify Sub interfaces as MCLAG client interfaces and ICL keepalive
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc028**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify Sub interfaces as MCLAG client interfaces and ICL keepalive** |
 | **Test Setup** | **Topology1**                                                |
@@ -428,7 +430,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.29 To Verify upstream link tracking brings down mlag client sub interface
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc029**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify upstream link tracking brings down mlag client sub interface** |
 | **Test Setup** | **Topology1**                                                |
@@ -439,7 +441,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.30 To Verify SAG on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc030**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify SAG on sub interfaces**                          |
 | **Test Setup** | **Topology1**                                                |
@@ -450,7 +452,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.31 To Verify sub interfaces  as underlay in Vxlan topology
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc031**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify sub interfaces as underlay in Vxlan topology**   |
 | **Test Setup** | **Topology1**                                                |
@@ -459,7 +461,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.32  To Verify qos service-policy on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc032**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify qos service-policy  on sub interfaces**          |
 | **Test Setup** | **Topology1**                                                |
@@ -470,7 +472,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.33  To Verify PBR service-policy on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc033**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify PBR service-policy on sub interfaces**           |
 | **Test Setup** | **Topology1**                                                |
@@ -481,7 +483,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.34  To Verify port mirroring on parent and sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc034**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify port mirroring on parent and sub interfaces**    |
 | **Test Setup** | **Topology1**                                                |
@@ -490,7 +492,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.35  To Verify L3 acl functionality applied on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc035**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify L3 acl functionality applied on sub interfaces** |
 | **Test Setup** | **Topology1**                                                |
@@ -499,7 +501,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.36  To Verify delete and recreate sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc036**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify delete and recreate sub interfaces**             |
 | **Test Setup** | **Topology1**                                                |
@@ -513,10 +515,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
-
 ### 3.2.37 To Verify Inband management on sub interface 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc037**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify InBand management on sub interface**             |
 | **Test Setup** | **Topology1**                                                |
@@ -529,7 +530,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc038**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify Verify dynamic breakout on parent interface**    |
 | **Test Setup** | **Topology1**                                                |
@@ -538,7 +539,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.39 To Verify NTP server functionality on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc039**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify NTP over sub interfaces**                        |
 | **Test Setup** | **Topology1**                                                |
@@ -547,7 +548,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.40 To Verify SNMP walk retrieves sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc040**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify snmpwalk retrieves sub interfaces**              |
 | **Test Setup** | **Topology1**                                                |
@@ -558,7 +559,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.41 To Verify sub interfaces logs gets updated on Syslog
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc041**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify snmpwalk retrieves sub interfaces**              |
 | **Test Setup** | **Topology1**                                                |
@@ -567,7 +568,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.42 To Verify handling of untagged packets on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc042**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify handling of untagged packets on sub interfaces** |
 | **Test Setup** | **Topology1**                                                |
@@ -578,7 +579,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.43 To Verify handling of QinQ packets on sub interfaces
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc043**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify handling of QinQ packets on sub interfaces**     |
 | **Test Setup** | **Topology1**                                                |
@@ -589,7 +590,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.44 To Verify creation of sub interface in port aliasing mode
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc044**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To Verify creation of sub interface in port aliasing mode** |
 | **Test Setup** | **Topology1**                                                |
@@ -598,7 +599,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.2.45 To Verify creation of sub interface over Portchannel with long interface name
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfFunc045**                                       |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **To To Verify creation of sub interface over Portchannel with long interface name** |
 | **Test Setup** | **Topology1**                                                |
@@ -609,7 +610,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.3.1 To verify routing over sub interfaces with config reload  ###
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfReload001**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify routing over sub interfaces with config reload** |
 | **Test Setup** | **Topology1**                                                |
@@ -619,7 +620,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 ### 3.3.2 To verify routing over sub interfaces with Coldboot
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfReload002**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify routing over sub interfaces with Coldboot**      |
 | **Test Setup** | **Topology1**                                                |
@@ -629,10 +630,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
-
 ### 3.3.3 To verify routing over sub interfaces with Fastboot 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfReload003**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify routing over sub interfaces with Fastboot**      |
 | **Test Setup** | **Topology1**                                                |
@@ -642,11 +642,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
-
-
 ### 3.3.4 To verify routing over sub interfaces with Warmboot
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfReload004**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify routing over sub interfaces with Warmboot**      |
 | **Test Setup** | **Topology1**                                                |
@@ -656,12 +654,14 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 
 
 
+
+
 ### **3.4 Scale Test Cases**
 
 ### 3.4.1 To verify maximum sub interfaces per parent interface  ###
 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfScale001**                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify maximum sub interfaces per parent interface**    |
 | **Test Setup** | **Topology1**                                                |
@@ -671,7 +671,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 ### 3.4.2 To verify maximum sub interfaces system level ###
 
 
-| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| **Test ID**    | **FtRoSubIntfScale002**                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To verify maximum sub interfaces system level**            |
 | **Test Setup** | **Topology1**                                                |
