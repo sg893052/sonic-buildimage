@@ -677,11 +677,6 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Configure maximum supported 750 sub interfaces system level with 3 parent ports having 2)50 sub interfaces each<br/>2) Assign IP and IPv6 addresses on each sub interfaces<br/>3) Assign encapsulation ID in the range 1-4090 for each sub interface randomly<br/>4) Verify all 750 Sub interfaces comes up without any issues<br/>5)Verify all directly connected subnets on sub interfaces gets installed in routing table<br/> |
->>>>>>> 79a612d... Adding Routed sub interface Testplan
-
-
-
-
 
 
 ## **Reference Links**
