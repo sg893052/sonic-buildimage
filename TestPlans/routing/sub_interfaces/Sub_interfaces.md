@@ -142,11 +142,8 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify basic sub interface routing created over Lag port** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(130.1.1.2 and 3001::2) and other on Vlan400(140.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003
-3)On D1(Router), Create two sub interfaces for the portchannel port connecting to D2 with encapsulation id 100,200 respectively
-4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 130.1.1.1 , 3001::1 and 130.1.1.1,3001::1 respectively
-5)Send L3 ipv4 and ipv6  between Host1 and Host2 and Verify D1 routes the traffic over sub interfaces
-6) Delete Parent PortChannel interface with sub interfaces configured and verify all parent and sub interfaces gets deleted |
+| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(130.1.1.2 and 3001::2) and other on Vlan400(140.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003<br/>3)On D1(Router), Create two sub interfaces for the Portchannel port connecting to D2 with encapsulation id 100,200 respectively<br/>4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 130.1.1.1 , 3001::1 and 130.1.1.1,3001::1 respectively<br/>5)Send L3 ipv4 and ipv6  between Host1 and Host2 and Verify D1 routes the traffic over sub interfaces<br/>6) Delete Parent Portchannel interface with sub interfaces configured and verify all parent and sub interfaces gets deleted<br/> |
+
 
 
 
@@ -507,12 +504,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify delete and recreate sub interfaces**             |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(130.1.1.2 and 3001::2) and other on Vlan400(140.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003
-3)On D1(Router), Create two sub interfaces for the physical port connecting to D2 with encapsulation id 100,200 respectively
-4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 130.1.1.1 , 3001::1 and 140.1.1.1,4001::1 respectively
-5)Send L3 ipv4 and ipv6  between Host1 and Host2 and Verify D1 routes the traffic over sub interfaces
-6)Delete sub interface and verify all configs are gone
-7)Recreate sub interfaces and verify routing between subinterfaces |
+| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(130.1.1.2 and 3001::2) and other on Vlan400(140.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003<br/>3)On D1(Router), Create two sub interfaces for the physical port connecting to D2 with encapsulation id 100,200 respectively<br/>4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 130.1.1.1 , 3001::1 and 140.1.1.1,4001::1 respectively<br/>5)Send L3 ipv4 and ipv6  between Host1 and Host2 and Verify D1 routes the traffic over sub interfaces<br/>6)Delete sub interface and verify all configs are gone<br/>7)Recreate sub interfaces and verify routing between sub interfaces<br/> |
+
+
 
 
 
@@ -630,10 +624,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify routing over sub interfaces with Coldboot**      |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces
-3)Save config and Perform coldboot
-4)Verify all sub interface configs are retained and all ports comes up
-5)Verify Traffic forwarding |
+| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform coldboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding<br/> |
+
+
 
 
 
@@ -644,10 +637,10 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify routing over sub interfaces with Fastboot**      |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces
-3)Save config and Perform Fastboot
-4)Verify all sub interface configs are retained and all ports comes up
-5)Verify Traffic forwarding |
+| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform Fastboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding<br/> |
+
+
+
 
 
 
@@ -658,11 +651,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify routing over sub interfaces with Warmboot**      |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces
-3)Save config and Perform warmboot
-4)Verify all sub interface configs are retained and all ports comes up
-5)Verify Traffic forwarding and check there is no traffic loss during warmboot |
-
+| **Steps**      | 1)Configure multiple sub interfaces on physical interface as well as L3 Portchennel<br/>2)Send L3 traffic from Tgen hosts and verify inter vlan routing happens on DUT between sub interfaces<br/>3)Save config and Perform warmboot<br/>4)Verify all sub interface configs are retained and all ports comes up<br/>5)Verify Traffic forwarding and check there is no traffic loss during warmboot<br/> |
 
 
 
@@ -687,11 +676,8 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify maximum sub interfaces system level**            |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure maximum supported 750 sub interfaces system level with 3 parent ports having 2)50 sub interfaces each<br/>2) Assign IP and IPv6 addresses on each sub interfaces
-3) Assign encapsulation ID in the range 1-4090 for each sub interface randomly
-4) Verify all 750 Sub interfaces comes up without any issues
-5)Verify all directly connected subnets on sub interfaces gets installed in routing table |
-
+| **Steps**      | 1) Configure maximum supported 750 sub interfaces system level with 3 parent ports having 2)50 sub interfaces each<br/>2) Assign IP and IPv6 addresses on each sub interfaces<br/>3) Assign encapsulation ID in the range 1-4090 for each sub interface randomly<br/>4) Verify all 750 Sub interfaces comes up without any issues<br/>5)Verify all directly connected subnets on sub interfaces gets installed in routing table<br/> |
+>>>>>>> 79a612d... Adding Routed sub interface Testplan
 
 
 
