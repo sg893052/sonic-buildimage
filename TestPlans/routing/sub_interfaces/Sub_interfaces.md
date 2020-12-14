@@ -142,9 +142,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To verify basic sub interface routing created over Lag port** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(300.1.1.2 and 3001::2) and other on Vlan400(400.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003
+| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(130.1.1.2 and 3001::2) and other on Vlan400(140.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003
 3)On D1(Router), Create two sub interfaces for the portchannel port connecting to D2 with encapsulation id 100,200 respectively
-4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 300.1.1.1 , 3001::1 and 300.1.1.1,3001::1 respectively
+4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 130.1.1.1 , 3001::1 and 130.1.1.1,3001::1 respectively
 5)Send L3 ipv4 and ipv6  between Host1 and Host2 and Verify D1 routes the traffic over sub interfaces<br/>6) Delete Parent PortChannel interface with sub interfaces configured and verify all parent and sub interfaces gets deleted |
 
 
@@ -352,7 +352,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify ICMP SLAs with sub interface as source-interface** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure sub interfaces on physical and lag interfaces<br/>  2)Configure encap_id on each sub interfaces and bind it to user-vrf  <br/>3)COnfigure ICMP SLA for the subnet ip configured on D3<br/>4)Verify ICMP SLA comes up fine<br/>5)Configure src-intf as sub interfaces and verify SLAs are UP<br/>6)Bring down the destination subnet and verify SLAs are timed out<br/> |
+| **Steps**      | 1) Configure sub interfaces on physical and lag interfaces<br/>  2)Configure encap_id on each sub interfaces and bind it to user-vrf  <br/>3)Configure ICMP SLA for the subnet ip configured on D3<br/>4)Verify ICMP SLA comes up fine<br/>5)Configure src-intf as sub interfaces and verify SLAs are UP<br/>6)Bring down the destination subnet and verify SLAs are timed out<br/>7) Verify static route configured with sub interface as nexthop gets removed from routing table once SLA goes down |
 
 ### 3.2.22  To Verify TCP SLAs with sub interface as source-interface
 
@@ -361,7 +361,7 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify ICMP SLAs with sub interface as source-interface** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure sub interfaces on physical and lag interfaces  <br/> 2)Configure encap_id on each sub interfaces and bind it to user-vrf <br/>  3)Configure TCP SLA for the subnet ip configured on D3  <br/>4)Verify ICMP SLA comes up fine<br/> 5)Configure src-intf as sub interfaces and verify SLAs are UP 6)Bring down the destination subnet and verify SLAs are timed out |
+| **Steps**      | 1) Configure sub interfaces on physical and lag interfaces  <br/> 2)Configure encap_id on each sub interfaces and bind it to user-vrf <br/>  3)Configure TCP SLA for the subnet ip configured on D3  <br/>4)Verify ICMP SLA comes up fine<br/> 5)Configure src-intf as sub interfaces and verify SLAs are UP 6)Bring down the destination subnet and verify SLAs are timed out<br/>6)Verify static route configured with sub interface as nexthop gets removed from routing table once SLA goes down |
 
 
 
@@ -507,9 +507,9 @@ Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q t
 | **Test Name**  | **To Verify delete and recreate sub interfaces**             |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(300.1.1.2 and 3001::2) and other on Vlan400(400.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003
+| **Steps**      | 1) Configure 2 hosts connecting to D2(L2 switch) one on Vlan 300(130.1.1.2 and 3001::2) and other on Vlan400(140.1.1.2 and 4001::2)<br/>2) Configure D2 ports towards Router D1 as trunk member for Vlan 100 and Vlan2003
 3)On D1(Router), Create two sub interfaces for the physical port connecting to D2 with encapsulation id 100,200 respectively
-4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 300.1.1.1 , 3001::1 and 300.1.1.1,3001::1 respectively
+4) Configure ip/ipv6 addresses addresses for these sub interfaces created over lag port 130.1.1.1 , 3001::1 and 140.1.1.1,4001::1 respectively
 5)Send L3 ipv4 and ipv6  between Host1 and Host2 and Verify D1 routes the traffic over sub interfaces
 6)Delete sub interface and verify all configs are gone
 7)Recreate sub interfaces and verify routing between subinterfaces |
