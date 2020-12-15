@@ -1,6 +1,6 @@
 # The NTP Restart Avoidance Design
 # High Level Design Document
-### Rev 0.1
+### Rev 0.4
 
 # Table of Contents
 
@@ -10,6 +10,7 @@
 | 0.1 | 11/22/2020  | Arun Barboza       | Initial draft                     |
 | 0.2 | 11/25/2020  | Arun Barboza       | Internal Review(trusted key)      |
 | 0.3 | 12/02/2020  | Arun Barboza       | Appendix ntpconfd design          |
+| 0.4 | 12/14/2020  | Arun Barboza       | Mgmt VRF handling                 |
 
 # About this Manual
 This document provides general information about the design of NTP Restart avoidance in SONiC.
@@ -258,6 +259,7 @@ saveconfig_logdir = ntpconfd_logdir + 'saveconfig/'
 ntpd_confdir = '/var/run/ntpconfd/etc'
 ntpd_conffile = ntpd_confdir + 'ntp.conf'
 ntpd_keyfile = ntpd_confdir + 'ntp.keys'
+ntpd_mgmtvrffile = ntpd_confdir + 'mgmt.vrf'
 
 ## Service File
 
@@ -413,6 +415,11 @@ if (not controlkey_inuse) and (not keyid_full)
 
 write prev_keyfile with generated controlkey as ntpd_keyfile
 write prev_conffile with generated controlkey as ntpd_conffile
+if prev_vrf_enabled == "true" and prev_vrf_configured != "default"
+  touch ntpd_mgmtvrffile
+else
+  rm ntpd_mgmtvrffile
+
 
 ```
 
@@ -454,6 +461,10 @@ read the '/etc/ntp.keys' file as new_keyfile
 if (vrf_enabled != prev_vrf_enabled) or (vrf_configured != prev_vrf_configured)
   write new_keyfile as ntpd_keyfile
   write new_conffile as ntpd_conffile
+  if prev_vrf_enabled == "true" and prev_vrf_configured != "default"
+    touch ntpd_mgmtvrffile
+  else
+    rm ntpd_mgmtvrffile
   prev_* = new_*
   ReStart ntp-daemon service (Stop, Sleep, Start)
   continue
@@ -462,6 +473,10 @@ if (vrf_enabled != prev_vrf_enabled) or (vrf_configured != prev_vrf_configured)
 if controlkey_inuse or keyidfull
   write new_keyfile as ntpd_keyfile
   write new_conffile as ntpd_conffile
+  if prev_vrf_enabled == "true" and prev_vrf_configured != "default"
+    touch ntpd_mgmtvrffile
+  else
+    rm ntpd_mgmtvrffile
   prev_* = new_*
   ReStart ntp-daemon service (Stop, Sleep, Start)
   continue
@@ -470,6 +485,10 @@ if controlkey is being used
   controlkey_inuse = true
   write new_keyfile as ntpd_keyfile
   write new_conffile as ntpd_conffile
+  if prev_vrf_enabled == "true" and prev_vrf_configured != "default"
+    touch ntpd_mgmtvrffile
+  else
+    rm ntpd_mgmtvrffile
   prev_* = new_*
   ReStart ntp-daemon service (Stop, Sleep, Start)
   continue
@@ -479,6 +498,10 @@ if keyid space is full
   keyidfull = true
   write new_keyfile as ntpd_keyfile
   write new_conffile as ntpd_conffile
+  if prev_vrf_enabled == "true" and prev_vrf_configured != "default"
+    touch ntpd_mgmtvrffile
+  else
+    rm ntpd_mgmtvrffile
   prev_* = new_*
   ReStart ntp-daemon service (Stop, Sleep, Start)
   continue;
@@ -488,6 +511,10 @@ generate new_controlkey_key
 
 write new_keyfile with generated controlkey as ntpd_keyfile
 write new_conffile with generated controlkey as ntpd_conffile
+if prev_vrf_enabled == "true" and prev_vrf_configured != "default"
+  touch ntpd_mgmtvrffile
+else
+  rm ntpd_mgmtvrffile
 
 Diff the Configuration (prev_ and new_ of keyfile, and conffile)
 
