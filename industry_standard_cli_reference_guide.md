@@ -6,8 +6,6 @@
 
 [aaa authentication login default](#aaa-authentication-login-default)
 
-[aaa authentication login-method](#aaa-authentication-login-method)
-
 [aaa authorization login default](#aaa-authorization-login-default)
 
 [aaa name-service group](#aaa-name-service-group)
@@ -144,11 +142,7 @@
 
 [clear ip helper-address statistics](#clear-ip-helper-address-statistics)
 
-[clear ip mroute](#clear-ip-mroute)
-
 [clear ip ospf](#clear-ip-ospf)
-
-[clear ip pim](#clear-ip-pim)
 
 [clear ip sla](#clear-ip-sla)
 
@@ -425,16 +419,6 @@
 [ip ospf retransmit-interval](#ip-ospf-retransmit-interval)
 
 [ip ospf transmit-delay](#ip-ospf-transmit-delay)
-
-[ip pim](#ip-pim)
-
-[ip pim bfd](#ip-pim-bfd)
-
-[ip pim drpriority](#ip-pim-drpriority)
-
-[ip pim hello](#ip-pim-hello)
-
-[ip pim sparse-mode](#ip-pim-sparse-mode)
 
 [ip prefix-list](#ip-prefix-list)
 
@@ -808,8 +792,6 @@
 
 [radius-server retransmit](#radius-server-retransmit)
 
-[radius-server source-ip](#radius-server-source-ip)
-
 [radius-server statistics](#radius-server-statistics)
 
 [radius-server timeout](#radius-server-timeout)
@@ -1040,13 +1022,9 @@
 
 [show ip load-share](#show-ip-load-share)
 
-[show ip mroute](#show-ip-mroute)
-
 [show ip ospf](#show-ip-ospf)
 
 [show ip ospf route](#show-ip-ospf-route)
-
-[show ip pim](#show-ip-pim)
 
 [show ip prefix-list](#show-ip-prefix-list)
 
@@ -1976,26 +1954,6 @@ no aaa authentication login default
 ```
 sonic(config)# aaa authentication login default group tacacs+ local
 ```
-## aaa authentication login-method 
-### Description 
-```
-AAA authentication login method preference 
-```
-### Parent Commands (Modes) 
-```
-configure terminal
-```
-### Syntax 
-```
-aaa authentication login-method { { [ local [ <tacacs+> ] [ <radius> ] ] } | { [ tacacs+ [ <local> ] ] } | { [ radius [ <local> ] ] } }
-no aaa authentication login-method
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| tacacs+ |   | Select [tacacs+(tacacs+) ]  |
-| radius |   | Select [radius(radius) ]  |
-| local |   | Select [local(local) ]  |
 ## aaa authorization login default 
 ### Description 
 ```
@@ -5198,44 +5156,6 @@ clear ip helper_address statistics
 
 
 ```
-## clear ip mroute 
-
-### Description 
-
-```
-This command is useful for debugging and resets multicast route information.
-
-
-```
-### Syntax 
-
-```
-clear ip mroute [ vrf <vrf-name> ]
-
-```
-### Parameters 
-
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| vrf-name | WORD  | String  |
-
-
-### Usage Guidelines 
-
-```
-* clear ip mroute [vrf {<vrf-name> | all}] ==> To reset all IP Multicast routes for the particular VRF
-
-
-```
-### Examples 
-#### clear ip mroute  [vrf {<vrf-name> | all}] 
-
-```
-sonic# clear ip mroute
-sonic#
-
-
-```
 ## clear ip ospf 
 
 ### Description 
@@ -5277,59 +5197,6 @@ information with command syntax that can be cleared.
 ```
 sonic# clear ip ospf interface  Ethernet64
 sonic# clear ip ospf vrf default interface Ethernet64
-
-
-```
-## clear ip pim 
-
-### Description 
-
-```
-These commands are useful for debugging. One resets the PIM interfaces. The other rescans the Outgoing Interface Lists (OILs).
-
-
-```
-### Syntax 
-
-```
-clear ip pim [ vrf <vrf-name> ] { [ interfaces ] | [ oil ] }
-
-```
-### Parameters 
-
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| vrf-name | WORD  | String  |
-
-
-### Usage Guidelines 
-
-```
-* clear ip pim [vrf <vrf-name>] interfaces ==> To reset all PIM interfaces of a particular VRF
-* clear ip pim [vrf <vrf-name>] oil ==> To rescan PIM OIL (Outgoing Interfaces List) of all multicast entries of a particular VRF
-
-
-```
-### Examples 
-#### clear ip pim [vrf <vrf-name> ] interfaces 
-
-```
-sonic# clear ip pim interfaces
-sonic#
----------------------------------------
-sonic# clear ip pim vrf Vrf2 interfaces
-sonic#
-
-
-```
-#### clear ip pim [vrf <vrf-name> ] oil 
-
-```
-sonic# clear ip pim oil
-sonic#
----------------------------------------
-sonic# clear ip pim vrf Vrf2 oil
-sonic#
 
 
 ```
@@ -6787,6 +6654,7 @@ no description
 | description-value | String (Max: 256 characters)  | String  |
 ### Usage Guidelines 
 ```
+
 ```
 ### Examples 
 #### add description for class-map 
@@ -6813,6 +6681,7 @@ no description
 | description-value | String (Max: 256 characters)  | String  |
 ### Usage Guidelines 
 ```
+
 ```
 ### Examples 
 #### add description for class-map 
@@ -6839,6 +6708,7 @@ no description
 | description-value | String (Max: 256 characters)  | String  |
 ### Usage Guidelines 
 ```
+
 ```
 ### Examples 
 #### add description for class-map 
@@ -12626,495 +12496,6 @@ sonic-cli(config-router-ospf)# ip ospf transmit-delay 35
 ```
 ### Features this CLI belongs to 
 *  OSPFv2
-## ip pim 
-### Description 
-```
-The following PIM (IPv4) global configurations are
-executed in configuration-view. All these commands can be executed per VRF. If
-VRF is not specified, then it will be executed in "default" VRF context. Once
-PIM global configurations are done on a particular non-default VRF, that VRF
-cannot be deleted from the system until relevant PIM configurations are cleared.
---------------------
-Join Prune Interval:
---------------------
-Configure the frequency of join/prune messages on the specified interface.
------------------
-Keep Alive Timer:
------------------
-Period after last (S,G) data packet during which (S,G) Join state will be even in the absence of (S,G) Join messages.
-------------------------------
-SSM Prefix-list configuration:
-------------------------------
-Apart from standard PIM-SSM multicast range (232.0.0.0/8),
-user can qualify other multicast group address as PIM-SSM range using
-IP-prefix-list. User should create the corresponding IP-prefix-list using
-existing "ip prefix-list" CLI command and then associate that prefix-list to
-PIM through this CLI command. This IP-prefix-list cannot be deleted from the
-system until after removal of any PIM global configuration referring to the
-prefix list.
------
-ECMP:
------
-If PIM has the a choice of ECMP nexthops for a particular RPF, PIM will cause
-S,G flows to be spread out amongst the nexthops. If this command is not
-specified then the first nexthop found will be used
-```
-### Parent Commands (Modes) 
-```
-configure terminal
-```
-### Syntax 
-```
-ip pim [ vrf <vrf-name> ] { { ecmp [ rebalance ] } | { join-prune-interval <jpi> } | { keep-alive-timer <kat> } | { ssm { prefix-list <pln> } } }
-no ip pim [ vrf <vrf-name> ] { { ecmp [ rebalance ] } | jpi | kat | { ssm pln } }
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| vrf-name | WORD  | String  |
-| jpi |   | Integer  |
-| kat |   | Integer  |
-| pln | String  | String  |
-### Usage Guidelines 
-```
-* ip pim [vrf <vrf-name>] join-prune-interval <value : (60-600 seconds)>
-* ip pim [vrf <vrf-name>] keep-alive-timer <value : (31-60000 seconds)>
-* ip pim [vrf <vrf-name>] ssm prefix-list <prefix-list-name>
-* ip pim [vrf <vrf-name>] ecmp [rebalance]
-```
-### Examples 
-#### List of PIM global level commands 
-```
-sonic# configure terminal
-sonic(config)#
-sonic(config)# ip pim
-  vrf                  VRF name
-  join-prune-interval  Configure Join Prune Interval
-  keep-alive-timer     Configure Keep Alive timer
-  ssm                  Configure SSM
-  ecmp                 Enable ECMP
-sonic(config)# ip pim vrf Vrf1
-  join-prune-interval  Configure Join Prune Interval
-  keep-alive-timer     Configure Keep Alive timer
-  ssm                  Configure SSM
-  ecmp                 Enable ECMP
-sonic(config)# no ip pim
-  vrf                  VRF name
-  join-prune-interval  Set Join Prune Interval to default
-  keep-alive-timer     Set Keep Alive timer to default
-  ssm                  Remove SSM configuration
-  ecmp                 Disable ECMP
-sonic(config)# no ip pim vrf Vrf1
-  join-prune-interval  Set Join Prune Interval to default
-  keep-alive-timer     Set Keep Alive timer to default
-  ssm                  Remove SSM configuration
-  ecmp                 Disable ECMP
-```
-#### ip pim [vrf <vrf-name>] join-prune-interval <value : (60-600 seconds)> 
-```
-sonic(config)# ip pim join-prune-interval
-      <0..600>  Range 60-600 seconds
-  -------------------------------------------------------
-  sonic(config)# ip pim join-prune-interval 70
-  sonic(config)#
-  -------------------------------------------------------
-  sonic(config)# ip pim vrf Vrf1 join-prune-interval 75
-  sonic(config)#
-```
-#### ip pim [vrf <vrf-name>] keep-alive-timer <value : (31-60000 seconds)> 
-```
-sonic(config)# ip pim keep-alive-timer
-    <31..60000>  Range 31-60000 seconds
-sonic(config)#
-sonic(config)# ip pim keep-alive-timer 35
-sonic(config)# ip pim vrf Vrf1 keep-alive-timer 45
-sonic(config)#
-```
-#### ip pim [vrf <vrf-name>] ssm prefix-list <vrefix-list-name> 
-```
-sonic(config)# ip pim ssm
-  prefix-list  Configure prefix list name
-sonic(config)# ip pim ssm prefix-list
-  String  Prefix list name
-sonic(config)# ip pim ssm prefix-list pim_ssm_pfx_list
-sonic(config)# ip pim vrf Vrf1 ssm prefix-list pim_ssm_pfx_list
-sonic(config)#
-```
-#### ip pim ecmp 
-```
-sonic(config)# ip pim ecmp
-sonic(config)# ip pim vrf Vrf1 ecmp
-sonic(config)#
-```
-#### ip pim ecmp rebalance 
-```
-sonic(config)# ip pim ecmp rebalance
-sonic(config)# ip pim vrf Vrf1 ecmp rebalance
-sonic(config)#
-```
-## ip pim bfd 
-### Description 
-```
-This command enables BFD processing for PIM on the given interface.
-```
-### Parent Commands (Modes) 
-```
-interface <phy-if-name>
-```
-### Syntax 
-```
-ip pim bfd
-no ip pim bfd
-```
-### Usage Guidelines 
-```
-ip pim bfd
-```
-### Examples 
-#### Enable BFD on interface Vlan100 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim bfd
-sonic(conf-if-Vlan100)#
-```
-## ip pim bfd 
-### Description 
-```
-This command enables BFD processing for PIM on the given interface.
-```
-### Parent Commands (Modes) 
-```
-interface PortChannel <lag-id> [ mode <PoMode> ] [ min-links <min-links-value> ] [ fallback ] [ fast_rate ]
-```
-### Syntax 
-```
-ip pim bfd
-no ip pim bfd
-```
-### Usage Guidelines 
-```
-ip pim bfd
-```
-### Examples 
-#### Enable BFD on interface Vlan100 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim bfd
-sonic(conf-if-Vlan100)#
-```
-## ip pim bfd 
-### Description 
-```
-This command enables BFD processing for PIM on the given interface.
-```
-### Parent Commands (Modes) 
-```
-interface <vlan-if-name>
-```
-### Syntax 
-```
-ip pim bfd
-no ip pim bfd
-```
-### Usage Guidelines 
-```
-ip pim bfd
-```
-### Examples 
-#### Enable BFD on interface Vlan100 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim bfd
-sonic(conf-if-Vlan100)#
-```
-## ip pim drpriority 
-### Description 
-```
-Set the DR Priority for the PIM interface. This command a
-allows user to set the priority of a node for becoming the DR on a network to
-which the interface is attached. A higher value means a higher chances of being
-elected.
-```
-### Parent Commands (Modes) 
-```
-interface <phy-if-name>
-```
-### Syntax 
-```
-ip pim drpriority <drprio>
-no ip pim drpriority
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| drprio | 1-4294967295  | Integer  |
-### Usage Guidelines 
-```
-ip pim drpriority <value>
-```
-### Examples 
-#### Set DR priority value of interface Vlan100 to 10 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim drpriority
-  <1..4294967295>  Range 1_4294967295
-sonic(conf-if-Vlan100)# ip pim drpriority 10
-sonic(conf-if-Vlan100)#
-```
-## ip pim drpriority 
-### Description 
-```
-Set the DR Priority for the PIM interface. This command a
-allows user to set the priority of a node for becoming the DR on a network to
-which the interface is attached. A higher value means a higher chances of being
-elected.
-```
-### Parent Commands (Modes) 
-```
-interface PortChannel <lag-id> [ mode <PoMode> ] [ min-links <min-links-value> ] [ fallback ] [ fast_rate ]
-```
-### Syntax 
-```
-ip pim drpriority <drprio>
-no ip pim drpriority
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| drprio | 1-4294967295  | Integer  |
-### Usage Guidelines 
-```
-ip pim drpriority <value>
-```
-### Examples 
-#### Set DR priority value of interface Vlan100 to 10 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim drpriority
-  <1..4294967295>  Range 1_4294967295
-sonic(conf-if-Vlan100)# ip pim drpriority 10
-sonic(conf-if-Vlan100)#
-```
-## ip pim drpriority 
-### Description 
-```
-Set the DR Priority for the PIM interface. This command a
-allows user to set the priority of a node for becoming the DR on a network to
-which the interface is attached. A higher value means a higher chances of being
-elected.
-```
-### Parent Commands (Modes) 
-```
-interface <vlan-if-name>
-```
-### Syntax 
-```
-ip pim drpriority <drprio>
-no ip pim drpriority
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| drprio | 1-4294967295  | Integer  |
-### Usage Guidelines 
-```
-ip pim drpriority <value>
-```
-### Examples 
-#### Set DR priority value of interface Vlan100 to 10 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim drpriority
-  <1..4294967295>  Range 1_4294967295
-sonic(conf-if-Vlan100)# ip pim drpriority 10
-sonic(conf-if-Vlan100)#
-```
-## ip pim hello 
-### Description 
-```
-Periodic interval for Hello messages to keep the PIM neighbor session alive.
-This configuration internally configures the default hold-time (3.5 *
-Hello-interval); the period to keep the PIM neighbor session alive
-without receiving hello messages from that particular neighbor.
-```
-### Parent Commands (Modes) 
-```
-interface <phy-if-name>
-```
-### Syntax 
-```
-ip pim hello <hello>
-no ip pim hello
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| hello |   | Integer  |
-### Usage Guidelines 
-```
-ip pim hello <value>
-```
-### Examples 
-#### Set the Hello interval of interface Vlan100 to 30 
-```
-sonic# configure terminal
-sonic(conf-if-Vlan100)# ip pim hello
-  <1..180>  Range 1 to 180 in seconds
-sonic(conf-if-Vlan100)# ip pim hello 30
-sonic(conf-if-Vlan100)#
-```
-## ip pim hello 
-### Description 
-```
-Periodic interval for Hello messages to keep the PIM neighbor session alive.
-This configuration internally configures the default hold-time (3.5 *
-Hello-interval); the period to keep the PIM neighbor session alive
-without receiving hello messages from that particular neighbor.
-```
-### Parent Commands (Modes) 
-```
-interface PortChannel <lag-id> [ mode <PoMode> ] [ min-links <min-links-value> ] [ fallback ] [ fast_rate ]
-```
-### Syntax 
-```
-ip pim hello <hello>
-no ip pim hello
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| hello |   | Integer  |
-### Usage Guidelines 
-```
-ip pim hello <value>
-```
-### Examples 
-#### Set the Hello interval of interface Vlan100 to 30 
-```
-sonic# configure terminal
-sonic(conf-if-Vlan100)# ip pim hello
-  <1..180>  Range 1 to 180 in seconds
-sonic(conf-if-Vlan100)# ip pim hello 30
-sonic(conf-if-Vlan100)#
-```
-## ip pim hello 
-### Description 
-```
-Periodic interval for Hello messages to keep the PIM neighbor session alive.
-This configuration internally configures the default hold-time (3.5 *
-Hello-interval); the period to keep the PIM neighbor session alive
-without receiving hello messages from that particular neighbor.
-```
-### Parent Commands (Modes) 
-```
-interface <vlan-if-name>
-```
-### Syntax 
-```
-ip pim hello <hello>
-no ip pim hello
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| hello |   | Integer  |
-### Usage Guidelines 
-```
-ip pim hello <value>
-```
-### Examples 
-#### Set the Hello interval of interface Vlan100 to 30 
-```
-sonic# configure terminal
-sonic(conf-if-Vlan100)# ip pim hello
-  <1..180>  Range 1 to 180 in seconds
-sonic(conf-if-Vlan100)# ip pim hello 30
-sonic(conf-if-Vlan100)#
-```
-## ip pim sparse-mode 
-### Description 
-```
-Enable PIM sparse-mode on the given interface
-```
-### Parent Commands (Modes) 
-```
-interface <phy-if-name>
-```
-### Syntax 
-```
-ip pim sparse-mode
-no ip pim sparse-mode
-```
-### Usage Guidelines 
-```
-ip pim sparse-mode
-```
-### Examples 
-#### Enable PIM sparse-mode on interface Vlan100 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim sparse-mode
-sonic(conf-if-Vlan100)#
-```
-## ip pim sparse-mode 
-### Description 
-```
-Enable PIM sparse-mode on the given interface
-```
-### Parent Commands (Modes) 
-```
-interface PortChannel <lag-id> [ mode <PoMode> ] [ min-links <min-links-value> ] [ fallback ] [ fast_rate ]
-```
-### Syntax 
-```
-ip pim sparse-mode
-no ip pim sparse-mode
-```
-### Usage Guidelines 
-```
-ip pim sparse-mode
-```
-### Examples 
-#### Enable PIM sparse-mode on interface Vlan100 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim sparse-mode
-sonic(conf-if-Vlan100)#
-```
-## ip pim sparse-mode 
-### Description 
-```
-Enable PIM sparse-mode on the given interface
-```
-### Parent Commands (Modes) 
-```
-interface <vlan-if-name>
-```
-### Syntax 
-```
-ip pim sparse-mode
-no ip pim sparse-mode
-```
-### Usage Guidelines 
-```
-ip pim sparse-mode
-```
-### Examples 
-#### Enable PIM sparse-mode on interface Vlan100 
-```
-sonic# configure terminal
-sonic(config)# interface Vlan 100
-sonic(conf-if-Vlan100)# ip pim sparse-mode
-sonic(conf-if-Vlan100)#
-```
 ## ip prefix-list 
 ### Description 
 ```
@@ -17788,6 +17169,7 @@ Use this command to configure OSPFv2 router parameters like router-id and ABR ty
 ### Examples 
 #### Configures OSPFv2 router parameters. 
 ```
+
 ```
 ### Features this CLI belongs to 
 *  OSPFv2
@@ -20246,24 +19628,6 @@ no radius-server retransmit
 ```
 sonic(config)# radius-server timeout 3
 ```
-## radius-server source-ip 
-### Description 
-```
-Configure global source ip for RADIUS 
-```
-### Parent Commands (Modes) 
-```
-configure terminal
-```
-### Syntax 
-```
-radius-server source-ip <source_ip>
-no radius-server source-ip
-```
-### Parameters 
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| source_ip | A.B.C.D/A::B  | String  |
 ## radius-server statistics 
 
 ### Description 
@@ -26088,70 +25452,6 @@ sonic-cli# show ip load-share
 *  HASH
 
 
-## show ip mroute 
-
-### Description 
-
-```
-This command displays multicast route information.
-
-
-```
-### Syntax 
-
-```
-show ip mroute [ vrf { <vrf-name> | all } ] { { [ <grp-addr> [ <src-addr> ] ] } | [ summary ] } ]
-
-```
-### Parameters 
-
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| vrf-name | WORD  | String  |
-| grp-addr | A.B.C.D  | String  |
-| src-addr | A.B.C.D  | String  |
-
-
-### Usage Guidelines 
-
-```
-* show ip mroute [vrf {<vrf-name> | all}]
-* show ip mroute [vrf {<vrf-name> | all}] summary
-
-
-```
-### Examples 
-#### show ip mroute [vrf {<vrf-name> | all}] 
-
-```
-sonic# show ip mroute
-
-IP multicast routing table for VRF: default
-* -> indicates installed route
-
-  Source          Group           Input         Output        Uptime
-* 71.0.0.11       233.0.0.1       Vlan100       Vlan200       00:41:59
-* 71.0.0.22       233.0.0.1       Vlan100       Vlan200       00:41:54
-                                                Vlan201       00:41:59
-* 71.0.0.11       234.0.0.1       Vlan100       Vlan200       00:41:34
-* 71.0.0.33       234.0.0.1       Vlan100       Vlan200       00:41:31
-                                                Vlan201       00:41:44
-* 71.0.0.22       235.0.0.1       Vlan100       Vlan200       00:41:16
-* 71.0.0.33       235.0.0.1       Vlan100       Vlan200       00:41:14
-
-
-```
-#### show ip mroute [vrf {<vrf-name> | all}] summary 
-
-```
-sonic# show ip mroute summary
-
-IP multicast routing table summary for VRF: default
-Mroute Type      Installed/Total
-(S, G)           7/7
-
-
-```
 ## show ip ospf 
 
 ### Description 
@@ -26747,172 +26047,6 @@ N    101.1.1.0/24          [10] area: 0.0.0.0
 *  OSPFv2
 
 
-## show ip pim 
-
-### Description 
-
-```
-This command displays PIM table entries. Available options are:
-interface, neighbor, ssm, topology and rpf. Results can also be filtered based on VRF name.
-
-
-```
-### Syntax 
-
-```
-show ip pim [ vrf { <vrf-name> | all } ] { { [ interface { [ <port-id> ] | { [ PortChannel <port-id> ] } | { [ Vlan <port-id> ] } ] } ] } | { [ nbr [ <nbr-addr> ] ] } | [ rpf ] | [ ssm ] | { [ topology { [ <grp-addr> [ <src-addr> ] ] } ] } }
-
-```
-### Parameters 
-
-| Name | Description | Type |
-|:---:|:-----:|:-----:|
-| vrf-name | WORD  | String  |
-| port-id | EthernetNUM  |   |
-| nbr-addr | A.B.C.D  | String  |
-| grp-addr | A.B.C.D  | String  |
-| src-addr | A.B.C.D  | String  |
-
-
-### Usage Guidelines 
-
-```
-* show ip pim [vrf <vrf-name>] interface [<intf-name>]
-* show ip pim [vrf <vrf-name>] neighbor [[<nbr-ipv4-address>]
-* show ip pim [vrf <vrf-name>] ssm
-* show ip pim [vrf <vrf-name>] topology [Group-addr | {Group-addr   Source-addr}]
-* show ip pim [vrf <vrf-name>] rpf
-
-
-```
-### Examples 
-#### show ip pim [vrf {<vrf-name> | all}] interface [<intf-name>] 
-
-```
-sonic # show ip pim interface
-
-PIM interface information for VRF: default
-Interface       State       Address         PIM Nbrs       PIM DR          Hello-interval       PIM DR-Priority
-Vlan100         up          100.0.0.2       1              100.0.0.2       30                   1
-Vlan200         up          200.0.0.2       1              200.0.0.3       30                   1
-
-----------------------------------------------------------------------------------------------------------------
-
-sonic # show ip pim interface vlan 100
-
-PIM interface information for VRF: default
-Interface       State       Address         PIM Nbrs       PIM DR          Hello-interval       PIM DR-Priority
-Vlan100         up          100.0.0.2       1              100.0.0.2       30                   1
-
-
-```
-#### show ip pim [vrf {<vrf-name> | all}] neighbor [<nbr-ipv4-address>] 
-
-```
-sonic# show ip pim neighbor
-
-PIM neighbor information for VRF: default
-Interface       Neighbor        Uptime         Expirytime       DR-Priority
-Vlan100         100.0.0.1       01:38:52       00:01:22         1
-Vlan200         200.0.0.3       01:22:33       00:01:13         1
-
---------------------------------------------------------------------------------
-
-sonic# show ip pim neighbor 100.0.0.1
-
-PIM neighbor information for VRF: default
-Interface       Neighbor        Uptime         Expirytime       DR-Priority
-Vlan100         100.0.0.1       01:38:52       00:01:22         1
-
-
-```
-#### show ip pim [vrf {<vrf-name> | all}] ssm 
-
-```
-If IP-prefix list is associated:
-===============================
-sonic# show ip pim ssm
-
-PIM SSM information for VRF: default
-SSM group range : PIM_PLIST1
-
------------------------------------------
-
-If IP-prefix list is not associated:
-===================================
-sonic# show ip pim ssm
-
-PIM SSM information for VRF: default
-SSM group range : 232.0.0.0/8
-
-
-```
-#### show ip pim [vrf {<vrf-name> | all}] topology [Group-addr | {Group-addr Source-addr}] 
-
-```
-sonic# show ip pim topology
-
-PIM multicast routing table for VRF: default
-(71.0.0.11, 233.0.0.1), uptime 13:08:24, expires 00:00:12
-  Incoming interface: vlan100, RPF neighbor 100.0.0.1
-  Outgoing interface list:
-    vlan200   uptime/expiry-time: 13:07:50/00:01:39
-    vlan122   uptime/expiry-time: 12:33:21/Never
-
-(71.0.0.22, 233.0.0.1), uptime 13:08:45, expires 00:00:18
-  Incoming interface: vlan100, RPF neighbor 100.0.0.1
-  Outgoing interface list:
-    vlan200   uptime/expiry-time: 13:22:52/00:01:45
-    vlan124   uptime/expiry-time: 12:42:28/Never
-
-(101.0.0.22, 225.1.1.1), uptime 13:07:51, expires 00:06:09
-  Incoming interface: vlan105, RPF neighbor 105.0.0.1
-  Outgoing interface list:
-    vlan200   uptime/expiry-time: 13:03:50/00:01:39
-    vlan123   uptime/expiry-time: 13:02:40/Never
-
---------------------------------------------------------------------------------
-
-sonic# show ip pim topology 233.0.0.1
-
-PIM multicast routing table for VRF: default
-(71.0.0.11, 233.0.0.1), uptime 13:08:24, expires 00:00:12
-  Incoming interface: vlan100, RPF neighbor 100.0.0.1
-  Outgoing interface list:
-    vlan200   uptime/expiry-time: 13:07:50/00:01:39
-    vlan122   uptime/expiry-time: 12:33:21/Never
-
-(71.0.0.22, 233.0.0.1), uptime 13:08:45, expires 00:00:18
-  Incoming interface: vlan100, RPF neighbor 100.0.0.1
-  Outgoing interface list:
-    vlan200   uptime/expiry-time: 13:22:52/00:01:45
-    vlan124   uptime/expiry-time: 12:42:28/Never
-
---------------------------------------------------------------------------------
-
-sonic# show ip pim topology 225.1.1.1 101.0.0.22
-
-PIM multicast routing table for VRF: default
-(101.0.0.22, 225.1.1.1), uptime 13:07:51, expires 00:06:09
-  Incoming interface: vlan105, RPF neighbor 105.0.0.1
-  Outgoing interface list:
-    vlan200   uptime/expiry-time: 13:03:50/00:01:39
-    vlan123   uptime/expiry-time: 13:02:40/Never
-
-
-```
-#### show ip pim [vrf {<vrf-name> | all}] rpf 
-
-```
-sonic# show ip pim rpf
-
-PIM RPF information for VRF: default
-Source          Group           RpfIface       RpfAddress       RibNextHop       Metric       Pref
-71.0.0.11       233.0.0.1       Vlan100        100.0.0.1        100.0.0.1        0            1
-71.0.0.22       235.0.0.1       Vlan100        100.0.0.1        100.0.0.1        0            1
-
-
-```
 ## show ip prefix-list 
 
 ### Description 
@@ -32263,6 +31397,108 @@ Show version information
 
 ```
 show version
+
+admin@mclag-leaf-1:~$ show version
+
+SONiC Software Version: SONiC-OS-3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg
+Product: Enterprise SONiC Distribution by Broadcom - Enterprise Advanced package
+Distribution: Debian 9.13
+Kernel: 4.9.0-11-2-amd64
+Config DB Version: version_3_1_2
+Build commit: 9bdbde164
+Build date: Thu Dec 10 02:37:00 UTC 2020
+Built by: sonicbld@sonic-lvn-csg-002
+
+Platform: x86_64-dellemc_s5232f_c3538-r0
+HwSKU: DellEMC-S5232f-C32
+ASIC: broadcom
+Serial Number: CN01WJVTCES0006A0027
+Uptime: 02:32:43 up  7:21,  1 user,  load average: 1.41, 1.36, 1.18
+
+Docker images:
+REPOSITORY                           TAG                                                   IMAGE ID            SIZE
+docker-swss-brcm-ent-advanced-dbg    3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   354c73eb3d55        666MB
+docker-swss-brcm-ent-advanced-dbg    latest                                                354c73eb3d55        666MB
+docker-swss-brcm-ent-advanced        3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   354c73eb3d55        666MB
+docker-swss-brcm-ent-advanced        latest                                                354c73eb3d55        666MB
+docker-teamd-dbg                     3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   df39d37f4c5e        648MB
+docker-teamd-dbg                     latest                                                df39d37f4c5e        648MB
+docker-teamd                         3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   df39d37f4c5e        648MB
+docker-teamd                         latest                                                df39d37f4c5e        648MB
+docker-dhcp-relay                    3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   6e530c582772        652MB
+docker-dhcp-relay                    latest                                                6e530c582772        652MB
+docker-dhcp-relay-dbg                3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   6e530c582772        652MB
+docker-dhcp-relay-dbg                latest                                                6e530c582772        652MB
+docker-stp-dbg                       3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   392bc5116e45        648MB
+docker-stp-dbg                       latest                                                392bc5116e45        648MB
+docker-stp                           3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   392bc5116e45        648MB
+docker-stp                           latest                                                392bc5116e45        648MB
+docker-vrrp-dbg                      3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   9320b0ea365d        656MB
+docker-vrrp-dbg                      latest                                                9320b0ea365d        656MB
+docker-vrrp                          3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   9320b0ea365d        656MB
+docker-vrrp                          latest                                                9320b0ea365d        656MB
+docker-nat-dbg                       3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   965df1b7fa66        652MB
+docker-nat-dbg                       latest                                                965df1b7fa66        652MB
+docker-nat                           3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   965df1b7fa66        652MB
+docker-nat                           latest                                                965df1b7fa66        652MB
+docker-l2mcd-dbg                     3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   2ee6faeecfc1        656MB
+docker-l2mcd-dbg                     latest                                                2ee6faeecfc1        656MB
+docker-l2mcd                         3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   2ee6faeecfc1        656MB
+docker-l2mcd                         latest                                                2ee6faeecfc1        656MB
+docker-udld-dbg                      3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   08972cb8c62f        646MB
+docker-udld-dbg                      latest                                                08972cb8c62f        646MB
+docker-udld                          3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   08972cb8c62f        646MB
+docker-udld                          latest                                                08972cb8c62f        646MB
+docker-sonic-mgmt-framework-dbg      3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   5701cf980aba        560MB
+docker-sonic-mgmt-framework-dbg      latest                                                5701cf980aba        560MB
+docker-sonic-mgmt-framework          3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   5701cf980aba        560MB
+docker-sonic-mgmt-framework          latest                                                5701cf980aba        560MB
+docker-fpm-frr                       3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   33f91f4939af        635MB
+docker-fpm-frr                       latest                                                33f91f4939af        635MB
+docker-sflow                         3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   f81287995b89        651MB
+docker-sflow                         latest                                                f81287995b89        651MB
+docker-sflow-dbg                     3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   f81287995b89        651MB
+docker-sflow-dbg                     latest                                                f81287995b89        651MB
+docker-iccpd                         3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   e260224b3f8e        649MB
+docker-iccpd                         latest                                                e260224b3f8e        649MB
+docker-iccpd-dbg                     3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   e260224b3f8e        649MB
+docker-iccpd-dbg                     latest                                                e260224b3f8e        649MB
+docker-sonic-telemetry               3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   cd60ce6ce0d2        490MB
+docker-sonic-telemetry               latest                                                cd60ce6ce0d2        490MB
+docker-syncd-brcm-ent-advanced-dbg   3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   8db25738d5be        589MB
+docker-syncd-brcm-ent-advanced-dbg   latest                                                8db25738d5be        589MB
+docker-syncd-brcm-ent-advanced       3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   8db25738d5be        589MB
+docker-syncd-brcm-ent-advanced       latest                                                8db25738d5be        589MB
+docker-tam-dbg                       3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   68f87198d28b        770MB
+docker-tam-dbg                       latest                                                68f87198d28b        770MB
+docker-tam                           3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   68f87198d28b        770MB
+docker-tam                           latest                                                68f87198d28b        770MB
+docker-lldp-sv2-dbg                  3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   e089d90edd12        427MB
+docker-lldp-sv2-dbg                  latest                                                e089d90edd12        427MB
+docker-lldp-sv2                      3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   e089d90edd12        427MB
+docker-lldp-sv2                      latest                                                e089d90edd12        427MB
+docker-snmp-sv2-dbg                  3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   5da35fe9c6ed        452MB
+docker-snmp-sv2-dbg                  latest                                                5da35fe9c6ed        452MB
+docker-snmp-sv2                      3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   5da35fe9c6ed        452MB
+docker-snmp-sv2                      latest                                                5da35fe9c6ed        452MB
+docker-platform-monitor              3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   041e8ba2ff06        467MB
+docker-platform-monitor              latest                                                041e8ba2ff06        467MB
+docker-platform-monitor-dbg          3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   041e8ba2ff06        467MB
+docker-platform-monitor-dbg          latest                                                041e8ba2ff06        467MB
+docker-pde-dbg                       3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   19381294092c        609MB
+docker-pde-dbg                       latest                                                19381294092c        609MB
+docker-pde                           3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   19381294092c        609MB
+docker-pde                           latest                                                19381294092c        609MB
+docker-database-dbg                  3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   9ee01008eafc        374MB
+docker-database-dbg                  latest                                                9ee01008eafc        374MB
+docker-database                      3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   9ee01008eafc        374MB
+docker-database                      latest                                                9ee01008eafc        374MB
+docker-router-advertiser-dbg         3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   6cd2f06a8f13        373MB
+docker-router-advertiser-dbg         latest                                                6cd2f06a8f13        373MB
+docker-router-advertiser             3.1.1_daily_201209_1800_195-Enterprise_Advanced-dbg   6cd2f06a8f13        373MB
+docker-router-advertiser             latest                                                6cd2f06a8f13        373MB
+SONIC 3.1.1 version.txt
+Displaying SONIC 3.1.1 version.txt.
 
 ```
 ## show vrrp 
