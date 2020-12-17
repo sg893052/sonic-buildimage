@@ -25,37 +25,37 @@
         * [2.5.1 Host sub port interfaces](#251-host-sub-port-interfaces)
         * [2.5.2 Route, neighbor subsystems](#252-route-neighbor-subsystems)
   * [3 Feature Support](#3-feature-support)
-        * [3.1 IPv4/IPv6 address](#31-ipv4/ipv6-address)
-        * [3.2 VRF](#32-vrf)
-        * [3.3 RIF Counters & Oper Status](#33-rif-counters-&-oper-status)
-        * [3.4 Port Channel Sub-interfaces](#34-port-channel-sub-interfaces)
-        * [3.5 Parent Interface Admin/oper UP/DOWN](#35-parent-interface-admin/oper-up/down)
-        * [3.6 Port Aliasing](#36-port-aliasing)
-        * [3.7 Speed/Bandwidth](#37-speed/bandwidth)
-        * [3.8 LAG](#38-lag)
-        * [3.9 Dynamic Port Breakout](#39-dynamic-port-breakout)
-        * [3.10 L2 Protocols](#310-l2-protocols)
-        * [3.11 ARP/NDP](#311-arp/ndp)
-        * [3.12 IPv4 Unnumbered](#312-ipv4-unnumbered)
-        * [3.13 IPv6 Enable/disable](#313-ipv6-enable/disable)
-        * [3.14 IPv4/IPv6 Routes with ECMP](#314-ipv4/ipv6-routes-with-ecmp)
-        * [3.15 BGP](#315-bfd)
-        * [3.16 OSPF](#316-ospf)
-        * [3.17 OSPFv3](#317-ospfv3)
-        * [3.18 BFD](#318-bfd)
-        * [3.19 DHCP & DHCP Relay](#319-dhcp-7-dhcp-relay)
-        * [3.20 IP Helper](#320-ip-helper)
-        * [3.21 IPSLA](#321-ipsla)
-        * [3.22 VRRP & SAG](#322-vrrp-&-sag)
-        * [3.23 VxLAN](#323-vxlan)
-        * [3.24 MCLAG](#324-mclag)
-        * [3.25 QinQ](#325-qinq)
-        * [3.26 PIM](#326-pim)
-        * [3.27 IGMP](#327-igmp)
-        * [3.28 QoS](#328-qos)
-        * [3.29 MTU](#329-mtu)
-        * [3.30 NAT](#330-nat)
-        * [3.31 SPAN/ERSPAN](#331-span/erspan)
+    * [3.1 IPv4/IPv6 address](#31-ipv4/ipv6-address)
+    * [3.2 VRF](#32-vrf)
+    * [3.3 RIF Counters & Oper Status](#33-rif-counters-&-oper-status)
+    * [3.4 Port Channel Sub-interfaces](#34-port-channel-sub-interfaces)
+    * [3.5 Parent Interface Admin/oper UP/DOWN](#35-parent-interface-admin/oper-up/down)
+    * [3.6 Port Aliasing](#36-port-aliasing)
+    * [3.7 Speed/Bandwidth](#37-speed/bandwidth)
+    * [3.8 LAG](#38-lag)
+    * [3.9 Dynamic Port Breakout](#39-dynamic-port-breakout)
+    * [3.10 L2 Protocols](#310-l2-protocols)
+    * [3.11 ARP/NDP](#311-arp/ndp)
+    * [3.12 IPv4 Unnumbered](#312-ipv4-unnumbered)
+    * [3.13 IPv6 Enable/disable](#313-ipv6-enable/disable)
+    * [3.14 IPv4/IPv6 Routes with ECMP](#314-ipv4/ipv6-routes-with-ecmp)
+    * [3.15 BGP](#315-bfd)
+    * [3.16 OSPF](#316-ospf)
+    * [3.17 OSPFv3](#317-ospfv3)
+    * [3.18 BFD](#318-bfd)
+    * [3.19 DHCP & DHCP Relay](#319-dhcp-7-dhcp-relay)
+    * [3.20 IP Helper](#320-ip-helper)
+    * [3.21 IPSLA](#321-ipsla)
+    * [3.22 VRRP & SAG](#322-vrrp-&-sag)
+    * [3.23 VxLAN](#323-vxlan)
+    * [3.24 MCLAG](#324-mclag)
+    * [3.25 QinQ](#325-qinq)
+    * [3.26 PIM](#326-pim)
+    * [3.27 IGMP](#327-igmp)
+    * [3.28 QoS](#328-qos)
+    * [3.29 MTU](#329-mtu)
+    * [3.30 NAT](#330-nat)
+    * [3.31 SPAN/ERSPAN](#331-span/erspan)
   * [4 Event flow diagrams](#4-event-flow-diagrams)
     * [4.1 Sub port interface creation](#41-sub-port-interface-creation)
     * [4.2 Sub port interface runtime admin status change](#42-sub-port-interface-runtime-admin-status-change)
@@ -96,7 +96,7 @@ A sub port interface is a logical interface that can be created on a physical po
 A sub port interface serves as an interface to either a .1D bridge or a VRF, but not both.
 This design focuses on the use case of creating a sub port interface on a physical port or a port channel and using it as a router interface to a VRF as shown in Fig. 1.
 
-![](sub_intf_rif.png "Fig. 1: Sub port router interface")
+![](images/sub_intf_rif.png "Fig. 1: Sub port router interface")
 __Fig. 1: Sub port router interface__
 
 Multiple L3 sub port interfaces, each characterized by a VLAN id in the 802.1q tag, can be created on a physical port or a port channel.
@@ -106,7 +106,7 @@ However, there is no L2 bridging between these sub port interfaces; each sub por
 
 This design does NOT cover the case of creating and using sub port as a bridge port to a .1D bridge shown in Fig. 2.
 
-![](sub_intf_bridge_port.png "Fig. 2: Sub port bridge port (out of scope of this design")
+![](images/sub_intf_bridge_port.png "Fig. 2: Sub port bridge port (out of scope of this design")
 __Fig. 2: Sub port bridge port__
 
 # Acronyms
@@ -687,13 +687,13 @@ NAT feature will not be supported on sub-interfaces.
 
 # 4 Event flow diagrams
 ## 4.1 Sub port interface creation
-![](sub_intf_creation_flow.png)
+![](images/sub_intf_creation_flow.png)
 
 ## 4.2 Sub port interface runtime admin status change
-![](sub_intf_set_admin_status_flow.png)
+![](images/sub_intf_set_admin_status_flow.png)
 
 ## 4.3 Sub port interface removal
-![](sub_intf_removal_flow.png)
+![](images/sub_intf_removal_flow.png)
 
 # 5 CLIs
 ## 5.1 Config commands
@@ -874,7 +874,7 @@ We enforce a minimum scalability requirement on the number of sub port interface
 Sub port interface is a router interface (RIF type sub port Vlan#) between a VRF and a physical port or a port channel.
 Vlan interface is a router interface (RIF type vlan Vlan#) facing a .1Q bridge. It is an interface between a bridge port type router (connecting to a .1Q bridge) and a VRF, as shown in Fig. 3.
 
-![](vlan_intf_rif.png "Fig. 3: Vlan interface")
+![](images/vlan_intf_rif.png "Fig. 3: Vlan interface")
 __Fig. 3: Vlan interface__
 
 # 10 Open questions:
