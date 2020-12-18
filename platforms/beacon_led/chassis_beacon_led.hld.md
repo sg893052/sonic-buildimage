@@ -30,7 +30,7 @@ This document describes the Chassis Locator LED Feature in the SONiC Network Ope
 
 # Scope
 
-This document describes the high level design of Chassis Locator LED feature. It describes the CLICK and KLISH commands used to enable, disable, and show status of Chassis Locator LED. 
+This document describes the high level design of Chassis Locator LED feature. It describes the CLI and KLISH commands used to enable, disable, and show status of Chassis Locator LED. 
 
 # Definition/Abbreviation
 
@@ -53,7 +53,6 @@ Functional requirements include capabilities of operating the Chassis Locator LE
  - Show the State Chassis Locator LED: Find out the status of the LED, on or off. 
 
 Not every platform supports Chassis Locator LED. Please refer to the [platform-list](https://docs.google.com/spreadsheets/d/1NuhoA2utcDPIIiM6dwrAY8FWrX_21KDfcR3Fw_OEwyE/edit#gid=0) that supports Locator LED in this release. 
-
 
 # CLI:
 
@@ -141,7 +140,6 @@ Not every platform supports Chassis Locator LED. Please refer to the [platform-l
 
 **Disable Chassis Locator LED**
 
-
 - Examples on supported platforms:
   ```
   sonic# chassis locator-led off 
@@ -165,7 +163,7 @@ Not every platform supports Chassis Locator LED. Please refer to the [platform-l
 - Examples on supported platforms:
   ```
   sonic# show chassis locator-led 
-  green 
+  green  
   
   Note: Chassis Locator LED color is platform specific. The output of color can vary 
 
@@ -180,7 +178,6 @@ Not every platform supports Chassis Locator LED. Please refer to the [platform-l
 ## SONiC image NetInstall
 
 - SONiC image netinstall clears up the Chassis Locator Led operation.  
-
 
 ## SONiC image upgrade 
 
