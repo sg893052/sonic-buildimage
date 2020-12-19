@@ -274,6 +274,18 @@ During the kernel crash, all the In-memory logs should be saved into /var/log fo
 4. As part of the kdump data collection, copy the contents of in-memory contents into /var/log/ folder.
 5. reboot the system. 
 
+
+## 4.0 Developer Guidelines
+
+1. In-memory storage is restricted to 32MB for all the SONiC applications.
+2. Currently, the in-memory logs are divided into only two main categories of log files
+	- INFO  - /var/log/ramfs/in-memory-syslog-info.log
+	- DEBUG - /var/log/ramfs/in-memory-syslog-debug.log
+3. When the in-memory logging feature is enabled, all the application debug logs(INFO and DEBUG) are forward to in-memory storage.
+4. Developers are recommended to use one of the in-memory log files for logging the application debug information 
+   and try to avoid creating an application-specific debug file in the in-memory storage.
+
+
 # 3 Unit Test
 
 |SNO|  Testcase                                                        | Result  |
@@ -281,13 +293,13 @@ During the kernel crash, all the In-memory logs should be saved into /var/log fo
 | 1 | Verify the In-memory logging memory reservation                  |         |
 | 2 | Verify the reserved memory block mounted as ramfs                |         | 
 | 3 | Verify the In-memory logging entry through rsyslog               |         |
-| 4 | Verify the In-memory contents are stored into the disk for every 2 minutes | |
+| 4 | Verify the In-memory contents are stored into the disk for every 5 minutes | |
 | 5 | Verify the In-memory log files stored on the disk are rotated    |         |
 | 6 | Verify the In-memory contents are saved into disk during system reboot |   |
 | 7 | Verify the In-memory contents are saved into disk during kernel panic |    |
 | 8 | Verify the show commands for both Im-memory and regular Syslog  |          |
 | 9 | Verify the techsupport that includes both In-memory and regular Syslog contents ||
-| 10 | Verify the In-memory dump utils                                 |         |
+| 10 | Verify the In-memory auto log rotate by rsyslod                       |         |
 
 
 
