@@ -63,7 +63,6 @@ In order to improve the performance of the logger and increase the life of SSD d
 - In case of kernel crash, all the in-memory logs should be saved into the disk as part of kdump collection. 
 - During the techsupport data collection, it should include both debug and non-debug logs. 
 - Klish/Click CLI should be provided to dump and filter the logs from both debug and non debugs logs. 
-- It should provide offline tools to show/filter the logs from both debug and non-debug logs.
 - Existing syslog bebaviour(over-the-network to syslog server, user interface and persistance) for non-debug log should not affected. 
 
 ### 1.1.2 Configuration and Management Requirements
@@ -135,6 +134,7 @@ In order to separate out the debug information from Syslog, the following Rsyslo
             /var/log/ramfs/in-memory-syslog-info.log
              stop
         }
+
         # Store all the DEBUG logs into ramfs file system.
         if $syslogseverity == 7 then {
             /var/log/ramfs/in-memory-syslog-debug.log
@@ -186,7 +186,7 @@ The following log rotation policy is applied to all the logs stored in the in-me
         }
 
 When rsyslog is being restarted, all the in-memory contents should be flushed to disk. The in-memory log rotation policy is added as part of an existing Syslog rotation policy.
-The log rotation happens every 2 minutes and keeps 4 weeks of log or max size of all the logs should be less than 4G. If it reaches the 4G usage, it deletes all the oldest logs in the log folder. 
+The log rotation happens every 5 minutes and keeps 4 weeks of log or max size of all the logs should be less than 4G. If it reaches the 4G usage, it deletes all the oldest logs in the log folder. 
 
 ## 2.5 In-Memory Logging Policy
 
@@ -210,9 +210,9 @@ The techsupport script is enhanced to support the in-memory log collection as we
 - All the logs which are already stored in the persistent disk.
 
 
-## 2.7 In-Memory Dump Tools
+## 2.7 In-Memory log Dump sequence
 
-A utility is provided to dump and filter the logs from in-memory as well as Syslog. The in-memory logs should be accessed in the following order to get the log timing sequence.
+The in-memory logs should be accessed in the following order to get the log timing sequence.
 
 For debug syslog log: 
 1. /var/log/syslog-debug.log.1
@@ -224,6 +224,8 @@ Similar sequence for following for info logs.
 ## 2.8 KLISH/CLICK Commands
 
 The following CLI commands are supported to dump the logs from in-memory.
+
+### Show commands
 
 - Show all the logs from In-Memory contents. It merges both info and debug logs in the order of time sequence.
 
@@ -246,6 +248,13 @@ The following CLI commands are supported to dump the logs from in-memory.
 		<search keyword>  => Filter the log based on the keyword
 
 
+### Clear command
+
+	The sonic-clear logging will clear both debug(in-memory) and non-debug logs.
+
+		# sonic-clear logging
+
+
 ## 2.9 Cold/Warm/Fast Reboot
 
 During the system reboot, all the In-Memory logs should be stored on the persistent disk. When a user initiates a system reboot command, the following sequence gets executed.
@@ -255,7 +264,7 @@ During the system reboot, all the In-Memory logs should be stored on the persist
 3. Let the reboot script to continue. 
 4. Just before the reboot, repeat step 1 and 2 again. 
 
-## 3.0 Kernal Crash 
+## 3.0 Kernel Crash 
 
 During the kernel crash, all the In-memory logs should be saved into /var/log folder as part of kdump data collection. When kernel crash happens the following action sequence gets executed.
 
