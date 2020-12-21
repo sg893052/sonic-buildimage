@@ -68,6 +68,10 @@ Table of Contents
         * [Configuration Commands](#bgp-error-handling-config-commands) 
         * [Show Commands](#bgp-error-handling-show-commands) 
         * [Clear Commands](#bgp-error-handling-clear-commands) 
+   * [BGP VRF Configuration And Show Commands](#bgp-vrf-configuration-and-show-commands)
+      * [Configuration Commands](#bgp-vrf-config-commands)
+      * [BGP VRF Route Leak](#bgp-vrf-route-leak)
+      * [Show Commands](#bgp-vrf-route-leak-show-commands)
    * [EVPN Configuration And Show Commands](#evpn-configuration-and-show-commands)
       * [Enable EVPN between BGP Neighbors](#enable-evpn-between-bgp-neighbors)
       * [EVPN Configuration Commands](#evpn-configuration-commands)
@@ -2829,6 +2833,159 @@ To retry installation of failed routes from Zebra, a clear command has been prov
   root@sonic:~# clear ip route not-installed
   ```
 
+# BGP VRF Configuration And Show Commands
+This section provides high level config and show commands for BGP VRF
+configuration and VRF route leak via BGP.
+
+Please refer to "VRF configuration and show commands" section for details on
+how to create VRFs in SONiC.
+
+## Configuration Commands
+
+BGP VRF instance for a given VRF can be configured using IS-CLI as shown below.
+Autonomous-System (AS) number for the BGP VRF instance is not mandated to same
+as of default BGP VRF instance.
+
+Below example configures BGP instance for Vrf-red, configures a neighbor, and
+redistributes connected routes into BGP VRF instance.
+
+```
+sonic(config)# router bgp 65535 vrf Vrf-red
+sonic(config-router-bgp)# router-id 192.168.1.1
+sonic(config-router-bgp)# neighbor 10.20.30.40
+sonic(config-router-bgp-neighbor)# remote-as external
+sonic(config-router-bgp-neighbor)# address-family ipv4 unicast
+sonic(config-router-bgp-neighbor-af)# activate
+
+sonic(config-router-bgp)# address-family ipv4 unicast
+sonic(config-router-bgp-af)# redistribute connected
+```
+
+It is recommended to configure router-id for the BGP VRF instance(s) in order
+to avoid router-id reselection when IP addresses are unconfigured in the VRF.
+
+IPv4 unicast, IPv6 unicast, and L2VPN EVPN address-families are
+supported in the BGP VRF instances.  Details on using L2VPN EVPN
+address-family is described in the next BGP EVPN section.
+
+BGP VRF instance can be created without creating default BGP VRF instance.
+However, deletion of default BGP VRF instance is restricted if non-default BGP
+VRF instance(s) are present. All non-default BGP VRF instances are required to
+be deleted before deleting BGP default VRF instance.
+
+
+## BGP VRF Route Leak
+Routes can be leaked from one VRF to another using BGP VRF route leak feature
+described in this section.
+
+Use the 'import' command in corresponding address-family of BGP VRF instance to
+import routes from the given source VRF. In the example below, BGP Vrf-red
+instance is configured to import IPv4 and IPv6 routes from BGP Vrf-blue.
+```
+sonic(config)# router bgp 20 vrf Vrf-red
+sonic(config-router-bgp)# address-family ipv4 unicast
+sonic(config-router-bgp-af)# import vrf Vrf-blue
+
+sonic(config-router-bgp)# address-family ipv6 unicast
+sonic(config-router-bgp-af)# import vrf Vrf-blue
+
+```
+
+Import of routes from multiple BGP VRF instances is allowed.
+
+Route-map can be applied for the imported leaked routes as shown below.
+
+```
+sonic(config)# router bgp 20 vrf Vrf-red
+sonic(config-router-bgp)# address-family ipv4 unicast
+sonic(config-router-bgp-af)# import vrf route-map my-import-filter
+sonic(config-router-bgp-af)# import vrf Vrf-red
+sonic(config-router-bgp-af)#
+```
+
+Configured import route-map filters routes from all of the configured
+import-VRFs.  In case specific routes from specific VRF are required to be
+filtered, match-vrf clause in the route-map can be used.
+
+Note that above BGP VRF import commands leak the prefixes, including connected
+subnets, from one vrf to another. Leaking of connected subnets may incur
+sub-optimal forwarding for the inter-vrf traffic through the CPU (slow) path.
+It is therefore recommended to always leak the routes which have remote
+next-hops instead of leaking the connected subnets.
+
+
+## Show Commands
+In order to show routes from a given VRF instance, 'vrf' option can be
+specified to the regular bgp and ip route show commands.
+
+Below commands show BGP routes in the given BGP VRF instance:
+
+```
+sonic# show ip bgp vrf Vrf-red
+BGP table version is 9, local router ID is 169.100.1.1, vrf id 91
+Default local pref 100, local AS 10
+Status codes:  s suppressed, d damped, h history, * valid, > best, = multipath, # not installed in hardware
+               i internal, r RIB-failure, S Stale, R Removed
+Nexthop codes: @NNN nexthop's vrf id, < announce-nh-self
+Origin codes:  i - IGP, e - EGP, ? - incomplete
+
+   Network          Next Hop            Metric     LocPrf     Weight Path
+*>  1.1.1.1/32       0.0.0.0@0<               0                 32768 ?
+*>  1.2.1.1/32       0.0.0.0@0<               0                 32768 ?
+*>  4.1.1.1/32       fe80::5054:ff:fe8d:7741@0<
+*>  8.0.0.0/24       fe80::5054:ff:fe8d:7741@0<
+*   10.59.128.0/20   fe80::5054:ff:fe8d:7741@0<
+*>  51.52.0.0/31     0.0.0.0@0<               0                 32768 ?
+*>  155.100.1.0/24   0.0.0.0                  0                 32768 ?
+*>  169.100.1.0/24   0.0.0.0                  0                 32768 ?
+*>  200.2.1.0/24     0.0.0.0@0<               0                 32768 ?
+
+Displayed  9 routes and 13 total paths
+sonic#
+
+```
+
+```
+sonic# show bgp vrf Vrf-red ipv6
+BGP table version is 3, local router ID is 169.100.1.1, vrf id 91
+Default local pref 100, local AS 10
+Status codes:  s suppressed, d damped, h history, * valid, > best, = multipath, # not installed in hardware
+               i internal, r RIB-failure, S Stale, R Removed
+Nexthop codes: @NNN nexthop's vrf id, < announce-nh-self
+Origin codes:  i - IGP, e - EGP, ? - incomplete
+
+   Network          Next Hop            Metric     LocPrf     Weight Path
+*>  1550:100:1::/80  ::                       0                 32768 ?
+*>  1690:100:1::/64  ::                       0                 32768 ?
+*>  2000:200::/64    ::@0<                    0                 32768 ?
+
+Displayed  3 routes and 3 total paths
+sonic#
+```
+
+
+Below command shows routes from the RIB for the specified VRF:
+```
+sonic# show ip route vrf Vrf-red
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, D - SHARP,
+       F - PBR, f - OpenFabric,
+       > - selected route, * - FIB route, q - queued route, r - rejected route, # - not installed in hardware
+VRF Vrf-red:
+B>*  1.1.1.1/32 [200/0] is directly connected, Loopback10(vrf default), 01:33:30
+B>*  1.2.1.1/32 [200/0] is directly connected, Loopback11(vrf default), 01:33:30
+B>*  4.1.1.1/32 [200/0] via fe80::5054:ff:fe8d:7741, Ethernet0(vrf default), 01:33:29
+B>*  8.0.0.0/24 [200/0] via fe80::5054:ff:fe8d:7741, Ethernet0(vrf default), 01:33:29
+B>*  10.59.128.0/20 [200/0] is directly connected, eth0(vrf default), 01:33:30
+B>*  51.52.0.0/31 [200/0] is directly connected, Vlan4090(vrf default), 01:33:30
+C>*  155.100.1.0/24 is directly connected, Vlan100, 01:33:52
+C>*  169.100.1.0/24 is directly connected, Vlan1000, 01:33:52
+B>*  200.2.1.0/24 [200/0] is directly connected, Vlan200(vrf default), 01:33:30
+sonic#
+
+```
+
 # EVPN Configuration And Show Commands
 
 The following sections provide the basic configuration needed to use EVPN as the control plane for VXLAN. 
@@ -5074,8 +5231,11 @@ This command displays portgroup information of current platform. It displays eac
             3  Ethernet24-35  25000, [10000, 1000]
             4  Ethernet36-47  25000, [10000, 1000]
   ```
-  25000, [10000, 1000] means that port group support 25000, 10000 and 1000 speeds.
-  [10000, 1000] means individual ports within that portgroup can change speed between 10000/1000 using 'config interface speed' command.
+  25000, [10000, 1000] means that port group support 25000 and 10000 speeds.
+  
+  [10000, 1000] means that port group support 10000 speeds. and individual ports within that portgroup can change speed to 1000 using 'config interface speed' command if the portgroup is in 10000.
+  
+  25000, 1000 means that port group support 25000 and 1000 speeds.
 
 **portgroup config commands
 This command configures portgroup speed.
