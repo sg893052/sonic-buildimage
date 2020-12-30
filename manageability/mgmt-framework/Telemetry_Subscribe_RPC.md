@@ -48,6 +48,7 @@
     - [10.1 Test Cases](#101-test-cases)
     - [10.2 gNMI UT Framework for PyNUT](#102-gnmi-ut-framework-for-pynut)
     - [10.3 UT with gnmi_cli tool](#103-ut-with-gnmi_cli-tool)
+    - [10.4 Onchange supported URI Paths](#104-onchange-supported-paths)
 - [11 Internal Design Information](#11-Internal-Design-Information)
     - [11.1 IS-CLI Compliance](#111-IS-CLI-Compliance)
     - [11.2 Broadcom Packaging](#112-Broadcom-SONiC-Packaging)
@@ -532,6 +533,70 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type streaming -streaming_type ON_CHANGE \
     -query openconfig-interfaces:interfaces/interface[name=*]/config,openconfig-acl:acl/acl-sets
+```
+## 10.4 Onchange supported URI Paths
+```
+Paths Avialable on 12/31:
+-------------------------
+
+openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config
+
+openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config/version
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state/version
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/version
+
+openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config/query-max-response-time
+
+openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state/query-max-response-time
+
+
+Paths Avialable on 01/08:
+-------------------------
+
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config/query-interval
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state/query-interval
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/last-member-query-interval
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/last-member-query-interval
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/fast-leave
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/fast-leave
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/last-member-query-interval
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/fast-leave
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/fast-leave
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group[group=*][source-addr=*]/config
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group[group=*][source-addr=*]/config/outgoing-interface
+
+openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group[group=*][source-addr=*]/state/outgoing-interface
 ```
 
 # 11 Internal Design Information
