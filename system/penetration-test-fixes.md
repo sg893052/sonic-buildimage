@@ -32,7 +32,7 @@ This document provides information on fixes for some of the security vulnerabili
 
 # Scope
 
-This document describes the high-level design on fixes for some of the security vulnerabilities reported by the eBay Red team as part of their SONiC Network OS PenTest report. This document focuses only the following three main cat
+This document describes the high-level design on fixes for some of the security vulnerabilities reported by the eBay Red team as part of their SONiC Network OS PenTest report. This document focuses only on the following three main categroies of issues reported.
 
 1. Sudo entry with wildcard expression which allows privilege escalation.
 2. Redis database accesss without authentication.
@@ -53,8 +53,8 @@ PenTest Report document is available at https://drive.google.com/file/d/1qquV_wx
 
 # 1 Feature Overview
 
-This document provides information on fixes for some of the security vulnerabilities reported by the eBay Red team as part of their SONiC Network OS PenTest report. The PenTest report provides detailed information about each vulner
-In simple, only the privileged users - "root" and "admin" should have read/write access to everything in the system and other users should have limited access for security reasons.
+This document provides information on fixes for some of the security vulnerabilities reported by the eBay Red team as part of their SONiC Network OS PenTest report. The PenTest report provides detailed information about each vulnerability and possible solutions to counter the identified issues. This document can be used as a response from the Enterprise SONiC team to overcome the identified vulnerabilities. These changes are being proposed for the SONiC 3.2.0 release.
+In simple, the solution proposes that only the privileged users - "root" and "admin" should have read/write access to everything in the system and other users should have limited access for security reasons.
 
 ## 1.1 Requirements
 
@@ -81,7 +81,7 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 
 ##### 1. sudo Entry "/usr/bin/docker exec * ps aux" leading to privilege escalation
 
-- The intention for the wildcard character '*' specified in the sudo entry is to allow the "ps aux" command to be executed in all docker containers. However, the wildcard character '*' can be used by a hacker to inject a crafted co
+- The intention for the wildcard character '*' specified in the sudo entry is to allow the "ps aux" command to be executed in all docker containers. However, the wildcard character '*' can be used by a hacker to inject a crafted command to get access to the shell inside the container.
 
 ##### Command to check the vulnerability
 
@@ -93,7 +93,7 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 
 ##### 2. sudo Entry "/usr/bin/vtysh -c show *" can be used to do a configuration write by a non sudoer
 
-- The vtysh command allows a user to execute multiple commands using chained -c command arguments. The wildcard character "*" used in the sudo entry can be used by a hacker to substitute it with configuration commands while using a
+- The vtysh command allows a user to execute multiple commands using chained -c command arguments. The wildcard character "*" used in the sudo entry can be used by a hacker to substitute it with configuration commands while using a show command in the beginning to match the sudo entry. The vtysh is not validating user input from a security standpoint and it is expected that the sudo entry take care of it which is being bypassed due to the use of ‘*’.
 
 ##### Command to check the vulnerability
 
@@ -114,7 +114,7 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 - The sudo entry has been modified to specifically allow cat of only syslog and syslog.1
 
 ## 2.2 Local state/config Redis database accessible without authentication
-- The local Redis database acts as a centralized location for storing device state and configuration. The Redis server runs inside the database container, and the user is required to execute redis-cli inside the database container
+- The local Redis database acts as a centralized location for storing device state and configuration. The Redis server runs inside the database container, and the user is required to execute redis-cli inside the database container to access the Redis database, which requires admin privilege. However, the Redis database also listens locally on TCP6379 without authentication, allowing any user to read/write to the Redis database.
 
 ##### Vulnerability check
 - The Redis server listens on TCP6379 on localhost. The standard redis-cli client binary is uploaded to host OS for accessing Redis database via TCP6379 without authentication.
@@ -123,12 +123,12 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 - Enabled redis db authentication by default to prevent read/write access from local unprivileged users.
 - Random passwords generated on every system boot up to be stored in a file shared across linux host and all containers with appropriate permissions set.
 - All Clients(cpp,python,go variants) to pass in the password parameter(read from the file) while accessing the redis db.
-- redis-cli client binary internally parses the password from an env variable (REDISCLI_AUTH) set.
+- redis-cli client binary internally parses the password from an env variable (REDISCLI_AUTH) set temporarily for that call instance.
 - Non-sudo users direct read/write access to redis db is prevented but the basic fixed show commands which depend on the redis db are added to sudoers file.
 
 ## 2.3 Docker Containers Running in Privileged Mode
 
-- Each service is running inside their own docker container in privileged mode. The privileged mode container doesn't offer security benefit of isolating but have full read/write access to host OS resources, such as file system, al
+- Each service is running inside their own docker container in privileged mode. The privileged mode container doesn't offer security benefit of isolating but have full read/write access to host OS resources, such as file system, allowing container escape or elevate privilege on the host OS. The docker socket on the host OS is also exposed inside mgmt-framework container, giving the container full control over all other docker containers and host OS.
 
 ##### Check the vulnerability
 - for c in $(docker ps --format '{{.Names}}'); do printf "$c:"; docker inspect $c --format {{.HostConfig.Privileged}}'; done
