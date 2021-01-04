@@ -25,6 +25,8 @@ Information on fixes for some of the security vulnerabilities reported by the eB
 | Rev |   Date  |    Author    | Change Description        |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 28/12/2020 |  Senthil    | Initial version          |
+| 0.2 | 04/01/2021 |  Senthil    | UT update          |
+
 
 # About this Manual
 
@@ -135,7 +137,7 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 
 ##### Solution
 
-- All the container privilege access should be removed and should run isolated from the host environment, Any container requires specicial access from host should use sys capability feature instead of privilege access.
+- All the container privilege access should be removed and should run isolated from the host environment. Any container which requires special access to host should use sys capability feature instead of privilege access.
 
 
 # 3 Unit Test
@@ -143,13 +145,19 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 |SNO|  Testcase                                                        | Result  |
 |---|------------------------------------------------------------------| ------- |
 | 1 | Verify the docker exec cmd from non-sudo user                    |         |
-| 2 | Verify the the vtysh show command from non-sudo user             |         |
-| 3 | Verify the syslog file asscess from non-sudo user                |         |
-| 4 | Verify the database access without the authentication through a standard redis-cli binary from non-sudo user |         |
-| 5 | Verify the database access with the authentication enabled through a standard redis-cli binary from non-sudo user |         |
-| 6 | With database authentication enabled, check for "NOAUTH Authentication required" in syslog |         |
-| 7 | Verify show commands from non-sudo users with database authentication enabled              |         |
-| 8 | Verify the container isolation with capability support                                     |         |
+| 2 | Verify the vtysh show command from non-sudo user             |         |
+| 3 | Verify if config cmd are rejected with vtysh -c from non-sudo user             |         |
+| 4 | Verify the syslog file access from non-sudo user                |         |
+| 5 | With database authentication disabled, verify the database access through a standard redis-cli binary from non-sudo user |         |
+| 6 | With database authentication enabled, verify system is in ready state |         |
+| 7 | With database authentication enabled, verify the database access through a standard redis-cli binary from non-sudo user |         |
+| 8 | With database authentication enabled, check "NOAUTH Authentication required" message for go client containers like mgmt-framework, telemetry in syslog |         |
+| 9 | With database authentication enabled, check "NOAUTH Authentication required" message for c++ client containers like swss in syslog |         |
+| 10 | With database authentication enabled, check "NOAUTH Authentication required" message for python client containers like teamd, pmon syslog |         |
+| 11 | With database authentication enabled, check "NOAUTH Authentication required" message for host OS in syslog|         |
+| 12 | With database authentication enabled, check for "REDISCLI_AUTH" message exposing password in syslog |         |
+| 13 | With database authentication enabled, verify show command from non-sudo users              |         |
+| 14 | Verify the container isolation with capability support                                     |         |
 
 
 
