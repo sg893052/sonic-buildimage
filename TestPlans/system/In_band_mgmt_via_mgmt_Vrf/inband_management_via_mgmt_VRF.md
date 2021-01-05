@@ -119,7 +119,43 @@ VRF is a technology that allows network paths to be segmented without using mult
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Start the traffic <br/>4) Unbind and Rebind the interfaces to the vrf <br/>5) Verify the traffic recovered <br/> |
 
-### **3.2 Reboot Test Cases**
+### 3.1.6 Add the same ip in mgmt and default vrf, make sure ping works fine.
+
+| **Test ID**    | **FtInbandMgmtFun006**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Add the same ip in mgmt and default vrf, make sure ping works fine** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Configure interface (Physical,vlan,portchannel) <br/>4) Bind it to default Vrf and Configure same IP and IPv6 addresses <br/>5) Verify the ping works <br/> |
+
+### 3.1.7 Test case to delete and add mgmt vrf & interface as part of mgmt vrf multiple times and make sure it is added back and ping works fine after each iteration.
+
+| **Test ID**    | **FtInbandMgmtFun007**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify delete and add Management VRF and its interface multiple times** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Verify that Ping works over Management VRF <br/>4)Delete the Mgmt vrf and its interfaces and add them back <br/>5) Verify that Ping works over Management VRF <br/> |
+
+### 3.1.8 Adding multiple ip address on the mgmt vrf interface, verify if they are accepted
+
+| **Test ID**    | **FtInbandMgmtFun008**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Adding multiple ip address on the mgmt vrf interface, verify if they are accepted** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) add multiple ip address on the mgmt vrf interface <br/>4)Verify the updated ip addresses <br/> |
+
+### 3.1.9 Enable protocols such as STP,OSPF on the vlan or portchannel interface which are part of mgmt vrf, it should be rejected
+
+| **Test ID**    | **FtInbandMgmtFun009**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Enable STP,OSPF on the vlan or portchannel interface which are part of mgmt vrf, it should be rejected** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Enable STP,OSPF on the vlan or portchannel interface which are part of mgmt vrf, it should be rejected <br/> |
+
+### 3.2 Reboot Test Cases**
 
 ### 3.2.1 Warm reboot with Management VRF
 
@@ -168,6 +204,25 @@ VRF is a technology that allows network paths to be segmented without using mult
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to default Vrf and Configure IP and IPv6 addresses <br/>3) Verify the traffic flowing <br/>4) Rebind the interface from default to the mgmt vrf and re-verify the traffic drop <br/>5) Rebind the interface to the default vrf and verify traffic recovery |
 
+### 3.3.2 Try deleting the mgmt vrf and verify.
+
+| **Test ID**    | **FtInbandMgmtNeg002**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Try deleting the mgmt vrf and verify**                     |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Verify the mgmt vrf cannot be deleted. |
+
+### 3.3.3 Deleting vlan or portchannel shouldn't be allowed if it is part of any vrf.
+
+| **Test ID**    | **FtInbandMgmtNeg003**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Deleting vlan or portchannel shouldn't be allowed if it is part of any vrf** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure interface (vlan,portchannel) <br/>2) Bind it to default Vrf and Configure IP and IPv6 addresses <br/>3) Verify the interface bind with vrf <br/>4) Deleting vlan/portchannel should fail as long aas long as the interface is a part of vrf. <br/>5) Repeat the test with mgmt vrf as well |
+
 ## Reference Links**
 
 https://github.com/project-arlo/SONiC/blob/d2ab17dd9db986d715e64718c2f1f0be17008311/doc/in-band-mgmt/SONiC_in_band_mgmt_via_mgmt_Vrf_HLD.md
+
