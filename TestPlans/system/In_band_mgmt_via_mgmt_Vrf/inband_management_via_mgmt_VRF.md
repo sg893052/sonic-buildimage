@@ -155,6 +155,79 @@ VRF is a technology that allows network paths to be segmented without using mult
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Configure interface (Physical,vlan,portchannel) <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Enable STP,OSPF on the vlan or portchannel interface which are part of mgmt vrf, it should be rejected <br/> |
 
+### 3.1.10 Verify that sub interface can be assigned to a Management VRF
+
+| **Test ID**    | **FtInbandMgmtFun010**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that sub interface can be assigned to a Management VRF** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure the sub interface <br/>2) Bind it to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Verify the sub interface successfully bind to the mgmt vrf <br/> |
+
+### 3.1.11  Verify sub interfaces of different physical ports can be assigned to same vrf
+| **Test ID**    | **FtRoSubIntfFunc011**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify sub interfaces of different physical ports can be assigned to same vrf** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure the sub interfaces of two different physical interfaces <br/>2) Bind them to Vrf and Configure IP and IPv6 addresses <br/>3) Verify the ping to the sub interfaces viceversa works fine<br/> |
+
+### 3.1.12  Verify the sub interfaces of same physical ports can be assigned to different vrf
+| **Test ID**    | **FtRoSubIntfFunc012**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify the sub interfaces of same physical ports can be assigned to different vrf** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure two sub interfaces of same physical interfaces <br/>2) Bind them to different Vrf and Configure IP and IPv6 addresses <br/>3) verify the sub interfaces has been bind to the appropriate vrfs<br/> |
+
+### 3.1.13  Verify that ntp sync is successful over Management VRF
+| **Test ID**    | **FtRoSubIntfFunc013**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that ntp sync is successful over Management VRF**   |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure mgmt vrf <br/>2) Bind FEP to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Verify the FEP successfully bind to the mgmt vrf <br/>4) Verify that ntp sync is successful over Management VRF |
+
+### 3.1.14  Verify that SNMP successful over Management VRF
+| **Test ID**    | **FtRoSubIntfFunc014**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that SNMP successful over Management VRF**          |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure mgmt vrf <br/>2) Bind FEP to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Verify the FEP successfully bind to the mgmt vrf <br/>4) Verify that snmp requests is successful over Management VRF |
+
+### 3.1.15  Verify that TACACS+ authentication is successful with Management VRF
+| **Test ID**    | **FtRoSubIntfFunc015**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that TACACS+ authentication is successful with Management VRF** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure mgmt vrf <br/>2) Bind FEP to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Add tacacs server authentication <br/>4)  Verify that TACACS authentication is successful with Management VRF |
+
+### 3.1.16  Verify that Radius authentication is successful with Management VRF
+| **Test ID**    | **FtRoSubIntfFunc016**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that Radius authentication is successful with Management VRF** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure mgmt vrf <br/>2) Bind FEP to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Add Radius server authentication <br/>4)  Verify that Radius authentication is successful with Management VRF |
+
+### 3.1.17  Verify that ZTP is successful over Management VRF
+| **Test ID**    | **FtRoSubIntfFunc017**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that ZTP is successful over Management VRF**        |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure mgmt vrf <br/>2) Bind FEP to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Add Radius server authentication <br/>4)  Verify that Radius authentication is successful with Management VRF |
+
+### 3.1.18  Verify that sFlow server reachablity over Management VRF
+| **Test ID**    | **FtRoSubIntfFunc018**                                       |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that sFlow server reachablity over Management VRF** |
+| **Test Setup** | **Inband_topo**                                              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1)Configure mgmt vrf <br/>2) Bind FEP to mgmt Vrf and Configure IP and IPv6 addresses <br/>3) Configure a sFlow server and generate samples <br/>4)  Verify that sFlow samples are recived at server successfully over Management VRF |
+
 ### 3.2 Reboot Test Cases**
 
 ### 3.2.1 Warm reboot with Management VRF
