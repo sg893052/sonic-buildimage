@@ -802,82 +802,64 @@ Sub port interface    Speed    MTU    Vlan    Admin                 Type
 ## 5.3 List of application commands, that needs sub port interface support
 These are the list of application CLI commands that has been committed to support sub port interface.
 
-|                                          **BGP**                                          |
-|-------------------------------------------------------------------------------------------|
-| neighbor interface \<sub-interface-name\>                                                 |
-| update-source interface \<sub-interface-name\>                                            |
-| show bgp ipv4/ipv6/all neighbors interface \<sub-interface-name\>                         |
-| clear bgp ipv4/ipv6/all interface \<sub-interface-name\>                                  |
-| show running-configuration bgp neighbor vrf \<vrf-name\> interface \<sub-interface-name\> |
+|                                              **BGP**                                               |
+|----------------------------------------------------------------------------------------------------|
+| neighbor interface \<*sub-interface-name*\>                                                        |
+| update-source interface \<*sub-interface-name*\>                                                   |
+| show bgp ipv4/ipv6/all neighbors interface \<*sub-interface-name*\>                                |
+| clear bgp ipv4/ipv6/all interface \<*sub-interface-name*\>                                         |
+| show running-configuration bgp neighbor vrf \<vrf-name**\> interface \<*sub-interface-name*\>      |
 
-|                **Route-MAP**                |
-|---------------------------------------------|
-| match interface \<sub-interface-name\>      |
-| match peer \<sub-interface-name\>           |
-| show route-map                              |
-| show running-configuration route-map        |
+|                                           **Route-MAP**                                            |
+|----------------------------------------------------------------------------------------------------|
+| match interface \<*sub-interface-name*\>                                                           |
+| match peer \<*sub-interface-name*\>                                                                |
+| show route-map                                                                                     |
+| show running-configuration route-map                                                               |
 
+|                                              **Ping**                                              |
+|----------------------------------------------------------------------------------------------------|
+| ping -I \<*sub-interface-name*\>                                                                   |
+| ping6 -I \<*sub-interface-name*\>                                                                  |
 
+|                                           **Traceroute**                                           |
+|----------------------------------------------------------------------------------------------------|
+| traceroute -I \<*sub-interface-name*\>                                                             |
+| traceroute6 -I \<*sub-interface-name*\>                                                            |
 
-|     Feature      |                               CLI Commands                                             |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | neighbor interface <sub-interface-name>                                                |
-|                  |----------------------------------------------------------------------------------------|
-|                  | update-source interface <sub-interface-name>                                           |
-|                  |----------------------------------------------------------------------------------------|
-| BGP              | show bgp ipv4/ipv6/all neighbors interface <sub-interface-name>                        |
-|                  |----------------------------------------------------------------------------------------|
-|                  | clear bgp ipv4/ipv6/all interface <sub-interface-name>                                 |
-|                  |----------------------------------------------------------------------------------------|
-|                  | show running-configuration bgp neighbor vrf <vrf-name> interface <sub-interface-name>  |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | match interface <sub-interface-name>                                                   |
-|                  |----------------------------------------------------------------------------------------|
-|                  | match peer <sub-interface-name>                                                        |
-| Route-map        |----------------------------------------------------------------------------------------|
-|                  | show route-map                                                                         |
-|                  |----------------------------------------------------------------------------------------|
-|                  | show running-configuration route-map                                                   |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | ping -I <sub-interface-name>                                                           |
-| Ping             |----------------------------------------------------------------------------------------|
-|                  | ping6 -I <sub-interface-name>                                                          |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | traceroute -i <sub-interface-name>                                                     |
-| Traceroute       |----------------------------------------------------------------------------------------|
-|                  | traceroute6 -i <sub-interface-name>                                                    |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | ip route <ip/prefix> interface <sub-interface-name>                                    |
-|                  |----------------------------------------------------------------------------------------|
-| Static route     | no ip route <ip/prefix> interface <sub-interface-name>                                 |
-|                  |----------------------------------------------------------------------------------------|
-|                  | show ip route [static]                                                                 |
-|------------------|----------------------------------------------------------------------------------------|
-| In-band          | ip vrf forwarding mgmt                                                                 |
-| Management       |----------------------------------------------------------------------------------------|
-|                  | show ip vrf                                                                            |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | ntp source-interface <sub-interface-name>                                              |
-| NTP              |----------------------------------------------------------------------------------------|
-|                  | show ntp global                                                                        |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | ip name-server source-interface <sub-interface-name>                                   |
-| DNS              |----------------------------------------------------------------------------------------|
-|                  | show hosts                                                                             |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | tacacs-server source-interface <sub-interface-name>                                    |
-| TACACS           |----------------------------------------------------------------------------------------|
-|                  | show tacacs-server [global]                                                            |
-|------------------|----------------------------------------------------------------------------------------|
-|                  | ip pim bfd                                                                             |
-|                  |----------------------------------------------------------------------------------------|
-|                  | ip pim drpriority                                                                      |
-| PIM              |----------------------------------------------------------------------------------------|
-|                  | ip pim hello                                                                           |
-|                  |----------------------------------------------------------------------------------------|
-|                  | ip pim sparse-mode                                                                     |
-|                  |----------------------------------------------------------------------------------------|
-|                  | show ip pim interface <sub-interface-name>                                             |
+|                                          **Static-route**                                          |
+|----------------------------------------------------------------------------------------------------|
+| ip route \<ip/prefix\> interface \<*sub-interface-name*\>                                          |
+| no ip route \<ip/prefix\> interface \<*sub-interface-name*\>                                       |
+| show ip route [static]                                                                             |
+
+|                                       **In-band Management**                                       |
+|----------------------------------------------------------------------------------------------------|
+| ip vrf forwarding mgmt                                                                             |
+| show ip vrf                                                                                        |
+
+|                                              **NTP**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ntp source-interface \<*sub-interface-name*\>                                                      |
+| show ntp global                                                                                    |
+
+|                                              **DNS**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ip name-server source-interface \<*sub-interface-name*\>                                           |
+| show hosts                                                                                         |
+
+|                                             **TACACS**                                             |
+|----------------------------------------------------------------------------------------------------|
+| tacacs-server source-interface \<*sub-interface-name*\>                                            |
+| show tacacs-server [global]                                                                        |
+
+|                                              **PIM**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ip pim bfd                                                                                         |
+| ip pim drpriority                                                                                  |
+| ip pim hello                                                                                       |
+| ip pim sparse-mode                                                                                 |
+| show ip pim interface \<*sub-interface-name*\>                                                     |
 
 # 6 Warm reboot support
 There is no special runtime state that needs to be kept for sub port interfaces.
