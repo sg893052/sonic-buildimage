@@ -463,7 +463,7 @@ Internally, a sub port interface is represented as a Port object to be perceived
 # 3 Feature Support
 
 ## 3.1 IPv4/IPv6 address:
-IPv4 & IPv6 addresses can be configured on subinterfaces using the same set of CLIs.
+IPv4 & IPv6 addresses can be configured on subinterfaces using the same set of CLIs. 
 In presence of sub-interface, IP can be configured on the parent interface. All untagged packets will be classified to parent interface.
 
 ## 3.2 VRF:
@@ -494,25 +494,25 @@ Upon vrf binding, intfmgrd binds sub-interface netdev to vrf and also updates AP
 Note:
 
 -   Different Sub-interfaces under same parent interface can bind to different VRFs
-
+    
 -   Same sub-interface under a different parent interface can bind to different VRFs.
-
+    
 
 Note:
 
 Whenever a sub-interface is bound/unbound from a vrf, the sub-interface will be deleted and recreated to remove all L3 configurations.
-
+  
 Management VRF:
 Sub-interfaces can be bound/unbound to management VRF mgmt.
 
 ## 3.3 RIF Counters & Oper Status:
 -   Admin Status: Admin status per sub-interface can be controlled by administrator as mentioned in section 2.1.2. This status is updated in the kernel and same can be verified in the “show subinterfaces status” click command.
-
+    
 -   Oper Status: Oper Status of sub-interface is inherited from parent interface.
-
+    
 -   HW Counters: HW counters per subinterface can be supported upon RIF counter support(click command “show interface counters rif”).    
 
-NOTE: RIF counters support will be part of future release.
+NOTE: RIF counters support will be part of future release. 
 
 ## 3.4 Port Channel Sub-interfaces:
 Subinterfaces can be configured on portchannels.
@@ -520,7 +520,7 @@ All operation applicable to Physical sub-interfaces are applicable to portchanne
 
 ## 3.5 Parent Interface Admin/oper UP/DOWN:
 -   Upon Parent interface admin UP/DOWN, Kernel automatically brings UP/DOWN all associated sub-interfaces.
-
+    
 -   Upon Parent interface oper DOWN: All sub-interfaces under the parent interface will be Oper Down.
 
 ## 3.6 Port Aliasing:
@@ -557,9 +557,9 @@ IPv6 use-link-local-only should be supported on sub-interfaces.
 ## 3.14 IPv4/IPv6 Routes with ECMP:
 ### 3.14.1 Static/Dynamic Routes:
 -   User can configure static routes with next hop resolved on subinterfaces or pointing to subinterfaces.
-
+    
 -   User can configure static leak routes with next hop resolved on subinterfaces or pointing to subinterfaces.
-
+    
 Dynamic Routes with nexthop resolved on subinterfaces are also supported.
 
  FRR & Zebra populates interface Table from kernel netlink events. Hence this interface table is updated with subinterfaces as well.
@@ -571,7 +571,7 @@ Routeorch shall program these routes to appropriate LPM table pointing to sub-in
 ### 3.14.2 ECMP:
 ECMP of nexthops resolved over subinterfaces should be supported:  
     An ECMP group can comprise of:
-
+    
 -   All subinterfaces    
 -   Mix of subinterface and physical interface/PortChannels    
 -   Mix of subinterface and vlan
@@ -606,14 +606,14 @@ IPSLA sessions can run on sub-interfaces.
 IPSLA sessions can also be configured with source as sub-interface.
 
 ## 3.22 VRRP & SAG:
-VRRP sessions can be configured on sub-interfaces.
+VRRP sessions can be configured on sub-interfaces. 
 
 SAG will be supported on subinterfaces. SAG support on subinterfaces will be solely to provide gateway functionality across leaf nodes. Since subinterfaces are router ports, there is no L2 domain extension across vxlan network hence there will be no Type-2 MACIP sync across vxlan network.
-
+ 
 Subinterface and SAG configuration should be symmetric across leaf nodes where the host could move. If not symmetric, traffic drop will be observed upon host move.
 
 SAG will be directly configured on the sub-interface netdevice in the kernel.
-
+ 
 
 - APP_DB Schema:
 ```
@@ -625,7 +625,7 @@ vip ; virtual IP address in a.b.c.d/32 or a:b:c::d format
 
 type ; IP(v6) address type string.
 
-
+  
 
 ; field = value
 
@@ -640,7 +640,7 @@ VIP Programming: VIP should be programmed pointing to Virtual RIF associated wit
 
 - Admin/Oper Down of parent interface:
 SAG Manager will monitor parent interface state and update SAG state in APP_DB SAG table.
-
+  
 
 - SAG on Subinterface on MCLAG:
 SAG can be configured on MCLAG client port subinterfaces. ARP/ND sync across mclag nodes will happen for those learnt on subinterfaces.
@@ -656,7 +656,7 @@ Vlan Interface (SVI) will have a physical port and LAG as switch port, so not ap
 
 - Subinterfaces as peer-interface:
 Peer interface is always switch port to carry tagged traffic in case of failover scenario.
-And subinterface is applicable only to router ports. So the peer interface cannot be a subinterface.
+And subinterface is applicable only to router ports. So the peer interface cannot be a subinterface. 
 
 - Neighbors learnt on subinterfaces:
 ARP and ND learnt on subintfs of a multihomed interface is required to be synced. And this is independent of whether the parent (Po) interface has an IP config or not. Users will be required to configure the same IP on MCLAG multihomed subintfs on the MCLAG peers.
