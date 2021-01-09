@@ -802,20 +802,20 @@ Sub port interface    Speed    MTU    Vlan    Admin                 Type
 ## 5.3 List of application commands, that needs sub port interface support
 These are the list of application CLI commands that has been committed to support sub port interface.
 
-|                                   BGP                                                  |
-|:--------------------------------------------------------------------------------------:|
-| neighbor interface <sub-interface-name>                                                |
-| update-source interface <sub-interface-name>                                           |
-| show bgp ipv4/ipv6/all neighbors interface <sub-interface-name>                        |
-| clear bgp ipv4/ipv6/all interface <sub-interface-name>                                 |
-| show running-configuration bgp neighbor vrf <vrf-name> interface <sub-interface-name>  |
+|                                        **BGP**                                        |
+|---------------------------------------------------------------------------------------|
+| neighbor interface <sub-interface-name>                                               |
+| update-source interface <sub-interface-name>                                          |
+| show bgp ipv4/ipv6/all neighbors interface <sub-interface-name>                       |
+| clear bgp ipv4/ipv6/all interface <sub-interface-name>                                |
+| show running-configuration bgp neighbor vrf <vrf-name> interface <sub-interface-name> |
 
-|                Route-MAP                     |
-|:--------------------------------------------:|
-| match interface <sub-interface-name>         |
-| match peer <sub-interface-name>              |
-| show route-map                               |
-| show running-configuration route-map         |
+|                **Route-MAP**                |
+|---------------------------------------------|
+| match interface <sub-interface-name>        |
+| match peer <sub-interface-name>             |
+| show route-map                              |
+| show running-configuration route-map        |
 
 
 
