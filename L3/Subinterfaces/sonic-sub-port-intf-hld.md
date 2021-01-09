@@ -808,7 +808,7 @@ These are the list of application CLI commands that has been committed to suppor
 | update-source interface \<*sub-interface-name*\>                                                   |
 | show bgp ipv4/ipv6/all neighbors interface \<*sub-interface-name*\>                                |
 | clear bgp ipv4/ipv6/all interface \<*sub-interface-name*\>                                         |
-| show running-configuration bgp neighbor vrf \<vrf-name**\> interface \<*sub-interface-name*\>      |
+| show running-configuration bgp neighbor vrf \<*vrf-name*\> interface \<*sub-interface-name*\>      |
 
 |                                           **Route-MAP**                                            |
 |----------------------------------------------------------------------------------------------------|
@@ -829,9 +829,9 @@ These are the list of application CLI commands that has been committed to suppor
 
 |                                          **Static-route**                                          |
 |----------------------------------------------------------------------------------------------------|
-| ip route \<ip/prefix\> interface \<*sub-interface-name*\>                                          |
-| no ip route \<ip/prefix\> interface \<*sub-interface-name*\>                                       |
-| show ip route [static]                                                                             |
+| ip route \<*ip/prefix*\> interface \<*sub-interface-name*\>                                        |
+| no ip route \<*ip/prefix*\> interface \<*sub-interface-name*\>                                     |
+| show ip route [*static*]                                                                           |
 
 |                                       **In-band Management**                                       |
 |----------------------------------------------------------------------------------------------------|
@@ -851,7 +851,7 @@ These are the list of application CLI commands that has been committed to suppor
 |                                             **TACACS**                                             |
 |----------------------------------------------------------------------------------------------------|
 | tacacs-server source-interface \<*sub-interface-name*\>                                            |
-| show tacacs-server [global]                                                                        |
+| show tacacs-server [*global*]                                                                      |
 
 |                                              **PIM**                                               |
 |----------------------------------------------------------------------------------------------------|
