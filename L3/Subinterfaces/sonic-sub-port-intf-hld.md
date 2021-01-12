@@ -797,7 +797,6 @@ Sub port interface    Speed    MTU    Vlan    Admin                 Type
 ------------------  -------  -----  ------  -------  -------------------
      Eth64.10          100G   9100    100       up  dot1q-encapsulation
 ```
-No operational status is defined on RIF (sub port interface being a type of RIF) in SAI spec.
 
 # 6 Warm reboot support
 There is no special runtime state that needs to be kept for sub port interfaces.
