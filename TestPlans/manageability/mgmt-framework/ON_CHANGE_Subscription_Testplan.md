@@ -7,7 +7,8 @@
 # Test Plan Revision History
 | Rev  |    Date    |        Author        |      Change Description      |
 | :--: | :--------: | :------------------: | :--------------------------: |
-| 0.1  | 5/1/2021   | Prudvi Mangadu       |      Initial version         |
+| 0.1  |  5/1/2021  | Prudvi Mangadu       |   Initial version            |
+| 0.1  | 13/1/2021  | Prudvi Mangadu       |   Addressing review comments |
 
 # List of Reviewers
 | Function  |         Name         |
@@ -70,6 +71,8 @@ Thereafter server sends only the delta updates to client when the values are cha
     - Config reload
     - Telemetry docker restart
    ```
+Note: If management interface or telemetry service goes down, Re-Subscription required from client when service becomes
+ up.
  
 # 2 Topologies
 ## 2.1 Topology
@@ -86,7 +89,7 @@ Thereafter server sends only the delta updates to client when the values are cha
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using any UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
 ### 3.1.2 Verify that change the value for multiple times make sure ON_CHANGE notifies it correctly.
-| **Test ID**    | **OnChange321**                                |
+| **Test ID**    | **OnChange312**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that change the value for multiple times make sure ON_CHANGE notifies it correctly** |
 | **Test Setup** | **Topology**                                                |
@@ -133,6 +136,14 @@ Thereafter server sends only the delta updates to client when the values are cha
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Configure IGMP snooping on DUT<br/> 4) Make sure Snooping entries are getting populated during ON_CHANGE is subscribed <br/>|
 
+### 3.1.8 Verify that Delete the value for multiple times make sure ON_CHANGE notifies it correctly.
+| **Test ID**    | **OnChange318**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that Delete the value for multiple times make sure ON_CHANGE notifies it correctly** |
+| **Test Setup** | **Topology**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now delete the Subscribe path values multiple time <br/> 4) Verify that server sends only the delta updates to client for each time values get change. <br/>|
+
 
 ## 3.2 Scale and Performance Test Cases
 ### 3.2.1 Verify that ON_CHANGE notification with Multiple/MAX URIs to ON_CHANGE subscription.
@@ -143,6 +154,22 @@ Thereafter server sends only the delta updates to client when the values are cha
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe MAX/Available URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/>3) Change the values of all subscription paths<br/>4) Make sure delta updated should trigger for all changes<br/> |
 
+### 3.2.2 Verify that CHANGE gets notified to corresponding client in multiple client environment.
+| **Test ID**    | **OnChange322**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that CHANGE gets notified to corresponding client in multiple client environment.** |
+| **Test Setup** | **Topology**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) client1 can subscribe for paths A, B, C and client2 can subscribe to B, C, D<br/> 2) Verify that initial sync of A gets notified to only client1 whereas B should be notified to both <br/> 3) Now change the Subscribe path values <br/> 4) Verify that delta updates of A gets notified to only client1 whereas B should be notified to both. <br/>|
+
+### 3.2.3 Verify that CHANGE gets notified to rest of clients, when other client are killed.
+| **Test ID**    | **OnChange323**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that CHANGE gets notified to rest of clients, when other client are killed.** |
+| **Test Setup** | **Topology**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) client1 can subscribe for paths A, B, C and client2 can subscribe to B, C, D<br/> 2) Verify that initial sync of A gets notified to only client1 whereas B should be notified to both <br/> 3) Kill client2.<br/> 4) Now change the Subscribe path values <br/> 5) Verify that delta updates of A gets notified to only client1 whereas B should be notified to client1 as client2 is killed. <br/>|
+
 
 ## 3.3 Negative Test Cases
 ### 3.3.1 Verify that Server should reject the ON_CHANGE subscribe request for URIs not support ON_CHANGE.
@@ -152,6 +179,14 @@ Thereafter server sends only the delta updates to client when the values are cha
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe the unsupported URI to the ON_CHANGE notification, make sure Server should reject the subscribe request <br/> 2) Verify that server should not send data related to the path to client.<br/>|
+
+### 3.3.2 Verify that Server should not send ON_CHANGE notification once delete the ON_CHANGE Subscription.
+| **Test ID**    | **OnChange332**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that Server should not send ON_CHANGE notification once delete the ON_CHANGE Subscription.** |
+| **Test Setup** | **Topology**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Un-Subscribe the URI and change the Subscribe path values multiple time <br/> 4) Verify that server should not send updates to client.<br/>|
 
 
 ## 3.4 Reboot/Reload/Upgrade Test Cases
