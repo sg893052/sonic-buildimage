@@ -523,7 +523,9 @@ All operation applicable to Physical sub-interfaces are applicable to portchanne
 -   Upon Parent interface oper DOWN: All sub-interfaces under the parent interface will be Oper Down.
 
 ## 3.6 Port Aliasing:
-
+Port Aliasing will not be have any impact due to this feature. The parent interface component of subinterface naming will be inline with existing aliasing convention.
+Example:
+- Ethernet4.10 will be represented as Eth1/2.10 in standard interface naming mode
 ## 3.7 Speed/Bandwidth:
 Speed & Bandwidth is not applicable per sub-interface, rather applicable on parent physical or port channel sub-interface.
 
@@ -531,7 +533,7 @@ Speed & Bandwidth is not applicable per sub-interface, rather applicable on pare
 Subinterfaces cannot become member of a PortChannel interface. Such configurations will be blocked at CLI level.
 
 ## 3.9 Dynamic Port Breakout:
-Upon port-breakout, subinterfaces on the parent interface needs to be removed automatically.
+Upon port-breakout, subinterfaces on the parent interface needs to be removed automatically. Also, all configuration entries referring to a subinterface will also be removed automatically.
 
 ## 3.10 L2 Protocols:
 None of L2 Protocols are supported on Subinterfaces.
@@ -696,7 +698,7 @@ NAT feature will not be supported on sub-interfaces.
 ![](images/sub_intf_removal_flow.png)
 
 # 5 CLIs
-## 5.1 Config commands
+## 5.1 Config commands (Click)
 ### 5.1.1 Config a sub port interface
 `subinterface` command category is introduced to the `config` command.
 
@@ -777,6 +779,50 @@ Usage: config interface startup <sub_port_interface_name>
 ```
 ```
 Usage: config interface shutdown <sub_port_interface_name>
+```
+## 5.1 Config commands (KLiSH)
+### 5.1.1 Config a sub port interface
+```
+Command: [no] interface <subinterface-name>
+
+Example 1:
+sonic-cli(config)# interface Ethernet4.10
+sonic-cli(conf-subif-Ethernet4.10)# 
+
+Example 2:
+sonic-cli(config)# interface PortChannel 100.100
+sonic-cli(conf-subif-PortChannel100.100)# 
+```
+### 5.1.2 Config vlan-id on a sub port interface
+
+```
+Command: encapsulation dot1q vlan <vlan-id>
+Command: no encapsulation
+
+Example 1:
+sonic-cli(conf-subif-Ethernet4.10)# encapsulation dot1q vlan-id 1000
+ 
+```
+### 5.1.3 Config IP address on a sub port interface
+
+```
+Command: [no] ip address <ipv4-address>
+Command: [no] ipv6 address <ipv6-address>
+
+Example 1:
+sonic-cli(config)# interface Ethernet 4.10
+sonic-cli(conf-subif-Ethernet4.10)# ip address 4.10.1.1/24
+sonic-cli(conf-subif-Ethernet4.10)# ipv6 address 410::1/64
+ 
+```
+
+### 5.1.4 Change admin status on a sub port interface
+```
+Command: [no] shutdown
+
+Example 1:
+sonic-cli(conf-subif-Ethernet4.10)# shutdown
+ 
 ```
 
 ## 5.2 Show commands
