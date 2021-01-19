@@ -136,8 +136,38 @@ Address the three major vulnerabilities reported in PenTest by ebay.
 - for c in $(docker ps --format '{{.Names}}'); do printf "$c:"; docker inspect $c --format {{.HostConfig.Privileged}}'; done
 
 ##### Solution
+- Container privilege access should be removed and should run isolated from the host environment. Any container which requires special access to host should use docker capability feature instead of full privilege access.
 
-- All the container privilege access should be removed and should run isolated from the host environment. Any container which requires special access to host should use sys capability feature instead of privilege access.
+- As part of the sudo restriction, the non-privileged user is restricted from entering into the sonic docker containers. This provides the first level of security protection from accessing the sonic docker containers.
+- Removing the '--privileged' option from the docker container provides the second level of protection from accessing the protected system resources.
+- However, some of the sonic containers require special access to system resources, for example:
+
+    - Creation of net devices(netdev).
+    - Addition/deleteion of route entries.
+    - IP table rule management and more.
+
+- Container that requires special access can be addressed using docker capability feature. For more info can be found at,
+
+    - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
+
+- The capability features allow the container to use a subset of the privileged feature. For example, if a container needs a privileged net socket for adding/deleting routes, only the NET_ADMIN capability can be given to the container.
+
+    - docker run --cap-add=NET_ADMIN ...
+
+- The docker capability feature allows the container to run with only the required admin access which eliminates the full access to the host.
+
+##### Limitations:
+
+- The docker capability feature has only the limited set of capability features and it doesn't provide cap set for Linux sysfs and sysctl write access. To address this, still, some of the sonic dockers needs to be run in the privileged mode. Currently, the following dockers are running in privileged mode.
+
+    mgmt-framework
+    syncd
+    bgp
+    pmon
+    swss
+    vrrp
+
+- The management docker requires connectivity with other dockers through host docker socket file(/var/run/docker.sock). Removing this file requires management-framework infrastructure change. So this is not covered for the current release. However, this will be addressed in the upcoming release.
 
 
 # 3 Unit Test
