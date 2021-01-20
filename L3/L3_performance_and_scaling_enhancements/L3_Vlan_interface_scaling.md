@@ -23,7 +23,7 @@ Layer 3 Vlan Interface Scaling
 This document provides information about the Layer 3 Vlan interface scaling achieved in SONIC 3.2.0 release. 
 
 # Scope
-This document describes the high level design of Layer 3 Vlan interface scaling achieved using mystation tcam optimisation.Implementation of warm reboot support for upgrade scenario.
+This document describes the high level design of Layer 3 Vlan interface scaling achieved using mystation tcam optimization.Implementation of warm reboot support for upgrade scenario.
 Supported platforms include TH,TH2,TD3
 
 # Definition/Abbreviation
@@ -43,10 +43,15 @@ SONIC currently supports a maximum of 1k L3 Vlan interfaces on Broadcom hardware
 
 ## 1.1 Functional Requirements
 Scaling improvements
-- Support for 4k SVI interfaces
-- Support for 4k SAG MAC configured SVI interfaces
-- Support for 4k MCLAG Gateway MAC configured SVI interfaces
-Only one of the above can exist at one time as the maximum supported Vlan interfaces is 4k.
+| MAC                                  | Scale Supported | 
+|--------------------------------------|-----------------|
+|System MAC configured SVI             | 4k              |
+|MCLAG Gateway MAC with same ip SVI    | 4k              |
+|MCLAG Setup - unique ip SVI           | 1k              | 
+|SAG MAC configured SVI                | 1k              |
+|VRRP MAC SVI                          | 1k              |
+
+Note :- In MCLAG scenario, 4k scale can be achieved only with MCLAG Gateway MAC configured with same ip Vlans.When MCLAG Gateway MAC is not configured per Vlan MyStationTcam entry will be programmed and scale will be limited to 1k.
 
 ## 1.2 Configuration and Management Requirements
 No new configuration or show commands introduced.
@@ -60,11 +65,10 @@ Upgrade to higher version should take care of installing one entry per MAC and d
 # 2 Design
 
 ## 2.1  MyStationTcam lookup key modification
-Use only MAC as the key for MyStationTcam entries, this will give way to use only one MyStationTcam entry for all SVI interfaces, i.e, we could be able to scale to 4K L3 Interfaces. This change is for the following 3 MACs only.
+Use only MAC as the key for MyStationTcam entries, this will give way to use only one MyStationTcam entry for all SVI interfaces, i.e, we could be able to scale to 4K L3 Interfaces. This change is for the following 2 MACs only.
 1.	System MAC 
-2.	SAG MAC
-3.	McLAG Gateway MAC 
-No change in VRRP VMAC programming. 
+2.	McLAG Gateway MAC 
+No change in VRRP VMAC programming and SAG MAC programming
 For SVI interfaces the lookup keys is only (DMAC)
 For Phy interfaces / RouterPorts the lookup key is retained the same [Port Id + DMAC]
 For LAG router interfaces the lookup key is retained the same [Trunk Id + DMAC]
@@ -77,19 +81,16 @@ When the first SVI interface configured with any of the above macs the correspon
 With the key change to only (MAC) from (MAC,Vlan), if the SVI interfaces are configured each with one type of MAC. Station tcam will look like below now.
 For example 
 1. System MAC - 3c2c992ed875
-2. SAG MAC - 222244445555
-3. MCLAG Gateway MAC - 050608060500
+2. MCLAG Gateway MAC - 050608060500
 drivshell>d chg my_station_tcam
 d chg my_station_tcam
 MY_STATION_TCAM.ipipe0[0]: <VALID=1,MASK=0x00000000ffffffffffff,MAC_ADDR_MASK=0xffffffffffff,MAC_ADDR=0x3c2c992ed875,KEY=0x000000003c2c992ed875,IPV6_TERMINATION_ALLOWED=1,IPV4_TERMINATION_ALLOWED=1,DATA=0x18,>
-MY_STATION_TCAM.ipipe0[1]: <VALID=1,MASK=0x00000000ffffffffffff,MAC_ADDR_MASK=0xffffffffffff,MAC_ADDR=0x222244445555,KEY=0x00000000222244445555,IPV6_TERMINATION_ALLOWED=1,IPV4_TERMINATION_ALLOWED=1,DATA=0x18,>
 MY_STATION_TCAM.ipipe0[3]: <VALID=1,MASK=0x00000000ffffffffffff,MAC_ADDR_MASK=0xffffffffffff,MAC_ADDR=0x050608060500,KEY=0x00000000050608060500,IPV6_TERMINATION_ALLOWED=1,IPV4_TERMINATION_ALLOWED=1,DATA=0x18,>
 
 ### 2.3.1 Special cases
 If a packet comes with (DA=System MAC ,Vlan = SAG vlan or MCLAG vlan or L2 vlan). It will be subjected to routing due to current station tcam entry.
-If a packet comes with (DA=SAG MAC, Vlan= !SAG vlan). It will be subjected to routing.
 If a packet comes with (DA=MCLAG Gateway MAC, Vlan = !MCLAG Vlan). It will be subjected to routing.
-If a packet comes with (DA=Any of the above three macs, Vlan=L2). It will be subjected to routing.
+If a packet comes with (DA=Any of the above two macs, Vlan=L2). It will be subjected to routing.
 Inorder to address these cases, added below  IFP rules during system bringup. Also, counters attached to each of the drop rules.
 
 ### 2.3.2 VSI Profile
@@ -117,19 +118,20 @@ Configure setup with base MCLAG config.
 Configure SAG MAC,MCLAG Gateway MAC.
 Configure SAG SVI interface, MCLAG Gateway MAC SVI interface and plain L3 SVI interface.
 
-Testcase | Validate                                           | Remarks |
-     1.  | Send l3 pkt with DA= System MAC vlan=SAG vlan      | Packet should be dropped|
-     2.  | Send l3 pkt with DA= System MAC vlan=MCLAG vlan    | Packet should be dropped|
-     3.  | Send l3 pkt with DA= System MAC vlan=L2 vlan       | Packet should be dropped|
-     4.  | Send l3 pkt with DA= System MAC vlan=L3 vlan       | Packet should be routed|
-     5.  | Send l3 pkt with DA= SAG MAC vlan=MCLAG vlan       | Packet should be routed|
-     6.  | Send l3 pkt with DA= SAG MAC vlan=SAG vlan         | Packet should be routed|
-     7.  | Send l3 pkt with DA= SAG MAC vlan=L3 vlan          | Packet should be routed|
-     8.  | Send l3 pkt with DA= SAG MAC vlan=L2 vlan          | Packet should be routed|
-     9.  | Send l3 pkt with DA= MCLAG Gw MAC vlan=L2 vlan     | Packet should be dropped|
-     10. | Send l3 pkt with DA= MCLAG Gw MAC vlan=SAG vlan    | Packet should be dropped|
-     11. | Send l3 pkt with DA= MCLAG Gw MAC vlan=L3 vlan     | Packet should be dropped|
-     12. | Send l3 pkt with DA= MCLAG Gw MAC vlan=MCLAG vlan  | Packet should be routed|
+Testcase | Validate                                           | Remarks                  |
+---------|----------------------------------------------------|--------------------------|
+     1.  | Send l3 pkt with DA= System MAC vlan=SAG vlan      | Packet should be dropped |
+     2.  | Send l3 pkt with DA= System MAC vlan=MCLAG vlan    | Packet should be dropped |
+     3.  | Send l3 pkt with DA= System MAC vlan=L2 vlan       | Packet should be dropped |
+     4.  | Send l3 pkt with DA= System MAC vlan=L3 vlan       | Packet should be routed  |
+     5.  | Send l3 pkt with DA= SAG MAC vlan=MCLAG vlan       | Packet should be switched|
+     6.  | Send l3 pkt with DA= SAG MAC vlan=SAG vlan         | Packet should be routed  |
+     7.  | Send l3 pkt with DA= SAG MAC vlan=L3 vlan          | Packet should be switched|
+     8.  | Send l3 pkt with DA= SAG MAC vlan=L2 vlan          | Packet should be switched|
+     9.  | Send l3 pkt with DA= MCLAG Gw MAC vlan=L2 vlan     | Packet should be dropped |
+     10. | Send l3 pkt with DA= MCLAG Gw MAC vlan=SAG vlan    | Packet should be dropped |
+     11. | Send l3 pkt with DA= MCLAG Gw MAC vlan=L3 vlan     | Packet should be dropped |
+     12. | Send l3 pkt with DA= MCLAG Gw MAC vlan=MCLAG vlan  | Packet should be routed  |
 
 
 # 6 Internal Design Information
