@@ -66,7 +66,7 @@
         * [5.1.2 Config IP address on a sub port interface](#512-config-ip-address-on-a-sub-port-interface)
         * [5.1.3 Change admin status on a sub port interface](#513-change-admin-status-on-a-sub-port-interface)
     * [5.2 Show commands](#52-show-commands)
-    * [5.3 List of application commands, that needs sub port interface support](#53-application-commands-list)
+    * [5.3 List of application commands that needs sub port interface support](#53-list-of-application-commands-that-needs-sub-port-interface-support)
   * [6 Warm reboot support](#6-warm-reboot-support)
   * [7 Unit test](#7-unit-test)
     * [7.1 Sub port interface creation](#71-sub-port-interface-creation)
@@ -799,7 +799,7 @@ Sub port interface    Speed    MTU    Vlan    Admin                 Type
      Eth64.10          100G   9100    100       up  dot1q-encapsulation
 ```
 
-## 5.3 List of application commands, that needs sub port interface support
+## 5.3 List of application commands that needs sub port interface support
 These are the list of application CLI commands that has been committed to support sub port interface.
 
 |                                              **BGP**                                               |
