@@ -47,7 +47,7 @@ Scaling improvements
 |--------------------------------------|-----------------|
 |System MAC configured SVI             | 4k              |
 |MCLAG Gateway MAC with same ip SVI    | 4k              |
-|MCLAG Setup - unique ip SVI           | 1k              | 
+|MCLAG with unique ip SVI              | 1k              | 
 |SAG MAC configured SVI                | 1k              |
 |VRRP MAC SVI                          | 1k              |
 
