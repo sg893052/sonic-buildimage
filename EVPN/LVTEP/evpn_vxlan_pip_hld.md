@@ -187,7 +187,7 @@ The basic approach of Advertise-PIP feature is to:
 
 
 
-<figure><img src="advertise_pip_images\advertise_pip_2.JPG" align="center"><figcaption align="center">Figure 2: Traffic forwarding after routes for MAC/IP learnt on orphan ports are advertised with primary VTEP IP</figcaption></img></figure>
+<figure><img src="advertise_pip_images\advertise_pip_2.jpg" align="center"><figcaption align="center">Figure 2: Traffic forwarding after routes for MAC/IP learnt on orphan ports are advertised with primary VTEP IP</figcaption></img></figure>
 
 
 
