@@ -1,7 +1,7 @@
 # Feature Name
 DHCP Relay Enhancements.
 # High Level Design Document
-#### Rev 0.5
+#### Rev 0.6
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -40,6 +40,7 @@ DHCP Relay Enhancements.
       * [3.1.9 IPv4 unnumbered support](#319-ipv4-unnumbered)
       * [3.1.10 Handling DHCPv4 packets with relay agent options](#3110-handling-agent-options)
       * [3.1.11 Server Identifier override sub-option](#3111-server-override)
+      * [3.1.12 Subinterfaces](#3112-subinterfaces)
     * [3.2 DB Changes](#32-db-changes)
       * [3.2.1 CONFIG DB](#321-config-db)
       * [3.2.2 APP DB](#322-app-db)
@@ -81,7 +82,9 @@ DHCP Relay Enhancements.
 | 0.3 | 2/13/2020   |   Abhimanyu Devarapalli   | Added link-selection option, source interface selection, max hops, OC-Yang, KLISH CLI. |
 | 0.4 | 4/29/2020   |   Abhimanyu Devarapalli   | Added IPv4 unnumbered support, VRF support, options handling. |
 | 0.5 | 7/23/2020   |   Santosh Doke   | Updated scaling limit and added server-override suboption. |
-
+| 0.6 | 12/28/2020   |   Santosh Doke   | Added support for L3 subinterfaces. |
+||
+&nbsp;
 # About this Manual
 This document provides general information about the DHCP Relay Enhancements implemented in SONiC.
 # Scope
@@ -98,15 +101,13 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 | VTEP                     | VXLAN Tunnel End Point              |
 | SAG                      | Static Anycast Gateway              |
 | VSS                      | Virtual Subnet Selection sub-option              |
-
+||
+&nbsp;
 # 1 Feature Overview
 ## 1.1 Requirements
 ### 1.1.1 Functional Requirements
 #### 1.1.1.1 New Functional Requirements
-1. Support relaying of DHCPv4 packets over IPv4 unnumbered interfaces.
-2. Support Virtual subnet selection (VSS) options 151/152 for DHCPv4, and VSS option 68 for DHCPv6, as per RFC 6607.
-3. Support relaying of DHCPv4/DHCPv6 packets when client and server are in different VRFs.
-
+1. Support DHCPv4/DHCPv6 relay over L3 subinterfaces. Unless otherwise specified, all existing DHCPv4/DHCPv6 functional requirements are supported on L3 subinterfaces.
 
 #### 1.1.1.2 Existing Functional Requirements
 1. Support relaying of IPv4 DHCP packets.
@@ -123,12 +124,14 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 12. Support DHCP clients and DHCP servers in different VRF domains.
 13. Support DHCP relay over VxLAN overlay tunnels.
 14. Support configuration of maximum number of relay hops. 
+15. Support relaying of DHCPv4 packets over IPv4 unnumbered interfaces.
+16. Support Virtual subnet selection (VSS) options 151/152 for DHCPv4, and VSS option 68 for DHCPv6, as per RFC 6607.
+17. Support relaying of DHCPv4/DHCPv6 packets when client and server are in different VRFs.
+
 
 ### 1.1.2 Configuration and Management Requirements
 #### 1.1.2.1 New Configuration Requirements
-1. Provide configuration option to specify VRF in which the server resides.
-2. Provide configuration option to specify forwarding behavior  of DHCPv4 packets that already contain relay agent options.
-3. All configuration changes must be applied with out restarting the DHCP relay docker.
+1. Extend Click/KLISH configuration and show commands to support DHCPv4/DHCPv6 relay on L3 subinterfaces.
 
 #### 1.1.2.2 Existing Configuration Requirements
 1. Provide configuration and management commands using python Click module based framework.
@@ -137,6 +140,9 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 4. Provide a show command to display the configured relay addresses.
 5. Support for OpenConfig YANG model - see [relay-agent.yang](https://github.com/openconfig/public/blob/master/release/models/relay-agent/openconfig-relay-agent.yang) for more details.
 6. Support for KLISH CLI commands using management framework.
+7. Provide configuration option to specify VRF in which the server resides.
+8. Provide configuration option to specify forwarding behavior  of DHCPv4 packets that already contain relay agent options.
+9. All configuration changes must be applied with out restarting the DHCP relay docker.
 
 ### 1.1.3 Scalability Requirements
 1. The maximum number of Relay addresses configurable per interface are 4. 
@@ -237,8 +243,8 @@ The IPv4 DHCP relay process is spawned with the below options supported by ISC-D
 |-a | Append an agent option field to each request before forwarding it to the server. Agent option fields in responses sent from servers to clients will be stripped before forwarding such responses back to the client. The agent option field contains two IDs: the Circuit ID sub-option and the Remote ID sub-option. The Circuit ID is set to the printable name of the interface on which the client request was received. The Remote ID is set to the MAC address of the interface. |
 |-U *ifname* | Enables the addition of a RFC 3527 compliant link selection suboption for clients directly connected to the relay. This RFC allows a relay to specify two different IP addresses: one for the server to use when communicating with the relay (giaddr) the other for choosing the subnet for the client (the suboption). This can be useful if the server is unable to send packets to the relay via the address used for the subnet. |
 |-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
-
-
+||
+&nbsp;
 Below is a sample IPv4 DHCP Relay process command:
 ```
 /usr/sbin/dhcrelay -d -m discard -a %%p %%P --name-alias-map-file /tmp/port-name-alias-map.txt -id Vlan10
@@ -265,7 +271,8 @@ The IPv6 DHCP relay process is spawned with the below options supported by ISC-D
 |-l [*address%*]*ifname*[#*index*] | Specifies the "lower" network interface for DHCPv6 relay mode: the interface on which queries will be received from clients or from other relay agents. At least one -l option must be included in the command line when running in DHCPv6 mode. The interface name "ifname" is a mandatory parameter. The link address can be specified by address%; if it is not, dhcrelay will use the first non-link-local address configured on the interface. The optional #index parameter specifies the interface index. |
 |-u [*address%*]*ifname* | Specifies the "upper" network interface for DHCPv6 relay mode: the interface to which queries from clients and other relay agents should be forwarded. At least one -u option must be included in the command line when running in DHCPv6 mode. The interface name ifname is a mandatory parameter. The destination unicast or multicast address can be specified by address%; if not specified, the relay agent will forward to the DHCPv6 All_DHCP_Relay_Agents_and_Servers multicast address. |
 |-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
-
+||
+&nbsp;
 Below is a sample IPv6 DHCP Relay process command:
 ```
 /usr/sbin/dhcrelay -6 -d --name-alias-map-file /tmp/port-name-alias-map.txt -l Vlan10 -u Ethernet64 -u Vlan56 -u PortChannel60 -c 15
@@ -668,6 +675,34 @@ DHCPv4 relay supports server identifier override sub-option 11 as defined in RFC
 If the DHCPv4 server does not support the server identifier sub-option, then the unicast DHCPv4 packets from client are sent directly to server bypassing the relay agent.
 
 This sub-option is only applicable to DHCPv4 relay agent.
+
+### 3.1.12 Subinterfaces 
+
+DHCPv4/DHCPv6 relay is supported on subinterfaces. Both the DHCP clients (downstream interface) and DHCP servers (upstream interface) can be reachable/attached via subinterfaces. DHCP config manager is enhanced to handle the subinterface naming format. For DHCPv4, the Option 82 Circuit-Id and Remote-Id values in the relayed packet are derived based on the subinterface name associated with the downstream interface. The maximum number of subinterfaces that can be enabled for DHCP relay is limited - refer to the scaling requirements section.
+
+```
+# Sample commands to configure DHCP relay on subinterfaces
+
+# Create L3 subinterface on Ethernet28 with VLAN 200
+config subinterface add Ethernet28.200 200
+
+# Configure IP address on the subinterface
+config interface ip add Ethernet28.200 3.0.0.1/24
+config interface ip add Ethernet28.200 1000::1/64
+
+# Enable DHCP relay on the subinterface
+config interface ip dhcp-relay add Ethernet28.200 2.0.0.2
+config interface ipv6 dhcp-relay add Ethernet28.200 2000::2
+
+# Check the show command to verify the relay is configured
+show ip dhcp-relay brief
++------------------+-----------------------+
+| Interface Name   | DHCP Helper Address   |
++==================+=======================+
+| Ethernet28.200   | 2.0.0.2               |
++------------------+-----------------------+
+
+```
 
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
@@ -1616,7 +1651,9 @@ Up to 4 DHCP relay addresses can be configured on each routing interface in the 
 32. Enable VSS option, and ensure the relay is appending client VRF name in the relayed packet to server.
 33. Verify that adding/modifying/deleting of DHCP server address on the interface does not restart the docker. Check 'uptime' of the docker using 'docker ps' command.
 34. Verify that the packets with agent option 82 are handled as per the configured policy action (discard/append/replace).
+35. Verify DHCPv4/DHCPv6 relay functionality on L3 subinterfaces (Ethernet and PortChannel based).
 
 # 10 Future enhancements
+
 
 

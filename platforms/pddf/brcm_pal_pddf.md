@@ -1542,16 +1542,16 @@ PDDF ledutil version 2.0
 
 # pddf_ledutil setstatusled <device_name> <color>
    device_name: configured in the JSON configuration file such as LOC_LED and DIAG_LED 
-   color: STATUS_LED_COLOR_GREEN, STATUS_LED_COLOR_RED, STATUS_LED_COLOR_OFF
-        STATUS_LED_COLOR_GREEN maps to LED at normal state
-        STATUS_LED_COLOR_RED maps to LED at faulty state
-        STATUS_LED_COLOR_OFF maps to LED at off state
+   color: green, red, off or other colors pre-defined in DeviceBase class
+        green maps to LED at normal state
+        red maps to LED at faulty state
+        off maps to LED at off state
 
-# pddf_ledutil setstatusled LOC_LED STATUS_LED_COLOR_GREEN
+# pddf_ledutil setstatusled LOC_LED green
 True
 
 # pddf_ledutil getstatusled LOC_LED
-Blue
+green
 ```    
 ### 5.4 PDDF_Thermalutil
 ```
