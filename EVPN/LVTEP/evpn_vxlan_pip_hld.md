@@ -121,6 +121,8 @@ Scenarios (2) and (3) are shown in Fig. 1 below. Since EVPN routes (including th
 
 
 
+The above sub-optimal forwarding via ICL, and the need to have BGP VRF-lite sessions between MCLAG peers, are avoided by allowing user to specify Primary VTEP IP addresses that is unique for each of the MCLAG peers. When VxLAN Primary VTEP IP address is configured, the EVPN routes for the orphan hosts and Type-5 prefixes will be advertised with the Primary VTEP IP address as next-hop. And the Type-2 routes for multi-homed hosts will be advertised with Logical VTEP IP address as next-hop common to the MCLAG.
+
 
 
 ## 1.1 Requirements
@@ -227,13 +229,13 @@ If advertise-pip is configured for Type-2 routes on the MCLAG nodes, the MAC/MAC
 
 The existence of two paths would potentially cause duplication of frames as described below:
 
-Assume, SHD-1 sends L2 unicast packet, destined to SHD2, to Leaf-1. In the transient scenario if the MAC address of SHD-2 is aged out on Leaf-2, but not yet cleaned up from Leaf-1, Leaf-1 will forward the packet over VxLAN PIP tunnel to Leaf-2. Since the MAC is not present on Leaf-2, Leaf-2 will flood the packet to its local ports including ICL towards Leaf-2. At this point, if MAC is removed from Leaf-2 as well, the flooded packets arriving over ICL will be flooded within Leaf-1. And the SHD-1 will received copy of the frame that it sent.
+Assume, SHD-1 sends L2 unicast packet, destined to SHD2, to Leaf-1. In the transient scenario if the MAC address of SHD-2 is aged out on Leaf-2, but not yet cleaned up from Leaf-1, Leaf-1 will forward the packet over VxLAN PIP tunnel to Leaf-2. Since the MAC is not present on Leaf-2, Leaf-2 will flood the packet to its local ports including ICL towards Leaf-1. At this point, if MAC is removed from Leaf-1 as well, the flooded packets arriving over ICL will be flooded within Leaf-1. And the SHD-1 will received copy of the frame that it sent.
 
 
 
 On the other hand, ICL cannot be completely removed and replaced by PIP VxLAN tunnel since IMET routes cannot be advertised with PIP as mentioned in previous section.
 
-In purview of above, Type-2 routes arriving with PIP as next-hop are required to be discarded in BGP control plane. This is described in sec. 1.2.3.4.
+In purview of above, Type-2 routes arriving with PIP as next-hop are required to be discarded in BGP control plane. This requires specifying MCLAG peer's  PIP address while enabling advertise-pip for Type-2 routes in EVPN default VRF. Please refer to sec. 2.2.6.4.
 
 In other words, behavior for VLAN switched traffic remains as is even in presence of PIP feature. Figure 3 shows the dotted-red line representing VLAN switched (unicast and BUM) traffic taking ICL to reach the other MCLAG node.
 
@@ -315,7 +317,7 @@ Configuring PIP on L3VNI VxLAN netdevices will cause:
 It is recommended to configure BGP router-id same as the primary-IP configured under VxLAN interface. If BGP router-id is configured to be different from VxLAN primary-ip address, the configured primary IP address will be required to be provided to `advertise-pip` configuration under BGP. 
 
 
-User will have to ensure that Primary IP address configured under VxLAN is same as BGP router-id or IP address provided to advertise-pip configuration in BGP.
+User will have to ensure that Primary IP address configured under VxLAN is same as BGP router-id or the IP address provided to advertise-pip configuration in BGP.
 
 
 
@@ -365,11 +367,41 @@ sonic(config-router-af)# advertise-pip ip 1.1.1.1 mac
 
 
 
-#### 2.2.5.1 L3VNI Router-MAC
+#### 2.2.5.1 L3VNI Router-MAC and System-MAC
 
 When VxLAN primary IP address is configured, it is required to ensure that L3VNI IRB MAC on the MCLAG node is also unique. Otherwise, Type-5 routes between MCLAG nodes would be discarded due to RMAC in the incoming routes being same as local MAC.
 
-In order to achieve above, L3VNI IRB VLAN should **NOT** be member of MCLAG port-channel interfaces or the ICL.
+Also, note that Type-2 routes carry L3VNI and router-mac (along with L2VNI) if VLAN is member of L3VNI VRF. On the remote VTEP, these Type-2 routes may get converted to host routes and get installed in routing table with L3VNI and router-mac values. If the Type-2 route happens to be for MHD, the next-hop will be VIP. In that case, the router-mac must be a common routable MAC address for the MCLAG, instead of the unique system-mac address. This is achieved by automatically creating macvlan netdevice for the L3VNI IRB Vlan SVI interface,  if PIP is configured under VxLAN configuration.  And the common router-mac address is programmed on the macvlan netdevice.
+
+```
+root@sonic:/home/admin# ip -d link show dev irbmv-1000
+200: irbmv-1000@Vlan1000: <BROADCAST,MULTICAST> mtu 9100 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 80:a2:35:81:ca:f0 brd ff:ff:ff:ff:ff:ff promiscuity 0
+    macvlan mode private addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535
+```
+
+ICCPd has been enhanced to discover these IRB macvlan netdevices and program the common router-mac on them. The common router-mac will be MCLAG gateway MAC address, if configured. Otherwise, it will be MCLAG active node's system-MAC. It is also ensured that the router-mac is installed in the hw for routing.
+
+The above approach aligns with the existing FRR advertise-pip design, where the system-mac is obtained from SVI netdevice and router-mac is obtained from the macvlan netdevice attached to the SVI.
+
+
+
+User is required to configure MCLAG separate-ip for L3VNI IRB VLANs in KLISH:
+
+```
+sonic(config)# interface Vlan 1000
+sonic(conf-if-Vlan1000)# mclag-separate-ip
+sonic(conf-if-Vlan1000)# 
+```
+
+The corresponding CLICK config command is:
+
+```
+admin@sonic:~$ sudo config mclag unique-ip add Vlan1000
+admin@sonic:~$
+```
+
+
 
 
 
@@ -662,6 +694,7 @@ VTEP Primary IP  :  2.2.2.2
 EVPN NVO Name    :  nvo1
 EVPN VTEP        :  vtep1
 Source Interface :  Loopback10
+Primary IP interface : Loopback20
 sonic#
 ```
 
@@ -677,6 +710,7 @@ VTEP Information:
         Primary IP  : 2.2.2.2
         NVO Name  : nvo1,  VTEP : vtep1
         Source interface  : Loopback10
+        Primary IP interface : Loopback20
 admin@sonic:~$
 ```
 
