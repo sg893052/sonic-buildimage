@@ -118,7 +118,7 @@
 | **Test Name**  | **Verify that a non-existing vlan can be added as access vlan, and takes effect when it is created, check the traffic forwarding.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. In both the DUTs configure a non existing vlan (21) as "switchport access vlan 21". <BR />2. Check that vlan is inactive. <BR />3. Create that vlan 21 now on both the DUTs. <BR />4. Check the vlan 21 participation. <BR />5. Send untagged traffic from TG port, check that it is forwarded to other DUT and the corresponding TG port as per vlan 21 participation <BR />.6. Remove the "switchport access vlan 21" configuration. |
+| **Steps**      | 1. In both the DUTs configure a non existing vlan (21) as "switchport access vlan 21". <BR />2. Check that vlan is inactive. <BR />3. Create that vlan 21 now on both the DUTs. <BR />4. Check the vlan 21 participation. <BR />5. Send untagged traffic from TG port, check that it is forwarded to other DUT and the corresponding TG port as per vlan 21 participation <BR />.6. Configure "switchport trunk allowed vlan add 21" on the ports. Check that still the port is in vlan 21 untagged participation only. <BR />7. Configure "switchport trunck allowed vlan all" on the ports. Check the running configuration is properly updated and ports are still in vlan 21 untagged participation. <BR />8. Remove the "switchport access vlan 21" configuration. |
 
 #### 3.2.5 Verify that "switchport access vlan <vid1>" takes effect/precedence over "switchport trucnk allowed vlan all" and "switchport trunk allowed except <vid1>".
 
