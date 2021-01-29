@@ -29,7 +29,7 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|:-----------------------------------|
-| 0.5 | 12/21/2020 | Dante (Kuo-Jung) Su | 1. Drop the dependency to the SONiC community pull request for the enhanced media support<br>2. Migrate the database from APPL_DB to CONFIG_DB<br>3. Added PRBS support<br>4. Updated the command syntax
+| 0.5 | 1/29/2021 | Dante (Kuo-Jung) Su | 1. Drop the dependency to the SONiC community pull request for the enhanced media support<br>2. Migrate the database from APPL_DB to CONFIG_DB<br>3. Added PRBS support<br>4. Updated the command syntax
 | 0.4 | 08/05/2020 | William Schwartz | 1. Updated CLI command structure<br>2. Removed references to modifying admin state of the port<br> 3. Updated PORT_TABLE to reflect new change when port is places in diagnostic mode |
 | 0.3 | 07/23/2020 | William Schwartz | 1. Updated yang models<br> 2. Updated TRANSCEIVER_DOM_SENSOR table entries to reflect proper values <br> 3. Removed non-supported CMIS CLI commands<br> 4. Resolved multiple review comments. |
 | 0.2 | 06/25/2020 | William Schwartz | 1. Removed pattern generation / checker references.<br> 2. Corrected link to CMIS 4.0 specification<br> 3. Updated loopback test CLI mode to remove the individual lane enablement (that will be a future advanced feature enhancement)<br>4. Added loopback test Yang Model |
@@ -62,8 +62,8 @@ This document describes the high level design of CMIS 4.0 diagnostic support in 
 | CDB          | Common Data Block                                            |
 | BER          | Bit Error Rate                                               |
 | SNR          | Signal to Noise Ratio                                        |
-| system -side | Refers to the internal connection between the switching silicon (MAC) and the transceiver |
-| line-side    | Refers to the external connection between the transceiver and the remote connected device |
+| host-side    | Refers to the internal connection between the switching silicon (MAC) and the transceiver |
+| media-side   | Refers to the external connection between the transceiver and the remote connected device |
 | FEC          | Forward Error Correction                                     |
 | EPL          | Extended Payload Length                                      |
 | COR          | Clear on Read                                                |
@@ -109,7 +109,7 @@ The functional requirements for adding CMIS 4.0 diagnostic support in SONiC are:
 
 ## 2.1 Target Deployment Use Cases
 
-CMIS 4.0 diagnostic support would be idea for initial switch deployment, diagnosing link/connection failures within the network topology, and ensuring link quality.
+CMIS 4.0 diagnostic support would be ideal for initial switch deployment, diagnosing link/connection failures within the network topology, and ensuring link quality.
 
 
 
@@ -123,60 +123,90 @@ CMIS 4.0 diagnostic support can be divided into the following components:
 The transceiver daemon (**xcvrd**) is part of the SONIC platform monitor(**pmon**), and it is responsible for posting/deleting the transceiver information upon transceiver insertion/removal, and it will be furtherly enhanced for CMIS 4.0 diagnostic support with the per port parameters in **CONFIG_DB** and **STATE_DB**.
 
 ### 3.1.2 SONiC Management Framework
-Management framework is a SONiC application which is responsible for providing various common North Bound Interfaces (NBIs) for the purposes of managing configuration and status on SONiC switches. The application manages coordination of NBI’s to provide a coherent way to validate, apply and show configuration. And the CMIS 4.0 diagnostic support will only be availble in this user interface.
+Management framework is a SONiC application which is responsible for providing various common North Bound Interfaces (NBIs) for the purposes of managing configuration and status on SONiC switches. The application manages coordination of NBI’s to provide a coherent way to validate, apply and show configuration. And the CMIS 4.0 diagnostic support will only be available in this user interface.
 
 ## 3.2 Database
 
 ### 3.2.1 CONFIG_DB
 
-The **TRANSCEIVER_DIAG** table will be newly introduced into CONFIG_DB for the diagnostic loopback configurations.
+The **TRANSCEIVER_DIAG** table will be newly introduced into CONFIG_DB for the diagnostic configurations.
 ```
-        "TRANSCEIVER_DIAG|Ethernet0": {
-            "type": "hash",
-            "value": {
-                "lb_host_input_enabled": "True" | "False",
-                "lb_host_output_enabled": "True" | "False",
-                "lb_media_input_enabled": "True" | "False",
-                "lb_media_output_enabled": "True" | "False",
-                "prbs_generator_enabled": "True" | "False",
-                "prbs_generator_mode": "Host" | "Media",
-                "prbs_generator_pattern": [0, 15],
-                "prbs_checker_enabled": "True" | "False",
-                "prbs_checker_mode": "Host" | "Media",
-                "prbs_checker_pattern": [0, 15],
-            }
-        },
+  "TRANSCEIVER_DIAG|Ethernet0": {
+    "type": "hash",
+    "value": {
+      "lb_host_input_enabled": "false",
+      "lb_host_output_enabled": "false",
+      "lb_media_input_enabled": "false",
+      "lb_media_output_enabled": "false",
+      "prbs_chk_host_enabled": "false",
+      "prbs_chk_media_enabled": "false",
+      "prbs_gen_host_enabled": "false",
+      "prbs_gen_media_enabled": "false"
+    }
+  }
 ```
 
 
 ### 3.2.2 STATE_DB
 
-The **TRANSCEIVER_DIAG_INFO** table will have the following additional entries if the transceiver inserted is CMIS 4.0 compliant:
+The **TRANSCEIVER_INFO** table will have the following additional entries if the transceiver inserted is CMIS 4.0 compliant:
+
 ```
-    "TRANSCEIVER_DIAG_INFO|Ethernet0": {
-        "type": "hash",
-        "value": {
-            "cap_loopback_simultaneous_host_media": "True" | "False",
-            "cap_loopback_per_lane_media": "True" | "False",
-            "cap_loopback_per_lane_host": "True" | "False",
-            "cap_loopback_host_input": "True" | "False",
-            "cap_loopback_host_output": "True" | "False",
-            "cap_loopback_media_input": "True" | "False",
-            "cap_loopback_media_output": "True" | "False",
-            "cap_prbs_auto_restart": "True" | "False",
-            "cap_prbs_gating": "True" | "False",
-            "cap_prbs_gating_per_lane": "True" | "False",
-            "cap_prbs_latched_error_info": "True" | "False",
-            "cap_prbs_realtime_ber": "True" | "False",
-            "cap_prbs_fec_media": "True" | "False",
-            "cap_prbs_fec_host": "True" | "False",
-            "cap_prbs_snr_media": "True" | "False",
-            "cap_prbs_snr_host": "True" | "False",
-            "cap_prbs_input_peak_media": "True" | "False",
-            "cap_prbs_input_peak_host": "True" | "False",
-            "cap_prbs_ber": "True" | "False",
-            "cap_prbs_ber_register": "True" | "False",
-            }
+  "TRANSCEIVER_INFO|Ethernet0": {
+    "type": "hash",
+    "value": {
+      "diag_caps_loopback": "['Host Side Input Loopback', 'Media Side Input Loopback']",
+      "diag_caps_pattern": "['Gating > 20 ms', 'Latched Error Information', 'Real-time BER Error Count', 'Auto Restart']",
+      "diag_caps_pattern_chk_host": "['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']",
+      "diag_caps_pattern_chk_media": "['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']",
+      "diag_caps_pattern_gen_host": "['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']",
+      "diag_caps_pattern_gen_media": "['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']",
+      "diag_caps_report": "['Media side SNR measurement', 'Host side SNR measurement', 'BER Error Count/Total Bits', 'BER register']",
+    }
+  }
+```
+
+The **TRANSCEIVER_DIAG** table will be newly introduced if the transceiver inserted is CMIS 4.0 compliant:
+```
+  "TRANSCEIVER_DIAG|Ethernet160": {
+    "type": "hash", 
+    "value": {
+      "diag_host_ber1": "5.0E-1", 
+      "diag_host_ber2": "5.0E-1", 
+      "diag_host_ber3": "5.0E-1", 
+      "diag_host_ber4": "5.0E-1", 
+      "diag_host_ber5": "5.0E-1", 
+      "diag_host_ber6": "5.0E-1", 
+      "diag_host_ber7": "5.0E-1", 
+      "diag_host_ber8": "5.0E-1", 
+      "diag_host_snr1": "0", 
+      "diag_host_snr2": "0", 
+      "diag_host_snr3": "0", 
+      "diag_host_snr4": "0", 
+      "diag_host_snr5": "0", 
+      "diag_host_snr6": "0", 
+      "diag_host_snr7": "0", 
+      "diag_host_snr8": "0", 
+      "diag_media_ber1": "5.0E-1", 
+      "diag_media_ber2": "5.0E-1", 
+      "diag_media_ber3": "5.0E-1", 
+      "diag_media_ber4": "5.0E-1", 
+      "diag_media_ber5": "0", 
+      "diag_media_ber6": "0", 
+      "diag_media_ber7": "0", 
+      "diag_media_ber8": "0", 
+      "diag_media_snr1": "79.5", 
+      "diag_media_snr2": "79.5", 
+      "diag_media_snr3": "79.5", 
+      "diag_media_snr4": "79.5", 
+      "diag_media_snr5": "0", 
+      "diag_media_snr6": "0", 
+      "diag_media_snr7": "0", 
+      "diag_media_snr8": "0",
+      "lb_host_input_enabled": "true",
+      "lb_media_input_enabled": "true"
+    }
+  },
 ```
 
 
@@ -190,36 +220,77 @@ The YANG tree will look as below:
 ```
 module: openconfig-platform
   +--rw components
-     +--rw oc-transceiver:transceiver
-        |  +--rw oc-transceiver:config
-        |  |  +--rw oc-pf-ext:lb-media-output-enabled?            boolean
-        |  |  +--rw oc-pf-ext:lb-media-input-enabled?             boolean
-        |  |  +--rw oc-pf-ext:lb-host-output-enabled?             boolean
-        |  |  +--rw oc-pf-ext:lb-host-input-enabled?              boolean
-        |  |  +--rw oc-pf-ext:prbs-generator-enabled?             boolean
-        |  |  +--rw oc-pf-ext:prbs-generator-mode?                string
-        |  |  +--rw oc-pf-ext:prbs-generator-pattern?             int
-        |  |  +--rw oc-pf-ext:prbs-checker-enabled?               boolean
-        |  |  +--rw oc-pf-ext:prbs-checker-mode?                  string
-        |  |  +--rw oc-pf-ext:prbs-checker-pattern?               int
-        |  +--ro oc-transceiver:state
-        |  |  +--ro oc-pf-ext:cap-lb-media-output?                boolean
-        |  |  +--ro oc-pf-ext:cap-lb-media-input?                 boolean
-        |  |  +--ro oc-pf-ext:cap-lb-host-output?                 boolean
-        |  |  +--ro oc-pf-ext:cap-lb-host-input?                  boolean
-        |  |  +--ro oc-pf-ext:cap-lb-per-lane-host?               boolean
-        |  |  +--ro oc-pf-ext:cap-lb-per-lane-media?              boolean
-        |  |  +--ro oc-pf-ext:cap-lb-simul-host-media?            boolean
-        |  |  +--ro oc-pf-ext:lb-media-output-enabled?            boolean
-        |  |  +--ro oc-pf-ext:lb-media-input-enabled?             boolean
-        |  |  +--ro oc-pf-ext:lb-host-output-enabled?             boolean
-        |  |  +--ro oc-pf-ext:lb-host-input-enabled?              boolean
-        |  |  +--ro oc-pf-ext:prbs-generator-enabled?             boolean
-        |  |  +--ro oc-pf-ext:prbs-generator-mode?                string
-        |  |  +--ro oc-pf-ext:prbs-generator-pattern?             int
-        |  |  +--ro oc-pf-ext:prbs-checker-enabled?               boolean
-        |  |  +--ro oc-pf-ext:prbs-checker-mode?                  string
-        |  |  +--ro oc-pf-ext:prbs-checker-pattern?               int
+     +--rw component* [name]
+        +--rw oc-transceiver:transceiver
+        |  +--rw oc-transceiver-ext:diagnostics
+        |     +--rw oc-transceiver-ext:capabilities
+        |     |  +--ro oc-transceiver-ext:state
+        |     |     +--ro oc-transceiver-ext:loopback?            string
+        |     |     +--ro oc-transceiver-ext:pattern?             string
+        |     |     +--ro oc-transceiver-ext:report?              string
+        |     |     +--ro oc-transceiver-ext:pattern-gen-host?    string
+        |     |     +--ro oc-transceiver-ext:pattern-gen-media?   string
+        |     |     +--ro oc-transceiver-ext:pattern-chk-host?    string
+        |     |     +--ro oc-transceiver-ext:pattern-chk-media?   string
+        |     +--rw oc-transceiver-ext:loopbacks
+        |     |  +--rw oc-transceiver-ext:config
+        |     |  |  +--rw oc-transceiver-ext:lb-host-input-enabled?     boolean
+        |     |  |  +--rw oc-transceiver-ext:lb-host-output-enabled?    boolean
+        |     |  |  +--rw oc-transceiver-ext:lb-media-input-enabled?    boolean
+        |     |  |  +--rw oc-transceiver-ext:lb-media-output-enabled?   boolean
+        |     |  +--ro oc-transceiver-ext:state
+        |     |     +--ro oc-transceiver-ext:lb-host-input-enabled?     boolean
+        |     |     +--ro oc-transceiver-ext:lb-host-output-enabled?    boolean
+        |     |     +--ro oc-transceiver-ext:lb-media-input-enabled?    boolean
+        |     |     +--ro oc-transceiver-ext:lb-media-output-enabled?   boolean
+        |     +--rw oc-transceiver-ext:patterns
+        |     |  +--rw oc-transceiver-ext:config
+        |     |  |  +--rw oc-transceiver-ext:pattern-gen-host-enabled?    boolean
+        |     |  |  +--rw oc-transceiver-ext:pattern-gen-media-enabled?   boolean
+        |     |  |  +--rw oc-transceiver-ext:pattern-chk-host-enabled?    boolean
+        |     |  |  +--rw oc-transceiver-ext:pattern-chk-media-enabled?   boolean
+        |     |  +--ro oc-transceiver-ext:state
+        |     |     +--ro oc-transceiver-ext:pattern-gen-host-enabled?    boolean
+        |     |     +--ro oc-transceiver-ext:pattern-gen-media-enabled?   boolean
+        |     |     +--ro oc-transceiver-ext:pattern-chk-host-enabled?    boolean
+        |     |     +--ro oc-transceiver-ext:pattern-chk-media-enabled?   boolean
+        |     +--rw oc-transceiver-ext:reports
+        |        +--rw oc-transceiver-ext:host
+        |        |  +--ro oc-transceiver-ext:state
+        |        |     +--ro oc-transceiver-ext:ber1?   string
+        |        |     +--ro oc-transceiver-ext:ber2?   string
+        |        |     +--ro oc-transceiver-ext:ber3?   string
+        |        |     +--ro oc-transceiver-ext:ber4?   string
+        |        |     +--ro oc-transceiver-ext:ber5?   string
+        |        |     +--ro oc-transceiver-ext:ber6?   string
+        |        |     +--ro oc-transceiver-ext:ber7?   string
+        |        |     +--ro oc-transceiver-ext:ber8?   string
+        |        |     +--ro oc-transceiver-ext:snr1?   string
+        |        |     +--ro oc-transceiver-ext:snr2?   string
+        |        |     +--ro oc-transceiver-ext:snr3?   string
+        |        |     +--ro oc-transceiver-ext:snr4?   string
+        |        |     +--ro oc-transceiver-ext:snr5?   string
+        |        |     +--ro oc-transceiver-ext:snr6?   string
+        |        |     +--ro oc-transceiver-ext:snr7?   string
+        |        |     +--ro oc-transceiver-ext:snr8?   string
+        |        +--rw oc-transceiver-ext:media
+        |           +--ro oc-transceiver-ext:state
+        |              +--ro oc-transceiver-ext:ber1?   string
+        |              +--ro oc-transceiver-ext:ber2?   string
+        |              +--ro oc-transceiver-ext:ber3?   string
+        |              +--ro oc-transceiver-ext:ber4?   string
+        |              +--ro oc-transceiver-ext:ber5?   string
+        |              +--ro oc-transceiver-ext:ber6?   string
+        |              +--ro oc-transceiver-ext:ber7?   string
+        |              +--ro oc-transceiver-ext:ber8?   string
+        |              +--ro oc-transceiver-ext:snr1?   string
+        |              +--ro oc-transceiver-ext:snr2?   string
+        |              +--ro oc-transceiver-ext:snr3?   string
+        |              +--ro oc-transceiver-ext:snr4?   string
+        |              +--ro oc-transceiver-ext:snr5?   string
+        |              +--ro oc-transceiver-ext:snr6?   string
+        |              +--ro oc-transceiver-ext:snr7?   string
+        |              +--ro oc-transceiver-ext:snr8?   string
 ```
 
 ### 3.5.3 Configuration Commands
@@ -251,7 +322,7 @@ sonic-cli(config)# no interface transceiver diagnostics loopback media-side-inpu
 #### Configure Pattern Generation and Checking Controls
 
 ```
-[no] interface transceiver diagnostics prbs <generator|checker> <host|media> pattern <0|1..15> Ethernet <1|2..N>
+[no] interface transceiver diagnostics pattern {checker-host|checker-media|generator-host|generator-media} Ethernet <1|2..N>
 ```
 
 This command enables the pattern generation and checking mode.
@@ -259,8 +330,8 @@ This command enables the pattern generation and checking mode.
 Use no form of the command to disable:
 
 ```
-sonic-cli(config)# interface transceiver diagnostics prbs generator media pattern 0 Ethernet 112
-sonic-cli(config)# no interface transceiver diagnostics prbs generator Ethernet 112
+sonic-cli(config)# interface transceiver diagnostics pattern checker-host Ethernet 0
+sonic-cli(config)# no interface transceiver diagnostics pattern checker-host Ethernet 0
 ```
 
 ### 3.5.4 CLI Show Commands
@@ -276,33 +347,43 @@ This command shows diagnostics capability of the transceiver. If no specific tra
 Example output:
 
 ```
-    sonic# show interface transceiver diagnostics capability Ethernet 112
+sonic# show interface transceiver diagnostics capability Ethernet 0 | no-more
 
-    Ethernet112
-    ----------------------------------------------------------
-    Loopback Capabilities:
-        Media Side Input Loopback                 Supported
-        Media Side Output Loopback                Not Supported
-        Host Side Input Loopback                  Supported
-        Host Side Output Loopback                 Not Supported
-        Per-lane Host Side Loopback               Not Supported
-        Per-lane Media Side Loopback              Not Supported
-        Simultaneous Host/Media Side Loopback     Not Supported
+--------------------------------------------------------
+Ethernet0
+--------------------------------------------------------
+Loopback Capabilities
+    Host Side Input Loopback                    :  Supported
+    Host Side Output Loopback                   :  Not Supported
+    Media Side Input Loopback                   :  Supported
+    Media Side Output Loopback                  :  Not Supported
+    Per-lane Host Side Loopback                 :  Not Supported
+    Per-lane Media Side Loopback                :  Not Supported
+    Simultaneous Host and Media Side Loopback   :  Not Supported
 
-    Pattern Generation and Checking Capabilities:
-        Auto Restart                              Supported
-        Gating                                    Supported
-        Per-Lane Gating                           Not Supported
-        Latched Error Information                 Supported
-        Realtime BER Polling                      Not Supported
-        FEC: Media Side                           Not Supported
-        FEC: Host Side                            Not Supported
-        SNR: Media Side                           Supported
-        SNR: Host Side                            Supported
-        Input Peak: Media Side                    Not Supported
-        Input Peak: Host Side                     Not Supported
-        BER: Error Count/Total Bits               Supported
-        BER: Register                             Not Supported
+General Pattern Capabilities
+    Auto Restart                                :  Supported
+    Gating                                      :  Supported
+    Latched Error Information                   :  Supported
+    Per-lane Gating Timer                       :  Not Supported
+    Real-time BER Error Count                   :  Supported
+
+Diagnostic Report Capabilities
+    BER Error Count/Total Bits                  :  Supported
+    BER register                                :  Supported
+    Host side FEC                               :  Not Supported
+    Host side Input Peak                        :  Not Supported
+    Host side SNR                               :  Supported
+    Media side FEC                              :  Not Supported
+    Media side Input Peak                       :  Not Supported
+    Media side SNR                              :  Supported
+
+Pattern Generation and Checking Capabilities
+    Host Side Pattern Checker                   :  ['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']
+    Host Side Pattern Generator                 :  ['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']
+    Media Side Pattern Checker                  :  ['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']
+    Media Side Pattern Generator                :  ['PRBS-31Q', 'PRBS-23Q', 'PRBS-15Q', 'PRBS-13Q', 'PRBS-9Q', 'PRBS-7Q', 'SSPRQ']
+sonic#
 ```
 
 #### Show Diagnostics Control Status
@@ -316,41 +397,68 @@ This command shows the loopback diagnostic controls of the transceiver. If no sp
 Example output:
 
 ```
-sonic# show interface transceiver diagnostics status Ethernet 112
+sonic# show interface transceiver diagnostics status Ethernet 0 | no-more
 
-Ethernet112
-Control Status                                  
---------------------------------------------------------
-Loopback:
-    Host Side Input                         Disabled
-    Host Side Output                        Disabled
-    Media Side Input                        Disabled
-    Media Side Output                       Disabled
+Ethernet0
+---------------------------------------------------------------------
+Attribute                           :  Value/State
+---------------------------------------------------------------------
+Loopback
+    Host Side Input                 :  Enable  ( Enable in Config )
+    Host Side Output                :  Disable ( Enable in Config )
+    Media Side Input                :  Disable ( Disable in Config )
+    Media Side Output               :  Disable ( Disable in Config )
 
-Pattern Generation and Checking:
-    PRBS Generator                          Disabled
-    PRBS Generator Mode                     Media(Tx)
-    PRBS Generator Pattern                  0(PRBS-31Q)
-    PRBS Checker                            Disabled
-    PRBS Checker Mode                       Host(Rx)
-    PRBS Checker Pattern                    0(PRBS-31Q)
+Pattern Generation and Checking
+    Host Side Pattern Checker       :  Disable ( Disable in Config )
+    Host Side Pattern Generator     :  Disable ( Disable in Config )
+    Media Side Pattern Checker      :  Disable ( Disable in Config )
+    Media Side Pattern Generator    :  Disable ( Disable in Config )
 
-Error Information:
-    BER - Host Side                         0
-    BER - Media Side                        0
-    Input Peak - Host Side                  0
-    Input Peak - Media Side                 0
-    SNR - Host Side                         0
-    SNR - Media Side                        0
+Error Information
+    Host side BER1                  : 5.0E-1
+    Host side BER2                  : 5.0E-1
+    Host side BER3                  : 5.0E-1
+    Host side BER4                  : 5.0E-1
+    Host side BER5                  : 5.0E-1
+    Host side BER6                  : 5.0E-1
+    Host side BER7                  : 5.0E-1
+    Host side BER8                  : 5.0E-1
+    Media side BER1                 : 5.0E-1
+    Media side BER2                 : 5.0E-1
+    Media side BER3                 : 5.0E-1
+    Media side BER4                 : 5.0E-1
+    Media side BER5                 : 0
+    Media side BER6                 : 0
+    Media side BER7                 : 0
+    Media side BER8                 : 0
+
+    Host side SNR1                  : 0
+    Host side SNR2                  : 0
+    Host side SNR3                  : 0
+    Host side SNR4                  : 0
+    Host side SNR5                  : 0
+    Host side SNR6                  : 0
+    Host side SNR7                  : 0
+    Host side SNR8                  : 0
+    Media side SNR1                 : 10.6
+    Media side SNR2                 : 10.6
+    Media side SNR3                 : 79.5
+    Media side SNR4                 : 79.5
+    Media side SNR5                 : 0
+    Media side SNR6                 : 0
+    Media side SNR7                 : 0
+    Media side SNR8                 : 0
+sonic#
 ```
 
   ### 3.5.4 Debug Commands
 
-  No debug commands are planned for at this time.
+No debug commands are planned for at this time.
 
   ### 3.5.5 REST API Support
 
-  This is supported by default with the new management framework.
+This is supported by default with the new management framework.
 
   # 4 Flow Diagrams
 
@@ -372,10 +480,16 @@ The CMIS 4.0 diagnostic feature is fully scalable on a SONiC platform and is sup
 # 8 Unit Test
 
 The following is the list of unit test cases:
-* Verify CMIS diagnostics CLI config commands.
-* Verify CMIS diagnostics CLI show commands.
-* Verify that CMIS diagnostics is disabled by default after installation.
-* Verify CMIS 4.0 transceiver which supports loopback test works properly when configured in loopback mode.
+* test_cmis_show_diag_capability: Validate the capability output
+* test_cmis_show_diag_status: Validate the status output
+* test_cmis_config_diag_loopback_host_input: Verify CMIS diagnostics host-side-input-loopback configuration
+* test_cmis_config_diag_loopback_host_output: Verify CMIS diagnostics host-side-output-loopback configuration
+* test_cmis_config_diag_loopback_media_input: Verify CMIS diagnostics media-side-input-loopback configuration
+* test_cmis_config_diag_loopback_media_output: Verify CMIS diagnostics media-side-output-loopback configuration
+* test_cmis_config_diag_pattern_checker_host: Verify CMIS diagnostics host-side-pattern-checker configuration
+* test_cmis_config_diag_pattern_checker_media: Verify CMIS diagnostics media-side-pattern-checker configuration
+* test_cmis_config_diag_pattern_generator_host: Verify CMIS diagnostics host-side-pattern-generator configuration
+* test_cmis_config_diag_pattern_generator_media: Verify CMIS diagnostics media-side-pattern-generator configuration
 
 # 9 Internal Design Information
 There are no internal design changes relative to the CMIS 4.0 diagnostic support in SONiC.  Design architecture is in accordance with the SONiC design framework.
