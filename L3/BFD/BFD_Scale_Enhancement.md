@@ -180,7 +180,7 @@ A timer wheel is created with 10 banks. Each bank is serviced by a 10 msec timer
 		 1. If Tx interval is 75 msec, the session node will be added in the 8th bank in the timerwheel.
 		 2. If the Tx interval is 45 msec the session will be added in the 5th  and 9th bank in the timer wheel.
 
- - Once all the node in the Tx list are added to the timerwheel, for all
+ - Once all the node in the Tx list are added  to the timerwheel, for all
    the entries in the 1st bank Tx packets will be sent out.
 
 **Timer for nth bank fires:**
