@@ -172,9 +172,13 @@ A timer wheel is created with 10 banks. Each bank is serviced by a 10 msec timer
 
 ![Tx List](images/TX_List.png)
 
+__Figure 1: BFD Tx List
+
 In the above diagram 100/25 msec indicates, configured Tx interval is 100 msec and at the expiry of timer for 1st Bank, 100 msec has already elapsed and the packet should be transmitted in next 25 msec.
 
 ![Timer Wheel](images/Timer_Wheel_Snapshot.png)
+
+__Figure 2: BFD Timer Wheel
 
 **Timer for 1st bank fires:**
 
