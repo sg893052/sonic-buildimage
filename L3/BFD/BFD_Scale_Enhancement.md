@@ -119,7 +119,7 @@ NA
 NA
 
 7 Scaling  
-Support up to 128 BFD sessions at an interval of 100 milliseconds. Considering jitter it is 1500 Rx and 1500 Tx pps.
+Support up to 128 BFD sessions at an interval of 100 milliseconds. 1500 Rx and 1500 Tx pps(considering jitter).
 
 8 Warm Boot/ISSU  
 NA 
@@ -172,13 +172,13 @@ A timer wheel is created with 10 banks. Each bank is serviced by a 10 msec timer
 
 ![Tx List](images/TX_List.png)
 
-__Figure 1: BFD Tx List
+    Figure 1: BFD Tx List
 
 In the above diagram 100/25 msec indicates, configured Tx interval is 100 msec and at the expiry of timer for 1st Bank, 100 msec has already elapsed and the packet should be transmitted in next 25 msec.
 
 ![Timer Wheel](images/Timer_Wheel_Snapshot.png)
 
-__Figure 2: BFD Timer Wheel
+    Figure 2: BFD Timer Wheel
 
 **Timer for 1st bank fires:**
 
