@@ -683,10 +683,10 @@ If (outer vlan == incoming port’s VLAN) and inner TPID is 0x8100,  following t
 
 
 ## 3.26 PIM:
-PIM is not supported on sub-interfaces in this release.
+PIM is supported on sub-interfaces.
 
 ## 3.27 IGMP:
-IGMP is not supported on sub-interfaces in this release.
+IGMP is supported on sub-interfaces.
 
 ## 3.28 QoS:
 QoS settings are inherited from parent interface.
@@ -704,10 +704,13 @@ NAT feature will not be supported on sub-interfaces.
 - Sub-interface as mirror destination port will not be supported.
 
 ## 3.32 NTP:
+NTP over subinterfaces is supported.
 
 ## 3.33 DNS:
+DNS over subinterfaces is supported.
 
 ## 3.34 TACACS:
+TACACS over subinterfaces is supported.
 
 # 4 Event flow diagrams
 ## 4.1 Sub port interface creation
