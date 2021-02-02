@@ -119,7 +119,7 @@ NA
 NA
 
 7 Scaling  
-Support up to 128 BFD sessions at an interval of 100 milliseconds (total 12000 pps)  
+Support up to 128 BFD sessions at an interval of 100 milliseconds. Considering jitter it is 1500 Rx and 1500 Tx pps.
 
 8 Warm Boot/ISSU  
 NA 
@@ -170,15 +170,19 @@ Once BFD session state is UP, the session along with the pre-formed BFD Tx packe
 **Timer wheel operation:**
 A timer wheel is created with 10 banks. Each bank is serviced by a 10 msec timer and all the banks in the timer wheel is serviced in 100 msec.
 
-![Timer Wheel](images/Timer_Wheel.png)
+![Tx List](images/TX_List.png)
+
+In the above diagram 100/25 msec indicates, configured Tx interval is 100 msec and at the expiry of timer for 1st Bank, 100 msec has already elapsed and the packet should be transmitted in next 25 msec.
+
+![Timer Wheel](images/Timer_Wheel_Snapshot.png)
 
 **Timer for 1st bank fires:**
 
  - Loop through all the nodes in the Tx list, identify and add the node to a timer wheel bank as per the Tx interval.
 
-		For eg: 
-		 1. If Tx interval is 75 msec, the session node will be added in the 8th bank in the timerwheel.
-		 2. If the Tx interval is 45 msec the session will be added in the 5th  and 9th bank in the timer wheel.
+		For eg(Refer above diagrams):
+		 1. For session node N1, Tx interval is 200 msec and the packet should be sent out in next 5 msec so the node is added to 1st Bank in the timer wheel.
+		 2. For session node N4 the Tx interval is 45 msec and the packet should be sent out in next 45msec so the node is added in the 5th and 9th bank in the timer wheel.
 
  - Once all the node in the Tx list are added  to the timerwheel, for all
    the entries in the 1st bank Tx packets will be sent out.
@@ -206,7 +210,7 @@ Even after increasing the socket receive buffer size BFD packets were still drop
 
 In the current design when socket read callback is triggered BFD reads only 1 packet from the socket. To receive 128 BFD packets BFD receive callback should be scheduled 128 times.
 
-In the new design multiple(64) BFD packets are read in one socket read callback.
+In the new design up to 64 BFD packets are read in one socket read(non blocking call) callback.
 - This reduces the number of socket system calls significantly.
 - It also avoids frequent context switch which occurs during socket system call.
 - Increases throughput of BFD packet form socket to BFD process.
@@ -233,6 +237,7 @@ To ensure bfdd threads are scheduled frequently and deterministically regardless
 
 The priority value of 40 is arrived after experimenting with different priority values and observing the stability of 128 BFD session in a scaled setup.
 
+This method should be handled with caution to ensure that the max processing associated with the SCHED_RR threads must be clearly understood to ensure that the rest of the system is not impacted. So, for instance, if the feature is ever scaled up (more sessions, shorter intervals) then this needs to be revisited.
 ### 3.1.3 Service and Docker Management
 
 NA
