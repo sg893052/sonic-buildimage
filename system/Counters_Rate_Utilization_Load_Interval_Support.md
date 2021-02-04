@@ -25,7 +25,8 @@
     * [3.1 Overview](#31-overview)
       * [3.1.1 Orchagent](#311-orchagent)
       * [3.1.2 SYNCD](#312-syncd)
-      * [3.1.3 Mgmt-framework](#313-mgmt-framework)
+      * [3.1.3 SAI](#313-sai)
+      * [3.1.4 Mgmt-framework](#314-mgmt-framework)
     * [3.2 DB Changes](#32-db-changes)
       * [3.2.1 CONFIG DB](#321-config-db)
       * [3.2.2 APP DB](#322-app-db)
@@ -130,7 +131,7 @@ Queue counters are fetched every 10 seconds, so the load interval can only be mu
 
 SYNCD flex counter thread fetches the interface and queue counters from SAI and updates the COUNTERS DB. 
 When load interval is set, then thread caches the counters and after every load interval,  will generate the  interface utilization counters and update the new fields to same COUNTERS DB.
-
+Micro-second timestamp after generating rate counters is cached and used for next rate counter calculations.
 
 ```
 // stats has current counters read from SAI
@@ -150,6 +151,8 @@ if (load_interval < poll_interval)
 // This logic is called every load interval.
 // counter overflow will be handled.
 
+// In 3.1.0 release, load_divisor is used for rate calculations
+
 # Interface IN counters
 current = stats[SAI_PORT_STAT_IF_IN_UCAST_PKTS] + stats[SAI_PORT_STAT_IF_IN_NON_UCAST_PKTS];
 prev = cache[SAI_PORT_STAT_IF_IN_PKTS]
@@ -166,6 +169,10 @@ BPS = ((stats[SAI_PORT_STAT_IF_IN_OCTETS] - cache[SAI_PORT_STAT_IF_IN_OCTETS]) /
 bps = BPS << 3
 utilization = (bps/port-speed)
 
+// In 3.1.1 releases, micro second timestamp is cached and used for rate calculations.
+curr_time = get_millisecond_time();
+load_divisor = curr_time - prev_time;
+
 Queue Counters
 
 current = stats[SAI_QUEUE_STAT_PACKETS]
@@ -177,6 +184,27 @@ BPS = (current - prev) / load_divisor)
 bps = BPS << 3
 
 ```
+
+### 3.1.3 SAI
+
+```
+3.1.0 Release:
+  All counters are read from cache and there will be some deviation with actual traffic on ports.
+  So the rate counters will show some deviation around 2-3% compared to actual traffic rate.
+
+3.1.1 Release:
+  Following counters are modified to retreive real time counters to get acurate traffic rate.
+    SAI_PORT_STAT_IF_IN_OCTETS,
+    SAI_PORT_STAT_IF_IN_UCAST_PKTS,
+    SAI_PORT_STAT_IF_IN_NON_UCAST_PKTS,
+    SAI_PORT_STAT_IF_OUT_OCTETS,
+    SAI_PORT_STAT_IF_OUT_UCAST_PKTS,
+    SAI_PORT_STAT_IF_OUT_NON_UCAST_PKTS,
+
+```
+
+To be updated by DELL
+The transformer code fetches the new counters and shares it to the client.
 
 ### 3.1.3 Mgmt-framework
 To be updated by DELL
