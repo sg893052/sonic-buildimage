@@ -316,13 +316,13 @@ Since the Linux kernel auto-generates the IPv6 link-local address per interface,
 
 New design:
 
-- On receiving Enable IPv6 event from CONFIG_DB, entry is created in both APP DB and STATE DB. Orchagent then creates the L3 RIF based on these entries. This is needed to ensure that the L3 routing can happen even with out any global IPv6 address configured on the interface.
+- On receiving Enable IPv6 event from CONFIG_DB, the INTF_TABLE entry is created in both APP DB and STATE DB. Orchagent then creates the L3 RIF based on these entries. This is needed to ensure that the L3 routing can happen even with out any global IPv6 address configured on the interface.
 
-- On receiving Disable IPv6 event from CONFIG_DB, the corresponding entries are deleted from APP DB and STATE DB. Orchagent then deletes the L3 RIF from the ASIC DB.
+- On receiving Disable IPv6 event from CONFIG_DB, the corresponding entries are deleted from APP DB and STATE DB. Orchagent then deletes the L3 RIF from the ASIC DB, provided there are no manually configured addresses on the interface.
 
-The link-local address is manually derived based on the system MAC address (DEVICE_METADATA) during INIT time, it is assumed that all interfaces have same MAC address. This address is used for all IPv6 enabled interfaces, unless user configures a manual link-local address.
+The link-local address is derived based on the system MAC address (DEVICE_METADATA) during INIT time, it is assumed that all the interfaces have the same MAC address. This address is used for all IPv6 enabled interfaces, unless user configures a manual link-local address.
 
- Note that the link-local addresses are stored in APP_DB to support fetching those addresses from KLISH CLI. There is no processing involved based on these addresses.
+ Note that the link-local addresses are stored in APP_DB to support fetching those addresses from KLISH CLI. There is no processing involved based on these addresses in the OrchAgent.
 
 ## 3.4 SyncD
 
