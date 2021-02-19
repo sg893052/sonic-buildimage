@@ -74,6 +74,7 @@ Rev 1.0
 | 0.1  | 10/22/2020 | Syed Hasan Naqvi | Initial version                                              |
 | 0.2  | 11/02/2020 | Rajesh Sankaran  | Updated DB,SAI, CLI sections                                 |
 | 0.3  | 01/15/2021 | Syed Hasan Naqvi | Addressed review comments, revamped the document, added REST URIs |
+| 0.4  | 02/18/2021 | Syed Hasan Naqvi | Added VxLAN REST URIs, corrected details in multiple sections, addressed review comments. |
 # About this Manual
 
 This document provides general information about Advertise Primary IP (PIP) feature for EVPN Type-2 and Type-5 EVPN VxLAN routes in Logical VTEP case.
@@ -121,7 +122,9 @@ Scenarios (2) and (3) are shown in Fig. 1 below. Since EVPN routes (including th
 
 
 
-The above sub-optimal forwarding via ICL, and the need to have BGP VRF-lite sessions between MCLAG peers, are avoided by allowing user to specify Primary VTEP IP addresses that is unique for each of the MCLAG peers. When VxLAN Primary VTEP IP address is configured, the EVPN routes for the orphan hosts and Type-5 prefixes will be advertised with the Primary VTEP IP address as next-hop. And the Type-2 routes for multi-homed hosts will be advertised with Logical VTEP IP address as next-hop common to the MCLAG.
+The above sub-optimal forwarding via ICL, and the need to have BGP VRF-lite sessions between MCLAG peers, are avoided by allowing user to specify Primary VTEP IP addresses that is unique for each of the MCLAG peers.
+
+When VxLAN Primary VTEP IP address is configured, the EVPN routes for the orphan hosts and Type-5 prefixes will be advertised with the Primary VTEP IP address as next-hop. And the Type-2 routes for multi-homed hosts will be advertised with Logical VTEP IP address (common to the MCLAG) as next-hop. The Type-5 routes advertised with PIP next-hop form overlay ECMP on the remote VTEPs. However, since a given Type-2 route cannot be advertised with two PIP next-hops (as otherwise it causes MAC move), the Type-2 routes for MHDs are advertised with the common VIP address as next-hop.
 
 
 
@@ -189,7 +192,7 @@ The basic approach of Advertise-PIP feature is to:
 
 
 
-<figure><img src="advertise_pip_images\advertise_pip_2.jpg" align="center"><figcaption align="center">Figure 2: Traffic forwarding after routes for MAC/IP learnt on orphan ports are advertised with primary VTEP IP</figcaption></img></figure>
+<figure><img src="advertise_pip_images/advertise_pip_2.jpg" align="center"><figcaption align="center">Figure 2: Traffic forwarding after routes for MAC/IP learnt on orphan ports are advertised with primary VTEP IP</figcaption></img></figure>
 
 
 
@@ -211,7 +214,7 @@ Enabling advertise-pip (i.e. configuring VxLAN primary-ip) will eliminate the re
 
 
 
-<figure><img src="advertise_pip_images\mclag_pip_tunnel.JPG" align="center"><figcaption align="center">Figure 3: Routed and Switched traffic forwarding within MCLAG cluster</figcaption></img></figure>
+<figure><img src="advertise_pip_images/mclag_pip_tunnel.JPG" align="center"><figcaption align="center">Figure 3: Routed and Switched traffic forwarding within MCLAG cluster</figcaption></img></figure>
 
 
 
@@ -219,25 +222,38 @@ Enabling advertise-pip (i.e. configuring VxLAN primary-ip) will eliminate the re
 
 When PIP is configured on the MCLAG nodes, BGP VRF routes will be advertised with PIP as next-hop instead of VIP. This will allow Type-5 routes advertised by one MCLAG node to be accepted by the other MCLAG node. And there will be VxLAN tunnel created with the PIP VTEP addresses within the MCLAG cluster as shown in Figure 3 above. The routed traffic on MCLAG nodes will used the PIP VxLAN tunnel to reach the other MCLAG peer. The dotted -blue line shows the L3 routed traffic using VxLAN PIP tunnel in the diagram above.
 
-The source IP address in the VxLAN encapsulated for the routed traffic is required to be PIP instead of VIP. Otherwise, VxLAN packets arriving on the other MCLAG peer will not be terminated due to VxLAN source-address (VIP) being the local IP address - as the VIP belongs to both of the MCLAG nodes.
+The source IP address in the VxLAN encapsulated packets for the routed traffic is required to be PIP instead of VIP. Otherwise, VxLAN packets arriving on the other MCLAG peer will not be terminated due to VxLAN source-address (VIP) being the local IP address - as the VIP belongs to both of the MCLAG nodes.
 
 
 
 ##### 1.2.1.1.2 Behavior of switched traffic within MCLAG
 
-If advertise-pip is configured for Type-2 routes on the MCLAG nodes, the MAC/MACIP of SHDs will be advertised with PIP. This will create two parallel paths between MCLAG peers-- one via VxLAN PIP tunnel, and another via ICL.
+Note that the devices forming MCLAG already have ICL for switching the east-west traffic, and VxLAN PIP tunnel provides redundant path that is not required. Therefore, Type-2 routes received from the MCLAG peer are required to be discarded in BGP.
 
-The existence of two paths would potentially cause duplication of frames as described below:
 
-Assume, SHD-1 sends L2 unicast packet, destined to SHD2, to Leaf-1. In the transient scenario if the MAC address of SHD-2 is aged out on Leaf-2, but not yet cleaned up from Leaf-1, Leaf-1 will forward the packet over VxLAN PIP tunnel to Leaf-2. Since the MAC is not present on Leaf-2, Leaf-2 will flood the packet to its local ports including ICL towards Leaf-1. At this point, if MAC is removed from Leaf-1 as well, the flooded packets arriving over ICL will be flooded within Leaf-1. And the SHD-1 will received copy of the frame that it sent.
+Following are some of the rationales behind it:
 
+**Using VIP as source-IP for L2VNI:**
+
+The source IP address in the VxLAN encapsulated packets originated in a given L2VNI is VIP, instead of PIP. Due to this, the VxLAN packets originated by MCLAG node and arriving on its MCLAG peer will not be terminated as VIP being common to both. This will result in packet drop.
+
+PIP is not used as source IP address in VxLAN encapsulated packets for L2VNI as this may result in traffic (tunnel termination) issues if PIP is configured, but there happens to be no routes advertised with PIP in the control plane due to persistent or transient situation.
+
+
+**Using PIP as source-IP for L2VNI:**
+
+Let's consider the case what if PIP is used as source IP address in VxLAN originated frames for L2VNI. When VxLAN primary IP address is configured on the MCLAG nodes, the MAC/MACIP of SHDs are advertised with PIP. This will create two parallel paths between MCLAG peers-- one via VxLAN PIP tunnel, and another via ICL. The existence of two paths would potentially cause duplication of frames as described below:
+
+In Figure 3, assume SHD-1 sends L2 unicast packet, destined to SHD2, to Leaf-1. In the transient scenario if the MAC address of SHD-2 is aged out on Leaf-2, but not yet cleaned up from Leaf-1, Leaf-1 will forward the packet over VxLAN PIP tunnel to Leaf-2. Since the MAC is not present on Leaf-2, Leaf-2 will flood the packet to its local ports including ICL towards Leaf-1. At this point, if MAC is removed from Leaf-1 as well, the flooded packets arriving over ICL will be flooded within Leaf-1. And the SHD-1 will received copy of the frame that it sent.
 
 
 On the other hand, ICL cannot be completely removed and replaced by PIP VxLAN tunnel since IMET routes cannot be advertised with PIP as mentioned in previous section.
 
+
+
 In purview of above, Type-2 routes arriving with PIP as next-hop are required to be discarded in BGP control plane. This requires specifying MCLAG peer's  PIP address while enabling advertise-pip for Type-2 routes in EVPN default VRF. Please refer to sec. 2.2.6.4.
 
-In other words, behavior for VLAN switched traffic remains as is even in presence of PIP feature. Figure 3 shows the dotted-red line representing VLAN switched (unicast and BUM) traffic taking ICL to reach the other MCLAG node.
+In other words, behavior for VLAN switched traffic remains as is even in presence of Advertise-PIP feature. Figure 3 shows the dotted-red line representing VLAN switched (unicast and BUM) traffic taking ICL to reach the other MCLAG node.
 
 
 
@@ -251,7 +267,7 @@ No changes to the Tunnel SAI specification.
 
 ## 2.1 Target Deployment Use Cases
 
-This feature is useful for avoiding suboptimal traffic forwarding EVPN VxLAN Logical VTEP deployments. If Orphan ports or subnets are present on MCLAG nodes, this feature is recommended to be used.
+This feature is useful for avoiding suboptimal traffic forwarding in EVPN VxLAN Logical VTEP deployments. If Orphan ports or subnets are present on MCLAG nodes, this feature is recommended to be used.
 
 
 
@@ -274,7 +290,19 @@ sonic(conf-if-vxlan-vtep-1)# primary-ip 2.2.2.2
 
 User will be required to create separate loopback interface with `primary-ip` IP address, and advertise it in BGP default VRF.
 
-Note that both `source-ip` and `primary-ip` configurations are required to be created before adding any VLAN-VNI mappings.
+```
+sonic(config)# interface Loopback 2
+sonic(conf-if-lo2)# ip address 2.2.2.2/32
+```
+
+
+
+Note that both `source-ip` and `primary-ip` configurations are required to be created before adding any VLAN-VNI mappings. If VLAN-VNI mappings already exist, below error will be thrown and user will have to remove VNI-VRF and VNI-VLAN mappings and reconfigure the Primary IP.
+
+```
+sonic(conf-if-vxlan-vtep-3)# primary-ip 3.3.3.3
+Error: Please delete all VLAN VNI mappings.
+```
 
 
 
@@ -314,10 +342,10 @@ Configuring PIP on L3VNI VxLAN netdevices will cause:
 
 ### 2.2.3 BGP Router-ID
 
-It is recommended to configure BGP router-id same as the primary-IP configured under VxLAN interface. If BGP router-id is configured to be different from VxLAN primary-ip address, the configured primary IP address will be required to be provided to `advertise-pip` configuration under BGP. 
+It is recommended to configure BGP router-id of default VF same as the primary-IP configured under VxLAN interface. If BGP router-id is configured to be different from VxLAN primary-ip address, the configured primary IP address will be required to be provided to `advertise-pip` configuration under BGP default and non-default VRFs.
 
 
-User will have to ensure that Primary IP address configured under VxLAN is same as BGP router-id or the IP address provided to advertise-pip configuration in BGP.
+User will have to ensure that Primary IP address configured under VxLAN is same as BGP router-id or the IP address provided to advertise-pip configuration in BGP. If BGP router-id happens to be different from VxLAN primary IP address, routes will still be be advertised with the BGP router-id, but the incoming VxLAN frames will not be tunnel terminated in hw resulting into traffic failure.
 
 
 
@@ -332,21 +360,19 @@ For L2VNI (unicast or multicast), VxLAN originated traffic will have VIP as sour
 | L2VNI        | VIP                                                        | VIP                                                          |
 | L3VNI        | PIP                                                        | VIP                                                          |
 
-Note that for L3VNI traffic to use PIP as source IP address, the VxLAN Primary IP address must have been configured before VxLAN tunnels are created.
-
-In other words, if Primary IP address is configured on a system where VxLAN tunnels are already created, user is required to ensure that all of the existing VxLAN tunnels are deleted and recreated again. This can be achieved by shutting down BGP sessions and restarting them again.
 
 
+### 2.2.5 Advertise-PIP configuration for user VRFs
 
-### 2.2.5 Advertise-PIP configuration for Type-5 routes
+Advertise-PIP for Type-5 and Type-2 routes gets enabled by default for the user VRFs by configuring:
+(a) `primary-ip` under VxLAN interface configuration mode, and
+(b) `mclag-separate-ip` for L3VNI IRB VLAN (please see next subsection)
+And the routes are advertised with **BGP router-id** (of default VRF) as PIP next-hop.
 
-Advertise-PIP for Type-5 routes is enabled by default if `primary-ip` is configured under VxLAN interface configuration mode.
-
-If VxLAN `primary-ip` is configured,  L3VNI VxLAN netdevices in the kernel will be created with PIP as VTEP IP address, and Type-5 routes will be automatically advertised with PIP as next-hop.
+The Type-5 routes in user VRFs are advertised with PIP as next-hop. And Type-2 routes are advertised with PIP/VIP depending on the MAC belonging to SHD/MHD, respectively. Please refer to sec 2.2.7 for details.
 
 
-
-Even though below  `advertise-pip` configuration knobs exist under BGP VRF `address-family l2vpn evpn` configuration mode, it is NOT required to be configured for the non-default VRFs.
+If the BGP router-id of default VRF is not configured same as the VxLAN Primary IP address, user is required to configure the PIP address in each and every user VRF explicitly using the configuration below.
 
 
 ```
@@ -358,12 +384,11 @@ sonic(config-router-af)# advertise-pip
 sonic(config-router-af)# advertise-pip ip
   A.B.C.D  ip address
 sonic(config-router-af)# advertise-pip ip 1.1.1.1
-  <cr>
-  mac   MAC address
-sonic(config-router-af)# advertise-pip ip 1.1.1.1 mac
-  X:X:X:X:X:X    MAC address
-  X:X:X:X:X:X/M  MAC address
 ```
+
+
+
+Note that Advertise-PIP feature cannot be controlled on a per VRF basis. Once this feature is enabled, it applies to all of the VRFs. Therefore, it is not recommended to remove the advertise-pip configuration using `no advertise-pip` command.
 
 
 
@@ -386,26 +411,51 @@ The above approach aligns with the existing FRR advertise-pip design, where the 
 
 
 
-User is required to configure MCLAG separate-ip for L3VNI IRB VLANs in KLISH:
+In order to let MCLAG(iccpd) automatically configure router-mac on the L3VNI IRB macvlan netdevices, user is required to configure MCLAG separate-ip for L3VNI IRB VLANs.
+
+MCLAG separate IP configuration in KLISH:
 
 ```
 sonic(config)# interface Vlan 1000
 sonic(conf-if-Vlan1000)# mclag-separate-ip
-sonic(conf-if-Vlan1000)# 
 ```
 
 The corresponding CLICK config command is:
 
 ```
 admin@sonic:~$ sudo config mclag unique-ip add Vlan1000
-admin@sonic:~$
 ```
 
 
 
+### 2.2.6  Advertise-PIP configuration in BGP default VRF
+
+The `advertise-pip` configuration is available in BGP default VRF and serves two purposes:
+(a) It allows user to specify MCLAG peer-ip to discard Type-2 routes received from MCLAG peer across all of the VNIs.
+(b) It enables advertise-pip functionality for Type-2 routes in default VRF
+
+As discussed in sec. 1.2.1.1.2, Type-2 routes received from MCLAG peer are required to be discarded. This is achieved by using `peer-ip` in the advertise-pip configuration in default VRF:
+
+```
+sonic(config)# router bgp 64512
+sonic(config-router-bgp)# address-family l2vpn evpn
+sonic(config-router-bgp-af)# advertise-pip peer-ip 1.1.1.1
+```
+
+Where `peer-ip` is the Primary VTEP IP address configured on the MCLAG peer. 
 
 
-### 2.2.6 Advertise-PIP for Type-2 (MAC/MACIP) routes
+If BGP router-id in default VRF cannot be configured to be same as VxLAN Primary IP address, the primary IP address has to be specified explicitly as shown below:
+
+```
+sonic(config)# router bgp 64512
+sonic(config-router)# address-family l2vpn evpn
+sonic(config-router-af)# advertise-pip ip 2.2.2.2 peer-ip 1.1.1.1
+```
+
+
+
+### 2.2.7 Advertise-PIP for Type-2 (MAC/MACIP) routes
 
 Following will be the behavior of advertisement of type-2 routes when `advertise-pip` is enabled:
 
@@ -472,62 +522,6 @@ SVI netdevices for MCLAG vlans will be grouped in MCLAG_NETDEV_GROUP.
 Rest of the SVI netdevices will be member of default(0) netdevice group.
 
 
-
-#### 2.2.6.4  Configuring Advertise-PIP for Type-2 routes
-
-Advertise-PIP for Type-2 routes is disabled by default. In order to enable this feature, `advertise-pip` is required to be configured under BGP EVPN default VRF.
-
-Below configuration options are available for advertise-ip:
-
-```
-sonic(config)# router bgp 64512
-sonic(config-router)# address-family l2vpn evpn
-sonic(config-router-af)# advertise-pip
-  <cr>
-  ip    IP information
-sonic(config-router-af)# advertise-pip ip
-  A.B.C.D  ip address
-sonic(config-router-af)# advertise-pip ip 2.2.2.2
-  <cr>
-  mac   MAC address
-```
-
-The `mac` option is not applicable to the Type-2 routes advertisement.
-
-
-
-If default VRF's BGP router-id is configured to be same as VxLAN Primary IP address, only below configuration is required:
-
-```
-sonic(config)# router bgp 64512
-sonic(config-router)# router-id 2.2.2.2
-sonic(config-router)# address-family l2vpn evpn
-sonic(config-router-af)# advertise-pip
-```
-
-
-
-Otherwise, if the BGP router-id is not configured to be same as VxLAN Primary-IP address, the advertise-pip is required to be configured with IP address same as VxLAN Primary-IP address as shown below:
-
-```
-sonic(config)# router bgp 64512
-sonic(config-router)# address-family l2vpn evpn
-sonic(config-router-af)# advertise-pip ip 2.2.2.2
-```
-
-
-
-As discussed in sec. 1.2.1.1.2, Type-2 routes received from MCLAG peer are required to be discarded. This is achieved by providing `peer-ip` option to the advertise-pip configuration in default VRF.
-
-```
-sonic(config)# router bgp 64512
-sonic(config-router-bgp)# address-family l2vpn evpn
-sonic(config-router-bgp-af)# advertise-pip ip 2.2.2.2 peer-ip 1.1.1.1
-- or -
-sonic(config-router-bgp-af)# advertise-pip peer-ip 1.1.1.1
-```
-
-Where `peer-ip` is the Primary VTEP IP address configured on the MCLAG peer. 
 
 
 
@@ -718,7 +712,30 @@ admin@sonic:~$
 
 #### 3.5.4.2 BGP EVPN show commands
 
-No new BGP show command has been added as part of this feature. The show command outputs of the BGP EVPN show commands remain same.
+Below show command shows details of the L3VNI in BGP.
+
+```
+sonic# show bgp l2vpn evpn vni 1000
+VNI: 1000 (known to the kernel)
+  Type: L3
+  Tenant VRF: Vrf-red
+  RD: 20:200
+  Originator IP: 2.1.1.1
+  Advertise-gw-macip : n/a
+  Advertise-svi-macip : n/a
+  Advertise-pip: Yes
+  System-IP: 2.1.1.1
+  System-MAC: 52:54:00:5e:d3:cf
+  Router-MAC: 00:0a:0b:0c:0d:0e
+  Import Route Target:
+    64358:100
+  Export Route Target:
+    64358:100
+```
+
+
+
+If PIP is configured, it shows the Primary IP address, system-MAC and router-MAC addresses. This command can be used to confirm if PIP configuration is effective for the VRF.
 
 
 
@@ -747,6 +764,26 @@ curl --insecure -X DELETE "https://<IP>/restconf/data/openconfig-network-instanc
 curl  --insecure -X GET "https://<IP>/restconf/data/openconfig-network-instance:network-instances/network-instance=Vrf-Red/protocols/protocol=BGP,bgp/bgp/global" -H  "accept: application/yang-data+json" | json_pp
 
 curl --insecure -X PATCH "https://<IP>/restconf/data/openconfig-network-instance:network-instances/network-instance=Vrf-Red/protocols/protocol=BGP,bgp/bgp/global/afi-safis/afi-safi=L2VPN_EVPN/l2vpn-evpn/openconfig-bgp-evpn-ext:config/advertise-pip-mac" -H  "accept: */*" -H  "Content-Type: application/yang-data+json" -d "{\"openconfig-bgp-evpn-ext:advertise-pip-mac\":\"22:22:33:44:22:66\"}"
+```
+
+
+
+VxLAN REST queries:
+
+```
+POST/PATCH:
+curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X PATCH https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/primary-ip -k -d "{ \"primary-ip\": \"12.12.12.12\" }" -k
+curl -v -u admin:broadcom -H "Content-Type: application/yang-data+json" -X PATCH https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config  -d "{\"openconfig-vxlan:config\":{\"source-vtep-ip\":\"4.5.6.7\", \"primary-ip\": \"2.2.3.6\"}}" -k
+curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X POST https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces -d "{  \"openconfig-interfaces:interface\": [    {   \"name\": \"vtep1\",   \"config\": {  \"name\": \"vtep1\",  \"type\": \"IF_NVE\" }, \"openconfig-vxlan:vxlan-if\": { \"config\": { \"source-vtep-ip\": \"4.5.6.7\", \"primary-ip\": \"12.13.14.15\" }    }     } ] }" -k
+
+DELETE:
+curl -v -u admin:broadcom -X DELETE -H "Content-type: application/yang-data+json" https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/primary-ip -k
+
+GET:
+curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X GET https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/primary-ip -k
+curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X GET https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1 -k
+curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X GET https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if -k
+curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X GET https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config -k
 ```
 
 
@@ -851,6 +888,8 @@ Type-2 routes tests:
 
 # 10 Configuration Example
 
+First configure VxLAN Primary IP, BGP router-id, and BGP advertise-pip configurations:
+
 ```
 MCLAG node1:
 sonic(config)# interface vxlan vtep-1
@@ -867,11 +906,105 @@ sonic(config)# interface vxlan vtep-2
 sonic(conf-if-vxlan-vtep-1)# source-ip 1.1.1.1
 sonic(conf-if-vxlan-vtep-1)# primary-ip 3.3.3.3
 sonic(config)# router bgp 10
-sonic(config-router)# router-id 1.1.1.3
+sonic(config-router)# router-id 3.3.3.3
 sonic(config-router)# address-family l2vpn evpn
 sonic(config-router-af)# advertise-all-vni
 sonic(config-router-af)# advertise-pip peer-ip 2.2.2.2
 ```
+
+
+
+VRF and IRB VLAN configurations:
+
+```
+MCLAG node1 and node2:
+sonic(config)# ip vrf Vrf-red
+
+sonic(config)# interface Vlan 1000
+sonic(conf-if-Vlan1000)# mclag-separate-ip                          !! MCLAG separate-ip
+sonic(conf-if-Vlan1000)# ip vrf forwarding Vrf-red                  !! L3VNI IRB VLAN member of corresponding VRF
+
+sonic(config)# interface Ethernet64                                 !! MCLAG Peer-Link
+sonic(conf-if-Ethernet64)# switchport trunk allowed Vlan add 1000   !! IRB VLAN member of MCLAG Peer-Link
+```
+
+
+
+L3VNI configuration:
+
+```
+MCLAG node1:
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# map vni 1000 vlan 1000
+sonic(conf-if-vxlan-vtep-1)# map vni 1000 vrf Vrf-red
+
+MCLAG node2:
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# map vni 1000 vlan 1000
+sonic(conf-if-vxlan-vtep-1)# map vni 1000 vrf Vrf-red
+```
+
+
+
+Create other L2VNI mappings, MCLAG, and BGP VRF instances as usual.
+
+
+
+## 10.1 Applying Primary IP configuration on an existing EVPN router
+
+As described in sec. 2.2.1 above, if VxLAN VNI mappings are already configured, user will have to remove them first.
+
+```
+sonic(config)# interface vxlan vtep3
+sonic(conf-if-vxlan-vtep3)# show configuration
+!
+interface vxlan vtep3
+ source-ip 3.1.1.1
+ map vni 1000 vlan 1000
+ map vni 10 vlan 10
+ map vni 20 vlan 20
+ map vni 1000 vrf Vrf-red
+sonic(conf-if-vxlan-vtep3)# primary-ip 3.2.2.2
+Error: Please delete all VLAN VNI mappings.
+sonic(conf-if-vxlan-vtep3)#
+```
+
+
+
+Remove VNI-VRF map first:
+
+```
+sonic(conf-if-vxlan-vtep3)# no map vni 1000 vrf Vrf-red
+```
+
+
+
+And then VNI-VLAN mappings:
+
+```
+sonic(conf-if-vxlan-vtep3)# no map vni 10 vlan 10
+sonic(conf-if-vxlan-vtep3)# no map vni 20 vlan 20
+- or -
+sonic(conf-if-vxlan-vtep3)# no map vni 10 vlan 10 count 11
+```
+
+
+
+Then configure the primary IP and re-apply the VNI-VLAN and VNI-VRF mappings:
+
+```
+sonic(conf-if-vxlan-vtep3)# primary-ip 3.2.2.2
+sonic(conf-if-vxlan-vtep3)# map vni 10 vlan 10
+sonic(conf-if-vxlan-vtep3)# map vni 20 vlan 20
+sonic(conf-if-vxlan-vtep3)# map vni 1000 vlan 1000
+sonic(conf-if-vxlan-vtep3)# map vni 1000 vrf  Vrf-red
+```
+
+
+
+Rest of the BGP and MCLAG configurations remain same as described above in this section.
+
+
 
 
 
