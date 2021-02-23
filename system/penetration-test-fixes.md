@@ -166,6 +166,7 @@ Address the three major vulnerabilities reported in PenTest by ebay.
     pmon
     swss
     vrrp
+    telemetry
 
 - The management docker requires connectivity with other dockers through host docker socket file(/var/run/docker.sock). Removing this file requires management-framework infrastructure change. So this is not covered for the current release. However, this will be addressed in the upcoming release.
 
