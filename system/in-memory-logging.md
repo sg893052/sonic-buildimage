@@ -185,8 +185,8 @@ The following log rotation policy is applied to all the logs stored in the in-me
              delaycompress
         }
 
-When rsyslog is being restarted, all the in-memory contents should be flushed to disk. The in-memory log rotation policy is added as part of an existing Syslog rotation policy.
-The log rotation happens every 5 minutes and keeps 4 weeks of log or max size of all the logs should be less than 4G. If it reaches the 4G usage, it deletes all the oldest logs in the log folder. 
+The in-memory log rotation policy is added as part of an existing Syslog rotation policy.
+The log rotation happens every 5 minutes as part of cron job. 
 
 ## 2.5 In-Memory Logging Policy
 
