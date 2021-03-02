@@ -69,6 +69,7 @@
         * [5.1.2 Config IP address on a sub port interface](#512-config-ip-address-on-a-sub-port-interface)
         * [5.1.3 Change admin status on a sub port interface](#513-change-admin-status-on-a-sub-port-interface)
     * [5.2 Show commands](#52-show-commands)
+    * [5.3 List of application commands that needs sub port interface support](#53-list-of-application-commands-that-needs-sub-port-interface-support)
   * [6 Warm reboot support](#6-warm-reboot-support)
   * [7 Unit test](#7-unit-test)
     * [7.1 Sub port interface creation](#71-sub-port-interface-creation)
@@ -868,6 +869,68 @@ Sub port interface    Speed    MTU    Vlan    Admin                 Type
 ------------------  -------  -----  ------  -------  -------------------
      Eth64.10          100G   9100    100       up  dot1q-encapsulation
 ```
+
+## 5.3 List of application commands that needs sub port interface support
+These are the list of application CLI commands that has been committed to support sub port interface.
+
+|                                              **BGP**                                               |
+|----------------------------------------------------------------------------------------------------|
+| neighbor interface \<*sub-interface-name*\>                                                        |
+| update-source interface \<*sub-interface-name*\>                                                   |
+| show bgp ipv4/ipv6/all neighbors interface \<*sub-interface-name*\>                                |
+| clear bgp ipv4/ipv6/all interface \<*sub-interface-name*\>                                         |
+| show running-configuration bgp neighbor vrf \<*vrf-name*\> interface \<*sub-interface-name*\>      |
+
+|                                           **Route-MAP**                                            |
+|----------------------------------------------------------------------------------------------------|
+| match interface \<*sub-interface-name*\>                                                           |
+| match peer \<*sub-interface-name*\>                                                                |
+| show route-map                                                                                     |
+| show running-configuration route-map                                                               |
+
+|                                              **Ping**                                              |
+|----------------------------------------------------------------------------------------------------|
+| ping -I \<*sub-interface-name*\>                                                                   |
+| ping6 -I \<*sub-interface-name*\>                                                                  |
+
+|                                           **Traceroute**                                           |
+|----------------------------------------------------------------------------------------------------|
+| traceroute -I \<*sub-interface-name*\>                                                             |
+| traceroute6 -I \<*sub-interface-name*\>                                                            |
+
+|                                          **Static-route**                                          |
+|----------------------------------------------------------------------------------------------------|
+| ip route \<*ip/prefix*\> interface \<*sub-interface-name*\>                                        |
+| no ip route \<*ip/prefix*\> interface \<*sub-interface-name*\>                                     |
+| show ip route [*static*]                                                                           |
+
+|                                       **In-band Management**                                       |
+|----------------------------------------------------------------------------------------------------|
+| ip vrf forwarding mgmt                                                                             |
+| show ip vrf                                                                                        |
+
+|                                              **NTP**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ntp source-interface \<*sub-interface-name*\>                                                      |
+| show ntp global                                                                                    |
+
+|                                              **DNS**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ip name-server source-interface \<*sub-interface-name*\>                                           |
+| show hosts                                                                                         |
+
+|                                             **TACACS**                                             |
+|----------------------------------------------------------------------------------------------------|
+| tacacs-server source-interface \<*sub-interface-name*\>                                            |
+| show tacacs-server [*global*]                                                                      |
+
+|                                              **PIM**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ip pim bfd                                                                                         |
+| ip pim drpriority                                                                                  |
+| ip pim hello                                                                                       |
+| ip pim sparse-mode                                                                                 |
+| show ip pim interface \<*sub-interface-name*\>                                                     |
 
 # 6 Warm reboot support
 There is no special runtime state that needs to be kept for sub port interfaces.
