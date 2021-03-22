@@ -29,7 +29,7 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|:-----------------------------------|
-| 0.5 | 1/29/2021 | Dante (Kuo-Jung) Su | 1. Drop the dependency to the SONiC community pull request for the enhanced media support<br>2. Migrate the database from APPL_DB to CONFIG_DB<br>3. Added PRBS support<br>4. Updated the command syntax
+| 0.5 | 3/22/2021 | Dante (Kuo-Jung) Su | 1. Drop the dependency to the SONiC community pull request for the enhanced media support<br>2. Migrate the database from APPL_DB to CONFIG_DB<br>3. Added PRBS support<br>4. Updated the command syntax
 | 0.4 | 08/05/2020 | William Schwartz | 1. Updated CLI command structure<br>2. Removed references to modifying admin state of the port<br> 3. Updated PORT_TABLE to reflect new change when port is places in diagnostic mode |
 | 0.3 | 07/23/2020 | William Schwartz | 1. Updated yang models<br> 2. Updated TRANSCEIVER_DOM_SENSOR table entries to reflect proper values <br> 3. Removed non-supported CMIS CLI commands<br> 4. Resolved multiple review comments. |
 | 0.2 | 06/25/2020 | William Schwartz | 1. Removed pattern generation / checker references.<br> 2. Corrected link to CMIS 4.0 specification<br> 3. Updated loopback test CLI mode to remove the individual lane enablement (that will be a future advanced feature enhancement)<br>4. Added loopback test Yang Model |
@@ -347,6 +347,18 @@ This command shows diagnostics capability of the transceiver. If no specific tra
 Example output:
 
 ```
+sonic# show interface transceiver diagnostics capability summary | no-more
+
++--------------------+-------------+---------------+
+|                    |   Loopback  |     Report    |
+| Interface          | HI HO MI MO | BER IPEAK SNR |
++--------------------+-------------+---------------+
+| Ethernet0          |  *     *    |   *         * |
+| Ethernet16         |             |               |
+| Ethernet64         |  *     *  * |   *         * |
+| Ethernet80         |  *     *  * |   *         * |
+| Ethernet96         |             |               |
+| Ethernet152        |  *     *    |   *         * |
 sonic# show interface transceiver diagnostics capability Ethernet 0 | no-more
 
 --------------------------------------------------------
@@ -397,6 +409,18 @@ This command shows the loopback diagnostic controls of the transceiver. If no sp
 Example output:
 
 ```
+sonic# show interface transceiver diagnostics status summary | no-more
+
++--------------------+-------------+-------------+
+|                    |   Loopback  |   Pattern   |
+| Interface          | HI HO MI MO | CH CM GH GM |
++--------------------+-------------+-------------+
+| Ethernet0          |             |             |
+| Ethernet16         |             |             |
+| Ethernet64         |             |             |
+| Ethernet80         |             |             |
+| Ethernet96         |             |             |
+| Ethernet152        |             |             |
 sonic# show interface transceiver diagnostics status Ethernet 0 | no-more
 
 Ethernet0
