@@ -61,7 +61,7 @@ In order to improve the performance of the logger and increase the life of SSD d
 - All the debug logs should be stored into in-memory first and then saved into the disk and rotated by log rotate periodically.
 - All the in-memory logs should be saved into the disk when cold/fast/warm command is issued.
 - In case of kernel crash, all the in-memory logs should be saved into the disk as part of kdump collection. 
-- During the techsupport data collection, it should include both debug and non-debug logs. 
+- During the techsupport data collection, it should include both debug and non-debug logs from the disk.
 - Klish/Click CLI should be provided to dump and filter the logs from both debug and non debugs logs. 
 - Existing syslog bebaviour(over-the-network to syslog server, user interface and persistance) for non-debug log should not affected. 
 
@@ -152,25 +152,29 @@ The log format remains the same as regular Syslog format as below.
 
 ## 2.4 Log Rotation Policy
 
-The following log rotation policy is applied to all the logs stored in the in-memory and also logs that are stored in the persistent disk. The first policy enforces the log rotate to rotate the logs stored in the in-memory file system, and then it enforces the rotated logs into the disk as part of the post-rotate script. The second policy instructs the log rotate to rotate the logs within persistent storage which is same as other Syslog rotation policy.
+The following log rotation policy is applied to all the logs stored in the in-memory and also logs that are stored in the persistent disk. The first policy enforces the log rotate to rotate the logs stored in the in-memory file system, and save_in_memory_to_disk api enforces the rotated logs into the disk. The next policy instructs the log rotate to rotate the logs within persistent storage which is same as other Syslog rotation policy.
 
 		# In-Memory log rotation
 		/var/log/ramfs/in-memory-syslog-info.log
 		/var/log/ramfs/in-memory-syslog-debug.log
 		{
-			rotate 2
+			rotate 5
 			size 1M
 			missingok
 			notifempty
-			copytruncate
 			sharedscripts
 			postrotate
-				IMEM_FILE=$1
-				FILE=${DISK_FILE/ramfs\/in-memory-/}
-				cat ${IMEM_FILE}.1 >> ${DISK_FILE}
-				rm -f ${IMEM_FILE}.1
-				sync
+				systemctl kill --kill-who=main --signal=HUP rsyslog
 			endscript
+		}
+
+		save_in_memory_to_disk
+		{
+			IMEM_FILE=$1
+			FILE=${DISK_FILE/ramfs\/in-memory-/}
+			cat ${IMEM_FILE}.1 >> ${DISK_FILE}
+			rm -f ${IMEM_FILE}.1
+			sync
 		}
 
 		# Disk file log rotation
@@ -178,7 +182,7 @@ The following log rotation policy is applied to all the logs stored in the in-me
 		/var/log/syslog-debug.log
         {
              size 1M
-             rotate 200
+             rotate 400
              missingok
              notifempty
              compress
@@ -191,23 +195,25 @@ The log rotation happens every 5 minutes as part of cron job.
 ## 2.5 In-Memory Logging Policy
 
 In order to simplify the application interface and improve the logging performance, the following policies are enforced on the in-memory logging.
-- Only two In-Memory logging file is prefered as this improves the performance and simplifies the in-memory logging interface and its implementation.
+- Five In-Memory logging file is prefered as this improves the performance and simplifies the in-memory logging interface and its implementation.
 - Log Rotation Policy
      - Cron job to rotate the in-memory logging for every 5 minutes.
      - Size of the log file is restricted to 1MB
-- 32MB of physical memory starting at 1G is reserved for In-Memory during kernel bootup.
-     - memmap=1G@32MB
+- 64MB of physical memory starting at 1G is reserved for In-Memory during kernel bootup.
+     - memmap=1G@64MB
 - Disk write policy
-     - Logs are written into the disk for every 5 minutes.
+     - Logs are written into the disk for every 5 minutes as part of cronjob and rsyslog rule.
+	 - Logs are written into the disk when 10K in-memory messages are generated.
      - Logs are written into the disk when a user issues a reboot(cold/warm/fast) command.
+	 - Logs are written into the disk once during techsupport collection.
      - During kernel panic, all the in-memory logs are written into the disk as port kdump data collection.
+	 - Logs are written into the disk when a user issues sonic-clear logging command
     
 ## 2.6 Tech-Support 
 
-The techsupport script is enhanced to support the in-memory log collection as well. During the tech-support collection, all the in-memory logs are included as part of regular Syslog collection.
-
-- All the logs from in-memory.
-- All the logs which are already stored in the persistent disk.
+The techsupport script is enhanced to support the in-memory log collection as well. During the tech-support collection, all the in-memory logs are forced to write to disk and those disk logs are included as part of regular Syslog collection.
+ 
+- All the logs which are stored in the persistent disk.
 
 
 ## 2.7 In-Memory log Dump sequence
