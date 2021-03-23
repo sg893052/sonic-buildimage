@@ -203,7 +203,7 @@ In order to simplify the application interface and improve the logging performan
      - memmap=1G@64MB
 - Disk write policy
      - Logs are written into the disk for every 5 minutes as part of cronjob and rsyslog rule.
-	 - Logs are written into the disk when 10K in-memory messages are generated.
+	 - Logs are written into the disk when ~10K in-memory messages are generated.
      - Logs are written into the disk when a user issues a reboot(cold/warm/fast) command.
 	 - Logs are written into the disk once during techsupport collection.
      - During kernel panic, all the in-memory logs are written into the disk as port kdump data collection.
