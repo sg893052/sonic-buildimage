@@ -406,7 +406,7 @@ This command sets the value, in seconds, of the timer used by the authenticator 
 | Default | 3600 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.10 Configuring dot1x port reauthenabled
+#### 3.6.2.12 Configuring dot1x port reauthenabled
 This command enables or disables reauthentication of the supplicant for the specified port.  The reauthenabled value must be ‘true’ or ‘false’.  If the value is ‘true’ reauthentication will occur.  Otherwise, reauthentication will not be allowed.
 
 | Mode | Config |
@@ -415,7 +415,7 @@ This command enables or disables reauthentication of the supplicant for the spec
 | Default | false |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.10 Configuring dot1x port keytxenabled
+#### 3.6.2.13 Configuring dot1x port keytxenabled
 This command enables or disables key transmission to the supplicant.  The keytransmissionenabled value must be ‘true’ or ‘false’.  If the value is ‘true’, keys will be transmitted to the supplicant.
 
 | Mode | Config |
@@ -423,6 +423,90 @@ This command enables or disables key transmission to the supplicant.  The keytra
 | Syntax | config dot1x port keytxenabled <slot.port>  <true/false>|
 | Default | false |
 | Change history | SONiC 4.0 - Introduced |
+
+
+### 3.6.3 Show Commands
+
+#### 3.6.3.1 Show dot1x summary
+This command displays a summary of the global dot1x configuration.  
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | SONiC# show dot1x summary |
+| Change history | SONiC 4.0 - Introduced |
+
+| Field   | Description |
+| ------ | ------------------- |
+| Administrative mode | Indicates if authentication control is enabled on the switch.  Possible values are “Enabled” and “Disabled”. |
+
+#### 3.6.3.2 Show dot1x port summary
+This command displays a summary of the dot1x configuration for a specified port or for all ports.   
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | show dot1x port summary <slot.port/all> |
+| Change history | SONiC 4.0 - Introduced |
+
+| Field   | Description |
+| ------ | ------------------- |
+| Port | The interface whose configuration is displayed in this row. |
+| Control Mode | The configured control mode for this port.  Possible values are “ForceUnauthorized”, “ForceAuthorized”, or “Auto”. |
+| Operating Control Mode | The control mode under which this port is operating.  Possible values are “Authorized” or “Unauthorized”. |
+| Reauthentication Enabled | Indicates if reauthentication is enabled on this port.  Possible values are “True” or “False”. |
+| Key Transmission Enabled | Indicates if the key is transmitted to the supplicant for the specified port.  Possible values are “True” or “False”. |
+
+
+
+#### 3.6.3.3 Show dot1x port detailed
+This command displays the details of the dot1x configuration for a specified port.
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | show dot1x port detailed <slot.port> |
+| Change history | SONiC 4.0 - Introduced |
+
+| Field   | Description |
+| ------ | ------------------- |
+| Port | The interface whose configuration is displayed |
+| Protocol Version | The protocol version associated with this port.  The only possible value is 1, corresponding to the first version of the dot1x specification. |
+| PAE Capabilities | The PAE functionality of this port.  Possible values are “Authenticator” or “Supplicant”. |
+| Authenticator PAE State | Current state of the authenticator PAE state machine.  Possible values are “Initialize”, “Disconnected”, “Connecting”, “Authenticating”, “Authenticated”, “Aborting”, “Held”, “ForceAuthorized”, and “ForceUnauthorized”. |
+| Backend Authentication State | Current state of the backend authentication state machine.  Possible values are “Request”, “Response”, “Success”, “Fail”, “Timeout”, “Idle”, and “Initialize”. |
+| Quiet Period	| The timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant.  The value is expressed in seconds and will be in the range 0 and 65535. |
+| Transmit Period  | The timer used by the authenticator state machine on the specified port to determine when to send an EAPOL EAP Request/Identity frame to the supplicant.  The value is expressed in seconds and will be in the range of 1 and 65535. |
+| Supplicant Timeout | The timer used by the authenticator state machine on this port to timeout the supplicant.  .  The value is expressed in seconds and will be in the range of 1 and 65535.
+| Server Timeout | The timer used by the authenticator on this port to timeout the authentication server.  The value is expressed in seconds and will be in the range of 1 and 65535. |
+| Maximum Requests | The maximum number of times the authenticator state machine on this port will retransmit an EAPOL EAP Request/Identity before timing out the supplicant.  The value will be in the range of 1 and 10. |
+| Reauthentication Period | The timer used by the authenticator state machine on this port to determine when reauthentication of the supplicant takes place.  The value is expressed in seconds and will be in the range of 1 and 65535. |
+| Reauthentication Enabled | Indicates if reauthentication is enabled on this port.  Possible values are “True” or “False”. |
+| Key Transmission Enabled | Indicates if the key is transmitted to the supplicant for the specified port.  Possible values are “True” or “False”. |
+
+
+
+#### 3.6.3.4 Show dot1x  port stats
+This command displays the dot1x statistics for a specified port.
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | show dot1x port stats <slot.port> |
+| Change history | SONiC 4.0 - Introduced |
+
+| Field   | Description |
+| ------ | ------------------- |
+| Port | The interface whose statistics are displayed. |
+| EAPOL Frames Transmitted | The number of EAPOL frames of any type that have been transmitted by this authenticator. |
+| EAPOL Start Frames Received | The number of EAPOL start frames that have been received by this authenticator. |
+| EAPOL Logoff Frames Received | The number of EAPOL logoff frames that have been received by this authenticator. |
+| Last EAPOL Frame Version | The protocol version number carried in the most recently received EAPOL frame. |
+| Last EAPOL Frame Source | The source MAC address carried in the most recently received EAPOL frame. |
+| EAP Response/Id Frames Received | The number of EAP response/identity frames that have been received by this authenticator. |
+| EAP Response Frames Received | The number of valid EAP response frames (other than resp/id frames) that have been received by this authenticator. |
+| EAP Request/Id Frames Transmitted | The number of EAP request/identity frames that have been transmitted by this authenticator. |
+| EAP Request Frames Transmitted | The number of EAP request frames (other than request/identity frames) that have been transmitted by this authenticator.|
+| Invalid EAPOL Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
+| EAP Length Error Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
+
+
 
 
 # 4 Flow Diagrams
