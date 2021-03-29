@@ -223,7 +223,7 @@ Additionally, there exists a third role:
 
 All three roles are required in order to complete an authentication exchange.  SONiC supports the Authenticator role only, in which the PAE is responsible for communicating with the Supplicant. The Authenticator PAE is also responsible for submitting the information received from the Supplicant to the Authentication Server in order for the credentials to be checked, which will determine the authorization state of the Port. The Authenticator PAE controls the authorized/unauthorized state of the controlled Port depending on the outcome of the authentication process.
 
-Local vs. RADIUS Authentication
+### 2.2.1 Local vs. RADIUS Authentication
 There are two methods that can be used for authenticating a user for a particular port on a switch. These methods are described in the following sections.
 
 Local Authentication
@@ -232,25 +232,64 @@ Local authentication consists of matching a user ID/password combination from th
 Note that the SONiC Authenticator supports only the EAP-MD5 authentication type for local authentication.
 
 
-ADIUS Authentication
+### 2.2.2 RADIUS Authentication
 
 When RADIUS authentication is used, the Authenticator basically becomes a passthrough between. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section labelled "RADIUS Authentication Attributes" in this document.
 
 Per IEEE 802.1X-2001, the SONiC Authenticator supports EAP types that support RFC2284 (i.e. MD5, TLS, PEAP). For certain authentication types, such as EAP-TLS, key information can also be sent from the Authentication Server to the Authenticator as a RADIUS attribute in a RADIUS Access-Accept packet (i.e.  the MS-MPPE-Send-Key and MS-MPPE-Recv-Key attributes). The SONiC Authenticator provides the state machines and outcalls to handle keys, but, key distribution has not been fully implemented. The mechanisms provided could be used to extend platforms that support key distribution. Note that re-keying of Supplicants authentication types could be accomplished by enabling reauthentication on the SONiC Authenticator.
 
 
-Unidirectional and bidirectional control
+### 2.2.3 Unidirectional and bidirectional control
 The controlled directions can be configured by management to dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The management setting of the controlled directions parameter can take on one of the following values:
 1. Both: Control is exerted over both incoming and outgoing frames.
 2. In: Control is only exerted over incoming traffic. Per 802.1X, if the Port is bridge Port, the operational status of controlled directions will be set to Both. However, unidirectional control is not supported in SONiC. Please see "Limitations and Restrictions" section.
+
+
+### 2.2.4 Downloadable ACL
+PAC (Port access control) feature brings in DACL (downloadable ACL) support into SONiC. As a part of PAC, once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Downloadable ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The downloadable ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.
+
+The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. Essentially, the DACL configuration is temporary (applied for the duration of the authenticated client session) and not persistent. The downloadable ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The ACLs created by the applications are owned by the internal application and hence cannot be deleted by a user.
+
+Generally, any static ACLs (created by user) applied on the port are removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However in certain situations, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. Amoung DACLs IPv6 ACL have higher prority over IPv4. In sitialtions where the client IP address changes, the application created ACLs are automatically updated to accomodate the operational change like a changed client IP address. 
+
+
+### 2.2.5 Named ACLs
+RADIUS server can also provide an attribute (filter name/filter id) to have PAC apply a pre-configured ACL on the switch to the client. These pre-configured ACLs are named ACLs. These ACLs are created by the user on the switch. Once RADIUS indicates a named ACL is to be applied for a client, PAC replicates the ACL rules, modifies the rules to incorporate the client IP and then provide them as dynamic ACL rules.
+
+### 2.2.6 RADIUS suplied VLANs
+PAC (port access control) brings in support for access control with the ability to control user profiles from a RADIUS server. Once a client is authenticated, the client authorization parameters from RADIUS can indicate VLAN association for client traffic. The VLAN associated to the client could be a pre-created VLAN on the switch (static VLAN) in which case port membership of the VLAN are modified. In the absence of the VLAN on the switch, the VLAN are created on the switch (dynamic VLANs).
+
+Default VLAN on port
+A port should not be part of user configured VLAN When PAC is enabled on the port. The port gets configured for a default VLAN (VLAN 1 - configurable) when PAC is enabled on the port. Once PAC is disabled on the port, the port is removed from the default VLAN.
+
+### 2.2.7 FDB interation
+PAC interacts with FDB to modify the learning mode of a port and add static FDB entries. The FDB related  interactions for PAC are outlined below:
+- PAC adds a static FDB entry for every authenticated client.   
+- SONiC today allows addition of static FDB entries from CLI which are persistent across reloads. The same is enhanced so that PAC SONiC applications can add static FDB entries.   
+- Note that FDB entries thus added are not persistent and are operational config only (entries added as a result of the client getting authenticated).   
+- The entries get removed once the client logs off.   
+- FDB entries added operationally follows a similar config sequence like user created FDB entries.   
+- The learning mode of a port (or bridge port) was configured and controlled completely at the orchestration layer. With PAC, the application layer (pacd) also manages the learning mode to
+	1. Once PAC is enabled on a port, all incoming and outgoing traffic on the port are blocked/dropped except certain protocol traffic.
+	2. PAC turns off learning on the port essentially dropping all unknown source MAC packets. This achieves the requirement of blocking ingress traffic.
+	3. Egress traffic on the port is not blocked.
+	4. Once a client starts the authentication process, the client is no longer unknown (unknown source MAC). However, since authentication is yet to be completed,
+traffic for the client must still get dropped. To acheive the same, PAC installs a static FDB entry in drop state to drop the client’s traffic but get classified as L2SrcHit.
+- For MAC based authentication mode of PAC, unknown source MAC packets are trapped to the CPU.
+- Station movement is also handled i.e if a packet is received from another port on a MAC, VLAN pair for which PAC installed a static FDB entry, such packets also get trapped to the CPU.
+
 
 # 3 Design
 
 ## 3.1 Overview
 
+[Figure 1](#pac-config-flow) shows the high level design overview of PAC services in SONiC. PAC Services Daemon is composed of multiple sub-modules. The main module i.e. PAC daemon handles the authentication related commands and makes use of hostApd and mabd dameons to authenticate a client via dot1x and mab respectively. hostApd being a standard linux application takes hostapd.con as a config file. hostApdMgr takes care of listenting to dot1x specific configuration and translating them to respective hostapd.conf file config entires. pacd daemon being the main module decides which autnetication protocol needs to be used for a given port and also calls APIs to program the polices in hardware.
+
 ### 3.1.1 Configuration flow
 
 ![pac-config-flow](https://user-images.githubusercontent.com/45380242/112821782-bd4e6580-90a4-11eb-93bb-b453b97da456.PNG)
+
+**Figure 1: PAC service daemon and configuration flow**
 
 1. Mgmt interfaces like CLI and REST writes the user provided configuration to CONFIG_DB.
 2. The pacd, mabd and hostApdMgr gets notified about their respective configuration.
@@ -264,6 +303,8 @@ The controlled directions can be configured by management to dictate the degree 
 
 
 ![EAPOL-receive-flow](https://user-images.githubusercontent.com/45380242/112822933-369a8800-90a6-11eb-9dfa-c8eaecbb681e.PNG)
+
+**Figure 2: EAPOL receive flow**
 
 1. EAPOL packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to hostApd socket listening on EtherType 0x888E on kernel interface associated with the given front panel interface.
 2. In a multi-step process, hostApd runs the Dot1x state machine to Authenticate the client via RADIUS.
@@ -279,6 +320,8 @@ The controlled directions can be configured by management to dictate the degree 
 ### 3.1.3 MAB PDU receive flow
 
 ![mab-pdu-receive-flow](https://user-images.githubusercontent.com/45380242/112823181-94c76b00-90a6-11eb-8a5e-19ccb525dcef.PNG)
+
+**Figure 3: MAB PDU receive flow**
 
 1. DHCP packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to pacd socket listening on the kernel interface associated with the given front panel interface.
 2. Pacd sends an Client Authenticate netlink message along with the received PDU MAC.
