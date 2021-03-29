@@ -45,7 +45,26 @@ High level design document version 0.1
 	- [3.6 Manageability](#36-manageability)
 		- [3.6.1 Data Models](#361-data-models)
 		- [3.6.2 Configuration Commands](#362-configuration-commands)
+		- [3.6.2.1 Config dot1x adminmode](#3621-config-dot1x-adminmode)
+		- [3.6.2.2 Config dot1x port initialize](#3622-config-dot1x-port-initialize)
+		- [3.6.2.3 Config dot1x port reauthenticate](#3623-config-dot1x-port-reauthenticate)
+		- [3.6.2.4 Config dot1x port controldir](#3624-config-dot1x-port-controldir)
+		- [3.6.2.5 Config dot1x port controlmode](#3625-config-dot1x-port-controlmode)
+		- [3.6.2.6 Config dot1x port quietperiod](#3626-config-dot1x-port-quietperiod)
+		- [3.6.2.7 Config dot1x port transmitperiod](#3627-config-dot1x-port-transmitperiod)
+		- [3.6.2.8 Config dot1x port supptimeout](#3628-config-dot1x-port-supptimeout)
+		- [3.6.2.9 Config dot1x port servertimeout](#3629-config-dot1x-port-servertimeout)
+		- [3.6.2.10 Config dot1x port maxrequests](#36210-config-dot1x-port-maxrequests)
+		- [3.6.2.11 Config dot1x port reauthperiod](#36211-config-dot1x-port-reauthperiod)
+		- [3.6.2.12 Config dot1x port reauthenabled](#36212-config-dot1x-port-reauthenabled)
+		- [3.6.2.13 Config dot1x port keytxenabled](#36213-config-dot1x-port-keytxenabled)
 		- [3.6.3 Show Commands](#363-show-commands)
+		- [3.6.3.1 Show dot1x summary](#3631-show-dot1x-summary)
+		- [3.6.3.2 Show dot1x port summary](#3632-show-dot1x-port-summary)
+		- [3.6.3.3 Show dot1x port detailed](#3633-show-dot1x-port-detailed)
+		- [3.6.3.4 Show dot1x  port stats](#3634-show-dot1x-port-stats)
+	- [3.6.4 Clear Commands](#364-clear-commands)
+		- [3.6.4.1 Clear dot1x port stats](#364-clear-dot1x-port-stats)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 - **[5 Error Handling](#5-error-handling)**
 - **[6 Serviceability and Debug](#6-serviceability-and-debug)**
@@ -300,17 +319,17 @@ Since Openconfig models are not available, Openconfig dot1x and mab are propriet
 The following commands are used to configure PAC.  
 
 
-#### 3.6.2.1 Configuring dot1x adminmode
+#### 3.6.2.1 Config dot1x adminmode
 This command enables or disables authentication support on the switch. The default value is disable.  While disabled, the dot1x configuration is retained and can be changed, but it is not activated.
 
 | Mode | Config |
 | ---- | ------ |
-| Syntax | config dot1x adminmode <enable/disable> |
+| Syntax | config dot1x adminmode <enable|disable> |
 |Default | disable |
 | Change history | SONiC 4.0 - Introduced |
 	
 
-#### 3.6.2.2 Configuring dot1x port initialize
+#### 3.6.2.2 Config dot1x port initialize
 This command begins the initialization sequence on the specified port.  This command is only valid if the control mode for the specified port is ‘auto’.  If the control mode is not ‘auto’, an error will be returned.
 
 | Mode | Config |
@@ -318,7 +337,7 @@ This command begins the initialization sequence on the specified port.  This com
 | Syntax | config dot1x port initialize <slot/port> |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.3 Configuring dot1x port reauthenticate
+#### 3.6.2.3 Config dot1x port reauthenticate
 This command begins the reauthentication sequence on the specified port.  This command is only valid if the control mode for the specified port is ‘auto’.  If the control mode is not ‘auto’, an error will be returned.
 
 | Mode | Config |
@@ -331,12 +350,12 @@ This command configures the control direction for the specified port or ports.  
 
 | Mode | Config |
 | ---- | ------ |
-| Syntax | config dot1x port controldir <slot.port/all> <both/in> |
+| Syntax | config dot1x port controldir <slot.port|all> <both|in> |
 | Default | both |
 | Change history | SONiC 4.0 - Introduced |
 	
 
-#### 3.6.2.5 Configuring dot1x port controlmode
+#### 3.6.2.5 Config dot1x port controlmode
 This command sets the authentication mode to be used on the specified port or ports.  The control mode may be one of the following:   
 forceunauthorized: The authenticator PAE unconditionally sets the controlled port to unauthorized.   
 forceauthorized: The authenticator PAE unconditionally sets the controlled port to authorized.    
@@ -344,12 +363,12 @@ auto: The authenticator PAE sets the controlled port mode to reflect the outcome
 
 | Mode | Config |
 | ---- | ------ |
-| Syntax | config dot1x port controlmode <slot.port/all> <forceunauthorized/forceauthorized/auto> |
+| Syntax | config dot1x port controlmode <slot.port|all> <forceunauthorized|forceauthorized|auto> |
 | Default | auto |
 | Change history | SONiC 4.0 - Introduced |
 	
 
-#### 3.6.2.6 Configuring dot1x port quietperiod
+#### 3.6.2.6 Config dot1x port quietperiod
 This command sets the value, in seconds, of the timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant.  The quiet period must be a value in the range of 0 and 65535. 
 
 | Mode | Config |
@@ -359,7 +378,7 @@ This command sets the value, in seconds, of the timer used by the authenticator 
 | Change history | SONiC 4.0 - Introduced |
 	
 
-#### 3.6.2.7 Configuring dot1x port transmitperiod
+#### 3.6.2.7 Config dot1x port transmitperiod
 This command sets the value, in seconds, of the timer used by the authenticator state machine on the specified port to determine when to send an EAPOL EAP Request/Identity frame to the supplicant.  The transmit period must be a value in the range of 1 and 65535. 
 
 | Mode | Config |
@@ -369,7 +388,7 @@ This command sets the value, in seconds, of the timer used by the authenticator 
 | Change history | SONiC 4.0 - Introduced |
 	
 
-#### 3.6.2.8 Configuring dot1x port supptimeout
+#### 3.6.2.8 Config dot1x port supptimeout
 This command sets the value, in seconds, of the timer used by the authenticator state machine on this port to timeout the supplicant.  The supplicant timeout must be a value in the range of 1 and 65535. 
 
 | Mode | Config |
@@ -378,7 +397,7 @@ This command sets the value, in seconds, of the timer used by the authenticator 
 | Default | 30 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.9 Configuring dot1x port servertimeout
+#### 3.6.2.9 Config dot1x port servertimeout
 This command sets the value, in seconds, of the timer used by the authenticator on this port to timeout the authentication server.  The server timeout must be a value in the range of 1 and 65535. 
 
 
@@ -388,7 +407,7 @@ This command sets the value, in seconds, of the timer used by the authenticator 
 | Default | 30 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.10 Configuring dot1x port maxrequests
+#### 3.6.2.10 Config dot1x port maxrequests
 This command sets the maximum number of times the authenticator state machine on this port will retransmit an EAPOL EAP Request/Identity before timing out the supplicant.  The max requests value must be in the range of 1 and 10. 
 
 | Mode | Config |
@@ -397,7 +416,7 @@ This command sets the maximum number of times the authenticator state machine on
 | Default | 2 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.11 Configuring dot1x port reauthperiod
+#### 3.6.2.11 Config dot1x port reauthperiod
 This command sets the value, in seconds, of the timer used by the authenticator state machine on this port to determine when reauthentication of the supplicant takes place.  The reauthperiod must be a value in the range of 1 and 65535.
 
 | Mode | Config |
@@ -406,21 +425,21 @@ This command sets the value, in seconds, of the timer used by the authenticator 
 | Default | 3600 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.12 Configuring dot1x port reauthenabled
+#### 3.6.2.12 Config dot1x port reauthenabled
 This command enables or disables reauthentication of the supplicant for the specified port.  The reauthenabled value must be ‘true’ or ‘false’.  If the value is ‘true’ reauthentication will occur.  Otherwise, reauthentication will not be allowed.
 
 | Mode | Config |
 | ---- | ------ |
-| Syntax | config dot1x port reauthenabled <slot.port>  <true/false> |
+| Syntax | config dot1x port reauthenabled <slot.port>  <true|false> |
 | Default | false |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.13 Configuring dot1x port keytxenabled
+#### 3.6.2.13 Config dot1x port keytxenabled
 This command enables or disables key transmission to the supplicant.  The keytransmissionenabled value must be ‘true’ or ‘false’.  If the value is ‘true’, keys will be transmitted to the supplicant.
 
 | Mode | Config |
 | ---- | ------ |
-| Syntax | config dot1x port keytxenabled <slot.port>  <true/false>|
+| Syntax | config dot1x port keytxenabled <slot.port>  <true|false> |
 | Default | false |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -444,7 +463,7 @@ This command displays a summary of the dot1x configuration for a specified port 
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show dot1x port summary <slot.port/all> |
+| Syntax | show dot1x port summary <slot.port | all> |
 | Change history | SONiC 4.0 - Introduced |
 
 | Field   | Description |
@@ -454,7 +473,6 @@ This command displays a summary of the dot1x configuration for a specified port 
 | Operating Control Mode | The control mode under which this port is operating.  Possible values are “Authorized” or “Unauthorized”. |
 | Reauthentication Enabled | Indicates if reauthentication is enabled on this port.  Possible values are “True” or “False”. |
 | Key Transmission Enabled | Indicates if the key is transmitted to the supplicant for the specified port.  Possible values are “True” or “False”. |
-
 
 
 #### 3.6.3.3 Show dot1x port detailed
@@ -483,7 +501,7 @@ This command displays the details of the dot1x configuration for a specified por
 
 
 
-#### 3.6.3.4 Show dot1x  port stats
+#### 3.6.3.4 Show dot1x port stats
 This command displays the dot1x statistics for a specified port.
 
 | Mode   | Exec |
@@ -507,7 +525,18 @@ This command displays the dot1x statistics for a specified port.
 | EAP Length Error Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
 
 
+### 3.6.4 Clear Commands
 
+#### 3.6.4.1 Clear dot1x port stats
+This command resets the dot1x statistics for the specified port or for all ports.
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | clear dot1x port stats <slot.port | all> |
+| Change history | SONiC 4.0 - Introduced |
+
+
+#### 3.6.4.1 Clear dot1x port stats
 
 # 4 Flow Diagrams
 
