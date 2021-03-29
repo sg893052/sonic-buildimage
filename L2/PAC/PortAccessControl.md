@@ -45,26 +45,26 @@ High level design document version 0.1
 	- [3.6 Manageability](#36-manageability)
 		- [3.6.1 Data Models](#361-data-models)
 		- [3.6.2 Configuration Commands](#362-configuration-commands)
-		- [3.6.2.1 Config dot1x adminmode](#3621-config-dot1x-adminmode)
-		- [3.6.2.2 Config dot1x port initialize](#3622-config-dot1x-port-initialize)
-		- [3.6.2.3 Config dot1x port reauthenticate](#3623-config-dot1x-port-reauthenticate)
-		- [3.6.2.4 Config dot1x port controldir](#3624-config-dot1x-port-controldir)
-		- [3.6.2.5 Config dot1x port controlmode](#3625-config-dot1x-port-controlmode)
-		- [3.6.2.6 Config dot1x port quietperiod](#3626-config-dot1x-port-quietperiod)
-		- [3.6.2.7 Config dot1x port transmitperiod](#3627-config-dot1x-port-transmitperiod)
-		- [3.6.2.8 Config dot1x port supptimeout](#3628-config-dot1x-port-supptimeout)
-		- [3.6.2.9 Config dot1x port servertimeout](#3629-config-dot1x-port-servertimeout)
-		- [3.6.2.10 Config dot1x port maxrequests](#36210-config-dot1x-port-maxrequests)
-		- [3.6.2.11 Config dot1x port reauthperiod](#36211-config-dot1x-port-reauthperiod)
-		- [3.6.2.12 Config dot1x port reauthenabled](#36212-config-dot1x-port-reauthenabled)
-		- [3.6.2.13 Config dot1x port keytxenabled](#36213-config-dot1x-port-keytxenabled)
+			- [3.6.2.1 Config dot1x adminmode](#3621-config-dot1x-adminmode)
+			- [3.6.2.2 Config dot1x port initialize](#3622-config-dot1x-port-initialize)
+			- [3.6.2.3 Config dot1x port reauthenticate](#3623-config-dot1x-port-reauthenticate)
+			- [3.6.2.4 Config dot1x port controldir](#3624-config-dot1x-port-controldir)
+			- [3.6.2.5 Config dot1x port controlmode](#3625-config-dot1x-port-controlmode)
+			- [3.6.2.6 Config dot1x port quietperiod](#3626-config-dot1x-port-quietperiod)
+			- [3.6.2.7 Config dot1x port transmitperiod](#3627-config-dot1x-port-transmitperiod)
+			- [3.6.2.8 Config dot1x port supptimeout](#3628-config-dot1x-port-supptimeout)
+			- [3.6.2.9 Config dot1x port servertimeout](#3629-config-dot1x-port-servertimeout)
+			- [3.6.2.10 Config dot1x port maxrequests](#36210-config-dot1x-port-maxrequests)
+			- [3.6.2.11 Config dot1x port reauthperiod](#36211-config-dot1x-port-reauthperiod)
+			- [3.6.2.12 Config dot1x port reauthenabled](#36212-config-dot1x-port-reauthenabled)
+			- [3.6.2.13 Config dot1x port keytxenabled](#36213-config-dot1x-port-keytxenabled)
 		- [3.6.3 Show Commands](#363-show-commands)
-		- [3.6.3.1 Show dot1x summary](#3631-show-dot1x-summary)
-		- [3.6.3.2 Show dot1x port summary](#3632-show-dot1x-port-summary)
-		- [3.6.3.3 Show dot1x port detailed](#3633-show-dot1x-port-detailed)
-		- [3.6.3.4 Show dot1x  port stats](#3634-show-dot1x-port-stats)
-	- [3.6.4 Clear Commands](#364-clear-commands)
-		- [3.6.4.1 Clear dot1x port stats](#364-clear-dot1x-port-stats)
+			- [3.6.3.1 Show dot1x summary](#3631-show-dot1x-summary)
+			- [3.6.3.2 Show dot1x port summary](#3632-show-dot1x-port-summary)
+			- [3.6.3.3 Show dot1x port detailed](#3633-show-dot1x-port-detailed)
+			- [3.6.3.4 Show dot1x  port stats](#3634-show-dot1x-port-stats)
+		- [3.6.4 Clear Commands](#364-clear-commands)
+			- [3.6.4.1 Clear dot1x port stats](#364-clear-dot1x-port-stats)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 - **[5 Error Handling](#5-error-handling)**
 - **[6 Serviceability and Debug](#6-serviceability-and-debug)**
@@ -91,6 +91,7 @@ This document provides general information about the Port Access Control feature
 
 # Scope
 This document provides general information about the Port Access Control feature implementation in SONiC.
+
 
 # Definition / Abbreviation
 
@@ -247,30 +248,48 @@ The controlled directions can be configured by management to dictate the degree 
 
 ## 3.1 Overview
 
-**Dot1x - multi host mode control flow**   
-0. User enables authentication 
-	ACL - "deny ip any any" installed
-	PortMgr - L2 Learning disabled (hardware)
-	Rules for EAP packets comes to hostapd
-1. Client sends an EAP Packet (EAP Start).
-2. Hostapd informs pacd that there is a new client (IPC)
-3. pacd informs hostapd to authenticate new client
-4. hostapd authenticates the client using RADIUS
-5. hostapd communicates authorization parameters to pacd
-	Auth Success/Failure
-	Authorization parameters (VLAN, DACL, Redirect, Voice, etc.)
-6. pacd communicates with aclmgrd via STATE_DB
-	(a) remove existing ACLs (deny ip any any)
-	(b) install new ACLs permitting traffic for the new client
-7. pacd communicates with PortMgr
-	PortMgr - L2 Learning enabled (hardware)
-8. pacd communicates with vlanmgrd
-	clean-up existing port vlan config - operationally
-	update Port membership with client VLAN
-	update port PVID to client VLAN
-9. (10), (11) -- Future component interaction based on Auth parameters received (like Voice VLAN, Redirect, DACL, etc.)
-12. pacd informs hostapd success/failure depending on results of 6-11
-13. hostapd sends EAP_SUCCESS/EAP_FAILURE
+### 3.1.1 Configuration flow
+
+![pac-config-flow](https://user-images.githubusercontent.com/45380242/112821782-bd4e6580-90a4-11eb-93bb-b453b97da456.PNG)
+
+1. Mgmt interfaces like CLI and REST writes the user provided configuration to CONFIG_DB.
+2. The pacd, mabd and hostApdMgr gets notified about their respective configuration.
+3. hostApd being a standard Linux application gets its configuration from hostapd.conf file. hostApdMgr makes use of Jinja2 templates to generates the hostapd.conf file based on the relevant CONFIG_DB tables.
+4. Pacd gets to know about the list of ports that needs to be authenticated via DOT1X and MAB and their priority from PAC_PORT_CONF_TABLE on CONFIG_DB. Based on the priority and authentication failure status, pacd decides on the list of ports to be authenticated via DOT1X and MAB and It communicates the list of interfaces to hostApd and mabd respectively via netlink messages.
+5. hostApd listen to EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives  a PDU. mabd listens to DHCP and EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives  a PDU.
+
+
+
+### 3.1.2 EAPOL receive flow
+
+
+![EAPOL-receive-flow](https://user-images.githubusercontent.com/45380242/112822933-369a8800-90a6-11eb-9dfa-c8eaecbb681e.PNG)
+
+1. EAPOL packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to hostApd socket listening on EtherType 0x888E on kernel interface associated with the given front panel interface.
+2. In a multi-step process, hostApd runs the Dot1x state machine to Authenticate the client via RADIUS.
+3. On successful authentication of a client, hostApd sends an Client Authenticated netlink message to pacd with all the authorization parameters like VLAN and DACL.
+4. pacd proceeds to authorize the client by writing PAC_AUTHORIZE_TABLE on APPL_DB. RADIUS authorization parameters like dynamic VLAN, dynamic ACL are created by writing on their tables on STATE_DB.
+5. Orchagent in SWSS docker gets notified about changes in APPL_DB and responds by translating the APPL_DB changes to respective sairedis calls.
+6. Sairedis APIs write into ASIC_DB.
+7. Syncd gets notified on changes to ASIC_DB and in turn calls respective SAI calls.
+8. The SAI calls translate to respective SDK calls to program hardware.
+9. EAP success message (EAPOL PDU) is sent to client.
+
+
+### 3.1.3 MAB PDU receive flow
+
+![mab-pdu-receive-flow](https://user-images.githubusercontent.com/45380242/112823181-94c76b00-90a6-11eb-8a5e-19ccb525dcef.PNG)
+
+1. DHCP packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to pacd socket listening on the kernel interface associated with the given front panel interface.
+2. Pacd sends an Client Authenticate netlink message along with the received PDU MAC.
+3. mabd interacts with RADIUS server to authenticate the given client based on the MAC.
+4. On successful authentication of a client, mabd sends an Client Authenticated netlink message to pacd with all the atheization parameters like VLAN and DACL.
+5. pacd proceeds to authorize the client by writing PAC_AUTHORIZE_TABLE on APPL_DB. RADIUS authorization parameters like dynamic VLAN, dynamic ACL are created by writing on their tables on STATE_DB.
+6. Orchagent in SWSS docker gets notified about changes in APPL_DB and responds by translating the APPL_DB changes to respective sairedis calls.
+7. Sairedis APIs write into ASIC_DB.
+8. Syncd gets notified on changes to ASIC_DB and in turn calls respective SAI calls.
+9. The SAI calls translate to respective SDK calls to program hardware.
+10. EAP success message (EAPOL PDU) is sent to client.
 
 
 
