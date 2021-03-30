@@ -672,9 +672,6 @@ This command resets the dot1x statistics for the specified port or for all ports
 | Syntax | clear dot1x port stats <slot.port | all> |
 | Change history | SONiC 4.0 - Introduced |
 
-
-#### 3.6.4.1 Clear dot1x port stats
-
 # 4 Flow Diagrams
 
 # 5 Error Handling
@@ -690,6 +687,19 @@ Configured actions and counters should continue to work across warm reboot.
 ## 8.1 Software scalability
 
 # 9 Limitation
+
+- Authentication Manager does not make any required configuration for the respective methods to authenticate successfully. The administrator needs to ensure that the correct and appropriate configuration is present in the system. For example, if the authentication order method includes the 802.1x port authentication method, 802.1X should be enabled for the authentication to succeed. Authentication manager will not enable/disable and make the configurations related to 802.1X. Administrator should make the necessary configurations.
+
+- If the authentication order includes web authentication, then fallback profile that enables web authentication on the switch and the interface should be configured. Similarly all the required ACLs should be configured by the administrator or user.
+
+- In the default configuration, all traffic that is not EAP over LAN (EAPoL) traffic (including DHCP) is dropped until 802.1X  and MAB times out. Therefore, the value of the timeout can significantly affect the DHCP client on the end host. Longer 802.1X timeouts may prevent DHCP from functioning correctly after the  802.1X timeout expires.
+
+- To prevent DHCP clients from timing out, SONiC recommends testing the DHCP clients in respective network to discover how long they take to time out and setting the  802.1X timers accordingly.
+
+- After configuration Save and reload, if the session Id in the PDU, that is sent by the client doesn’t match with the session Id expected by the 802.1X, then the received PDU is ignored and SONiC will re-try for 802.1X authentication. If the PDU is processed and the authentication fails or times out, then only the authentication moves to the next method.
+
+- Authentication Manager cannot be enabled on LAG interfaces. Enabling Authentication Manager on ports which are member of LAGs or including an Unauthorized port into a LAG will result in unpredictable results.
+
 
 # 10 Upgrade / Downgrade considerations
 
