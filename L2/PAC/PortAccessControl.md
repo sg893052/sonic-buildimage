@@ -360,6 +360,81 @@ None
 #### 3.3.2.1 PAC Manager
 
 #### 3.3.2.2 Authentication Manager
+Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by 802.1X. These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
+
+Authentication Manager allows enforcing authentication on a port. Authentication Manager needs to be enabled for the same. This is the first step to enabling port based access control. Once authentication is enabled, the port is marked Unauthorized and traffic is blocked through it.
+
+Authentication Manager enables configuring various Authentication Host modes. This is configured per port. These modes determine the number of clients and the type of clients that can be authenticated and authorized on the ports. Distinction is made between Data and Voice clients.
+
+Authentication Manager also enables configuring the authentication methods to be used for authenticating clients on a port. By default the configured authentication methods are tried in order for that port. SONiC allows the below authentication methods to get configured for each port.  
+- 802.1X
+- MAB
+
+In the event that a port is configured for 802.1X and MAB in this sequence, the port will first attempt to authenticate the user through 802.1X. If 802.1X authentication times out, the switch will attempt MAB. The automatic sequencing of authentication methods allows the network administrator to apply the same configuration to every access port without having to know in advance what kind of device (employee or guest, printer or PC, IEEE 802.1X capable or not, etc.) will be attached to it.   
+
+Authentication Manager allows configuring priority for each authentication method on the port. The default priority of a method is equivalent to its position in the order of the default authentication list.   
+ 
+After successful authentication, the authentication method returns the Authorization parameters for the client. Authentication Manager uses these parameters for configuring the switch for allowing traffic for authenticated clients.
+
+**Authentication Manager port modes**
+
+*Auto*   
+This mode is used to enforce authentication on a port. The port is unauthorized and blocked for traffic unless a client is authenticated.
+
+*Force-Authorized*    
+This mode is used to disable authentication on a port. All client traffic is allowed.
+
+*Force-Unauthorized*   
+This mode is used to un-authorize a port and block any client traffic
+
+
+**Authentication Manager port host modes** 
+
+*Single-Host mode*   
+In this mode only one data client can be authenticated on a port and the client is granted access to the port. Access is allowed only for this client and no one else. Only when this client logs off, can another client get authenticated and authorized on the port and granted port access.   
+
+*Multiple Hosts mode*   
+In this mode only one data client can be authenticated on a port. However once authentication succeeds, access is granted to all clients connected to the port. Typical use case is a wireless access point which is connected to an access controlled port of a NAS. Once the access point is authenticated by the NAS, the port is authorized for traffic from not just the access point but also from all the wireless clients connected to the access point. Once this client gets authenticated, the port is open for all clients connected to the port.   
+
+*Multiple Domain Authentication mode*   
+In this mode one data client and one voice client can be authenticated on a port and these clients are then granted access. Typical use case is an IP phone connected to a NAS port and a laptop connected to the hub port of the IP phone. Both the devices need to be authenticated to access the network services behind the NAS. The voice and data domains are segregated. The RADIUS server attribute “Cisco-AVPair = "device-traffic-class=voice"” is used to identify a voice client.   
+
+*Multiple Authentication mode*   
+In this mode one voice client and multiple data clients can be authenticated on a port and these clients are then granted access. Typical use case is a network of laptops and an IP phone connected to the NAS port via a hub.   
+
+*Multiple Domain Multi Host mode*   
+In this mode one voice client and one data client can be authenticated on a port and these clients are then granted access. However once a data client is authenticated, access is granted to all clients connected to the port and they are considered data clients. Typical use case is an IP phone connected to a NAS port and a Virtual Machine Controller connected to the hub port of the IP phone. The Virtual Machine Controller hosts multiple Virtual Machines. Both the VM Controller and the IP phone need to be authenticated to access the network services behind the NAS. The voice and data domains are segregated. Once the VM Controller is authenticated, it allows traffic from all the VMs hosted by the VM Controller. Once this client gets authenticated, the port is open for all clients connected to the port. Authentication and port access is also allowed for a Voice device.   
+
+Note: If the data client gets authenticated first, the Voice client can only be authenticated using 802.1x.
+
+**Authentication Manager Authentication method fallback and priorities**
+
+Authentication manager controls the order in which the authentication methods are executed. Authentication manager does not make any required configuration for the respective methods to authenticate successfully. User or Administrator needs to ensure that the correct and appropriate configuration is present in the system.
+Using the Authentication manager, user can configure an authentication method fallback list, which is configured per port. If authentication using any of the method fails, then authentication of the client on the port is tried using the next or subsequent methods.   
+
+The default priority of a method is equivalent to its position in the order of the default authentication list, which is configured per port. If authentication method priorities are not configured, then the relative priorities (highest first) are in the same order as that of per port based authentication list. By configuring the authentication priority, user can over-ride the default priority.   
+
+If the client is already authenticated using methods such as MAB and 802.1X happens to have higher priority than the authenticated method, if a 802.1X frame is received, then the existing authenticated client will be removed and authentication process would begin for the client using 802.1X.However if 802.1X is configured at a lower priority than the authenticated method, then the client will not be removed and the 802.1X frames will be ignored.   
+
+Authentication manager allows user to modify the default method priorities using configuration. This is supported by configuring the priority order list for the authentication methods using the command authentication priority.   
+
+If administrator changes the priority of the methods, then all the users who are authenticated using a lower priority method will be forced to re-authenticate. If an authentication session is in progress and administrator changes the order of the authentication methods then the configuration will take effect for the next session onwards.   
+
+**Authorization parameters** 
+
+Upon successful authentication, the authentication methods inform Authentication Manager about the result. Authentication Manager then authorizes the port and configures it for allowing traffic from and to the client.  
+
+Authentication Manager receives the client authorization parameters from the authentication method after successful authentication of a client. The following parameters are acted upon:  
+
+- *VLAN Id*: This is the VLAN ID sent by a RADIUS server. Authentication Manager configures the port membership accordingly so that the client traffic is associated with the VLAN. Refer [3] for further details.
+- *Session Timeout*: This is the timeout attribute of the authenticated client session.
+- *Session Termination Action*: Upon session timeout, the Session Termination Action determines the action on the client session. The following actions are defined:
+- *Default*: The client session is torn down and authentication needs to be restarted for the client.
+- *RADIUS*: Re-authentication is initiated for the client.
+- *Filter-Id*: Specifies an ACL of Diffserv policy name. This is used to apply a Static ACL or DiffServ policy on the port for the client. IPv4 and IPv6 ACLs in the “IN” direction is supported. If the Differv policy or ACL is not present in the system, or if a Diffserv policy is already configured on the port, authentication for the client is rejected. These are subject to Monitor Mode configuration. Filter-Id is supported on all Authentication Manager host modes.
+- *Downloadable ACL*: DACLs are supported on all host modes.
+- *Redirect ACL*: This is used to apply an ACL that traps matching packets to the CPU for redirection. It is typically used to match on HTTP packets from a client.
+- *Redirect URL*: This is used to specify a redirect URL and works in conjunction with the Redirect ACL.
 
 ### 3.3.3 Other Process
 
