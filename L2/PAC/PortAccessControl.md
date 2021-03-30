@@ -39,6 +39,7 @@ High level design document version 0.1
 		- [3.3.2 PAC daemons](#332-pac-daemons)
 			- [3.3.2.1 PAC Manager](#3321-pac-manager)
 			- [3.3.2.2 Authentication Manager](#3322-authentication-manager)
+			- [3.3.2.3 mabd](#3323-mabd)
 		- [3.3.3 Other Process](#333-other-process)
 	- [3.4 SyncD](#34-syncd)
 	- [3.5 SAI](#35-sai)
@@ -435,6 +436,30 @@ Authentication Manager receives the client authorization parameters from the aut
 - *Downloadable ACL*: DACLs are supported on all host modes.
 - *Redirect ACL*: This is used to apply an ACL that traps matching packets to the CPU for redirection. It is typically used to match on HTTP packets from a client.
 - *Redirect URL*: This is used to specify a redirect URL and works in conjunction with the Redirect ACL.
+
+#### 3.3.2.3 mabd
+MAB is intended to provide 802.1x unaware clients controlled access to the network using the devices’ MAC address as an identifier. This requires that the known and allowable MAC address and corresponding access rights be pre-populated in the authentication server.  
+
+Today, 802.1x has become the recommended port-based authentication method at the access layer in enterprise networks. However, there may be 802.1x unaware devices such as printers, fax-machines etc that would require access to the network without 802.1x authentication. MAB is a supplemental authentication mechanism to allow 802.1x unaware clients to authenticate to the network. SONiC supported authentication methods are as below:
+- CHAP
+- EAP-MD5
+- PAP
+
+SONiC provides a mechanism to format the attribute1 as part of MAB configuration. This mechanism decouples the formats of attribute1 and attribute31 sent in the RADIUS packets and enables separate controls for both.   
+
+Mac-based Authentication Bypass (MAB) is configured per port. For MAB to be used for authentication it needs to be is configured as an authentication method in method list for the port by Authentication Manager, MAB authentication is done in the order in which the methods are configured. If first in the list, MAB occurs first. If second in the list after 802.1x, MAB will occur if 802.1X times out or fails. 802.1X timeout is determined by the following time period:   
+
+Timeout  = (maxReAuthReqIdentity + 1) * txPeriod   
+
+Authentication Manager initiates MAB authentication by conveying the MAC address of the client attempting to authenticate as the username. MAB then sends a request to the authentication server with the MAC address of the client in the user configured attribute 1 format (by default ‘hhXX:XXhh:hhXX:hhXX:hhXX:hhXX’) as the User-Name (Radius Attribute 1). This attribute is sent irrespective of the authentication type configured on that interface for MAB.   
+
+The type of RADIUS attributes included in the Access-Request varies with the type of authentication type selected for MAB on a physical interface. An Access-Request MUST contain either an EAP-Message (Radius Attribute 79) or a User-Password (Radius Attribute 2) or a CHAP-Password (Radius Attribute 3).  An Access-Request MUST NOT contain all 3 or any 2 of the above listed attributes.  
+If authentication type is configured as EAP-MD5 (also the default), the MD5 hash of the Mac address as the password in the EAP-Message (Radius Attribute 79) is sent to the authentication server.  
+If authentication type is configured as PAP, MAC address of the client is sent as the password similar to the format of Attribute 1 as clear text as part of the User-Password (Radius Attribute 2).  
+If authentication type is configured as CHAP, a randomly generated 16-octet challenge is sent as the CHAP-Challenge (Radius Attribute 60) along with the CHAP-Password (Radius Attribute 3). CHAP-ID is a unique number which is used to identify the session. MAC address of the client is taken and formatted using the configured Attribute 1 format and is used as ‘secret’ in deriving the CHAP-Password. CHAP-Password is calculated as MD5 (CHAP-ID | secret | CHAP-Challenge).
+
+The authentication server checks its pre-populated database for the authorized Mac addresses and returns an ‘Access-Accept’ or an ‘Access-Reject’ depending on if the Mac address has been found in the database. This also makes it possible for the client to be placed in a RADIUS assigned VLAN or apply a specific Filter ID to the client traffic.
+
 
 ### 3.3.3 Other Process
 
