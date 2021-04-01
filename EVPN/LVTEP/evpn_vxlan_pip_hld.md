@@ -484,8 +484,7 @@ The following commands will be used to configure secondary IP address for VxLAN.
 - IPv4 address check
 - Only a single Primary IP shall be allowed.
 - Primary IP cannot be edited.
-- Primary IP cannot be configured unless the VTEP IP is configured.
-- VTEP IP cannot be deleted unless the Primary IP is deleted.
+- Primary IP cannot be added or removed if VLAN VNI mappings are present.
 
 ### 3.5.4 Show Commands
 

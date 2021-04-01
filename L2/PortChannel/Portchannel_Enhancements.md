@@ -2,7 +2,7 @@
 ### Portchannel Enhancements in SONiC
 
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -13,9 +13,14 @@
   * [1 Feature Overview](#1-feature-overview)
     * [1.1 Requirements](#1_1-requirements)
       * [1.1.1 Functional Requirements](#1_1_1-functional-requirements)
+        * [1.1.1.1 SONiC 3.1.0](#1_1_1_1-sonic-3_1_0)
+          * [1.1.1.1.1 Port Channel graceful shutdown mode](#1_1_1_1_1-port-channel-graceful-shutdown-mode)
       * [1.1.2 Configuration and Management Requirements](#1_1_2-configuration-and-management-requirements)
       * [1.1.3 Scalability Requirements](#1_1_3-scalability-requirements)
       * [1.1.4 Warm Boot Requirements](#1_1_4-warm-boot-requirements)
+        * [1.1.4.1 SONiC 3.1.0](#1_1_4_1-sonic-3_1_0)
+          * [1.1.4.1.1 Port Channel graceful shutdown](#1_1_4_1_1-port-channel-graceful-shutdown)
+        * [1.1.4.2 SONiC 3.1.1](#1_1_4_2-sonic-3_1_1)
     * [1.2 Design Overview](#1_2-design-overview)
       * [1.2.1 Basic Approach](#1_2_1-basic-approach)
       * [1.2.2 Container](#1_2_2-container)
@@ -51,8 +56,14 @@
   * [5 Error Handling](#5-error-handling)
   * [6 Serviceability and Debug](#6-serviceability-and-debug)
   * [7 Warm Boot Support](#7-warm-boot-support)
+    * [7.1 LACPDU transmission using KNET](#7_1-lacpdu-transmission-using-knet)
+    * [7.2 Warm boot operation with Port Channel graceful shutdown](#7_2-warm-boot-operation-with-port-channel-graceful-shutdown)
   * [8 Scalability](#8-scalability)
   * [9 Unit Test](#9-unit-test)
+    * [9.1 Port Channel graceful shutdown](#9_1-port-channel-graceful-shutdown)
+      * [9.1.1 Enable Port Channel graceful shutdown mode](#9_1_1-enable-port-channel-graceful-shutdown-mode)
+      * [9.1.2 Disable Port Channel graceful shutdown mode](#9_1_2-disable-port-channel-graceful-shutdown-mode)
+    * [9.2 Warm boot](#9_2-warm-boot)
   * [10 References](#references)
 
 # List of Tables
@@ -63,6 +74,7 @@
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/22/2020  |      Madhukar K    | Initial version                   |
 | 0.2 | 07/25/2020  |      Madhukar K    | Adding portchannel level commands |
+| 0.3 | 10/07/2020  |      Madhukar K    | SONiC 3.1.1 related enhancements  |
 
 # About this Manual
 This document provides details on Port Channel enhancements in SONiC.
@@ -76,13 +88,19 @@ This document describes the high level design of Port Channel enhancements in SO
 |--------------------------|--------------------------------------|
 | LAG                      | Link Aggregation Group               |
 | LACP                     | Link Aggregation Control Protocol    |
+| LACPDU                   | LACP Data Unit                       |
 | MCLAG                    | Multi-Chassis Link Aggregation Group |
 
 # 1 Feature Overview
+
 ## 1.1 Requirements
+
 ### 1.1.1 Functional Requirements
-1. Port Channel graceful shutdown mode
-    - Upon enabling PortChannel graceful shutdown mode, all the portchannels in the system should be operationally down and stop traffic transmission and reception.
+
+#### 1.1.1.1 SONiC 3.1.0
+
+##### 1.1.1.1.1 Port Channel graceful shutdown mode
+Upon enabling PortChannel graceful shutdown mode, all the portchannels in the system should be operationally down and stop traffic transmission and reception.
 
 ### 1.1.2 Configuration and Management Requirements
 Provide configuration to enable/disable Port Channel graceful shutdown mode globally and at portchannel level with the KLISH and click CLI.
@@ -91,7 +109,14 @@ Provide configuration to enable/disable Port Channel graceful shutdown mode glob
 All the supported portchannels in the device should enable/disable graceful shutdown mode upon user trigger.
 
 ### 1.1.4 Warm Boot Requirements
-The portchannels  should continue to be operationally down when warm boot is triggered by the user in the Port Channel graceful shutdown mode.
+
+#### 1.1.4.1 SONiC 3.1.0
+
+##### 1.1.4.1.1 Port Channel graceful shutdown
+The portchannels should continue to be operationally down when warm boot is triggered by the user in the Port Channel graceful shutdown mode.
+
+##### 1.1.4.2 SONiC 3.1.1
+The portchannel should continue to be operationally UP (on actor and partner LAG devices) when user triggers the warm boot.
 
 ## 1.2 Design Overview
 ### 1.2.1 Basic Approach
@@ -359,13 +384,41 @@ No new error handling support is added.
 No new Serviceability or Debug support are added.
 
 # 7 Warm Boot Support
+When the user issues warm-boot on the SONiC device, each teamd process (corresponding to each portchannel in the system) receives SIGUSR1 signal. Upon receiving the SIGUSR1, each teamd process does below actions for all the portchannel member ports:
+  - transmit an LACPDU.
+    - Note: upon receving an LACPDU, the partner LAG device resets the peer timeout to the LACP timeout duration (default 90-seconds for long timeout); the portchannel on the partner device continues to be operationally UP for the next 90-seconds.
+  - save the current LACP state and the last received LACPDU packet into a file. After the system is ready (post warm boot), this file will be read to restore the LACP state of the portchannel member port.
+  - starting SONiC 3.1.1, the last transmitted LACPDU is saved into a file. The saved LACPDU is used to transmit an LACPDU (using KNET) after system is UP post warm boot.
+
+Once the system is ready (after warm-boot), teammgr launches the teamd process for each portchannel in the system. Each teamd process reads the saved portchannel information from the file system and does below actions:
+  - create the portchannel netdevice in the kernel; the portchannel operational state (link status) is restored
+  - restore the member port LACP states
+    - LACP partner information (partner system id, partner key, partner port, etc) is restored by reading the saved rx LACPDU
+  - continue the LACP state machine with the restored LACP states
+
+By doing above, the LACP state machine for all the portchannel member ports is restored. After restoring the LACP state information, the LACP state machine continues on each member port.
+The LACPDU transmission occurs when member port netdevice is available (and link UP) in the kernel. There can be a delay in creation (OR to become link UP) of the member port netdevice; this may result in the portchannel going DOWN on the partner device. To handle this, starting SONiC 3.1.1, once the system is UP post warm boot - one LACPDU is transmitted per port using KNET.
+
+Note: With LACP short timeout configured, the portchannel becomes operationally down when the warm boot is triggered. The portchannel becomes operationally up once the system is ready post warm boot operation.
+
+## 7.1 LACPDU transmission using KNET
+As mentioned in the previous section, there might be a delay for the portchannel member port netdevice to become operational (netdevice creation and link UP in the kernel) post warm boot. If the time gap between the moment last LACPDU is transmitted before system going down (due to warm boot) and the 1st LACPDU tranmitted after the system is ready is larger than the LACP timeout (90 seconds), the partner LACP device resets the LACP states and the portchannel on the partner would go DOWN operationally. This results in trafffic forwarding failure through the portchannel during warm boot operation.
+
+To handle this issue, starting SONiC 3.1.1, post warm boot the LACP helper script reads the saved tx LACPDU on a given port and transmit an LACPDU using KNET transmit path per each member port of the portchannel. Only one LACPDU is transmitted using the KNET transmit path. The LACPDU transmitted from the LACP helper resets the LACP timeout to 90-seconds on the partner LAG device. Once the system is ready (post warm boot) and the portchannel member port netdevices become operational (member port netdevice is created and link UP in the kernel), the teamd process transmits the LACPDUs as part of its regular LACP state machine operations; the LACPDU transmission happens using a raw socket per the portchannel member port netdevice.
+
+Note: Even though LACP helper script transmits an LACPDU before the member port netdevice is operational (in the kernel), if there is a delay in the member port netdevice to become operational in the kernel (link UP), the portchannel on the partner device will become operationally down (due to LACP timeout) and traffic on that portchannel is dropped.
+
+## 7.2 Warm boot operation with Port Channel graceful shutdown
 In the Port Channel graceful shutdown mode, the portchannels continue to be operationally down if user triggers warm boot of the device.
 
 # 8 Scalability
 All the supported portchannels in the device enter the Port Channel graceful shutdown mode when enabled by the user.
 
 # 9 Unit Test
-1. Enable Port Channel graceful shutdown mode.
+
+## 9.1 Port Channel graceful shutdown
+
+### 9.1.1 Enable Port Channel graceful shutdown mode.
   - Verify that "graceful_shutdown_mode" entry is set to "enable" in the PORTCHANNEL_GLOBAL table in CONFIG_DB.
   - Verify that all the portchannels in the system are Down in kernel, APPL_DB.
   - Verify that all the trunks in the hardware have no member ports.
@@ -373,11 +426,14 @@ All the supported portchannels in the device enter the Port Channel graceful shu
   - Verify that existing portchannels can be deleted and new portchannels can be created when Port Channel graceful shutdown mode is enabled.
   - With Port Channel graceful shutdown enabled, verify that portchannels continue to be operationally DOWN after config save and reload.
 
-
-2. Disable Port Channel graceful shutdown mode.
+### 9.1.2 Disable Port Channel graceful shutdown mode.
   - Verify that "graceful_shutdown_mode" entry is set to "disable" in the PORTCHANNEL_GLOBAL table in CONFIG_DB.
   - Verify that all the portchannels in the system start LACP state machine are programmed in kernel, APPL_DB if LACP convergence succeeds.
   - Verify that all the trunks in the hardware are programmed with member ports if LACP convergence succeeds.
+
+## 9.2 Warm boot
+  - Verify that portchannel on the partner LAG device continues to be operationally UP when warm boot is issued
+  - Verify that LACP helper transmits only one LACPDU per portchannel member port after system comes up post warm boot
 
 # 10 References
 None
