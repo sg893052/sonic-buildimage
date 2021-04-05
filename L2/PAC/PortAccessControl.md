@@ -124,6 +124,8 @@ Simple devices like camera or printers which do not support 802.1x authenticatio
 ## 1.3 Requirements
 
 ### 1.3.1 Functional Requirements
+
+*PAC*
 The following are the requirements for Port Access Control feature:
 1. PAC is supported on physical interfaces only.
 2. The interfaces cannot be part of a port-channel / LAG.
@@ -132,45 +134,61 @@ The following are the requirements for Port Access Control feature:
    - 802.1x
    - MAB (MAC-based authentication bypass).
 5. MAB, and dot1x need support for access port.
-6. User enable or disable of 802.1X on ports can cause PAC daemons (hostapd) to reload; however, existing authorized sessions do not reset.
-7. Changing the 802.1X interface, MAB do not reset existing authorized user ports. However, removing all 802.1X interfaces or changing any of the following RADIUS parameters restarts hostapd, which forces existing, authorized users to re-authenticate:
-   - RADIUS server IP address, shared secret, authentication port or accounting port.
-   - MAB activation delay.
-   - EAP re authentication period.
-8. User can configure up to three RADIUS servers (in case of failover). However, do not use a SONiC switch as the RADIUS server.
-9. User can configure 802.1X interfaces with dynamic ACLs in VLAN-aware bridge mode only.
-10. RADIUS authentication is supported with FreeRADIUS and Cisco ISE.
-11. 802.1X supports simple login and password, PEAP/MSCHAPv2 (Win7) and EAP-TLS (Debian).
-12. 802.1X supports RFC 5281 for EAP-TTLS, which provides more secure transport layer security.
-13. SONiC supports Multi Domain Authentication (MDA), where 802.1X is extended to allow authorization of multiple devices (a data and a voice device) on a single port and assign different VLANs to the devices based on authorization.
+6. PAC supports the following Dynamic ACLs:
+   - Named ACLs
+   - Dynamic ACLs
+   - Filter Id
+7. SONiC supports Single-Host mode where only one data client can be authenticated on a port and is granted access to the port at a given time.
+8. SONiC supports Multiple Hosts mode where only one data client can be authenticated on a port and after that access is granted to all clients connected to the port
+9. SONiC supports Multi Domain Authentication (MDA), where 802.1X is extended to allow authorization of multiple devices (a data and a voice device) on a single port and assign different VLANs to the devices based on authorization.
     - MDA is enabled by default; however, you need to assign a tagged VLAN for voice devices (see Configure 802.1X Interfaces for a VLAN-aware Bridge).
     - A maximum of four authorized devices (MAB + EAPOL) per port are supported.
     - The 802.1X-enabled port must be a trunk port to allow tagged voice traffic from a phone; you cannot enable 802.1X on an access port.
     - Only one untagged VLAN and one tagged VLAN is supported on the 802.1X enabled ports.
     - Multiple MAB (non voice) devices on a port are supported for VLAN-aware bridges only. Authorization of multiple MAB devices for different VLANs is not supported.
+10.  SONiC supports Multiple Authentication mode where one voice client and multiple data clients can be authenticated on a port and these clients are then granted access.
+11.  SONiC supports the following specical VLANs:
+     - Unauthenticated VLAN
+     - Guest VLAN
+     - Monitor VLAN
+     - Open VLAN
+     - Critical VLAN
+     - Voice VLAN
+12. The following PAC port modes are supported on SONiC: 
+    - Auto
+    - Force Authorized
+    - Force Unauthorized
 
+*802.1x*
+1. SONiC shall make use of opensource 802.1x implementation **hostapd** suppied with **wpa_supplicant** package.
 
-
+*MAB*
 The following are the requirements for MAB feature:
-1. A port can be configured to be either doing port-based authentication or doing Mac-based authentication. But only one mode at a given instance.
-2. A port when enabled for Dot1x authentication needs to explicitly mention whether it is being enabled for port-based authentication mode or Mac-based authentication mode.
-3. When a port is configured for Mac-based Dot1x Authentication, then if at least one client has actively authentication itself then port is placed in authorized state for other components.
-4. When a port is configured for Mac-based Dot1x Authentication, then port is placed in un-authorized state if the last active authorized client ceases to exist.
-5. When a port is operational in Mac-based Dot1x Authentication, then only the data traffic arriving on the port from authorized clients need to be forwarded.
-6. When a port is operational in Mac-based Dot1x Authentication, accept EAPOL packets from all the clients (both authorized and unauthorized as well).
-7. When a port is enabled for Guest vlan, then Mac-based dot1x authentication can not be enabled on that port.
-8. When a port is enabled for vlan assignment, then Mac-based dot1x authentication could also be enabled on that port. As the vlan assignment is based on the user details of the client.
-9. To enable Mac-based dot1x authentication on port it needs to be an Edge port. (Dot1s Configuration).
-10. If Mac-based dot1x authentication is enabled on a port and if Mac-based VLANs or Subnet VLANs or Protocol VLANs are also enabled, then Mac-based dot1x authentication is disabled.
-11. If Port-Mac Locking is enabled on the port and if Mac-based dot1x authentication is also enabled on the port. Then Port-Mac Locking needs to be disabled.
-12. If a client already authentication on one port has roamed to another port on the switch, then the state (status, vlan etc) of the client on the prior port needs to be cleaned.
-13. Timeout mechanism needs to be maintained per client so that inactive client's status can be removed on the switch.
-14. Multicast/Broadcast traffic arriving on the port that is enabled for Mac-based authentication would be forwarded accordingly. If the source Mac-address of the packet is from a authenticated user.
-15. Even when the port is authorized, dot1x would still continue to send EAPOL for authentication as more users could join on the port.
-16. Unauthenticated Vlan is per port configuration. By default unauthenticated vlan is zero (invalid and not operational).
-17. In port-based dot1x, if the client fails authentication then port is placed in the unauthenticated vlan (if configured)
-18. In mac-based dot1x, if the client fails authentication then client-mac is associated to the unauthenticated vlan (if configured).
-19. Unauthenticated vlan deprecates the Guest vlan feature of supplicant mode, as it would be redundant. 
+1. MAB can be used to authenticate clients that do not support EAP.
+2. A port can be configured to be either doing port-based authentication or doing Mac-based authentication. But only one mode at a given instance.
+3. A port when enabled for Dot1x authentication needs to explicitly mention whether it is being enabled for port-based authentication mode or Mac-based authentication mode.
+4. When a port is configured for Mac-based Dot1x Authentication, then if at least one client has actively authentication itself then port is placed in authorized state for other components.
+5. When a port is configured for Mac-based Dot1x Authentication, then port is placed in un-authorized state if the last active authorized client ceases to exist.
+6. When a port is operational in Mac-based Dot1x Authentication, then only the data traffic arriving on the port from authorized clients need to be forwarded.
+7. When a port is operational in Mac-based Dot1x Authentication, accept EAPOL packets from all the clients (both authorized and unauthorized as well).
+8. When a port is enabled for Guest vlan, then Mac-based dot1x authentication can not be enabled on that port.
+9. When a port is enabled for vlan assignment, then Mac-based dot1x authentication could also be enabled on that port. As the vlan assignment is based on the user details of the client.
+10. To enable Mac-based dot1x authentication on port it needs to be an Edge port. (Dot1s Configuration).
+11. If Mac-based dot1x authentication is enabled on a port and if Mac-based VLANs or Subnet VLANs or Protocol VLANs are also enabled, then Mac-based dot1x authentication is disabled.
+12. If Port-Mac Locking is enabled on the port and if Mac-based dot1x authentication is also enabled on the port. Then Port-Mac Locking needs to be disabled.
+13. If a client already authentication on one port has roamed to another port on the switch, then the state (status, vlan etc) of the client on the prior port needs to be cleaned.
+14. Timeout mechanism needs to be maintained per client so that inactive client's status can be removed on the switch.
+15. Multicast/Broadcast traffic arriving on the port that is enabled for Mac-based authentication would be forwarded accordingly. If the source Mac-address of the packet is from a authenticated user.
+16. Even when the port is authorized, dot1x would still continue to send EAPOL for authentication as more users could join on the port.
+17. Unauthenticated Vlan is per port configuration. By default unauthenticated vlan is zero (invalid and not operational).
+18. In port-based dot1x, if the client fails authentication then port is placed in the unauthenticated vlan (if configured)
+19. In mac-based dot1x, if the client fails authentication then client-mac is associated to the unauthenticated vlan (if configured).
+20. Unauthenticated vlan deprecates the Guest vlan feature of supplicant mode, as it would be redundant. 
+
+*RADIUS*
+1. User can configure up to three RADIUS servers (in case of failover). However, do not use a SONiC switch as the RADIUS server.
+2. RADIUS authentication is supported with FreeRADIUS and Cisco ISE.
+
 
 ### 1.3.2 Configuration and Management Requirements
 
@@ -193,11 +211,9 @@ No changes to SAI spec for supporting PAC.
 
 ## 2.1 Target Deployment Use Cases
 
-When a client authenticates itself initially on the network, the Switch acts as the authenticator to the clients on the network and forwards the authentication request to the Radius server in the network. If the authentication succeeds then the port is placed in authorized state and the client is able to forward or receive traffic through the port.
+When a client authenticates itself initially on the network, the Switch acts as the authenticator to the clients on the network and forwards the authentication request to the Radius server in the network. If the authentication succeeds then the client is placed in authorized state and the client is able to forward or receive traffic through the port.
 
-In a standard dot1x scenario, all the subsequent clients in the network that are connected to the same port need not authenticate to utilize the port on the switch. When Mac-based dot1x authentication is enabled, all the subsequent clients in the network that are connected to the same port need to authenticate themselves to utilize the port on the switch.
-
-If the vlan assignment is enabled in the Radius server then as part of the response message Radius server sends the vlan id the client is supposed to be in the 802.1x tunnel attributes. In the diagram above, the switch has placed three clients belonging to same port in the different vlans (vlan10 and vlan20) based on the user details of the clients. This implies that the client can connect from any port and can get assigned to the appropriate vlan that it is supposed to be in, this is configured in the radius server. This gives flexibility for the clients to move around the network with out much configuration need to be done by the administrator.
+If the vlan assignment is enabled in the Radius server, then as part of the response message, Radius server sends the vlan id the client is supposed to be in the 802.1x tunnel attributes. This implies that the client can connect from any port and can get assigned to the appropriate vlan that it is supposed to be in; this is configured in the radius server. This gives flexibility for the clients to move around the network with out much configuration need to be done by the administrator.
 
 
 ## 2.2 Functional Description
@@ -230,15 +246,13 @@ Note that the SONiC Authenticator supports only the EAP-MD5 authentication type 
 
 *RADIUS Authentication*   
 
-When RADIUS authentication is used, the Authenticator basically becomes a passthrough between. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section labelled "RADIUS Authentication Attributes" in this document.
-
-Per IEEE 802.1X-2001, the SONiC Authenticator supports EAP types that support RFC2284 (i.e. MD5, TLS, PEAP). For certain authentication types, such as EAP-TLS, key information can also be sent from the Authentication Server to the Authenticator as a RADIUS attribute in a RADIUS Access-Accept packet (i.e.  the MS-MPPE-Send-Key and MS-MPPE-Recv-Key attributes). The SONiC Authenticator provides the state machines and outcalls to handle keys, but, key distribution has not been fully implemented. The mechanisms provided could be used to extend platforms that support key distribution. Note that re-keying of Supplicants authentication types could be accomplished by enabling reauthentication on the SONiC Authenticator.
-
+When RADIUS authentication is used, the Authenticator basically becomes a passthrough. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section labelled "RADIUS Authorization Attributes" in this document.
 
 ### 2.2.2 Unidirectional and bidirectional control
-The controlled directions can be configured by management to dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The management setting of the controlled directions parameter can take on one of the following values:
+The controlled directions dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control direction are of two type:
 1. Both: Control is exerted over both incoming and outgoing frames.
-2. In: Control is only exerted over incoming traffic. Per 802.1X, if the Port is bridge Port, the operational status of controlled directions will be set to Both. However, unidirectional control is not supported in SONiC. Please see "Limitations and Restrictions" section.
+2. In: Control is only exerted over incoming traffic.
+SONiC supports on the unidirection(In) control. Please see "Limitations and Restrictions" section.
 
 
 ### 2.2.3 Downloadable ACL
@@ -250,28 +264,28 @@ Generally, any static ACLs (created by user) applied on the port are removed pri
 
 
 ### 2.2.4 Named ACLs
-RADIUS server can also provide an attribute (filter name/filter id) to have PAC apply a pre-configured ACL on the switch to the client. These pre-configured ACLs are named ACLs. These ACLs are created by the user on the switch. Once RADIUS indicates a named ACL is to be applied for a client, PAC replicates the ACL rules, modifies the rules to incorporate the client IP and then provide them as dynamic ACL rules.
+RADIUS server can also provide an attribute (filter name/filter id) to have PAC apply a pre-configured ACL on the switch to the client. These pre-configured ACLs are *named ACLs*. These ACLs are created by the user on the switch. Once RADIUS indicates a named ACL is to be applied for a client, PAC replicates the ACL rules, modifies the rules to incorporate the client IP and then provide them as dynamic ACL rules.
 
 ### 2.2.5 RADIUS supplied VLANs
-PAC (port access control) brings in support for access control with the ability to control user profiles from a RADIUS server. Once a client is authenticated, the client authorization parameters from RADIUS can indicate VLAN association for client traffic. The VLAN associated to the client could be a pre-created VLAN on the switch (static VLAN) in which case port membership of the VLAN are modified. In the absence of the VLAN on the switch, the VLAN are created on the switch (dynamic VLANs).
+PAC (port access control) brings in support for access control with the ability to control user profiles from a RADIUS server. Once a client is authenticated, the client authorization parameters from RADIUS can indicate VLAN association for client traffic. The VLAN associated to the client could be a pre-created VLAN on the switch (static VLAN). In the absence of the VLAN on the switch, the VLAN are created on the switch (dynamic VLANs).
 
 Default VLAN on port
 A port should not be part of user configured VLAN When PAC is enabled on the port. The port gets configured for a default VLAN (VLAN 1 - configurable) when PAC is enabled on the port. Once PAC is disabled on the port, the port is removed from the default VLAN.
 
 ### 2.2.6 FDB interaction
-PAC interacts with FDB to modify the learning mode of a port and add static FDB entries. The FDB related  interactions for PAC are outlined below:
-- PAC adds a static FDB entry for every authenticated client.   
+PAC interacts with FDB to modify the learning mode of a port and add static FDB entries. The FDB related interactions for PAC are outlined below:
+- PAC adds a static FDB entry for every authenticated client on Multi-Auth, Single-Host and Multi-Domain host modes.   
 - SONiC today allows addition of static FDB entries from CLI which are persistent across reloads. The same is enhanced so that PAC SONiC applications can add static FDB entries.   
 - Note that FDB entries thus added are not persistent and are operational config only (entries added as a result of the client getting authenticated).   
 - The entries get removed once the client logs off.   
 - FDB entries added operationally follows a similar config sequence like user created FDB entries.   
 - The learning mode of a port (or bridge port) was configured and controlled completely at the orchestration layer. With PAC, the application layer (pacd) also manages the learning mode to
-	1. Once PAC is enabled on a port, all incoming and outgoing traffic on the port are blocked/dropped except certain protocol traffic.
+	1. Once PAC is enabled on a port, all incoming traffic on the port are blocked/dropped except certain protocol traffic.
 	2. PAC turns off learning on the port essentially dropping all unknown source MAC packets. This achieves the requirement of blocking ingress traffic.
 	3. Egress traffic on the port is not blocked.
 	4. Once a client starts the authentication process, the client is no longer unknown (unknown source MAC). However, since authentication is yet to be completed,
-traffic for the client must still get dropped. To achieve the same, PAC installs a static FDB entry in drop state to drop the client’s traffic but get classified as L2SrcHit.
-- For MAC based authentication mode of PAC, unknown source MAC packets are trapped to the CPU.
+traffic for the client must still get dropped. To achieve the same, PAC installs a static FDB entry with discard bits set, is installed to mark the client "known" so that the incoming traffic does not flood the CPU.
+- For MAB, unknown source MAC packets are trapped to the CPU.
 - Station movement is also handled i.e if a packet is received from another port on a MAC, VLAN pair for which PAC installed a static FDB entry, such packets also get trapped to the CPU.
 
 
@@ -279,7 +293,7 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 ## 3.1 Overview
 
-[Figure 1](#pac-config-flow) shows the high level design overview of PAC services in SONiC. PAC Services Daemon is composed of multiple sub-modules. The main module i.e. PAC daemon handles the authentication related commands and makes use of hostApd and mabd daemons to authenticate a client via dot1x and mab respectively. hostApd being a standard Linux application takes hostapd.con as its config file. hostApdMgr takes care of listenting to dot1x specific configuration and translating them to respective hostapd.conf file config entries. pacd daemon being the main module decides which authentication protocol needs to be used for a given port and also calls APIs to program the polices in hardware.
+[Figure 1](#pac-config-flow) shows the high level design overview of PAC services in SONiC. PAC Services Daemon is composed of multiple sub-modules. The main module i.e. PAC daemon handles the authentication related commands and makes use of hostApd and mabd daemons to authenticate a client via dot1x and mab respectively. hostApd being a standard Linux application takes hostapd.conf as its config file. hostApdMgr takes care of listening to dot1x specific configuration and translating them to respective hostapd.conf file config entries. pacd daemon being the main module decides which authentication protocol needs to be used for a given port and also calls APIs to program the polices in hardware.
 
 ### 3.1.1 Configuration flow
 
@@ -290,8 +304,8 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 1. Mgmt interfaces like CLI and REST writes the user provided configuration to CONFIG_DB.
 2. The pacd, mabd and hostApdMgr gets notified about their respective configuration.
 3. hostApd being a standard Linux application gets its configuration from hostapd.conf file. hostApdMgr makes use of Jinja2 templates to generates the hostapd.conf file based on the relevant CONFIG_DB tables.
-4. Pacd gets to know about the list of ports that needs to be authenticated via DOT1X and MAB and their priority from PAC_PORT_CONF_TABLE on CONFIG_DB. Based on the priority and authentication failure status, pacd decides on the list of ports to be authenticated via DOT1X and MAB and It communicates the list of interfaces to hostApd and mabd respectively via netlink messages.
-5. hostApd listen to EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives  a PDU. mabd listens to DHCP and EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives  a PDU.
+4. Pacd gets to know about the list of ports that needs to be authenticated from PAC_PORT_CONFIG_TABLE on CONFIG_DB. The same table provides info on which ports supporrts DOT1X and which supports MAB and priority amoung the authentication methods. Based on the priority and authentication failure status, pacd decides on the list of ports to be authenticated via DOT1X and the list of ports that needs to be authenticated via MAB. It communicates the respective list of interfaces to hostApd and mabd via netlink messages.
+5. hostApd listens to EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives a PDU. mabd listens to DHCP and EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives a PDU.
 
 
 
@@ -322,7 +336,7 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 1. DHCP packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to pacd socket listening on the kernel interface associated with the given front panel interface.
 2. Pacd sends an Client Authenticate netlink message along with the received PDU MAC.
 3. mabd interacts with RADIUS server to authenticate the given client based on the MAC.
-4. On successful authentication of a client, mabd sends an Client Authenticated netlink message to pacd with all the atheization parameters like VLAN and DACL.
+4. On successful authentication of a client, mabd sends an Client Authenticated netlink message to pacd with all the authorization parameters like VLAN and DACL.
 5. pacd proceeds to authorize the client by writing PAC_AUTHORIZE_TABLE on APPL_DB. RADIUS authorization parameters like dynamic VLAN, dynamic ACL are created by writing on their tables on STATE_DB.
 6. Orchagent in SWSS docker gets notified about changes in APPL_DB and responds by translating the APPL_DB changes to respective sairedis calls.
 7. Sairedis APIs write into ASIC_DB.
@@ -398,11 +412,6 @@ In this mode one data client and one voice client can be authenticated on a port
 *Multiple Authentication mode*   
 In this mode one voice client and multiple data clients can be authenticated on a port and these clients are then granted access. Typical use case is a network of laptops and an IP phone connected to the NAS port via a hub.   
 
-*Multiple Domain Multi Host mode*   
-In this mode one voice client and one data client can be authenticated on a port and these clients are then granted access. However once a data client is authenticated, access is granted to all clients connected to the port and they are considered data clients. Typical use case is an IP phone connected to a NAS port and a Virtual Machine Controller connected to the hub port of the IP phone. The Virtual Machine Controller hosts multiple Virtual Machines. Both the VM Controller and the IP phone need to be authenticated to access the network services behind the NAS. The voice and data domains are segregated. Once the VM Controller is authenticated, it allows traffic from all the VMs hosted by the VM Controller. Once this client gets authenticated, the port is open for all clients connected to the port. Authentication and port access is also allowed for a Voice device.   
-
-Note: If the data client gets authenticated first, the Voice client can only be authenticated using 802.1x.
-
 **Authentication Manager Authentication method fallback and priorities**
 
 Authentication manager controls the order in which the authentication methods are executed. Authentication manager does not make any required configuration for the respective methods to authenticate successfully. User or Administrator needs to ensure that the correct and appropriate configuration is present in the system.
@@ -418,15 +427,15 @@ If administrator changes the priority of the methods, then all the users who are
 
 **Authorization parameters** 
 
-Upon successful authentication, the authentication methods inform Authentication Manager about the result. Authentication Manager then authorizes the port and configures it for allowing traffic from and to the client.  
+Upon successful authentication, the authentication methods inform Authentication Manager about the result. Authentication Manager then authorizes the port and configures it for allowing traffic from the client.  
 
 Authentication Manager receives the client authorization parameters from the authentication method after successful authentication of a client. The following parameters are acted upon:  
 
 - *VLAN Id*: This is the VLAN ID sent by a RADIUS server. Authentication Manager configures the port membership accordingly so that the client traffic is associated with the VLAN. Refer [3] for further details.
 - *Session Timeout*: This is the timeout attribute of the authenticated client session.
 - *Session Termination Action*: Upon session timeout, the Session Termination Action determines the action on the client session. The following actions are defined:
-- *Default*: The client session is torn down and authentication needs to be restarted for the client.
-- *RADIUS*: Re-authentication is initiated for the client.
+   - *Default*: The client session is torn down and authentication needs to be restarted for the client.
+   - *RADIUS*: Re-authentication is initiated for the client.
 - *Filter-Id*: Specifies an ACL of Diffserv policy name. This is used to apply a Static ACL or DiffServ policy on the port for the client. IPv4 and IPv6 ACLs in the “IN” direction is supported. If the Differv policy or ACL is not present in the system, or if a Diffserv policy is already configured on the port, authentication for the client is rejected. These are subject to Monitor Mode configuration. Filter-Id is supported on all Authentication Manager host modes.
 - *Downloadable ACL*: DACLs are supported on all host modes.
 - *Redirect ACL*: This is used to apply an ACL that traps matching packets to the CPU for redirection. It is typically used to match on HTTP packets from a client.
@@ -439,8 +448,6 @@ Today, 802.1x has become the recommended port-based authentication method at the
 - CHAP
 - EAP-MD5
 - PAP
-
-SONiC provides a mechanism to format the attribute1 as part of MAB configuration. This mechanism decouples the formats of attribute1 and attribute31 sent in the RADIUS packets and enables separate controls for both.   
 
 Mac-based Authentication Bypass (MAB) is configured per port. For MAB to be used for authentication it needs to be is configured as an authentication method in method list for the port by Authentication Manager, MAB authentication is done in the order in which the methods are configured. If first in the list, MAB occurs first. If second in the list after 802.1x, MAB will occur if 802.1X times out or fails. 802.1X timeout is determined by the following time period:   
 
@@ -710,8 +717,6 @@ Configured actions and counters should continue to work across warm reboot.
 
 - Authentication Manager does not make any required configuration for the respective methods to authenticate successfully. The administrator needs to ensure that the correct and appropriate configuration is present in the system. For example, if the authentication order method includes the 802.1x port authentication method, 802.1X should be enabled for the authentication to succeed. Authentication manager will not enable/disable and make the configurations related to 802.1X. Administrator should make the necessary configurations.
 
-- If the authentication order includes web authentication, then fallback profile that enables web authentication on the switch and the interface should be configured. Similarly all the required ACLs should be configured by the administrator or user.
-
 - In the default configuration, all traffic that is not EAP over LAN (EAPoL) traffic (including DHCP) is dropped until 802.1X  and MAB times out. Therefore, the value of the timeout can significantly affect the DHCP client on the end host. Longer 802.1X timeouts may prevent DHCP from functioning correctly after the  802.1X timeout expires.
 
 - To prevent DHCP clients from timing out, SONiC recommends testing the DHCP clients in respective network to discover how long they take to time out and setting the  802.1X timers accordingly.
@@ -724,7 +729,8 @@ Configured actions and counters should continue to work across warm reboot.
 # 10 Upgrade / Downgrade considerations
 
 # 11 Unit Test
-
+*fpinfra*
+This being a library that provides C APIs is unit tested via a C/C++ based test utility that exercises those APIs. The unit test is build up on the google test (gtest) infra. The test infra relies on the automake "make check" and gets executed during the compliation of sonic-secutity docker.
 
 # 12 Appendix: Sample configuration
 
@@ -734,7 +740,14 @@ Configured actions and counters should continue to work across warm reboot.
 
 # 13 Internal Design Information
 
-Internal BRCM information to be removed before sharing with the community
+Internal BRCM information to be removed before sharing with the community.
+
+Feature shall be supported on below mentioned platforms.
+*AS4630*
+- 4 Core CPU
+- 8 GB RAM
+- 16G Disc
+- TD3-X3
 
 ## 13.1 Future Design Enhancements
 
