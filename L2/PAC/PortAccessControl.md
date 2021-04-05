@@ -1059,7 +1059,7 @@ fpinfra is a shared library that provides C APIs. Its unit tested using a C/C++ 
 
 Internal BRCM information to be removed before sharing with the community.
 
-Feature shall be supported on below mentioned platforms.
+Feature shall be supported on below mentioned platforms.   
 *AS4630*
 - 4 Core CPU
 - 8 GB RAM
