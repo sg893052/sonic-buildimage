@@ -86,6 +86,7 @@ High level design document version 0.1
 | Rev  | Date       | Author   | Change Description |
 | ---- | ---------- | ---------| ------------------ |
 | 0.1  | 02/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Initial version |
+| 0.2  | 04/05/2021 | Prabhu Sreenivasan | Initial Review comments |
 
 # About this Manual
 This document provides general information about the Port Access Control feature in SONiC.
@@ -125,7 +126,7 @@ Simple devices like camera or printers which do not support 802.1x authenticatio
 
 ### 1.3.1 Functional Requirements
 
-*PAC*
+*PAC*   
 The following are the requirements for Port Access Control feature:
 1. PAC is supported on physical interfaces only.
 2. The interfaces cannot be part of a port-channel / LAG.
@@ -159,10 +160,10 @@ The following are the requirements for Port Access Control feature:
     - Force Authorized
     - Force Unauthorized
 
-*802.1x*
+*802.1x*   
 1. SONiC shall make use of opensource 802.1x implementation **hostapd** suppied with **wpa_supplicant** package.
 
-*MAB*
+*MAB*   
 The following are the requirements for MAB feature:
 1. MAB can be used to authenticate clients that do not support EAP.
 2. A port can be configured to be either doing port-based authentication or doing Mac-based authentication. But only one mode at a given instance.
@@ -185,7 +186,7 @@ The following are the requirements for MAB feature:
 19. In mac-based dot1x, if the client fails authentication then client-mac is associated to the unauthenticated vlan (if configured).
 20. Unauthenticated vlan deprecates the Guest vlan feature of supplicant mode, as it would be redundant. 
 
-*RADIUS*
+*RADIUS*   
 1. User can configure up to three RADIUS servers (in case of failover). However, do not use a SONiC switch as the RADIUS server.
 2. RADIUS authentication is supported with FreeRADIUS and Cisco ISE.
 
@@ -218,30 +219,28 @@ If the vlan assignment is enabled in the Radius server, then as part of the resp
 
 ## 2.2 Functional Description
 
-The Ports of an 802.1X Authenticator switch provide the means in which it can offer services to other systems reachable via the LAN. Port-based network access control allows the operation of a System's Port(s) to be controlled in order to ensure that access to its services is only permitted by Systems that are authorized to do so.
+The Ports of an 802.1X Authenticator switch provide the means in which it can offer services to other systems reachable via the LAN. Port-based network access control allows the operation of a System's Port(s) to be controlled in order to ensure that access to its services is only permitted by Systems that are authorized to do so.   
 
-Port Access Control provides a means of preventing unauthorized access by Supplicants to the services offered by a System. Control over the access to a switch and the LAN to which it is connected can be desirable in order to restrict access to publicly accessible bridge ports or to restrict access to departmental LANs.
+Port Access Control provides a means of preventing unauthorized access by Supplicants to the services offered by a System. Control over the access to a switch and the LAN to which it is connected can be desirable in order to restrict access to publicly accessible bridge ports or to restrict access to departmental LANs.   
 
-Access control is achieved by enforcing authentication of Supplicants that are attached to an Authenticator's controlled Ports. The result of the authentication process determines whether the Supplicant is authorized to access services on that controlled Port.
+Access control is achieved by enforcing authentication of Supplicants that are attached to an Authenticator's controlled Ports. The result of the authentication process determines whether the Supplicant is authorized to access services on that controlled Port.   
 
-A PAE is able to adopt one of two distinct roles within an access control interaction:
-
+A PAE is able to adopt one of two distinct roles within an access control interaction:   
 1. authenticator: A Port that enforces authentication before allowing access to services available via that Port.
+2. supplicant: A Port that attempts to access services offered by the Authenticator.   
 
-2. supplicant: A Port that attempts to access services offered by the Authenticator.
-
-Additionally, there exists a third role:
+Additionally, there exists a third role:   
 3. authentication server: Performs the authentication function necessary to check the credentials of the Supplicant on behalf of the Authenticator.  
 
 All three roles are required in order to complete an authentication exchange. SONiC supports the Authenticator role only, in which the PAE is responsible for communicating with the Supplicant. The Authenticator PAE is also responsible for submitting the information received from the Supplicant to the Authentication Server in order for the credentials to be checked, which will determine the authorization state of the Port. The Authenticator PAE controls the authorized/unauthorized state of the controlled Port depending on the outcome of the authentication process.
 
 ### 2.2.1 Local vs. RADIUS Authentication
-There are two methods that can be used for authenticating a user for a particular port on a switch. These methods are described in the following sections.
+There are two methods that can be used for authenticating a user for a particular port on a switch. These methods are described in the following sections.   
 
 *Local Authentication*   
 Local authentication consists of matching a user ID/password combination from the Supplicant to a locally-stored user database. The user ID that is returned in response to an EAP-Request/Identity is matched against the database. If a match is found, an EAP-Request/MD5 challenge request is sent to the Supplicant. The Supplicant then takes the challenge, its password and the EAP ID and derives an MD5 response. The MD5 response is then send to the Authenticator which uses the locally stored password to derive the answer and compare it to the Supplicants response. A match results in a successful authentication of the port.   
 
-Note that the SONiC Authenticator supports only the EAP-MD5 authentication type for local authentication.
+Note that the SONiC Authenticator supports only the EAP-MD5 authentication type for local authentication.   
 
 
 *RADIUS Authentication*   
@@ -249,18 +248,18 @@ Note that the SONiC Authenticator supports only the EAP-MD5 authentication type 
 When RADIUS authentication is used, the Authenticator basically becomes a passthrough. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section labelled "RADIUS Authorization Attributes" in this document.
 
 ### 2.2.2 Unidirectional and bidirectional control
-The controlled directions dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control direction are of two type:
+The controlled directions dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control direction are of two type:   
 1. Both: Control is exerted over both incoming and outgoing frames.
-2. In: Control is only exerted over incoming traffic.
+2. In: Control is only exerted over incoming traffic.   
 SONiC supports on the unidirection(In) control. Please see "Limitations and Restrictions" section.
 
 
 ### 2.2.3 Downloadable ACL
-PAC (Port access control) feature brings in DACL (downloadable ACL) support into SONiC. As a part of PAC, once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Downloadable ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The downloadable ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.
+PAC (Port access control) feature brings in DACL (downloadable ACL) support into SONiC. As a part of PAC, once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Downloadable ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The downloadable ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.   
 
-The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. Essentially, the DACL configuration is temporary (applied for the duration of the authenticated client session) and not persistent. The downloadable ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The ACLs created by the applications are owned by the internal application and hence cannot be deleted by a user.
+The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. Essentially, the DACL configuration is temporary (applied for the duration of the authenticated client session) and not persistent. The downloadable ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The ACLs created by the applications are owned by the internal application and hence cannot be deleted by a user.   
 
-Generally, any static ACLs (created by user) applied on the port are removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However in certain situations, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. Amoung DACLs IPv6 ACL have higher prority over IPv4. In situations where the client IP address changes, the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address. 
+Generally, any static ACLs (created by user) applied on the port are removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However in certain situations, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. Amoung DACLs IPv6 ACL have higher prority over IPv4. In situations where the client IP address changes, the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.   
 
 
 ### 2.2.4 Named ACLs
@@ -275,7 +274,7 @@ A port should not be part of user configured VLAN When PAC is enabled on the por
 ### 2.2.6 FDB interaction
 PAC interacts with FDB to modify the learning mode of a port and add static FDB entries. The FDB related interactions for PAC are outlined below:
 - PAC adds a static FDB entry for every authenticated client on Multi-Auth, Single-Host and Multi-Domain host modes.   
-- SONiC today allows addition of static FDB entries from CLI which are persistent across reloads. The same is enhanced so that PAC SONiC applications can add static FDB entries.   
+- SONiC today allows addition of static FDB entries from CLI which are persistent across reloads. The same is enhanced so that PAC SONiC applications can add static FDB entries. 
 - Note that FDB entries thus added are not persistent and are operational config only (entries added as a result of the client getting authenticated).   
 - The entries get removed once the client logs off.   
 - FDB entries added operationally follows a similar config sequence like user created FDB entries.   
@@ -350,6 +349,68 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 ### 3.2.1 Config DB
 
+```
+ "PAC_PORT_CONFIG_TABLE": {
+"ethernet1": {
+"method_list": [
+"802.1x",
+"mab"
+],
+"priority_list": [
+"802.1x",
+"mab"
+],
+"port_control_mode": "auto",
+"host_control_mode": "multi_auth",
+"quiet_period": 10,
+"reauth_period": 60,
+"reauth_enable": "true",
+"max_users_per_port": 48,
+"max_reauth_attempts": 1,
+"guest_vlan": 10,
+"auth_fail_vlan": 100
+}
+}
+
+
+key = PAC_PORT_CONFIG_TABLE:port ; Physical port
+;field = value
+method_list = "dot1x"/"mab" ; List of methods to be used for authentication
+priority_list= "dot1x"/"mab"; Relative priority of methods to be used for authentication
+port_control_mode = "auto"/"force_authorized"/"force_unauthorized"; Port control mode
+                                                                  ; 'auto": authentication enforced on port
+								  ; 'force_authorized": authentication not enforced on port
+								  ; 'force_unauthorized": authentication not enforced on port but port is blocked for all traffic
+host_control_mode = "multi-host"/"multi-domain"/"multi-auth"/"single-auth" ; Host control mode
+                                                    ; "multi-host": One data client can be authenticated on the port. Rest of the clients tailgate once the first client is authenticated.
+						    ; "multi-domain": One data client and one voice client can be authenticated on the port.
+						    ; "multi-auth": Multiple data client and one voice client can be authenticated on the port.
+						    ; "single-auth": One data client or one voice client can be authenticated on the port.
+
+quiet_period = 1*5DIGIT ; The initial value of the timer that defines the period during which the Authenticator will not attempt to authenticate the Supplicant. Range is 0-65535 seconds.
+reauth_period = 1*10DIGIT;The initial value of the timer that defines the period after which the Authenticator will reauthenticate the Supplicant. Range is 3600 - 4294967296 seconds.
+reauth_enable = "true"/"false";Indicates whether Reauthentication is enabled on the port.
+max_users_per_port=1*2DIGIT; Maximum number of clients that can be authenticated on the port. This is applicable only for "multi-auth" host mode.Range is 1 - 64 clients.
+guest_vlan_id= 1*4DIGIT;The Guest VLAN Id for the port. Range is 1 - 4093
+auth_fail_vlan_id=1*4DIGIT;The Authentication Fail VLAN Id for the port. Range is 1 - 4093
+max_auth_attempts=1DIGIT;The maximum number of authentication retries in the event of authentication failure.Range is 1 - 5
+
+```
+
+```
+
+"PAC_GLOBAL_CONFIG_TABLE": {
+"authentication_enable": "true",
+"monitor_mode_enable": "false"
+}
+						
+
+;field=value
+authentication_enable="true"/"false";Indicates whether PAC is enabled in the system.
+monitor_mode_enable="true"/"false";Indicates whether monitor mode is enabled in the system.
+
+```
+
 
 ### 3.2.2 App DB
 
@@ -358,6 +419,68 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 None
 
 ### 3.2.5 Counter DB
+None
+### 3.2.6 State DB
+```
+" PAC_PORT_OPER_TABLE ": {
+"ethernet1": {
+"enabled_method_list": [
+"802.1x",
+"mab"
+],
+"enabled_priority_list": [
+"802.1x",
+"mab"
+],
+"num_clients_authenticated": 10
+}
+}
+
+auth_fail_vlan_id = 1*4DIGIT ; The Authentication Fail VLAN Id for the port. Range is 1 - 4093
+max_auth_attempts = 1DIGIT ; The maximum number of authentication retries in the event of authentication failure. Range is 1 - 5
+;field = value
+authentication_enable = "true"/"false" ; Indicates whether PAC is enabled in the system.
+monitor_mode_enable = "true"/"false" ; Indicates whether monitor mode is enabled in the system. 
+
+```
+
+```
+" PAC_AUTHENTICATED_CLIENT_OPER_TABLE ": {
+"ethernet1": [{
+"00:00:00:11:02:33": {
+"current_id": 21,
+"auth_status": "authorized",
+"authenticated_method": "802.1X",
+"server_state": "36 34 43 50 4d 53 65 73 73 69 6f 6e 49 44 3d 30 61 38 32 62 39 37 36 4c 49
+50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d
+6e 4a 33 31 42 6a 5a 34 51 49 3b 33 34 53 65 73 73 69 6f 6e 49 44 3d 43 69 73 63 6f 49 53 45
+2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35 3b",
+"server_state_len": 106,
+"server_class": "43 41 43 53 3a 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55
+39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49
+3a 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35",
+"server_class_len": 83,
+"session_timeout": 60,
+"user_name": "sonic_user",
+"user_name_len": 9,
+"termination_action": 0,
+"vlan_id": 194,
+"vlan_type": "radius",
+"backend_auth_method": "radius",
+"session_time": 511
+}
+},
+{
+"00:00:00:21:00:30": {
+"current_id": 28,
+"auth_status": "authorized",
+"authenticated_method": "802.1X",
+key = PAC_PORT_OPER_TABLE : port ; Physical port
+;field = value
+enabled_method_list = "dot1x"/"mab" ; List of methods to be used for authentication
+enabled_priority_list = "dot1x"/"mab" ; Relative priority of methods to be used for authentication 
+num_clients_authenticated = 1*2DIGIT ; Number of clients authenticated on the port.
+```
 
 ## 3.3 Switch State Service Design
 
@@ -729,8 +852,10 @@ Configured actions and counters should continue to work across warm reboot.
 # 10 Upgrade / Downgrade considerations
 
 # 11 Unit Test
-*fpinfra*
-This being a library that provides C APIs is unit tested via a C/C++ based test utility that exercises those APIs. The unit test is build up on the google test (gtest) infra. The test infra relies on the automake "make check" and gets executed during the compliation of sonic-secutity docker.
+
+*fpinfra*   
+
+fpinfra being a shared library that provides C APIs is unit tested via a C/C++ based test utility that exercises those APIs. The unit test is build up on the google test (gtest) infrastructure. The test infra relies on the automake "make check" and gets executed during the compliation of sonic-secutity docker.
 
 # 12 Appendix: Sample configuration
 
