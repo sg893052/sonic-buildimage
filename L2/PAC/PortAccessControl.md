@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.1
+High level design document version 0.2
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -86,7 +86,7 @@ High level design document version 0.1
 | Rev  | Date       | Author   | Change Description |
 | ---- | ---------- | ---------| ------------------ |
 | 0.1  | 02/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Initial version |
-| 0.2  | 04/05/2021 | Prabhu Sreenivasan | Initial Review comments |
+| 0.2  | 04/05/2021 | Prabhu Sreenivasan | DB schema update and Review comments |
 
 # About this Manual
 This document provides general information about the Port Access Control feature in SONiC.
@@ -349,7 +349,8 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 ### 3.2.1 Config DB
 
-```
+*PAC*   
+```   
  "PAC_PORT_CONFIG_TABLE": {
 "ethernet1": {
 "method_list": [
@@ -375,13 +376,14 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 key = PAC_PORT_CONFIG_TABLE:port ; Physical port
 ;field = value
-method_list = "dot1x"/"mab" ; List of methods to be used for authentication
-priority_list= "dot1x"/"mab"; Relative priority of methods to be used for authentication
-port_control_mode = "auto"/"force_authorized"/"force_unauthorized"; Port control mode
+method_list         = "dot1x"/"mab" ; List of methods to be used for authentication
+priority_list       = "dot1x"/"mab"; Relative priority of methods to be used for authentication
+port_control_mode   = "auto"/"force_authorized"/"force_unauthorized"; Port control mode
                                                                   ; 'auto": authentication enforced on port
 								  ; 'force_authorized": authentication not enforced on port
 								  ; 'force_unauthorized": authentication not enforced on port but port is blocked for all traffic
-host_control_mode = "multi-host"/"multi-domain"/"multi-auth"/"single-auth" ; Host control mode
+								  
+host_control_mode   = "multi-host"/"multi-domain"/"multi-auth"/"single-auth" ; Host control mode
                                                     ; "multi-host": One data client can be authenticated on the port. Rest of the clients tailgate once the first client is authenticated.
 						    ; "multi-domain": One data client and one voice client can be authenticated on the port.
 						    ; "multi-auth": Multiple data client and one voice client can be authenticated on the port.
@@ -394,23 +396,29 @@ max_users_per_port=1*2DIGIT; Maximum number of clients that can be authenticated
 guest_vlan_id= 1*4DIGIT;The Guest VLAN Id for the port. Range is 1 - 4093
 auth_fail_vlan_id=1*4DIGIT;The Authentication Fail VLAN Id for the port. Range is 1 - 4093
 max_auth_attempts=1DIGIT;The maximum number of authentication retries in the event of authentication failure.Range is 1 - 5
+```   
 
-```
-
-```
-
+```   
 "PAC_GLOBAL_CONFIG_TABLE": {
 "authentication_enable": "true",
 "monitor_mode_enable": "false"
 }
-						
-
+    
 ;field=value
-authentication_enable="true"/"false";Indicates whether PAC is enabled in the system.
-monitor_mode_enable="true"/"false";Indicates whether monitor mode is enabled in the system.
+authentication_enable = "true"/"false";Indicates whether PAC is enabled in the system.
+monitor_mode_enable   = "true"/"false";Indicates whether monitor mode is enabled in the system.
 
+```   
+
+*hostapd*   
 ```
+" HOSTAPD_GLOBAL_CONFIG_TABLE ": {
+"dot1x_system_auth_control": "enable"
+}
 
+;field = value 
+dot1x_system_auth_control "true"/"false" ; Indicates whether dot1x is enabled in the system.
+```
 
 ### 3.2.2 App DB
 
@@ -419,9 +427,60 @@ monitor_mode_enable="true"/"false";Indicates whether monitor mode is enabled in 
 None
 
 ### 3.2.5 Counter DB
-None
-### 3.2.6 State DB
+
 ```
+"HOST_APD_STATS_TABLE": [{
+"00:00:00:11:22:33": {
+"dot1xAuthEapolFramesRx": 311,
+"dot1xAuthEapolFramesTx": 380,
+"dot1xAuthEapolStartFramesRx": 71,
+"dot1xAuthEapolLogoffFramesRx": 15,
+"dot1xAuthEapolRespIdFramesRx": 67,
+"dot1xAuthEapolRespFramesRx": 212,
+"dot1xAuthEapolReqIdFramesTx": 250,
+"dot1xAuthEapolReqFramesTx": 250,
+"dot1xAuthInvalidEapolFramesRx": 250,
+"dot1xAuthEapLengthErrorFramesRx": 250,
+"dot1xAuthLastEapolFrameVersion": 2
+}
+},
+{
+"00:00:00:22:22:34": {
+"dot1xAuthEapolFramesRx": 311,
+"dot1xAuthEapolFramesTx": 380,
+"dot1xAuthEapolStartFramesRx": 71,
+"dot1xAuthEapolLogoffFramesRx": 15,
+"dot1xAuthEapolRespIdFramesRx": 67,
+"dot1xAuthEapolRespFramesRx": 212,
+"dot1xAuthEapolReqIdFramesTx": 250,
+"dot1xAuthEapolReqFramesTx": 250,
+"dot1xAuthInvalidEapolFramesRx": 250,
+"dot1xAuthEapLengthErrorFramesRx": 250,
+"dot1xAuthLastEapolFrameVersion": 2
+}
+}
+]
+
+key = HOST_APD_STATS_TABLE : client mac; Client MAC
+;field = value
+dot1xAuthEapolFramesRx          = 1*10DIGIT ; The number of valid EAPOL frames of any type that have been received by this Authenticator.
+dot1xAuthEapolFramesTx          = 1*10DIGIT ; The number of EAPOL frames of any type that have been transmitted by this Authenticator.
+dot1xAuthEapolStartFramesRx     = 1*10DIGIT ; The number of EAPOL Start frames that have been received by this Authenticator.
+dot1xAuthEapolLogoffFramesRx    = 1*10DIGIT ; The number of EAPOL Logoff frames that have been received by this Authenticator.
+dot1xAuthEapolRespIdFramesRx    = 1*10DIGIT ; The number of EAP Resp/Id frames that have been received by this Authenticator.
+dot1xAuthEapolRes pFramesRx     = 1*10DIGIT ; The number of valid EAP Response frames (other than Resp/Id frames) that have been received by this Authenticator.
+dot1xAuthEapolReqIdFramesTx     = 1*10DIGIT ; The number of EAP Req/Id frames that have been transmitted by this Authenticator.
+dot1xAuthEapolReqFramesTx       = 1*10DIGIT ; The number of EAP Request frames (other than Rq/Id frames) that have been transmitted by this Authenticator.
+dot1xAuthInvalidEapolFramesRx   = 1*10DIGIT ; The number of EAPOL frames that have been received by this Authenticator in which the frame type is not recognized.
+dot1xAuthEapLengthErrorFramesRx = 1*10DIGIT ; The number of EAPOL frames that have been received by this Authenticator in which the Packet Body Length field is invalid.
+dot1xAuthLastEapolFrameVersion  = 1*10DIGIT ; The protocol version number carried in the most recently received EAPOL frame.
+```
+
+
+### 3.2.6 State DB
+
+*PAC*   
+```   
 " PAC_PORT_OPER_TABLE ": {
 "ethernet1": {
 "enabled_method_list": [
@@ -436,11 +495,12 @@ None
 }
 }
 
-auth_fail_vlan_id = 1*4DIGIT ; The Authentication Fail VLAN Id for the port. Range is 1 - 4093
-max_auth_attempts = 1DIGIT ; The maximum number of authentication retries in the event of authentication failure. Range is 1 - 5
+key = PAC_PORT_OPER_TABLE : port ; Physical port
 ;field = value
-authentication_enable = "true"/"false" ; Indicates whether PAC is enabled in the system.
-monitor_mode_enable = "true"/"false" ; Indicates whether monitor mode is enabled in the system. 
+enabled_method_list       = "dot1x"/"mab" ; List of methods to be used for authentication
+enabled_priority_list     = "dot1x"/"mab" ; Relative priority of methods to be used for authentication
+num_clients_authenticated = 1*2DIGIT ; Number of clients authenticated on the port.
+
 
 ```
 
@@ -475,12 +535,137 @@ monitor_mode_enable = "true"/"false" ; Indicates whether monitor mode is enabled
 "current_id": 28,
 "auth_status": "authorized",
 "authenticated_method": "802.1X",
-key = PAC_PORT_OPER_TABLE : port ; Physical port
+"server_state": "36 34 43 50 4d 53 65 73 73 69 6f 6e 49 44 3d 30 61 38 32 62 39 37 36 4c 49
+50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d
+6e 4a 33 31 42 6a 5a 34 51 49 3b 33 34 53 65 73 73 69 6f 6e 49 44 3d 43 69 73 63 6f 49 53 45
+2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35 3b",
+"server_state_len": 106,
+"server_class": "43 41 43 53 3a 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55
+39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49
+3a 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35",
+"server_class_len": 83,
+"session_timeout": 60,
+"user_name": "sonic_user1",
+"user_name_len": 9,
+"termination_action": 0,
+"vlan_id": 194,
+"vlan_type": "radius",
+"backend_auth_method": "radius",
+"session_time": 51
+}
+}
+]
+}
+
+
+key = PAC_AUTHENTICATED_CLIENTS_OPER_TABLE: mac ; Client MAC address
+;field               = value ;
+current_id           = 1*3DIGIT ; EAP Packet Id
+auth_status          = "authorized"/"unauthorized" ; Authorization status of the client.
+authenticated_method = "802.1x"/'mab" ; Method used to authenticate the client
+server_state         = 1*506VCHARS ; Server State used in RADIUS Challenge packets
+server_state_len     = 1*3DIGIT ; Server State Length
+server_class         = 1*506VCHARS ; Server Class used in RADIUS Access Accept packets
+server_class_len     = 1*3DIGIT ; Server Class Length
+session_timeout      = 1*10DIGIT ; Client session timeou
+user_name            = 1*255VCHARS ; Client user name
+user_name_len        = 1*3DIGIT ; Client user name length
+termination_action   = 1DIGIT ; Client action on session timeout:
+                            ;0: Terminate the client
+                            ;1: Reauthenticate the client
+vlan_id              = 1*4DIGIT ; VLAN associated with the authorized client
+vlan_type            = "RADIUS"/"Default"/"Voice"/"Critical"/"Unauthenticated"/"Guest"/"Monitor"; Type of VLANs associated with anauthorized client.
+                                 ; Default VLAN: The client has been authenticated on the port default VLAN and the authentication server is not RADIUS.
+                                 ; RADIUS: RADIUS is used for authenticating the client.
+                                 ; Voice VLAN: The client is identified as a Voice device.
+                                 ; Critical VLAN: The client has been authenticated on the Critical VLAN.
+                                 ; Unauthenticated VLAN: The client has been authenticated on the Unauthenticated VLAN.
+                                 ; Guest VLAN: The client has been authenticated on the Guest VLAN.
+                                 ; Monitor Mode: The client has been authenticated by Monitor mode.
+backend_auth_method = "radius" ; Backend authentication method used to authorize the client.
+session_time        = 1*10DIGIT ; Client session time.
+
+```   
+
+
+```   
+" PAC_CLIENT_HISTORY_TABLE ": {
+"ethernet1": [{
+"31-March-2021-13:46:02": {
+"client_mac_addr": "00:00:00:11:22:33",
+"authentication_method": "mab",
+"backend_auth_method": "radius",
+"auth_status": "authorized"
+}
+},
+{
+"31-March-2021-13:45:58": {
+"client_mac_addr": "00:00:00:11:22:33",
+"authentication_method": "802.1X",
+"backend_auth_method": "radius",
+"auth_status": "un-authorized"
+}
+}
+]
+}
+
+
+key = PAC_CLIENT_HISTORY_TABLE : port ; Physical Port Clientmac; Client MAC address
 ;field = value
-enabled_method_list = "dot1x"/"mab" ; List of methods to be used for authentication
-enabled_priority_list = "dot1x"/"mab" ; Relative priority of methods to be used for authentication 
-num_clients_authenticated = 1*2DIGIT ; Number of clients authenticated on the port.
+authentication_method = "802.1x"/'mab" ; Method used to authenticate the client
+backend_auth_method = "radius" ; Backend authentication method used to authorize the client.
+auth_status = "authorized"/"unauthorized" ; Authorization status of the client
+
 ```
+
+*hostapd*   
+```
+"HOSTAPD_OPER_PORT_TABLE": [{
+"ethernet1": {
+"protocol_version": 2,
+"quiet_period": 30,
+"tx_period": 30,
+"server_timeout": 45,
+"max_reqs": 2,
+"max_req_ids": 3
+}
+}]
+
+
+
+key = HOSTAPD_OPER_PORT_TABLE : port ; Physical Port
+;field            = value
+protocol_version  = 1DIGIT ; Dot1x protocol version
+quiet_period      = 1*5DIGIT ; The initial value of the timer that defines the period during which the Authenticator will not attempt to authenticate the Supplicant. Range is 0-65535 seconds.
+tx_period         = 1*5DIGIT ; Time time interval between each EAP Request Ids sent to the supplicant.
+
+server_timeout    = 1*5DIGIT ; RADIUS server timeout
+
+max_reqs          = 1*5DIGIT ; Maximum number of EAP requests (except Req-Ids) to be sent to the supplicant before timing out.
+
+max_req_id        = 1*5DIGIT ; Maximum number of EAP Req-Ids to be sent to the supplicant before timing out.
+```
+
+```
+"HOSTAPD_CLIENT_OPER_TABLE": {
+"ethernet1": [{
+"00:00:00:11:22:33": {
+"user_name": "sonic_user"
+}
+},
+{
+"00:00:00:11:22:55": {
+"user_name": "sonic_user1"
+}
+}
+]
+}
+key = HOSTAPD_OPER_PORT_TABLE : port ; Physical Port: client mac; Client MAC
+;field    = value
+user_name = 1*255VCHARS ; Client user name
+```
+
+
 
 ## 3.3 Switch State Service Design
 
@@ -855,7 +1040,14 @@ Configured actions and counters should continue to work across warm reboot.
 
 *fpinfra*   
 
-fpinfra being a shared library that provides C APIs is unit tested via a C/C++ based test utility that exercises those APIs. The unit test is build up on the google test (gtest) infrastructure. The test infra relies on the automake "make check" and gets executed during the compliation of sonic-secutity docker.
+fpinfra is a shared library that provides C APIs. Its unit tested using a C/C++ based test utility that exercises these APIs in sequence. The unit test is build up on the google test (gtest) infrastructure. The test infra relies on the automake "make check" and gets executed during the compliation of sonic-secutity docker. The test code is spread into the following file/modules.
+1. Semaphore API tests.
+2. Task API tests
+3. Linked list API tests.
+4. Buffer managment API tests.
+5. Tree API tests.
+6. OS API tests.
+7. NIM task and API tests.
 
 # 12 Appendix: Sample configuration
 
