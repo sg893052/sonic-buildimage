@@ -16,13 +16,12 @@
 # Revision
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
-| 0.1 | 04/12/2021  |   Michael Li       | Initial version                   |
+| 0.1 | 04/12/2021  |   Michael Li       | Initial version w/ requirements   |
 
 # About this Manual
 This document provides general information about the CoPP per Platform feature implementation in SONiC.
 # Scope
-This document describes the high level design of the CoPP feature enhancement that adds a CoPP config per platform.  Please see the [SONiC CoPP HLD](https://github.com/project-arlo/SONiC/blob/1d6a3ce682f4ab49a3ad1b0eb7e116b2802292eb/doc/copp/SONiC_CoPP.md
-) for more details on general SONiC CoPP feature.
+This document describes the high level design of the CoPP feature enhancement that adds a CoPP config per platform.  Please see the [SONiC CoPP HLD](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/copp/SONiC_CoPP.md) for more details on the SONiC CoPP feature.
 
 # Definition/Abbreviation
 
