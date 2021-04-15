@@ -50,6 +50,7 @@ protocol          rx   rx_err       tx   tx_err
 --------------------------------------------------
 UDLD               0        0        0        0
 STP                0        0        0        0
+BFD                0        0        0        0
 PTP                0        0        0        0
 LLDP           24291        0       54        0
 VRRP               0        0        0        0
