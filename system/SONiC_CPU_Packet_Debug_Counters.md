@@ -48,8 +48,6 @@ Total rx = 101127
 Total tx = 235644
 protocol          rx   rx_err       tx   tx_err
 --------------------------------------------------
-INET           28700        0    28700    12506
-INET6              0        0       15        0
 UDLD               0        0        0        0
 STP                0        0        0        0
 PTP                0        0        0        0
