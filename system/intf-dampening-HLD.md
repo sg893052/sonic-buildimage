@@ -44,7 +44,7 @@ If the port link state toggles from up to down for a specified number of times w
 System shall be able to suppress interfaces state change events to protect system resources.
 User shall be able to enable or disable the feature on individual interfaces and globally.
 The feature must be disabled on all interfaces by default.
-The feature shall be supported on physcial interfaces.
+The feature shall be supported on physical interfaces.
 There must be two sets of configuration parameters (sample-interval, waiting-period, and toggling-frequency) a per-interface set and a global set. If both global and per-interface are configured, the per-interface values are used only for given interfaces. Global values are used for all other physcial interfaces.
 If no values are specified by user, a default set of parameters are applied to all interfaces.
 User shall be able to save configuration parameters (both global and per-interface).
@@ -57,7 +57,7 @@ Specifies the number of times a port link state goes from up to down before the 
 - sample-interval
 Specifies the amount of time, in seconds, during which the specified toggle threshold can occur before the wait period is activated. The default value is 0 and indicates that the time is forever. The value ranges from 0 through 65535.
 - waiting-period
-Specifies the amount of time in seconds, in seconds, for which the port remains disabled (down) before it becomes enabled. The value ranges from 0 through 65535. A value of 0 indicates that the port will stay down until an administrative override occurs.
+Specifies the amount of time in seconds, for which the port remains disabled (down) before it becomes enabled. The value ranges from 0 through 65535. A value of 0 indicates that the port will stay down until an administrative override occurs.
 
 ### 1.1.2 Configuration and Management Requirements
 - Interface Dampening feature default is OFF on all physcial interfaces and port-channels
