@@ -1,0 +1,55 @@
+# Feature Name
+PCS Error Counters
+# High Level Design Document
+#### Rev 0.1
+
+# Table of Contents
+  * [List of Tables](#list-of-tables)
+  * [Revision](#revision)
+  * [About This Manual](#about-this-manual)
+  * [Scope](#scope)
+  * [Definition/Abbreviation](#definitionabbreviation)
+  
+# List of Tables
+[Table 1: Abbreviations](#table-1-abbreviations)
+
+# Revision
+| Rev |     Date    |       Author       | Change Description                |
+|:---:|:-----------:|:------------------:|-----------------------------------|
+| 0.1 | 04/14/2021  |   Steven Lu        | Initial version for requirements  |
+
+# About this Manual
+This document provides general information about the PCS Error counters feature implementation in SONiC.
+# Scope
+This document describes the high level design of PCS Error counters feature. Call out any related design that is not covered by this document
+
+# Definition/Abbreviation
+
+### Table 1: Abbreviations
+| **Term**                 | **Meaning**                         |
+|--------------------------|-------------------------------------|
+| XYZ                      | Term description                    |
+
+# 1 Feature Overview
+The PCS Error counters feature collects PCS Errors from Brcm silicons and help customers determine condition of physcial ethernet link
+
+
+
+## 1.1 Requirements
+PCS Error counters feature should cover Broadcom silicons include Tomahawk-1, Tomahawk-2, Trident-3 and Tomahawk-3
+SONiC shall be able collect PCS Error counters of individual port
+SONiC shall be able to display PCS Error counters of individual port
+SONiC shall be able to clear PCS Error counters of individual port
+
+
+### 1.1.1 Functional Requirements
+
+
+### 1.1.3 Scalability Requirements
+PCS Error counters feature shall be supported on all physcial ports. All the platform design, SDK, and ASIC constraints should be considered.
+
+
+### 1.1.4 Warm Boot Requirements
+Interfaces PCS Error counters must be retained across warmboot.
+
+
