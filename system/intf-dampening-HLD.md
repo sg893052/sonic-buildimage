@@ -39,8 +39,6 @@ The sampling time or window (the time during which the specified toggle threshol
 
 If the port link state toggles from up to down for a specified number of times within a specified period, the interface is physically disabled for the specified wait period. Once the wait period expires, the port link state is re-enabled. However, if the wait period is set to zero (0) seconds, the port link state will remain disabled until it is manually re-enabled.
 
-When a flap dampening port becomes a member of a Link Aggregation (LAG), that port, as well as all other member ports of that LAG, inherit the primary port configuration. This means that the member ports will inherit the primary port flap dampening configuration, regardless of any previous configuration.
-
 
 ## 1.1 Requirements
 System shall be able to suppress interfaces state change events to protect system resources.
