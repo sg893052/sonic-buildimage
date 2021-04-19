@@ -45,7 +45,7 @@ System shall be able to suppress interfaces state change events to protect syste
 User shall be able to enable or disable the feature on individual interfaces and globally.
 The feature must be disabled on all interfaces by default.
 The feature shall be supported on physical interfaces.
-There must be two sets of configuration parameters (sample-interval, waiting-period, and toggling-frequency) a per-interface set and a global set. If both global and per-interface are configured, the per-interface values are used only for given interfaces. Global values are used for all other physcial interfaces.
+There must be two sets of configuration parameters (sample-interval, waiting-period, and toggling-frequency) a per-interface set and a global set. If both global and per-interface are configured, the per-interface values are used only for given interfaces. Global values are used for all other physical interfaces.
 If no values are specified by user, a default set of parameters are applied to all interfaces.
 User shall be able to save configuration parameters (both global and per-interface).
 The configuration parameters (both global and per-interface) must be preserved across device reboot.
@@ -60,7 +60,7 @@ Specifies the amount of time, in seconds, during which the specified toggle thre
 Specifies the amount of time in seconds, for which the port remains disabled (down) before it becomes enabled. The value ranges from 0 through 65535. A value of 0 indicates that the port will stay down until an administrative override occurs.
 
 ### 1.1.2 Configuration and Management Requirements
-- Interface Dampening feature default is OFF on all physcial interfaces and port-channels
+- Interface Dampening feature default is OFF on all physical interfaces and port-channels
 - When Dampening is enabled, use below default values:
   sample-interval: TBD
   toggle-frequency: TBD
