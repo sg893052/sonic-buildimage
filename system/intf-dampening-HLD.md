@@ -68,6 +68,7 @@ Specifies the amount of time in seconds, in seconds, for which the port remains 
 - User shall be able to specify different sample-interval, toggle-frequency and waiting-period on a physical interface
 - User shall be able to display current interface dampening confiuration values.
 - User shall be able to display current interface status if it was surpresed by Link-Dampening
+- User shall be able to display Link-Down-Reason if a port is disabled by Link-Dampening feature
 
 
 ### 1.1.3 Scalability Requirements
