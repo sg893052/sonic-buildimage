@@ -86,7 +86,7 @@ High level design document version 0.2
 | Rev  | Date       | Author   | Change Description |
 | ---- | ---------- | ---------| ------------------ |
 | 0.1  | 02/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Initial version |
-| 0.2  | 04/05/2021 | Prabhu Sreenivasan | DB schema update and Review comments |
+| 0.2  | 04/05/2021 | Prabhu Sreenivasan, Amitabha Sen | DB schema update and Review comments |
 
 # About this Manual
 This document provides general information about the Port Access Control feature in SONiC.
@@ -296,14 +296,14 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 ### 3.1.1 Configuration flow
 
-![pac-config-flow](https://user-images.githubusercontent.com/45380242/112821782-bd4e6580-90a4-11eb-93bb-b453b97da456.PNG)
+![pac-config-flow](https://user-images.githubusercontent.com/45380242/115655812-a91f2080-a351-11eb-9207-26dafc103d8e.PNG)
 
 **Figure 1: PAC service daemon and configuration flow**
 
 1. Mgmt interfaces like CLI and REST writes the user provided configuration to CONFIG_DB.
 2. The pacd, mabd and hostApdMgr gets notified about their respective configuration.
 3. hostApd being a standard Linux application gets its configuration from hostapd.conf file. hostApdMgr makes use of Jinja2 templates to generates the hostapd.conf file based on the relevant CONFIG_DB tables.
-4. Pacd gets to know about the list of ports that needs to be authenticated from PAC_PORT_CONFIG_TABLE on CONFIG_DB. The same table provides info on which ports supporrts DOT1X and which supports MAB and priority amoung the authentication methods. Based on the priority and authentication failure status, pacd decides on the list of ports to be authenticated via DOT1X and the list of ports that needs to be authenticated via MAB. It communicates the respective list of interfaces to hostApd and mabd via netlink messages.
+4. Pacd gets to know about the list of ports that needs to be authenticated from PAC_PORT_CONFIG_TABLE on CONFIG_DB. The same table provides info on which ports supporrts DOT1X and which supports MAB and priority amoung the authentication methods. Based on the priority and authentication failure status, pacd decides on the list of ports to be authenticated via DOT1X and the list of ports that needs to be authenticated via MAB. It communicates the respective list of interfaces to hostApd and mabd via Unix domain socket messages.
 5. hostApd listens to EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives a PDU. mabd listens to DHCP and EAPOL PDUs on the provided interface list and proceeds to authenticate the client when it receives a PDU.
 
 
@@ -311,13 +311,14 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 ### 3.1.2 EAPOL receive flow
 
 
-![EAPOL-receive-flow](https://user-images.githubusercontent.com/45380242/112822933-369a8800-90a6-11eb-9dfa-c8eaecbb681e.PNG)
+![EAPOL-receive-flow](https://user-images.githubusercontent.com/45380242/115655906-ceac2a00-a351-11eb-9095-9d53ae549ad7.PNG)
+
 
 **Figure 2: EAPOL receive flow**
 
 1. EAPOL packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to hostApd socket listening on EtherType 0x888E on kernel interface associated with the given front panel interface.
 2. In a multi-step process, hostApd runs the Dot1x state machine to Authenticate the client via RADIUS.
-3. On successful authentication of a client, hostApd sends an Client Authenticated netlink message to pacd with all the authorization parameters like VLAN and DACL.
+3. On successful authentication of a client, hostApd sends an Client Authenticated Unix domain socket message to pacd with all the authorization parameters like VLAN and DACL.
 4. pacd proceeds to authorize the client by writing PAC_AUTHORIZE_TABLE on APPL_DB. RADIUS authorization parameters like dynamic VLAN, dynamic ACL are created by writing on their tables on STATE_DB.
 5. Orchagent in SWSS docker gets notified about changes in APPL_DB and responds by translating the APPL_DB changes to respective sairedis calls.
 6. Sairedis APIs write into ASIC_DB.
@@ -328,14 +329,15 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 ### 3.1.3 MAB PDU receive flow
 
-![mab-pdu-receive-flow](https://user-images.githubusercontent.com/45380242/112823181-94c76b00-90a6-11eb-8a5e-19ccb525dcef.PNG)
+![mab-pdu-receive-flow](https://user-images.githubusercontent.com/45380242/115655929-da97ec00-a351-11eb-90d3-a602ee2b0e3e.PNG)
+
 
 **Figure 3: MAB PDU receive flow**
 
 1. DHCP packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to pacd socket listening on the kernel interface associated with the given front panel interface.
-2. Pacd sends an Client Authenticate netlink message along with the received PDU MAC.
+2. Pacd sends an Client Authenticate Unix domain socket message along with the received PDU MAC.
 3. mabd interacts with RADIUS server to authenticate the given client based on the MAC.
-4. On successful authentication of a client, mabd sends an Client Authenticated netlink message to pacd with all the authorization parameters like VLAN and DACL.
+4. On successful authentication of a client, mabd sends an Client Authenticated Unix domain socket message to pacd with all the authorization parameters like VLAN and DACL.
 5. pacd proceeds to authorize the client by writing PAC_AUTHORIZE_TABLE on APPL_DB. RADIUS authorization parameters like dynamic VLAN, dynamic ACL are created by writing on their tables on STATE_DB.
 6. Orchagent in SWSS docker gets notified about changes in APPL_DB and responds by translating the APPL_DB changes to respective sairedis calls.
 7. Sairedis APIs write into ASIC_DB.
