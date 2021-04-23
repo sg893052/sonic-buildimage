@@ -134,7 +134,7 @@ Go back to [Beginning of the document](#dhcp-snooping).
 # 2 Functionality
 ## 2.1 Target Deployment Use Cases
 
-![DHCP snooping deployment](ds_deployment.PNG)
+![DHCP snooping deployment](ds_deployment.png)
 
 DHCP clients connect through untrusted ports. DHCP messages from clients received on untrusted ports are forwarded to the trusted ports in the same VLAN.
 
@@ -569,6 +569,6 @@ Go back to [Beginning of the document](#dhcp-snooping).
 
 Go back to [Beginning of the document](#dhcp-snooping).
 # 9 Internal Design Information
-![DHCP snooping high level architecture](ds_packet_flow.PNG)
+![DHCP snooping high level architecture](ds_packet_flow.png)
 
 Go back to [Beginning of the document](#dhcp-snooping).
