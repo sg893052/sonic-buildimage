@@ -9,9 +9,10 @@
     - [1.2 Requirements](#12-Requirements)
         - [1.2.1 Wildcard paths in Subscribe API](#121-wildcard-paths-in-subscribe-api)
         - [1.2.2 ON_CHANGE subscription](#122-on_change-subscription)
-        - [1.2.3 TARGET_DEFINED subscription](#123-target_defined-subscription)
-        - [1.2.4 PROTO encoding in gNMI responses](#124-proto-encoding-in-gnmi-responses)
-        - [1.2.5 Translib Subscription Infrastructure for DB data](#125-translib-subscription-infrastructure-for-db-data)
+        - [1.2.3 SAMPLE subscription](#123-sample-subscription)
+        - [1.2.4 TARGET_DEFINED subscription](#124-target_defined-subscription)
+        - [1.2.5 Scalar encoding for telemetry updates](#125-scalar-encoding-for-telemetry-updates)
+        - [1.2.6 Translib Subscription Infrastructure for DB data](#126-translib-subscription-infrastructure-for-db-data)
     - [1.3 Design Overview](#13-Design-Overview)
         - [1.3.1 Basic Approach](#131-Basic-Approach)
             - [1.3.1.1 ON_CHANGE Subscription for DB data](#1311-on_change-subscription-for-db-data)
@@ -67,6 +68,8 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 12/23/2020  | Sachin Holla       | Initial version                   |
+| 0.2 | 04/23/2021  | Sachin Holla       | Updated requirements for Cyrus release |
+
 
 # About This Manual
 
@@ -118,7 +121,7 @@ Path can contain any number of wildcard key values.
 
 Following cases will not be supported:
 
-- Wildcard in path element (like `/openconfig-interfaces:interfaces/*/config`). 
+- Wildcard in path element (like `/openconfig-interfaces:interfaces/*/config` or `/openconfig-interfaces:interfaces/.../config`).
 - Wildcard paths pointing to non-DB data sources, like FRR socket.
 - WIldcard paths in **Get** API.
 
@@ -130,27 +133,68 @@ unsupported wildcard paths.
 gNMI server should support ON_CHANGE subscription for all YANG paths except following:
 
 - Paths mapped to COUNTER_DB
-- Paths mapped to any other DB table that can be updated frequently (to be decided by individual features).
+- Paths mapped to DB tables that can be updated frequently, like COUNTER_DB tables.
+  Actual list of such paths will be decided & published by individual features.
 - Paths mapped to non-DB data sources, like FRR socket.
-- Any YANG container or list path whose descendent node does not support ON_CHANGE.
-
-Note: The actual list of unsupported paths is not in the scope of this document.
-It will be separately published by individual feature teams.
 
 Server should reject the Subscribe request with INVALID_ARGUMENT status code if it receives
 ON_CHANGE subscription request for unsupported paths.
 
-### 1.2.3 TARGET_DEFINED subscription
+### 1.2.3 SAMPLE subscription
 
-### 1.2.4 PROTO encoding in gNMI responses
+Server should support SAMPLE subscription for every YANG path.
+Minimum subscribe interval will be 20 seconds.
+Individual features can override this to have larger minimum sample interval
+for specific YANG paths depending on the functionality.
 
-gNMI server should support PROTO encoded responses for **Get** and **Subscribe** RPCs.
-Existing implementation supports only IETF_JSON encoded values.
-Server should return response data in either PROTO or IETF_JSON encoded values
-depending on the encoding requested by the client.
-Server should reject the RPC with UNIMPLEMENTED status code if client requested for any other encoding.
+Server should send periodic updates for every set leaf in the subscribed path.
+If the `suppress_redundant` flag is set in the subscribe request, server should
+generate updates only for the changed leaf paths (since last notification message).
+Special case - notification message should not be sent if there are no changes.
 
-### 1.2.5 Translib Subscription Infrastructure for DB data
+Server should include delete paths for the YANG nodes deleted during
+the sample interval in the notification message.
+Existing implementation was not notifying deleted paths.
+
+### 1.2.4 TARGET_DEFINED subscription
+
+For TARGET_DEFINED subscription requests, the server should determine best type
+of subscription mode based on the preference of the subscribed path and its
+descendent nodes.
+Server should split the subscription request into multiple requests if subscribed path
+prefers ON_CHANGE but some of its descendent paths prefer SAMPLE subscription.
+Following table summarizes the server behavior.
+
+| Subscribe path<br>preference | Descendent path<br>preference | Result       |
+|------------------------------|-------------------------------|--------------|
+| ON_CHANGE | All ON_CHANGE  | ON_CHANGE                  |
+| ON_CHANGE | Few SAMPLE     | SAMPLE for those "few" descendent paths;<br>ON_CHANGE for rest |
+| SAMPLE    | Don't care     | SAMPLE                     |
+
+By default, all paths that support ON_CHANGE are assumed to prefer ON_CHANGE.
+Individual apps can override it to prefer SAMPLE for individual paths (i.e, supports ON_CHANGE but prefers SAMPLE).
+
+Paths that do not support ON_CHANGE will always have preferred mode as SAMPLE.
+
+### 1.2.5 Scalar encoding for telemetry updates
+
+All telemetry updates should be encoded as gNMI scalar types.
+Each update entry should be a {leaf path, scalar value} pair.
+Scalar type encoding is explained in gNMI specification [section 2.2.3](https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md#223-node-values).
+
+Existing implementation coalesces all leaf values into a big JSON blob.
+gNMI allows this only if the client requests it through `allow_aggregation` flag
+and the YANG node is marked as eligible for aggregation.
+Today there is no such option available in Translib schema.
+Hence telemetry update message should not aggregate the leaf values.
+Also, gNMI does not recommend aggregation as it helps both server and client implementation.
+
+### 1.2.6 Translib Subscription Infrastructure for DB data
+
+Translib should provide an infrastructure to handle gNMI subscription requests.
+Translib (and gNMI server) should handle all protocol requirements and DB data monitoring without apps getting involved.
+Apps should be only required to provide yang path to DB mappings and subscription preferences
+(whether ON_CHANGE supported, minimum SAMPLE interval, preferred mode for TARGET_DEFINED subscription).
 
 ## 1.3 Design Overview
 
@@ -276,8 +320,14 @@ The `translib.IsSubscribeSupported` invokes App Module's `translateSubscribe` fu
 to get subscription preferences for the YANG path.
 `translateSubscribe` returns the preferences for YANG node pointed by the subscribe path
 and its descendent nodes.
-If any of the descendent node does not support ON_CHANGE, then ON_CHANGE cannot be supported
-for the target path -- even if individual leaf nodes under subscribe path support ON_CHANGE.
+Subscriptions are created based on these preferences.
+
+- If the subscribe path and its descendent nodes prefer ON_CHANGE, then the request is treated as an ON_CHANGE subscription request.
+- If the subscribe path prefers SAMPLE, then the request is treated as a SAMPLE subscription request.
+- If the subscribe path prefers ON_CHANGE but few of its descendent nodes prefer SAMPLE,
+  then the request is treated as multiple requests internally.
+  Server starts SAMPLE subscription for the descendent nodes that prefer SAMPLE.
+  An ON_CHANGE subscription will be created for rest of the nodes.
 
 Few examples with a simplified openconfig-interfaces YANG model:
 
@@ -295,15 +345,15 @@ module: openconfig-interfaces
         |  |  +--ro in-octets
 ```
 
-YANG container /interfaces/interface/state/counters maps to COUNTERS_DB and hence ON_CHANGE is not supported.
+Here container /interfaces/interface/state/counters maps to COUNTERS_DB and does not support ON_CHANGE.
 Other nodes support ON_CHANGE.
 Below table lists the gNMI server's behavior for different combinations of subscription modes and paths.
 
 | **Mode**       | **Subscribe Path**                       | **Result** |
 |----------------|------------------------------------------|------------|
-| TARGET_DEFINED | /interfaces/interface[name=\*]           | SAMPLE (counters does not support ON_CHANGE) |
+| TARGET_DEFINED | /interfaces/interface[name=\*]           | SAMPLE for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE for other paths |
 | TARGET_DEFINED | /interfaces/interface[name=\*]/config    | ON_CHANGE |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/state     | SAMPLE (counters does not support ON_CHANGE) |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/state     | SAMPLE for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE for other paths |
 | TARGET_DEFINED | /interfaces/interface[name=\*]/state/enabled         | ON_CHANGE  |
 | TARGET_DEFINED | /interfaces/interface[name=\*]/state/counters        | SAMPLE     |
 | ON_CHANGE      | /interfaces/interface[name=\*]           | error (counters does not support ON_CHANGE) |
