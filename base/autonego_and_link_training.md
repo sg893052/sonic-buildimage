@@ -102,8 +102,8 @@ maintained.
 Several CLI configuration commands support this feature. The commands are available in
 interface config mode.
 
-- A CLI show command lists the per-interface AN and LT configuration and status
-- A set of CLI config commands to configure the per-interface AN and LT configuration
+- A CLI show command lists the per-interface AN and LT configuration and status.
+- A set of CLI config commands to configure the per-interface AN and LT configuration.
 
 # 2 Functionality
 
