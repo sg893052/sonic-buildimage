@@ -52,3 +52,4 @@ In the new PAI layer, it will provide the standard SAI interface for PHY, e.g. -
 
 ![Gearbox BRCM + PAI Layer Flow](images/gearbox_brcm_layer.png)
 
+3. Fix the Gearbox issue found in SWSS and SAIREDIS : Since there is an attribute SAI_PORT_ATTR_INTERFACE_TYPE missing in the call of initGearboxPort from the SWSS, we add a new key system_intf_type in the gearsyncd. If user doesn't provide this key in the gearbox_config.json, in the gearsyncd system_intf_type will be set to XFI by default. 
