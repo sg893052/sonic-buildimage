@@ -67,10 +67,12 @@ High level design document version 0.2
 			- [3.6.2.19 mab](#36219-mab)
 			- [3.6.2.20 dot1x timeout](#36220-dot1x-timeout)
 		- [3.6.3 Show Commands](#363-show-commands)
-			- [3.6.3.1 Show dot1x summary](#3631-show-dot1x-summary)
-			- [3.6.3.2 Show dot1x port summary](#3632-show-dot1x-port-summary)
-			- [3.6.3.3 Show dot1x port detailed](#3633-show-dot1x-port-detailed)
-			- [3.6.3.4 Show dot1x  port stats](#3634-show-dot1x-port-stats)
+			- [3.6.3.1 show authentication interface](#3631-show-authentication-interface)
+			- [3.6.3.2 show authentication](#3632-show-authentication)
+			- [3.6.3.3 show authentication clients](#3633-show-authentication-clients)
+			- [3.6.3.4 show authentication authentication-history](#3634-show-authentication-authentication-history)
+			- [3.6.3.5 show mab](#3635-show-mab)
+			- [3.6.3.6 show dot1x](#3636-show-dot1x)
 		- [3.6.4 Clear Commands](#364-clear-commands)
 			- [3.6.4.1 Clear dot1x port stats](#364-clear-dot1x-port-stats)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
@@ -1062,7 +1064,7 @@ Open Authentication............................ Disabled
 
 ```
 #### 3.6.3.2 show authentication 
-This command displays the authentication manager information for the interface 
+This command displays the authentication manager global information and the number of authenticated clients.
 
 | Mode   | Exec |
 | ------ | ------------------- |
@@ -1102,6 +1104,40 @@ This command displays the details of the dot1x configuration for a specified por
 | Syntax | show authentication clients  {all | {interface <unit/slot/port >}} |
 | Change history | SONiC 4.0 - Introduced |
 
+
+| Field   | Description |
+| ------ | ------------------- |
+| Interface  | The interface for which authentication configuration information is being displayed. |
+| Mac Address | The MAC address of the client. |
+| User Name | The user name associated with the client. |
+| VLAN Assigned Reason | This can take one of the following values |
+| Host Mode | The authentication host mode configured on the interface. The possible values are multi-auth, multi-domain, multi-host, single-host and multi-domain-multi-host. |
+| Method | The method used to authenticate the client on the interface. The possible values are 802.1x. MAB, Captive Portal and None. |
+| Control Mode | The configured control mode for this port. Possible values are force-unauthorized, auto and unauthorized. |
+| Session Time | The amount of time the client session has been active. |
+| Session Timeout | This value indicates the time for which the given session is valid. The time period in seconds is returned by the RADIUS server on authentication of the port. |
+| Time left for Session Termination Action | This value indicates the time left for the session termination action to occur. This field is valid only when the “authentication periodic” is configured. |
+| Session Termination Action | This value indicates the action to be taken once the session timeout expires. Possible values are Default and Radius-Request. If the value is Default, the session is terminated and client details are cleared. If the value is Radius-Request, then a reauthentication of the client is performed. |
+| Filter ID | Identifies the Filter ID returned by the RADIUS server when the client was authenticated. This is a configured DiffServ policy name on the switch. |
+| ACS ACL Name | Identifies the Downloadable ACL returned by the RADIUS server when the client was authenticated. The Downloadable ACL is the same as returned using CiscoSecure-Defined-ACL AVP.|
+| DACL | Identifies the Downloadable Dynamic ACL returned by the RADIUS server when the client was authenticated. |
+| Redirect-ACL | The Redirect ACL is a static ACL sent in the RADIUS attribute redirect-acl. It is used to redirect matching packets to the CPU for further action. |
+| Redirect URL | The Redirect URL is a URL sent in the RADIUS attribute redirect-url. It is used by the Redirect component logic to redirect matching packets the redirect URL by using HTTP 302 response code. |
+| Acct Session Id | The Accounting Session Id associated with the client session. |
+
+
+VLAN Assigned Reason can take one of the following values:
+| VLAN Assigned Reason   | Description |
+| ------ | ------------------- |
+| Default VLAN | The client has been authenticated on the port default VLAN and the authentication server is not RADIUS. |
+| RADIUS | RADIUS is used for authenticating the client. |
+| Voice VLAN | The client is identified as a Voice device. |
+| Critical VLAN | The client has been authenticated on the Critical VLAN |
+| Unauthenticated VLAN | The client has been authenticated on the Unauthenticated VLAN. |
+| Guest VLAN | The client has been authenticated on the Guest VLAN. |
+| Monitor Mode | The client has been authenticated by Monitor mode. |
+
+
 Example:
 ```
 (dhcp-10-130-86-200) #show authentication clients all
@@ -1136,31 +1172,79 @@ Acct SessionId:................................ testixia:200000003
 ```
 
 
+
+
+
 #### 3.6.3.4 show authentication authentication-history 
-This command displays the dot1x statistics for a specified port.
+This command displays the authentication manager authentication history log for an interface
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show dot1x port stats <slot.port> |
+| Syntax | show authentication authentication-history  {interface <unit/slot/port >} |
+| Change history | SONiC 4.0 - Introduced |
+
+Example:
+```
+show authentication authentication-history 1/0/2 
+
+
+Timestamp             Interface  MAC-Address        Auth Status   Method
+--------------------  ---------  -----------------  ------------  ------
+May 07 2020 13:02:41  1/0/2      58:05:94:1C:00:00  Unauthorized  802.1X
+May 07 2020 13:01:33  1/0/2      58:05:94:1C:00:00  Unauthorized  802.1X
+
+```
+
+#### 3.6.3.5 show mab
+This command is used to show a summary of the global mab configuration and summary information of the mab configuration for all ports. This command also provides the detailed mab sessions for a specified port. 
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | show mab  {<cr> | {interface <unit/slot/port >}}  |
+| Change history | SONiC 4.0 - Introduced |
+
+Example:
+```
+dhcp-10-130-86-142) #show  mab 
+
+MAB Request Fmt Attr1 Groupsize... 2
+MAB Request Fmt Attr1 Separator... legacy(:)
+MAB Request Fmt Attr1 Case........ uppercase
+
+Interface    Admin Mode     Auth-type    ---------    -----------    ---------    ---------------------   -------  -------------
+0/1          Disabled       N/A          0/2          Disabled       N/A          
+0/3          Disabled       N/A          
+
+
+(dhcp-10-130-86-142) #show  mab interface 0/10
+Interface    Admin Mode     Auth-type    
+0/10         Enabled        eap-md5    
+
+```
+
+#### 3.6.3.6 show dot1x
+This command is used to show a summary of the global dot1x configuration, summary information of the dot1x configuration for a specified port or all ports, the detailed dot1x configuration for a specified port and the dot1x statistics for a specified port - depending on the tokens used.
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | show dot1x  |
 | Change history | SONiC 4.0 - Introduced |
 
 | Field   | Description |
 | ------ | ------------------- |
-| Port | The interface whose statistics are displayed. |
-| EAPOL Frames Transmitted | The number of EAPOL frames of any type that have been transmitted by this authenticator. |
-| EAPOL Start Frames Received | The number of EAPOL start frames that have been received by this authenticator. |
-| EAPOL Logoff Frames Received | The number of EAPOL logoff frames that have been received by this authenticator. |
-| Last EAPOL Frame Version | The protocol version number carried in the most recently received EAPOL frame. |
-| Last EAPOL Frame Source | The source MAC address carried in the most recently received EAPOL frame. |
-| EAP Response/Id Frames Received | The number of EAP response/identity frames that have been received by this authenticator. |
-| EAP Response Frames Received | The number of valid EAP response frames (other than resp/id frames) that have been received by this authenticator. |
-| EAP Request/Id Frames Transmitted | The number of EAP request/identity frames that have been transmitted by this authenticator. |
-| EAP Request Frames Transmitted | The number of EAP request frames (other than request/identity frames) that have been transmitted by this authenticator.|
-| Invalid EAPOL Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
-| EAP Length Error Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
+| Administrative Mode | Indicates whether 802.1x is enabled or disabled. |
+| EAPOL Flood Mode  | Indicates whether the EAPOL flood support is enabled on the switch. |
+| Dot1x Software Version | The version of Dot1x implementation running on the switch. |
+	
+Example:
+```
+#show dot1x
 
-#### 3.6.3.5 show mab
-#### 3.6.3.6 show dot1x
+Administrative Mode............... Enabled
+EAPOL Flood Mode.................. Disabled
+Software Version.................. 1
+
+```
 
 ### 3.6.4 Clear Commands
 
