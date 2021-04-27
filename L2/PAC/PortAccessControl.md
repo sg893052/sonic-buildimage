@@ -46,19 +46,26 @@ High level design document version 0.2
 	- [3.6 Manageability](#36-manageability)
 		- [3.6.1 Data Models](#361-data-models)
 		- [3.6.2 Configuration Commands](#362-configuration-commands)
-			- [3.6.2.1 Config dot1x adminmode](#3621-config-dot1x-adminmode)
-			- [3.6.2.2 Config dot1x port initialize](#3622-config-dot1x-port-initialize)
-			- [3.6.2.3 Config dot1x port reauthenticate](#3623-config-dot1x-port-reauthenticate)
-			- [3.6.2.4 Config dot1x port controldir](#3624-config-dot1x-port-controldir)
-			- [3.6.2.5 Config dot1x port controlmode](#3625-config-dot1x-port-controlmode)
-			- [3.6.2.6 Config dot1x port quietperiod](#3626-config-dot1x-port-quietperiod)
-			- [3.6.2.7 Config dot1x port transmitperiod](#3627-config-dot1x-port-transmitperiod)
-			- [3.6.2.8 Config dot1x port supptimeout](#3628-config-dot1x-port-supptimeout)
-			- [3.6.2.9 Config dot1x port servertimeout](#3629-config-dot1x-port-servertimeout)
-			- [3.6.2.10 Config dot1x port maxrequests](#36210-config-dot1x-port-maxrequests)
-			- [3.6.2.11 Config dot1x port reauthperiod](#36211-config-dot1x-port-reauthperiod)
-			- [3.6.2.12 Config dot1x port reauthenabled](#36212-config-dot1x-port-reauthenabled)
-			- [3.6.2.13 Config dot1x port keytxenabled](#36213-config-dot1x-port-keytxenabled)
+			- [3.6.2.1 authentication enable](#3621-authentication-enable)
+			- [3.6.2.2 authentication critical recovery max-reauth](#3622-authentication-critical-recovery-max-reauth )
+			- [3.6.2.3 authentication monitor](#3623-authentication-monitor)
+			- [3.6.2.4 aaa authentication pac](#3624-aaa-authentication-pac)
+			- [3.6.2.5 mab request format attribute 1](#3625-mab-request-format-attribute-1)
+			- [3.6.2.6 dot1x system-auth-control](#3626-dot1x-system-auth-control)
+			- [3.6.2.7 authentication event no-response action authorize vlan](#3627-authentication-event-no-response-action-authorize-vlan)
+			- [3.6.2.8 authentication event fail action authorize vlan](#3628-authentication-event-fail-action-authorize-vlan)
+			- [3.6.2.9 authentication event fail retry](#3629-authentication-event-fail-retry)
+			- [3.6.2.10 authentication max-users](#36210-authentication-max-users)
+			- [3.6.2.11 authentication periodic](#36211-authentication-periodic)
+			- [3.6.2.12 authentication port-control](#36212-authentication-port-control)
+			- [3.6.2.13 authentication host-mode](#36213-authentication-host-mode)
+			- [3.6.2.14 authentication timer reauthentiate](#36214-authentication-timer-reauthentiate)
+			- [3.6.2.15 authentication event server dead action](#36215-authentication-event-server-dead-action)
+			- [3.6.2.16 authentication event server dead action authorize voice](#36216-authentication-event-server-dead-action-authorize-voice)
+			- [3.6.2.17 authentication event server alive action reinitialize](#36217-authentication-event-server-alive-action-reinitialize)
+			- [3.6.2.18 authentication open](#36218-authentication-open)
+			- [3.6.2.19 mab](#36219-mab)
+			- [3.6.2.20 dot1x timeout](#36220-dot1x-timeout)
 		- [3.6.3 Show Commands](#363-show-commands)
 			- [3.6.3.1 Show dot1x summary](#3631-show-dot1x-summary)
 			- [3.6.3.2 Show dot1x port summary](#3632-show-dot1x-port-summary)
@@ -792,190 +799,344 @@ Since Openconfig models are not available, Openconfig dot1x and mab are propriet
 
 The following commands are used to configure PAC.  
 
+#### 3.6.2.1 authentication enable
 
-#### 3.6.2.1 Config dot1x adminmode
-This command enables or disables authentication support on the switch. The default value is disable.  While disabled, the dot1x configuration is retained and can be changed, but it is not activated.
 
-| Mode | Config |
+#### 3.6.2.2 authentication critical recovery max-reauth
+This command configures the number of supplicants that are re-authenticated per second. This configuration is for the entire system across all the supplicants on all ports. This is used to control the system and network load when the number of supplicants to be re-authenticated is large. These re-authentications can be triggered due to ‘reinitialize’ dead or alive server actions.
+
+| Mode | Global Config |
 | ---- | ------ |
-| Syntax | config dot1x adminmode <enable|disable> |
-|Default | disable |
+| Syntax | authentication critical recovery max-reauth |
+| Default | 10 |
 | Change history | SONiC 4.0 - Introduced |
+
+
+#### 3.6.2.3 authentication monitor
+
+This command enables the Authentication monitor mode on the switch. The purpose of Monitor mode is to help troubleshoot port-based authentication configuration issues without disrupting network access for hosts connected to the switch. In Monitor mode, a host is granted network access to an authentication enforced port even if it fails the authentication process. The results of the process are logged for diagnostic purposes.
+
+| Mode | Global Config |
+| ---- | ------ |
+| Syntax | authentication monitor |
+| Default | disable |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.4 aaa authentication pac
+This command configures the authentication method for port-based access to the switch. The additional methods of authentication are used only if the previous method returns an error, not if there is an authentication failure. The possible methods are as follows:
+ias. Uses the internal authentication server users database for authentication. This method can be used in conjunction with any one of the existing methods like local, radius, etc.
+local. Uses the local username database for authentication.
+none. Uses no authentication.
+radius. Uses the list of all RADIUS servers for authentication
+
+| Mode | Global Config |
+| ---- | ------ |
+| Syntax | aaa authentication pac { radius | local | none } |
+| Default | radius |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.5 mab request format attribute 1 
+This command sets configuration parameters that are used to format attribute1 for MAB requests to the RADIUS server. RADIUS attribute 1 is the username, which is often the client MAC address
+
+| Mode | Global Config |
+| ---- | ------ |
+| Syntax | mab request format attribute 1 groupsize {1 | 2 | 4 | 12} separator {- | : | .} [lowercase | uppercase] |
+| Default | group size=2 |
+| Default | separator is : |
+| Default | uppercase |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.6 dot1x system-auth-control 
+This command enables the dot1x authentication support on the switch. While disabled, the dot1x configuration is retained and can be changed, but is not activated.
+| Mode | Global Config |
+| ---- | ------ |
+| Syntax | dot1x system-auth-control |
+| Default | disable |
+| Change history | SONiC 4.0 - Introduced |
+
+
+#### 3.6.2.7 authentication event no-response action authorize vlan
+This command configures VLAN as guest vlan on an interface or a range of interfaces. The range is 1 to the maximum VLAN ID supported by the platformor alive server actions. By default, the guest VLAN is 0, i.e. invalid and is not operational.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication event no-response action authorize vlan <vlan-id> |
+| Default | 0 |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.8 authentication event fail action authorize vlan
+This command configures the unauthenticated VLAN associated with the specified interface or range of interfaces. This VLAN is used when the AAA server fails to recognize the client credentials and rejects the authentication attempt. The unauthenticated VLAN ID can be a valid VLAN ID from 1-Maximum supported VLAN ID (4093 for FASTPATH). By default, the unauthenticated VLAN is 0, i.e. invalid and not operational.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication event fail action authorize vlan <vlan-id> |
+| Default | 0 |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.9 authentication event fail retry
+This command configures the  number of times authentication may be reattempted by the client before a port moves to the authentication fail VLAN.  The reattemps range is 1 to 5.
 	
-
-#### 3.6.2.2 Config dot1x port initialize
-This command begins the initialization sequence on the specified port.  This command is only valid if the control mode for the specified port is ‘auto’.  If the control mode is not ‘auto’, an error will be returned.
-
-| Mode | Config |
+| Mode | Interface Config |
 | ---- | ------ |
-| Syntax | config dot1x port initialize <slot/port> |
+| Syntax | authentication event fail retry <max-attempts> |
+| Default | 3 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.3 Config dot1x port reauthenticate
-This command begins the reauthentication sequence on the specified port.  This command is only valid if the control mode for the specified port is ‘auto’.  If the control mode is not ‘auto’, an error will be returned.
+#### 3.6.2.10 authentication max-users
+This command sets the maximum number of clients supported on an interface or range of interfaces when multi-authentication host mode is enabled on the port. The maximum users supported per port is dependent on the product. The count value is in the range 1 - 48.
 
-| Mode | Config |
+| Mode | Interface Config |
 | ---- | ------ |
-| Syntax | config dot1x port reauthenticate <slot.port> |
+| Syntax | authentication max-users <count> |
+| Default | 48 |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.4 Config dot1x port controldir
-This command configures the control direction for the specified port or ports.  The control direction dictates the degree to which protocol exchanges take place between Supplicant and Authenticator.  This affects whether the unauthorized controlled port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames).
+#### 3.6.2.11 authentication periodic 
+This command enables periodic reauthentication of the supplicant for the specified interface or range of interfaces.
 
-| Mode | Config |
+| Mode | Interface Config |
 | ---- | ------ |
-| Syntax | config dot1x port controldir <slot.port|all> <both|in> |
-| Default | both |
+| Syntax | authentication periodic |
+| Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.12 authentication port-control
+This command sets the authentication mode to use on the specified interface or range of interfaces. The configuration on the interface mode takes precedence over the global configuration of this parameter.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication host-mode authentication port-control { auto | force-authorized | force-unauthorized } |
+| Default | auto  |
+| Change history | SONiC 4.0 - Introduced 
+
+#### 3.6.2.13 authentication host-mode 
+This command configures the host mode of a port. The configuration on the interface mode takes precedence over the global configuration of this parameter. 
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication host-mode { multi-auth | multi-domain | multi-host | single-host | multi-domain-multi-host } |
+| Default | multi-host  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.14 authentication timer reauthentiate 
+This command is used to configure the period of time after which the Authenticator attempts to reauthenticate a supplicant on the port. This command also provides an option to specify re-authentication time out value from the server (ex. Radius). When ‘server’ option is selected, the server supplied Session time out and Session Termination-action are used by Authenticator to reauthenticate a supplicant on the port .  By default server option is enabled. The reauthenticate seconds value range is 1 to 65535.
+
+For reauthentication to happen after the configured or server provided timeout, the command “authentication periodic” should have enabled periodic reauthentication.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication timer reauthenticate { <seconds> | server} |
+| Default | server  |
+| Change history | SONiC 4.0 - Introduced |
+
+
+#### 3.6.2.15 authentication event server dead action 
+This command configures the actions to take when all the authentication servers are dead. The command also configures the critical VLAN ID. If the VLAN ID is not specified, the port PVID is used as the critical VLAN ID.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication event server dead action [{reinitialize | authorize}][vlan vlan-id]] |
+| Default | Action: None  |
+| Default | VLAN: Port PVID  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.16 authentication event server dead action authorize voice
+This command enables authorization of voice devices on the critical voice VLAN when all the authentication servers are dead. The configured voice VLAN of the port, on which the voice device is connected, is used as the critical voice VLAN ID.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication event server dead action authorize voice |
+| Default | Action: None  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.17 authentication event server alive action reinitialize
+This command configures the actions to take when one authentication server comes back alive after all were dead. The reinitialize action triggers the re-authentication of supplicants authenticated on the critical VLAN. 
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication event server alive action reinitialize |
+| Default | Action: None  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.18 authentication open
+This command configures Open Authentication mode on the port.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication open |
+| Default | Disabled  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.19 mab
+This command is used to enable MAC Authentication Bypass (MAB) on an interface. MAB is a supplemental authentication mechanism that allows 802.1X unaware clients – such as printers, fax machines, and some IP phones — to authenticate to the network using the client MAC address as an identifier. However MAB can also be used to authenticate 802.1x aware clients. This command also provides options to specify the type of authentication to be used, which can be either EAP-MD5 ,PAP,CHAP. If enabled, EAP-MD5 is used by default.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | mab [auth-type {pap | eap-md5}|chap] |
+| Default | Disabled  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.20 dot1x timeout
+This command sets the value, in seconds, of the timers used by the authenticator or supplicant state machines on an interface or range of interfaces. Depending on the token used and the value (in seconds) passed, various timeout configurable parameters are set. 
+
+- quiet-period: The value, in seconds, of the timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant. This is the period for which the authenticator state machine stays in the HELD state.
+- tx-period: The value, in seconds, of the timer used by the authenticator state machine on this port to determine when to send an EAPOL EAP Request/Identity frame to the supplicant. 
+- server-timeout: The value, in seconds, of the timer used by the authenticator state machine on this port to timeout the authentication server. 
+- supp-timeout: The value, in seconds, of the timer used by the authenticator state machine on this port to timeout the supplicant. 
+- auth-period: The value, in seconds, of the timer used by the supplicant state machine on this port to timeout an authenticator when waiting for a response to packets other than EAPOL-Start.
+- start-period: The value, in seconds, of the timer used by the supplicant state machine on this port to determine the interval between two successive EAPOL-Start frames when they are being retransmitted.
+- held-period: The value, in seconds, of the timer used by the supplicant state machine on this port to determine the length of time it will wait before trying to send the authentication credentials again after a failed attempt. This is the period for which the supplicant state machine stays in the HELD state.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | dot1x timeout { quiet-period | tx-period | server-timeout | supp-timeout | auth-period | start-period | held-period } |
+| Default | quiet-period: 60 seconds  |
+| Default | tx-period: 30 seconds  |
+| Default | supp-timeout: 30 seconds  |
+| Default | server-timeout: 30 seconds  |
+| Default | auth-period: 30 seconds  |
+| Default | start-period: 30 seconds |
+| Default | held-period: 60 seconds |
+| Change history | SONiC 4.0 - Introduced |
+
+
 	
-
-#### 3.6.2.5 Config dot1x port controlmode
-This command sets the authentication mode to be used on the specified port or ports.  The control mode may be one of the following:   
-forceunauthorized: The authenticator PAE unconditionally sets the controlled port to unauthorized.   
-forceauthorized: The authenticator PAE unconditionally sets the controlled port to authorized.    
-auto: The authenticator PAE sets the controlled port mode to reflect the outcome of the authentication exchanges between the supplicant, authenticator, and the authentication server. 
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port controlmode <slot.port|all> <forceunauthorized|forceauthorized|auto> |
-| Default | auto |
-| Change history | SONiC 4.0 - Introduced |
-	
-
-#### 3.6.2.6 Config dot1x port quietperiod
-This command sets the value, in seconds, of the timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant.  The quiet period must be a value in the range of 0 and 65535. 
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port quietperiod <slot.port>  <0-65535> |
-| Default | 60 |
-| Change history | SONiC 4.0 - Introduced |
-	
-
-#### 3.6.2.7 Config dot1x port transmitperiod
-This command sets the value, in seconds, of the timer used by the authenticator state machine on the specified port to determine when to send an EAPOL EAP Request/Identity frame to the supplicant.  The transmit period must be a value in the range of 1 and 65535. 
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port transmitperiod <slot.port>  <1-65535> |
-| Default | 30 |
-| Change history | SONiC 4.0 - Introduced |
-	
-
-#### 3.6.2.8 Config dot1x port supptimeout
-This command sets the value, in seconds, of the timer used by the authenticator state machine on this port to timeout the supplicant.  The supplicant timeout must be a value in the range of 1 and 65535. 
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port supptimeout <slot.port>  <1-65535>|
-| Default | 30 |
-| Change history | SONiC 4.0 - Introduced |
-
-#### 3.6.2.9 Config dot1x port servertimeout
-This command sets the value, in seconds, of the timer used by the authenticator on this port to timeout the authentication server.  The server timeout must be a value in the range of 1 and 65535. 
-
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port servertimeout <slot.port>  <1-65535> |
-| Default | 30 |
-| Change history | SONiC 4.0 - Introduced |
-
-#### 3.6.2.10 Config dot1x port maxrequests
-This command sets the maximum number of times the authenticator state machine on this port will retransmit an EAPOL EAP Request/Identity before timing out the supplicant.  The max requests value must be in the range of 1 and 10. 
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port maxrequests <slot.port>  <1-10> |
-| Default | 2 |
-| Change history | SONiC 4.0 - Introduced |
-
-#### 3.6.2.11 Config dot1x port reauthperiod
-This command sets the value, in seconds, of the timer used by the authenticator state machine on this port to determine when reauthentication of the supplicant takes place.  The reauthperiod must be a value in the range of 1 and 65535.
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port reauthperiod <slot.port>  <1-65535> |
-| Default | 3600 |
-| Change history | SONiC 4.0 - Introduced |
-
-#### 3.6.2.12 Config dot1x port reauthenabled
-This command enables or disables reauthentication of the supplicant for the specified port.  The reauthenabled value must be ‘true’ or ‘false’.  If the value is ‘true’ reauthentication will occur.  Otherwise, reauthentication will not be allowed.
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port reauthenabled <slot.port>  <true|false> |
-| Default | false |
-| Change history | SONiC 4.0 - Introduced |
-
-#### 3.6.2.13 Config dot1x port keytxenabled
-This command enables or disables key transmission to the supplicant.  The keytransmissionenabled value must be ‘true’ or ‘false’.  If the value is ‘true’, keys will be transmitted to the supplicant.
-
-| Mode | Config |
-| ---- | ------ |
-| Syntax | config dot1x port keytxenabled <slot.port>  <true|false> |
-| Default | false |
-| Change history | SONiC 4.0 - Introduced |
-
-
 ### 3.6.3 Show Commands
 
-#### 3.6.3.1 Show dot1x summary
-This command displays a summary of the global dot1x configuration.  
+#### 3.6.3.1 show authentication interface
+This command displays the authentication manager information for the interface 
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# show dot1x summary |
+| Syntax | show authentication interface  {all | {interface <unit/slot/port >}} |
 | Change history | SONiC 4.0 - Introduced |
 
 | Field   | Description |
 | ------ | ------------------- |
-| Administrative mode | Indicates if authentication control is enabled on the switch.  Possible values are “Enabled” and “Disabled”. |
+| Authentication Manager Status | The admin status of Authentication on the switch. This is a global configuration. |
+| Interface  | The interface for which authentication configuration information is being displayed. |
+| Port Control Mode | The configured control mode for this port. Possible values are force-unauthorized | auto | unauthorized. |
+| Host Mode | The authentication host mode configured on the interface. |
+| Authentication Restart timer | The time, in seconds, after which reauthentication starts. |
+| Configured method order | The order of authentication methods used on the interface. |
+| Enabled method order | The order of authentication methods used on the interface. |
+| Configured method priority | The priority for the authentication methods used on the interface. |
+| Enabled method priority | The priority for the authentication methods used on the interface. |
+| Reauthentication Period | The period after which all clients on the interface will be reauthenticated. |
+| Reauthentication Enabled | Indicates whether reauthentication is enabled on the interface. |
+| Maximum Users | The maximum number of clients that can be authenticated on the interface if the interface is configured as multi-auth host mode. |
+| Guest VLAN ID | The VLAN id to be used to authorize clients that time out or fail authentication due to invalid credentials. This is applicable only for 802.1x unaware clients. |
+| Unauthenticated VLAN ID | The VLAN id to be used to authorize clients that that time out or fail authentication due to invalid credentials. This is applicable only for 802.1x clients. |
+| Critical Vlan Id | The VLAN id to be used to authorize clients that that time out due to unreachable RADIUS servers. |
+| Authentication Violation Mode | The action to be taken when a security violation occurs on a port. |
+| Authentication Server Dead action | The action to be undertaken for data clients when all RADIUS servers are found dead. |
+| Authentication Server Dead action for Voice | The action to be undertaken for voice clients when all RADIUS servers are found dead. |
+| Authentication Server Alive action | The action to be undertaken for data clients when a RADIUS server comes back alive after all were found dead. |
+| Allowed protocols on unauthorized port | The action to drop or forward the particular protocol packet from and to unauthorized clients on the port |
+| Open Authentication | Indicates if Open Authentication is enabled on the interface. |
 
-#### 3.6.3.2 Show dot1x port summary
-This command displays a summary of the dot1x configuration for a specified port or for all ports.   
+Example:
+```
+show  authentication interface 1/0/1
+
+Authentication Manager Status.................. Enabled
+
+Interface...................................... 1/0/1
+Authentication Restart timer................... 300
+Configured method order........................ mab undefined undefined
+Enabled method order........................... mab undefined undefined
+Configured method priority..................... dot1x mab captive-portal
+Enabled method priority........................ dot1x mab undefined
+Reauthentication Period (secs)................. 3600
+Reauthentication Enabled....................... False
+Maximum Users.................................. 48
+Guest VLAN ID..... ............................ 0
+Unauthenticated VLAN ID........................ 0
+Critical Vlan Id............................... 0
+Authentication Violation Mode.................. Restrict
+Authentication Server Dead action.............. None
+Authentication Server Dead action for Voice.... None
+Authentication Server Alive action............. None
+Allowed protocols on unauthorized port......... dhcp
+Open Authentication............................ Disabled
+
+```
+#### 3.6.3.2 show authentication 
+This command displays the authentication manager information for the interface 
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show dot1x port summary <slot.port | all> |
+| Syntax | show authentication |
 | Change history | SONiC 4.0 - Introduced |
 
 | Field   | Description |
 | ------ | ------------------- |
-| Port | The interface whose configuration is displayed in this row. |
-| Control Mode | The configured control mode for this port.  Possible values are “ForceUnauthorized”, “ForceAuthorized”, or “Auto”. |
-| Operating Control Mode | The control mode under which this port is operating.  Possible values are “Authorized” or “Unauthorized”. |
-| Reauthentication Enabled | Indicates if reauthentication is enabled on this port.  Possible values are “True” or “False”. |
-| Key Transmission Enabled | Indicates if the key is transmitted to the supplicant for the specified port.  Possible values are “True” or “False”. |
+| Authentication Manager Status | The admin status of Authentication on the switch. This is a global configuration. |
+| Dynamic VLAN Creation Mode | Indicates whether the switch can dynamically create a RADIUS-assigned VLAN if it does not currently exist on the switch. |
+| VLAN Assignment Mode | Indicates if RADIUS assigned VLAN can be used for the Authentication Manager client or not. |
+| Authentication Monitor Mode | The admin status of Monitor mode on the switch. This is a global configuration. |
+| Critical Recovery Max ReAuth | Indicates the number of supplicants that are re-authenticated per second. |
+| Number of Authenticated clients | The total number of clients authenticated on the switch except the ones in Monitor Mode |
+| Number of clients in Monitor Mode | The number clients authorized by Monitor mode on the switch.|
 
+Example:
+```
+ #show authentication 
 
-#### 3.6.3.3 Show dot1x port detailed
+Authentication Manager Status.................. Disabled
+Dynamic Vlan Creation Mode..................... Disabled
+VLAN Assignment Mode........................... Disabled
+Authentication Monitor Mode.................... Disabled
+Critical Recovery Max ReAuth................... 10
+
+Number of Authenticated clients................ 2
+Number of clients in Monitor mode.............. 0
+
+```
+
+#### 3.6.3.3 show authentication clients
 This command displays the details of the dot1x configuration for a specified port.
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show dot1x port detailed <slot.port> |
+| Syntax | show authentication clients  {all | {interface <unit/slot/port >}} |
 | Change history | SONiC 4.0 - Introduced |
 
-| Field   | Description |
-| ------ | ------------------- |
-| Port | The interface whose configuration is displayed |
-| Protocol Version | The protocol version associated with this port.  The only possible value is 1, corresponding to the first version of the dot1x specification. |
-| PAE Capabilities | The PAE functionality of this port.  Possible values are “Authenticator” or “Supplicant”. |
-| Authenticator PAE State | Current state of the authenticator PAE state machine.  Possible values are “Initialize”, “Disconnected”, “Connecting”, “Authenticating”, “Authenticated”, “Aborting”, “Held”, “ForceAuthorized”, and “ForceUnauthorized”. |
-| Backend Authentication State | Current state of the backend authentication state machine.  Possible values are “Request”, “Response”, “Success”, “Fail”, “Timeout”, “Idle”, and “Initialize”. |
-| Quiet Period	| The timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant.  The value is expressed in seconds and will be in the range 0 and 65535. |
-| Transmit Period  | The timer used by the authenticator state machine on the specified port to determine when to send an EAPOL EAP Request/Identity frame to the supplicant.  The value is expressed in seconds and will be in the range of 1 and 65535. |
-| Supplicant Timeout | The timer used by the authenticator state machine on this port to timeout the supplicant.  .  The value is expressed in seconds and will be in the range of 1 and 65535.
-| Server Timeout | The timer used by the authenticator on this port to timeout the authentication server.  The value is expressed in seconds and will be in the range of 1 and 65535. |
-| Maximum Requests | The maximum number of times the authenticator state machine on this port will retransmit an EAPOL EAP Request/Identity before timing out the supplicant.  The value will be in the range of 1 and 10. |
-| Reauthentication Period | The timer used by the authenticator state machine on this port to determine when reauthentication of the supplicant takes place.  The value is expressed in seconds and will be in the range of 1 and 65535. |
-| Reauthentication Enabled | Indicates if reauthentication is enabled on this port.  Possible values are “True” or “False”. |
-| Key Transmission Enabled | Indicates if the key is transmitted to the supplicant for the specified port.  Possible values are “True” or “False”. |
+Example:
+```
+(dhcp-10-130-86-200) #show authentication clients all
 
 
+(dhcp-10-130-86-142) (Interface 0/10)#show  authentication  clients all
 
-#### 3.6.3.4 Show dot1x port stats
+Interface  MAC-Address         Method   Host Mode    Control Mode  VLAN Assigned Reason
+---------  -----------------   -------  ------------ ------------  --------------------------
+0/16       10:8D:B6:C6:00:00   802.1X   multi-host   auto     RADIUS Assigned VLAN (10)
+
+(dhcp-10-130-86-200) #show authentication clients interface 1/0/2
+
+Mac Address.................................... 58:05:94:1C:00:00
+User Name...................................... testixia
+VLAN Assigned Reason........................... Voice VLAN (100)
+Host Mode ..................................... multi-auth
+Method......................................... 802.1X
+Control Mode................................... auto
+Session time ... .............................. 10
+Session timeout ............................... 100
+Time left for Session Termination Action....... 90
+Session Termination Action..................... Default
+Filter-Id ..................................... None
+ACS ACL Name................................... xACSACLx-IP-FP_ACL-5ee227a2
+DACL........................................... None
+Redirect ACL................................... IP-REDIRECT-IN-00000001#d
+Redirect URL................................... http://rtpjira.rtp.broadcom.com:8080
+Session Termination Action..................... Default
+Acct SessionId:................................ testixia:200000003
+
+```
+
+
+#### 3.6.3.4 show authentication authentication-history 
 This command displays the dot1x statistics for a specified port.
 
 | Mode   | Exec |
@@ -998,16 +1159,20 @@ This command displays the dot1x statistics for a specified port.
 | Invalid EAPOL Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
 | EAP Length Error Frames Received | The number of EAPOL frames that have been received by this authenticator in which the frame type is not recognized. |
 
+#### 3.6.3.5 show mab
+#### 3.6.3.6 show dot1x
 
 ### 3.6.4 Clear Commands
 
-#### 3.6.4.1 Clear dot1x port stats
+#### 3.6.4.1 clear authentication sessions
 This command resets the dot1x statistics for the specified port or for all ports.
 
 | Mode   | Exec |
 | ------ | ------------------- |
 | Syntax | clear dot1x port stats <slot.port | all> |
 | Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.4.2 clear dot1x statistics
 
 # 4 Flow Diagrams
 
