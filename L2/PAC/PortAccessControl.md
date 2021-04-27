@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.2
+High level design document version 0.3
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -74,7 +74,8 @@ High level design document version 0.2
 			- [3.6.3.5 show mab](#3635-show-mab)
 			- [3.6.3.6 show dot1x](#3636-show-dot1x)
 		- [3.6.4 Clear Commands](#364-clear-commands)
-			- [3.6.4.1 Clear dot1x port stats](#364-clear-dot1x-port-stats)
+			- [3.6.4.1 clear authentication sessions](#3641-clear-authentication-sessions)
+			- [3.6.4.2 clear dot1x statistics](#3642-clear-dot1x-statistics)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 - **[5 Error Handling](#5-error-handling)**
 - **[6 Serviceability and Debug](#6-serviceability-and-debug)**
@@ -96,6 +97,7 @@ High level design document version 0.2
 | ---- | ---------- | ---------| ------------------ |
 | 0.1  | 02/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Initial version |
 | 0.2  | 04/05/2021 | Prabhu Sreenivasan, Amitabha Sen | DB schema update and Review comments |
+| 0.3  | 04/27/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated CLI commands |
 
 # About this Manual
 This document provides general information about the Port Access Control feature in SONiC.
@@ -1249,14 +1251,20 @@ Software Version.................. 1
 ### 3.6.4 Clear Commands
 
 #### 3.6.4.1 clear authentication sessions
-This command resets the dot1x statistics for the specified port or for all ports.
+This command  clears information for all Auth Manager sessions. All the authenticated clients are re-intialized and forced to authenticate again.
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | clear dot1x port stats <slot.port | all> |
+| Syntax | clear authentication session |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.4.2 clear dot1x statistics
+This command resets the 802.1X statistics for the specified port or for all ports.
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | clear dot1x statistics |
+| Change history | SONiC 4.0 - Introduced |
 
 # 4 Flow Diagrams
 
