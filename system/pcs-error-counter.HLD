@@ -39,8 +39,14 @@ The PCS Error counters feature collects PCS Errors from Brcm silicons and help c
 PCS Error counters feature should cover Broadcom silicons include Tomahawk-1, Tomahawk-2, Trident-3 and Tomahawk-3
 SONiC shall be able collect PCS Error counters of individual port
 SONiC shall be able to display PCS Error counters of individual port
-SONiC shall be able to clear PCS Error counters of individual port
-
+PCS error counters should be collected at same rate as other counters.
+Below PCS counters should be collected:
+- For 10G/40G/100G NRZ without FEC
+  Errored Block Count
+  BER Count
+- For PAM4 ports or ports with RS FEC enabled
+  FEC correctable errors
+  FEC  uncorrectable errors
 
 ### 1.1.1 Functional Requirements
 
