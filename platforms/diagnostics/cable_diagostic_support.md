@@ -117,7 +117,13 @@ The functional requirements for adding cable-diagnostics support in SONiC are:
 The cable-diagnostics would be ideal for initial switch deployment, diagnosing link/connection failures
 within the network topology, and ensuring link quality.
 
+## 2.2 Functional Description
 
+This document provides functional design and specifications of cable-diagnostics that helps users easily identify the cause of link failures. Based on the platform hardware designs, the front panel ports can be categorized as below:
+
+1. **Native RJ45:** This is a port with both MAC and PHY mounted on the box, the connections could be easily established by cat5e and cat6 Ethernet cables. When the cable-diagnostics test is conducted on the native RJ45, the orchagent will dispatches the request to the external PHY drivers, and it could either be the SAI library on the syncd or the PAI library on the GearBox, it depends on the platform designs.
+
+2. **External SFP/QSFP ports:** This is the so-called PHYless switch design, the front panel ports are cages that allow external PHYs on SFP/QSFP modules to get connected and communicated with the MAC on the box. The conducted cable-diagnostics test will evaluate the power and thermal readings of the moudule and compared with the threshold values found in the module registers. And hence, it could only work on modules with DOM information and threshold support, which is required to optics and optional to the coppers.
 
 # 3 Design
 ## 3.1 Overview
@@ -157,9 +163,9 @@ The **cable_diag_status** field of **PORT_TABLE** is to contorl the cable-diagno
 ```
 
 - The **submitted** state shall only be set by the IS-CLI, which is to trigger the cable-diagnostics test
-- The **in-progress** shall only be set by the xcvrd, and it's updated once **submitted** is detected on a particualr port with SFP/QSFP attached. This should take place before performing the cable-diagnostics test on the module.
-- The **gearbox** shall only be set by the xcvrd, and it's updated once **submitted** is detected on a particualr port without SFP/QSFP attached, and the **orchagent** should then send out the requests to external PHYs.
-- The **completed** shall only be set by the xcvrd, and the test report should be posted to the **STATE_DB** when transitioned to this state
+- The **in-progress** state shall only be set by the xcvrd, and it's updated once **submitted** is detected on a particualr port with SFP/QSFP attached. This should take place before performing the cable-diagnostics test on the module.
+- The **gearbox** state shall only be set by the xcvrd, and it's updated once **submitted** is detected on a particualr port without SFP/QSFP attached, and the **orchagent** should then send out the requests to external PHYs.
+- The **completed** state shall only be set by the xcvrd, and the test report should be posted to the **STATE_DB** when transitioned to this state.
 
 ### 3.2.2 STATE_DB
 
