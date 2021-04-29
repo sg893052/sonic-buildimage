@@ -19,13 +19,12 @@
 
 
 # Revision
-| Rev |     Date    |       Author       | Change Description                |
-|:---:|:-----------:|:------------------:|-----------------------------------|
-| 0.1 | 04/18/2021  | Geans Pin          | Initial version
-
-| 0.2 | 05/28/2021  | Jiahua Wang      | 2nd version
-
+| Rev  |    Date    |   Author    | Change Description |
+| :--: | :--------: | :---------: | ------------------ |
+| 0.1  | 04/18/2021 |  Geans Pin  | Initial version    |
+| 0.2  | 04/28/2021 | Jiahua Wang | 2nd version        |
 # About this Manual
+
 We  propose an extra PAI layer within the existing Gearbox framework to integrate and bring up the BRCM external PHY in the SONIC. The proposed PAI layer is compatible with both the BRCM PAI library and the Gearbox framework. Also, we fix some issues in the Gearbox framework.
 
 # Scope
