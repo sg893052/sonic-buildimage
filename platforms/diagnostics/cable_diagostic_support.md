@@ -74,7 +74,7 @@ the characteristics of electrical lines by observing reflected waveforms.
 In 2002, in order to ease and facilitate the rapid deployment of Gigabit Ethernet,
 Marvell Technology Group introduced an innovative new feature for its Alaska® family
 of Gigabit Ethernet Physical Layer (PHY) devices, called Virtual Cable Tester™ (VCT)
-technology, which is built on top of TDR, and is well-received and widely delopyed
+technology, which is built on top of TDR, and is well-received and widely deployed
 in the enterprise switches.
 
 Nowadays, most of the enterprise switch silicon vendors also provide similar features
@@ -84,11 +84,10 @@ and hence, it's still commonly available on these devices.
 
 From a SONiC perspective, the addition of this diagnostic feature will enhance
 platform development, user deployment, platform support, and serviceability.
-In addition to the copper cable-diagnostics, we'll also introduce optical transceiver diagnostics
-into SONIC to help users easily identify the cause of link failure.
 
-Furthermore, the SFP and QSFP module diagnostic will also be implemented to help users
-easily identify the cause of link failure on the transceivers with DOM and threshold support.
+Furthermore, not only the TDR for coppers, but also the SFP and QSFP module diagnostic will be 
+implemented to help users easily identify the cause of link failure on the transceivers with
+DOM and threshold support.
 
 - Native RJ45: The TDR test should be performed for the conducted test requests
 - Copper SFP(1000GBASE-T): The TDR test should be performed via the built-in copper register read/write
@@ -107,7 +106,7 @@ The functional requirements for adding cable-diagnostics support in SONiC are:
 ## 1.2 Configuration and Management Requirements
 
 1. The cable diagnostic support has to be managed using the SONiC management infrastructure.
-2. The cable diagnostic is port/transceiver specific, and the test result should not persistent across reboot.
+2. The cable diagnostic is port/transceiver specific, and the test result should not persist across reboot.
 3. In the case of SFP/QSFP transceivers, the diagnostic result should be cleared upon module removal.
 
 # 2 Functionality
@@ -149,23 +148,24 @@ The **orchagent** of SWSS will monitor **APPL_DB** and then dispatches the reque
 
 ### 3.2.1 APPL_DB
 
-The **cable_diag_status** field of **PORT_TABLE** is to contorl the cable-diagnostics tests.
+The **cable_diag_status** field of **PORT_TABLE** is to control the cable-diagnostics tests.
 
 ```
   "PORT_TABLE:Ethernet0": {
     "type": "hash", 
     "value": {
       ...... omitted ......
-      "cable_diag_status": "submitted" / "in-progress" / "gearbox" / "completed", 
+      "cable_diag_status": "submitted" / "in-progress" / "gearbox" / "completed" / "failed", 
       ...... omitted ......
     }
   }, 
 ```
 
-- The **submitted** state shall only be set by the IS-CLI, which is to trigger the cable-diagnostics test
+- The **submitted** state shall only be set by the management framework, which is to trigger the cable-diagnostics test
 - The **in-progress** state shall only be set by the xcvrd, and it's updated once **submitted** is detected on a particualr port with SFP/QSFP attached. This should take place before performing the cable-diagnostics test on the module.
 - The **gearbox** state shall only be set by the xcvrd, and it's updated once **submitted** is detected on a particualr port without SFP/QSFP attached, and the **orchagent** should then send out the requests to external PHYs.
 - The **completed** state shall only be set by the xcvrd, and the test report should be posted to the **STATE_DB** when transitioned to this state.
+- The **failed** state shall only be set by the xcvrd, and it indicates either a failure in the test initiated by writting to the VCT registers on the copper PHY.
 
 ### 3.2.2 STATE_DB
 
@@ -228,19 +228,30 @@ module: openconfig-platform-diagnostics
 The cable-diagnostics commands are only available in exec-mode, as the test operation and report
 should not be activated or persistent across reboot.
 
-#### test cable-diagnostics Ethernet <Port-ID>[-<Port-ID>]
+#### interface cable-diagnostics [Ethernet <Port-ID>[-<Port-ID>]]
 
-This command activates the cable-diagnostics test on one particular port or the ports in a specific range.
+This command activates the cable-diagnostics test on one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
+
+To activate the cable-diagnostics test on all the ports
+```
+sonic-cli# interface cable-diagnostics
+```
 
 To activate the cable-diagnostics test on Ethernet0
 ```
-sonic-cli# test cable-diagnostics Ethernet 0
+sonic-cli# interface cable-diagnostics Ethernet 0
 ```
 
 To activate the cable-diagnostics test on Ethernet0,Ethernet1...Ethernet9
 ```
-sonic-cli# test cable-diagnostics Ethernet 0-9
+sonic-cli# interface cable-diagnostics Ethernet 0-9
 ```
+
+In the case of standard interface-naming mode, the ranged command is as below
+```
+sonic-cli# interface cable-diagnostics Eth 1/1-1/9
+```
+
 
 ### 3.3.3 CLI Show Commands
 
@@ -382,6 +393,9 @@ The cable-diagnostics feature is fully scalable on a SONiC platform and is suppo
 The following is the list of unit test cases:
 * Verify cable-diagnostics CLI test commands.
 * Verify cable-diagnostics CLI show commands.
+* Verify cable-diagnostics for p2p and breakout interfaces
+* Verify failure scenarios for cable-diagnostics (transceiver not present, fiber not plugged in, transceiver not plugged in on peer, etc.)
+* Verify graceful exit when test/show is executed on an invalid interface (e.g., something out of range like Ethernet300)
 
 # 9 Internal Design Information
 There are no internal design changes relative to the cable-diagnostic support in SONiC. Design architecture
