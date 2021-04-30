@@ -77,3 +77,18 @@ sai_port_api_t functions in the PAI layer will replace the switch oid before cal
 
    To fix the Gearbox issue found in SWSS and SAIREDIS : Since there is an attribute SAI_PORT_ATTR_INTERFACE_TYPE missing in the call of initGearboxPort from the SWSS, we add a new key system_intf_type in the "ports" section of phy_config.json. If user doesn't provide this key in the gearbox_config.json, in the gearsyncd system_intf_type will be set to XFI by default. 
 
+
+
+## 4 Serviceability and DEBUG
+
+
+### 4.1 Syslogs
+
+TBD
+
+## 5 Scalability
+TBD
+
+## 6 Unit Test
+
+TBD
