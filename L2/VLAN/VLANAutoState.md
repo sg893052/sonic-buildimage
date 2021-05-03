@@ -66,21 +66,30 @@ This document provides comprehensive functional and design information about the
 ### Table 1: Abbreviations
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
-|                       | |
+| Autostate enable        | VLAN operstate is controlled by its local members operstate. |
+| Autostate disable        | VLAN operstate is always operationally up irrespective of its members operstate |
 
 # 1 Feature Overview
 
 The operstatus of a VLAN is currently controlled by the operational status of its physical port, portchannel members. 
+
+VLAN Operup is required for VXLAN tunnel to get established.
 There are deployment scenarios which require that the VLAN be declared operationally up irrespective of the 
-operational status of its members. This functionality is described as part of this document. 
+operational status of its members. An example is the border leaf where there may be no physical ports/LAG as VLAN members 
+but a VXLAN tunnel is still expected to be established.
+
+This feature supports such deployment scenarios and provides configurability per VLAN to control this behaviour.
 
 
 ## 1.1 Target Deployment Use Cases
-AutoState disable is applicable to scenarios where there are no physical ports or LAG as a member but the VLAN operational state 
-is still to be kept up for the L3 protocols to operate over this interface.
 
-An example is a border leaf where VXLAN tunnels need to be up without any physical ports being present there. 
-
+- In border leaf cases where there is no local port/portchannel as VLAN members and no VRF-VNI-VLAN mapping exists, 
+  Autostate disable would be required for the IMR routes to be exchanged with the remote leaf. 
+- In remote leaf cases where local ports/portchannels are members of the VLAN, Autostate enable would be used by default.
+  However if the user wishes to override this to avoid churn in the network then autostate can be disabled.
+- Another use case for Autostate disable is involving IRB over a default VRF. In this case we would require the tunnel 
+  to still be up when all the local vlan members go down to allow for the routing functionality over the tunnel.
+  
 ## 1.2 Requirements
 
 
