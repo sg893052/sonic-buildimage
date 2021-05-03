@@ -61,6 +61,7 @@ System Readiness:
 - Identify the vital host systemd services 
 - Introduce HOST_SERVICE table in CONFIG_DB to include vital host services. FEATURE table already exists for all docker services.
 - Sysmonitor to check system status of all the service units from the above tables[FEATURE,HOST_SERVICE] & the Port ready status and then show and post 'FULL SYSTEM READY' status in the STATE_DB.
+  In parallel, need to explore if monit can offload these acitivities from sysmontior.
   Service status Details:
 	- Check only the status of "enabled" services(host+docker).
 	- Docker Services:
@@ -71,22 +72,31 @@ System Readiness:
 
   Port Ready status Details:
 	- As part of show system status, today we consider portInitDone message from SWSS. But this is only the initial port creation in DB, and no way reflects the actual port status. This is the portInitDone from PORTTABLE. However there is one more portInitDone updated by portsyncd in the state DB by portsyncd. This is updated when host interfaces are created in the kernel. We plan to use this one.
-- Provide configuration commands to enable/disable host features/services.
-- hostcfgd will subscribe to FEATURE table(s) and take appropriate enable/disable action on the feature state being modified.
 - New Click CLI
 	- "show system status all" to be introduced to cover the overall system status.
 	- This CLI to display the existing core system status as well as the overall system status with the failed services' systemctl status.
 	- During the techsupport data collection, the new click CLI to be included for debugging.
-	- Click commands to enable/disable host services and also to see the status of all the host services to be introduced.
+	- Output of the CLI to display:
+		Core Service Status: Up/Down  - This output is from existing show system status CLI
+		
+		Other System Services: All are Up / Some services have failed:
+		networking.service                  loaded active failed  ifupdown2 networking initialization
+		ntp-daemon.service                  loaded active failed LSB: NTP daemon
+		...
+		
+		Port Status: Ports are initialised/Portinitdone Status NOT Updated/XCVRD PortInitdone Status NOT Updated
+
+		Failed Services details:
+		● system-health.service - SONiC system health monitor
+		   Loaded: loaded (/lib/systemd/system/system-health.service; enabled-runtime; vendor preset: enabled)
+		   Active: failed (Result: start-limit-hit) since Sun 2021-04-25 07:57:26 UTC; 2s ago
+		   Process: 16444 ExecStart=/usr/local/bin/healthd (code=exited, status=0/SUCCESS)
+	       Main PID: 16444 (code=exited, status=0/SUCCESS)
 
 
 ### 1.1.2 Configuration and Management Requirements
 - Click CLI to be introduced to show the overall system status in addition to the existing 'show system status' CLI which covers the core services.
 	"show system status all"
-- Implement config hostservice state Click comamnd to enable/disable host features/services.
-	"config hostservice state <service> <enabled/disabled>"
-- Implement show hostservice status Click command to see status of the host services.
-	"show hostservice status"
 
 ### 1.1.3 Scalability Requirements
 - NA
