@@ -62,8 +62,7 @@ Trace-l2 will follow the xSTP path if enabled in the system.
 
 
 ## 2.2 Configuration and Management Requirements
-- All ports must be part of same Vlan.
-- trace-l2 first tries to use the IP address of the virtual routing interface that is associated with a VLAN. If the virtual routing interface is not available, it then uses the loopback address. If both addresses are not available, it displays MAC address only.
+- Trace-l2 first tries to use the IP address of the virtual routing interface that is associated with a VLAN. If the virtual routing interface is not available, it then uses the loopback address. If both addresses are not available, it displays MAC address only.
 - One way time is not available because the trace-l2 protocol does not synchronize the clocks between hops.
 
 
