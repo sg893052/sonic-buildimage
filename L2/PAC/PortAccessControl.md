@@ -13,7 +13,7 @@ High level design document version 0.3
 - **[1 Feature Overview](#1-feature-overview)**
 	- [1.1 Port Access Control](#11-port-access-control)
 		- [1.1.1 Dot1x](#111-dot1x)
-		- [1.1.2 MAC Authentication Bypass](#112-mac-autentication-bypass)
+		- [1.1.2 MAC Authentication Bypass](#112-mac-authentication-bypass)
 	- [1.3 Requirements](#13-requirements)
 		- [1.3.1 Functional Requirements](#131-functional-requirements)
 		- [1.3.2 Configuration and Management Requirements](#132-configuration-and-management-requirements)
@@ -31,9 +31,9 @@ High level design document version 0.3
 	- [3.2 DB Changes](#32-db-changes)
 		- [3.2.1 Config DB](#321-config-db)
 		- [3.2.2 App DB](#322-app-db)
-		- [3.2.3 State DB](#323-state-db)
-		- [3.2.4 ASIC DB](#324-asic-db)
-		- [3.2.5 Counter DB](#325-counter-db)
+		- [3.2.3 ASIC DB](#324-asic-db)
+		- [3.2.4 Counter DB](#325-counter-db)
+		- [3.2.5 State DB](#323-state-db)
 	- [3.3 Switch State Service Design](#33-switch-state-service-design)
 		- [3.3.1 Orchestration Agent](#331-orchestration-agent)
 		- [3.3.2 PAC daemons](#332-pac-daemons)
@@ -217,7 +217,7 @@ Port Access Control feature should work seamlessly across warmboot. Statistics m
 ### 1.4.2 Container
 A new container sonic-security is introduced to hold all the port security applications. Apart from sonic-security container, code changes are made to SWSS, mgmt-frameowrk containers.
  
-### 1.4.3 SAI Overview
+### 1.4.3 SAI Support
 No changes to SAI spec for supporting PAC.
 
 # 2 Functionality
@@ -436,11 +436,11 @@ dot1x_system_auth_control "true"/"false" ; Indicates whether dot1x is enabled in
 
 ### 3.2.2 App DB
 
-### 3.2.4 ASIC DB
+### 3.2.3 ASIC DB
 
 None
 
-### 3.2.5 Counter DB
+### 3.2.4 Counter DB
 
 ```
 "HOST_APD_STATS_TABLE": [{
@@ -491,7 +491,7 @@ dot1xAuthLastEapolFrameVersion  = 1*10DIGIT ; The protocol version number carrie
 ```
 
 
-### 3.2.6 State DB
+### 3.2.5 State DB
 
 *PAC*   
 ```   
@@ -1273,6 +1273,9 @@ This command resets the 802.1X statistics for the specified port or for all port
 
 
 # 6 Serviceability and Debug
+show commands will help to see if the PAC is active on a port.
+All processing errors will be captured in syslog.
+Debug command output will be captured as part of tech support for offline analysis.
 
 # 7 Warm Boot Support
 Configured actions and counters should continue to work across warm reboot.
@@ -1280,6 +1283,15 @@ Configured actions and counters should continue to work across warm reboot.
 # 8 Scalability
 
 ## 8.1 Software scalability
+The following is the support scale for Port Access Control. The following numbers are recommended numbers and are not enforced by the software. Its expected that the user will not configure beyond the recommended scale.
+
+| Configuration / Resource   | Scale |
+| ------ | ------------------- |
+| ports supported by dot1x | 300 |
+| ports supported by MAB | 300 |
+| Clients per port | 48 |
+| DACLs supported | system-limit |
+
 
 # 9 Limitation
 
