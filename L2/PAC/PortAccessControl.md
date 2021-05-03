@@ -116,6 +116,7 @@ This document provides general information about the Port Access Control feature
 | EAPOL    | Extensible Authentication Protocol over LAN  |
 | MAB      | MAC Authentication Bypass|
 | PAC      | Port Access Control  |
+| PAE      | Port Access Entity |
 | RADIUS   | Remote Authentication Dial In User service |
 | SONiC-CLI | Klish CLI used by management framework |
 
@@ -262,7 +263,7 @@ When RADIUS authentication is used, the Authenticator basically becomes a passth
 The controlled directions dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control direction are of two type:   
 1. Both: Control is exerted over both incoming and outgoing frames.
 2. In: Control is only exerted over incoming traffic.   
-SONiC supports on the unidirection(In) control. Please see "Limitations and Restrictions" section.
+SONiC allows only unidirection(In) control. Please see "Limitations and Restrictions" section.
 
 
 ### 2.2.3 Downloadable ACL
@@ -752,7 +753,7 @@ Upon successful authentication, the authentication methods inform Authentication
 
 Authentication Manager receives the client authorization parameters from the authentication method after successful authentication of a client. The following parameters are acted upon:  
 
-- *VLAN Id*: This is the VLAN ID sent by a RADIUS server. Authentication Manager configures the port membership accordingly so that the client traffic is associated with the VLAN. Refer [3] for further details.
+- *VLAN Id*: This is the VLAN ID sent by a RADIUS server. Authentication Manager configures the port membership accordingly so that the client traffic is associated with the VLAN.   
 - *Session Timeout*: This is the timeout attribute of the authenticated client session.
 - *Session Termination Action*: Upon session timeout, the Session Termination Action determines the action on the client session. The following actions are defined:
    - *Default*: The client session is torn down and authentication needs to be restarted for the client.
@@ -835,7 +836,7 @@ radius. Uses the list of all RADIUS servers for authentication
 
 | Mode | Global Config |
 | ---- | ------ |
-| Syntax | aaa authentication pac { radius | local | none } |
+| Syntax | aaa authentication pac \{ radius \| local \| none \} |
 | Default | radius |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -844,7 +845,7 @@ This command sets configuration parameters that are used to format attribute1 fo
 
 | Mode | Global Config |
 | ---- | ------ |
-| Syntax | mab request format attribute 1 groupsize {1 | 2 | 4 | 12} separator {- | : | .} [lowercase | uppercase] |
+| Syntax | mab request format attribute 1 groupsize \{ 1 \| 2 \| 4 \| 12 \} separator \{ \- \| \: \| \. } \[ lowercase \| uppercase \] |
 | Default | group size=2 |
 | Default | separator is : |
 | Default | uppercase |
@@ -864,7 +865,7 @@ This command configures VLAN as guest vlan on an interface or a range of interfa
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication event no-response action authorize vlan <vlan-id> |
+| Syntax | authentication event no-response action authorize vlan \<vlan-id\> |
 | Default | 0 |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -873,7 +874,7 @@ This command configures the unauthenticated VLAN associated with the specified i
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication event fail action authorize vlan <vlan-id> |
+| Syntax | authentication event fail action authorize vlan \<vlan-id\> |
 | Default | 0 |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -882,7 +883,7 @@ This command configures the  number of times authentication may be reattempted b
 	
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication event fail retry <max-attempts> |
+| Syntax | authentication event fail retry \<max-attempts\> |
 | Default | 3 |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -891,7 +892,7 @@ This command sets the maximum number of clients supported on an interface or ran
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication max-users <count> |
+| Syntax | authentication max-users \<count\> |
 | Default | 48 |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -909,7 +910,7 @@ This command sets the authentication mode to use on the specified interface or r
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication host-mode authentication port-control { auto | force-authorized | force-unauthorized } |
+| Syntax | authentication host-mode authentication port-control \{ auto \| force-authorized \| force-unauthorized \} |
 | Default | auto  |
 | Change history | SONiC 4.0 - Introduced 
 
@@ -918,7 +919,7 @@ This command configures the host mode of a port. The configuration on the interf
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication host-mode { multi-auth | multi-domain | multi-host | single-host | multi-domain-multi-host } |
+| Syntax | authentication host-mode \{ multi-auth \| multi-domain \| multi-host \| single-host \| multi-domain-multi-host \} |
 | Default | multi-host  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -929,7 +930,7 @@ For reauthentication to happen after the configured or server provided timeout, 
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication timer reauthenticate { <seconds> | server} |
+| Syntax | authentication timer reauthenticate \{ \<seconds\> \| server \} |
 | Default | server  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -939,7 +940,7 @@ This command configures the actions to take when all the authentication servers 
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication event server dead action [{reinitialize | authorize}][vlan vlan-id]] |
+| Syntax | authentication event server dead action \[ \{ reinitialize \| authorize \} \] \[ vlan vlan-id \] \] |
 | Default | Action: None  |
 | Default | VLAN: Port PVID  |
 | Change history | SONiC 4.0 - Introduced |
@@ -976,7 +977,7 @@ This command is used to enable MAC Authentication Bypass (MAB) on an interface. 
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | mab [auth-type {pap | eap-md5}|chap] |
+| Syntax | mab \[ auth-type \{ pap \| eap-md5 \} \| chap \] |
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -993,7 +994,7 @@ This command sets the value, in seconds, of the timers used by the authenticator
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | dot1x timeout { quiet-period | tx-period | server-timeout | supp-timeout | auth-period | start-period | held-period } |
+| Syntax | dot1x timeout \{ quiet-period \| tx-period \| server-timeout \| supp-timeout \| auth-period \| start-period \| held-period \} |
 | Default | quiet-period: 60 seconds  |
 | Default | tx-period: 30 seconds  |
 | Default | supp-timeout: 30 seconds  |
@@ -1012,7 +1013,7 @@ This command displays the authentication manager information for the interface
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication interface  {all | {interface <unit/slot/port >}} |
+| Syntax | show authentication interface  \{ all \| \{ interface \<unit\/slot\/port\> \} \} |
 | Change history | SONiC 4.0 - Introduced |
 
 | Field   | Description |
@@ -1103,7 +1104,7 @@ This command displays the details of the dot1x configuration for a specified por
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication clients  {all | {interface <unit/slot/port >}} |
+| Syntax | show authentication clients  \{ all \| \{ interface \<unit\/slot\/port\> \} \} |
 | Change history | SONiC 4.0 - Introduced |
 
 
@@ -1182,7 +1183,7 @@ This command displays the authentication manager authentication history log for 
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication authentication-history  {interface <unit/slot/port >} |
+| Syntax | show authentication authentication-history  \{ interface \<unit\/slot\/port\> \} |
 | Change history | SONiC 4.0 - Introduced |
 
 Example:
@@ -1202,7 +1203,7 @@ This command is used to show a summary of the global mab configuration and summa
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show mab  {<cr> | {interface <unit/slot/port >}}  |
+| Syntax | show mab  \{ \<cr\> \| \{ interface \<unit\/slot\/port\> \} \}  |
 | Change history | SONiC 4.0 - Introduced |
 
 Example:
