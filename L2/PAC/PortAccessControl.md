@@ -1325,7 +1325,23 @@ fpinfra is a shared library that provides C APIs. Its unit tested using a C/C++ 
 
 
 **Using Sonic-CLI**
+```
+configure
+authentication enable
+aaa authentication dot1x default radius
 
+interface 1/0/1
+authentication order dot1x mab
+authentication priority dot1x mab
+authentication host-mode multi-auth
+authentication event fail action authorize vlan 30
+authentication event no-response action authorize vlan 30
+mab
+exit
+
+dot1x system-auth-control
+exit
+```
 
 # 13 Internal Design Information
 
