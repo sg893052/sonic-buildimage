@@ -64,8 +64,10 @@ High level design document version 0.3
 			- [3.6.2.16 authentication event server dead action authorize voice](#36216-authentication-event-server-dead-action-authorize-voice)
 			- [3.6.2.17 authentication event server alive action reinitialize](#36217-authentication-event-server-alive-action-reinitialize)
 			- [3.6.2.18 authentication open](#36218-authentication-open)
-			- [3.6.2.19 mab](#36219-mab)
-			- [3.6.2.20 dot1x timeout](#36220-dot1x-timeout)
+			- [3.6.2.19 authentication order](#36219-authentication-order)
+			- [3.6.2.20 authentication priority](#36220-authentication-priority)
+			- [3.6.2.21 mab](#36221-mab)
+			- [3.6.2.22 dot1x timeout](#36222-dot1x-timeout)
 		- [3.6.3 Show Commands](#363-show-commands)
 			- [3.6.3.1 show authentication interface](#3631-show-authentication-interface)
 			- [3.6.3.2 show authentication](#3632-show-authentication)
@@ -805,7 +807,13 @@ Since Openconfig models are not available, Openconfig dot1x and mab are propriet
 The following commands are used to configure PAC.  
 
 #### 3.6.2.1 authentication enable
+This command enables PAC feature globally. By default the value is disabled. If enabled only, the configuration on the interface would take effect.
 
+| Mode | Global Config |
+| ---- | ------ |
+| Syntax | authentication enable |
+| Default | disable |
+| Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.2 authentication critical recovery max-reauth
 This command configures the number of supplicants that are re-authenticated per second. This configuration is for the entire system across all the supplicants on all ports. This is used to control the system and network load when the number of supplicants to be re-authenticated is large. These re-authentications can be triggered due to ‘reinitialize’ dead or alive server actions.
@@ -972,7 +980,25 @@ This command configures Open Authentication mode on the port.
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.19 mab
+#### 3.6.2.19 authentication order
+This command is used to set the order of authentication methods used on a port. The allowed methods to configure for SONiC are Dot1x and MAB. Ordering sets the order of methods that the switch attempts when trying to authenticate a new device connected to a port. If one method in the list is unsuccessful or timed out, the next method is atempted. Each method can only be entered once.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication order \{ dot1x \[ mab \] \| mab \[ dot1x \] \} |
+| Default | None  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.20 authentication priority
+This command is used to set the priority for the authentication methods used on a port. The allowed methods to configure for SONiC are Dot1x and MAB. Authentication priority decides if the client, who is already authenticated, to re-authenticate with the  higher-priority method when the same is received.
+
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | authentication priority \{ dot1x \[ mab \] \| mab \[ dot1x \] \} |
+| Default | None  |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.2.21 mab
 This command is used to enable MAC Authentication Bypass (MAB) on an interface. MAB is a supplemental authentication mechanism that allows 802.1X unaware clients – such as printers, fax machines, and some IP phones — to authenticate to the network using the client MAC address as an identifier. However MAB can also be used to authenticate 802.1x aware clients. This command also provides options to specify the type of authentication to be used, which can be either EAP-MD5 ,PAP,CHAP. If enabled, EAP-MD5 is used by default.
 
 | Mode | Interface Config |
@@ -981,7 +1007,7 @@ This command is used to enable MAC Authentication Bypass (MAB) on an interface. 
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.20 dot1x timeout
+#### 3.6.2.22 dot1x timeout
 This command sets the value, in seconds, of the timers used by the authenticator or supplicant state machines on an interface or range of interfaces. Depending on the token used and the value (in seconds) passed, various timeout configurable parameters are set. 
 
 - quiet-period: The value, in seconds, of the timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant. This is the period for which the authenticator state machine stays in the HELD state.
