@@ -122,13 +122,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To Verify Vlan add/del from Portchannel with autostate disabled/enabled** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-<<<<<<< HEAD
-| **Steps**      | 1. Configure Vlan100-110 on D1 and add it as member to portchannel port<br/>2. Verify all Vlans have autostate enabled by default and vlan state shows Active
-3. Remove vlan membership from physical port and verify Vlans go to Inactive state with autostate enabled
-4. Disable autostate for all the Vlans and verify Vlans becomes Active |
-=======
 | **Steps**      | 1. Configure Vlan100-110 on D1 and add it as member to portchannel port<br/>2. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>3. Remove vlan membership from physical port and verify Vlans go to Inactive state with autostate enabled<br/>4. Disable autostate for all the Vlans and verify Vlans becomes Active<br/> |
->>>>>>> 07de985... Vlan Autostate Testplan
 
 
 
