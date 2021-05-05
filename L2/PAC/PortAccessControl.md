@@ -695,7 +695,7 @@ user_name = 1*255VCHARS ; Client user name
 #### 3.3.2.1 PAC Manager
 
 #### 3.3.2.2 Authentication Manager
-Authentication Manager in major component of pacd process. Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by hostapd(802.1X). These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
+Authentication Manager is the major component of pacd process. Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by hostapd(802.1X). These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
 
 Authentication Manager allows enforcing authentication on a port. Authentication Manager needs to be enabled for the same. This is the first step to enabling port based access control. Once authentication is enabled, the port is marked Unauthorized and traffic is blocked through it.
 
