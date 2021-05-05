@@ -122,9 +122,13 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To Verify Vlan add/del from Portchannel with autostate disabled/enabled** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
+<<<<<<< HEAD
 | **Steps**      | 1. Configure Vlan100-110 on D1 and add it as member to portchannel port<br/>2. Verify all Vlans have autostate enabled by default and vlan state shows Active
 3. Remove vlan membership from physical port and verify Vlans go to Inactive state with autostate enabled
 4. Disable autostate for all the Vlans and verify Vlans becomes Active |
+=======
+| **Steps**      | 1. Configure Vlan100-110 on D1 and add it as member to portchannel port<br/>2. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>3. Remove vlan membership from physical port and verify Vlans go to Inactive state with autostate enabled<br/>4. Disable autostate for all the Vlans and verify Vlans becomes Active<br/> |
+>>>>>>> 07de985... Vlan Autostate Testplan
 
 
 
@@ -150,9 +154,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To Verify Vlan is Active with Autostate disabled after physical/Portchannel port shutdown** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100-105 on D1 and add it as member of physical port<br/>2.Configure Vlan106-110 on D1  and add it as member of Portchannel port<br/>3. Verify all Vlans have autostate enabled by default and vlan state shows Active
-4. Disable Autostate for all the vlans <br/>5.Shutdown physical/Portchannel port and verify Vlans are still Active
-6. Enable autostate for all the Vlans and verify Vlans becomes InActive<br/>7.Noshut the physical and Portchannel ports and verify Vlans become Active<br/> |
+| **Steps**      | 1. Configure Vlan100-105 on D1 and add it as member of physical port<br/>2.Configure Vlan106-110 on D1  and add it as member of Portchannel port<br/>3. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>4. Disable Autostate for all the vlans <br/>5.Shutdown physical/Portchannel port and verify Vlans are still Active<br/>6. Enable autostate for all the Vlans and verify Vlans becomes InActive<br/>7.Noshut the physical and Portchannel ports and verify Vlans become Active<br/> |
 
 
 
@@ -190,9 +192,6 @@ This feature supports such deployment scenarios and provides configurability per
 
 
 
-
-
-
 ### **3.3 Reboot Test Cases**
 
 ### 3.3.1 To verify Vlan autostate with config reload  ###
@@ -202,7 +201,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To verify Vlan autostate with config reload**              |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005<br/>3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state<br/>4.Perform config save and do config reload<br/>5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after config reload |
+| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005<br/>3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state<br/>4.Perform config save and do config reload<br/>5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after config reload<br/> |
 
 
 ### 3.3.2 To verify Vlan autostate with coldboot
@@ -212,12 +211,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To verify Vlan autostate with coldboot**                   |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005
-3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state
-4.Perform config save and do coldboot
-5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after coldboot |
-
-
+| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005<br/>3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state<br/>4.Perform config save and do coldboot<br/>5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after coldboot<br/> |
 
 ### 3.3.3 To verify Vlan autostate with swss container restart
 
@@ -226,10 +220,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To verify Vlan autostate with swss container restart**     |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005
-3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state
-4.Perform config save and do SWSS container restart
-5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after SWSS container restart |
+| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005<br/>3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state<br/>4.Perform config save and do SWSS container restart<br/>5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after SWSS container restart<br/> |
 
 ### 3.3.4 To verify Vlan autostate with warmboot
 
@@ -238,10 +229,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To verify Vlan autostate with warmboot**                   |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005
-3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state
-4.Perform config save and do warmboot
-5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after warmboot |
+| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005<br/>3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state<br/>4.Perform config save and do warmboot<br/>5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after warmboot<br/> |
 
 
 
