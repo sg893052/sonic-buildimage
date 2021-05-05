@@ -148,9 +148,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To Verify Vlan is Active with Autostate disabled after physical/Portchannel port shutdown** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100-105 on D1 and add it as member of physical port<br/>2.Configure Vlan106-110 on D1  and add it as member of Portchannel port<br/>3. Verify all Vlans have autostate enabled by default and vlan state shows Active
-4. Disable Autostate for all the vlans <br/>5.Shutdown physical/Portchannel port and verify Vlans are still Active<br/>6. Enable autostate for all the Vlans and verify Vlans becomes InActive<br/>7.Noshut the physical and Portchannel ports and verify Vlans become Active<br/> |
-
+| **Steps**      | 1. Configure Vlan100-105 on D1 and add it as member of physical port<br/>2.Configure Vlan106-110 on D1  and add it as member of Portchannel port<br/>3. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>4.Disable Autostate for all the vlans<br/>5.Shutdown physical/Portchannel port and verify Vlans are still Active<br/>6. Enable autostate for all the Vlans and verify Vlans becomes InActive<br/>7.Noshut the physical and Portchannel ports and verify Vlans become Active<br/> |
 
 
 ### 3.2.5  To Verify vlan operational state and ping to ip/ipv6 address configured on Vlan having autostate disabled
