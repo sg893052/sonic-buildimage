@@ -100,10 +100,10 @@ High level design document version 0.3
 | 0.3  | 04/27/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated CLI commands |
 
 # About this Manual
-This document provides general information about the Port Access Control feature in SONiC.
+This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
 
 # Scope
-This document provides general information about the Port Access Control feature implementation in SONiC.
+This document describes the high level design details about Port Access Control feature implementation in SONiC.
 
 
 # Definition / Abbreviation
