@@ -41,6 +41,7 @@ High level design document version 0.3
 			- [3.3.2.2 Authentication Manager](#3322-authentication-manager)
 			- [3.3.2.3 mabd](#3323-mabd)
 		- [3.3.3 Other Process](#333-other-process)
+		- [3.3.4 Interaction between pacd hostapd and mabd](#334-interaction-between-pacd-hostapd-and-mabd)
 	- [3.4 SyncD](#34-syncd)
 	- [3.5 SAI](#35-sai)
 	- [3.6 Manageability](#36-manageability)
@@ -116,7 +117,7 @@ This document describes the high level design details about Port Access Control 
 | CoPP     | Control Plane Policing |
 | Dot1x    | IEEE 802.1 standard  |
 | EAPOL    | Extensible Authentication Protocol over LAN  |
-| MAB      | MAC Authentication Bypass|
+| MAB      | Mac-based Authentication Bypass |
 | PAC      | Port Access Control  |
 | PAE      | Port Access Entity |
 | RADIUS   | Remote Authentication Dial In User service |
@@ -694,7 +695,7 @@ user_name = 1*255VCHARS ; Client user name
 #### 3.3.2.1 PAC Manager
 
 #### 3.3.2.2 Authentication Manager
-Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by 802.1X. These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
+Authentication Manager in major component of pacd process. Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by hostapd(802.1X). These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
 
 Authentication Manager allows enforcing authentication on a port. Authentication Manager needs to be enabled for the same. This is the first step to enabling port based access control. Once authentication is enabled, the port is marked Unauthorized and traffic is blocked through it.
 
@@ -765,8 +766,160 @@ Authentication Manager receives the client authorization parameters from the aut
 - *Redirect ACL*: This is used to apply an ACL that traps matching packets to the CPU for redirection. It is typically used to match on HTTP packets from a client.
 - *Redirect URL*: This is used to specify a redirect URL and works in conjunction with the Redirect ACL.
 
+
+**Dynamic ACL attributes**   
+
+ACL attributes from the RADIUS server can be sent using below methods:  
+
+*Individual Cisco AVPair attributes*:   
+This attribute sends single or multiple Cisco AV-Pairs in the format “ip:inacl” or “ipv6:inacl” containing attribute value as IP ACL rules in Extended ACL format. It can also specify the ACL name which must be pre-configured on the switch. Only one ipv4 and one ipv6 ACL is allowed per client.   
+
+Predefined ACL example:   
+```
+ip:inacl=99
+ip:inacl=Named_ACL
+ipv6:inacl=Named_IPv6_ACL
+Dynamic ACL example:
+ip:inacl[#number]={extended-access-control-list}
+ipv6:inacl[#number]={ extended-access-control-list}
+```
+
+*Filter-Id Attribute (locally configured ACL)*:   
+ACL’s sent using Filter-Id need to be pre-configured on the switch. On receiving Access-Accept packet with Filter-Id containing ACL name with direction, the specified ACL is applied on the port. This ACL can be of any type; ipv4, ipv6 or MAC.  Any existing static ACLs on the port are removed and the new ACL is applied prior to authorizing the port to 802.1X. When the 802.1X session terminates, the pre-existing ACLs is restored to the port. If both a Filter-ID and a Cisco AV-Pair (26) containing a DACL are present in the Access Accept, the Access Accept is treated as an Access-Reject.   
+
+*CiscoSecure-Defined-ACL attribute-value pair*:   
+This attribute uses Named ACL’s configured on the RADIUS Server. CiscoSecure-Defined-ACL attribute-value pair can be set with the RADIUS Cisco-AV-Pair vendor-specific attributes (VSAs). This pair specifies the name of the Downloadable ACL on the RADIUS server with the “ACL-Name” attribute.  On receiving CiscoSecure-Defined-ACL attribute, a new Access-Request, with UserName as “ACL-Name” is sent to RADIUS server, to which RADIUS responds with Access-Accept containing Rules in the ACL Set <ACL-Name> of CiscoSecure-Defined-ACL as individual Cisco AV Pair attributes. If there is no response to the 2nd Access-Request or if an Access-Reject is received, the client is Rejected.
+Individual Cisco AVPs containing individual ACL rules can be sent in Access-Accept along with CiscoSecure-Defined-ACL AVP. All the rules/ACLs are applied on the port.
+Also, the rules downloaded as part of the second Access-Request are stored (cached) in a DB on the DUT till there is at least one client (on any port) using (configured with) that ACL. The “ACL-Name” has to be compliant with ACL naming convention as defined by SONiC.   
+
+For each client session, one ACL of each type (IPv4, IPv6) is supported. Prior to applying ACL sent from RADIUS server, if any ACL’s were configured, they are removed and DACL’s are applied to the port. In case of the last session termination on a port, the removed static ACL’s are restored to the port after deleting the DACL’s.
+
+**ACL naming convention**   
+
+When an ACL is installed by Authentication Manager, the following the naming convention is used.
+
+
+| ACL type | Source | ACL name |
+| -------- | ------ | -------- |
+| IPv4 | Filter Id / Cisco AV Pair StaticACL | IP-STATIC-IN-\<Client Session ID\> |
+| IPv6 | Filter Id / Cisco AV Pair StaticACL | IPV6-STATIC-IN-\<Client Session ID\> |
+| IPv4 | Cisco AV Pair DACL | IP-DACL-IN-\<Client Session ID\> |
+| IPv6 | Cisco AV Pair DACL | IPV6-DACL-IN-\<Client Session ID\> |
+| IPv4 | Redirect ACL | IP-REDIRECT-IN-\<Client Session ID\> |
+| IPv6 | Redirect ACL | IPV6- REDIRECT-IN-\<Client Session ID\> |
+| MAC  | Filter Id / Cisco AV Pair StaticACL | MAC-STATIC-IN-\<Client Session ID\> |
+
+
+The switch UI shall prevent the operator from creating a static ACL where the name matches any of the regular expressions that can be part of the above naming conventions.
+
+**Authentication Manager special VLANs**   
+
+Authentication Manager keeps trying the next configured authentication method in case authentication method fails or times out. However if the last authentication fails, Authentication Manager authorizes the client to special VLANs like Unauthenticated VLAN, Guest VLAN, or Critical VLAN. If a client is authenticated in any of these VLANs and the VLAN is reconfigured or deleted from the system, all these clients are unauthorized.   
+
+*Unauthenticated VLAN*   
+This is a special VLAN which is used to authorize clients which fail authentication due to invalid credentials. This is used for 802.1X aware clients only.
+
+*Guest VLAN*   
+This is a special VLAN used to authorize 802.1X unaware clients. Refer [4] for details.
+
+*Critical VLAN*   
+Critical VLAN allows supplicants to authenticate on a Critical VLAN when all RADIUS servers are dead. The criteria to mark a server dead is documented in [8]. The dead-server (all RADIUS servers marked dead) actions are configured per port.
+
+*Critical Voice VLAN*   
+Critical Voice VLAN support allows a phone to continue port access on the Voice VLAN when all the RADIUS servers go dead. If the feature is not enabled, the phone will be disconnected.
+
+
+**Critical VLAN processing**   
+
+When all the configured RADIUS servers are marked Dead, the existing clients are kept intact. This is true for dead action Reinitialize/Authorize/None. Critical VLAN processing begins when either a new client tries to authenticate or re-authentication kicks in for an authorized client.
+ 
+*Critical VLAN dead action “Reinitialize”*   
+Pre-condition: All the configured RADIUS servers are marked Dead 
+ 
+When a new client attempts to authenticate or an existing client undergoes re-authentication, the new client or the client under re-authentication is authorized into Critical Data VLAN. All the other authorized clients are terminated, with the exception of clients in Unauthenticated VLAN, Guest VLAN, Voice VLAN, Critical Data VLAN, Critical Voice VLAN, clients authorized in Monitor mode and Open mode. Terminated clients are expected to re-initiate the authentication process and they would be authorized into Critical Data VLAN once they do so.
+ 
+*Critical VLAN dead action “Authorize”*   
+Pre-condition: All the configured RADIUS servers are marked Dead  
+ 
+When a new client attempts to authenticate or an existing client undergoes re-authentication, the new client or the client under re-authentication is authorized into Critical Data VLAN. All the other authorized clients are kept undisturbed.
+
+*Critical VLAN dead action “None”*   
+Pre-condition: All the configured RADIUS servers are marked Dead.  
+ 
+When a new client attempts to authenticate or an existing client undergoes re-authentication, the new client or the client under re-authentication is not authorized and is terminated. All the other authorized clients are kept undisturbed.
+
+*Critical VLAN alive-server action “Reinitialize”*   
+When the alive-server action (one server alive after all were dead) is configured to “reinitialize”, Authentication Manager triggers the re-authentication of supplicants authorized on the Critical VLAN.   
+
+The number of supplicants that are re-authenticated per second is configurable. This configuration is for the entire system across all the supplicants on all ports. This is used to control the system and network load when the number of supplicants to be re-authenticated is large. These re-authentications are triggered due to alive server actions.
+
+
+**RADIUS assigned Trunk mode**   
+
+In an 802.1X Access-Accept message, the Cisco VSA device-traffic-class=switch indicates that the connected device is capable of forwarding traffic from multiple stations using tagged and untagged traffic.   
+
+When an Access-Accept message is received that contains the VSA device-traffic-class=switch, the switch shall:   
+
+- if present in the Access-Accept, utilize the RADIUS assigned VLAN  to set the trunk port native VLAN. If not present, the port PVID is used to set the operational trunk port native VLAN.
+- Spanning-tree portfast is operationally disabled on the port.
+- The port is operationally set to trunk mode using the current trunk mode configuration.   
+
+Parsing of this VSA attribute is subject to the setting of the “radius-server vsa send authentication” command.   
+
+It is expected that the first device to be authenticated on an interface will have the trunk mode configuration in the Access-Accept and other authentications will not have trunk mode assignment. However, subsequent authentications with trunk mode assignment shall be allowed, however, only the first trunk mode assignment is processed (including the native VLAN assignment). Additional trunk mode assignments are allowed and processed with a debug level log message "Redundant trunk mode assignment for <<interface-id>> ignored"   
+
+Only the first Trunk mode native VLAN assignment received along with the first trunk mode assignment Access-Accept is processed. Typically, this will be contained in the first Access-Accept received for the port along with the trunk mode assignment, however, it need not be. Subsequent VLAN assignments - if the same as the operational PVID - are logged as a DEBUG level message "Redundant native VLAN assignment of Gi1/0/1 to VLAN P ignored" and are ignored as if the assignment was not present in the message.
+Subsequent clients authenticating with a VLAN that does not match the Native VLAN/access PVID are denied access with the message (RADIUS supplied VLAN P does not match operational native VLAN Q on \<interface id\>. Access denied".   
+
+The RADIUS supplied native VLAN must be configured on the switch. Dynamic VLAN creation is not supported for RADIUS supplied native VLANs for trunk mode.   
+
+If non-switch clients are already authenticated on a port when a Trunk mode assignment is received, the existing clients are terminated. These clients are assumed to have been behind the switch whose authentication attempt resulted in a Trunk mode assignment.   
+
+If a port is in RADIUS assigned Trunk mode, when the last 802.1X session on the port is terminated or the interface is shut down or error-disabled, the port is restored to the configuration state as it was prior to establishment of any 802.1X session. This is regardless of whether the 802.1X sessions are trunk or non-trunk.   
+
+
+**Monitor Mode**   
+If Monitor mode is enabled, Authentication Manager places the client in Monitor mode as applicable.   
+
+
+**Authentication History**   
+Authentication Manager maintains a database of authentication events. Events like “Authorized” or “Unauthorized” are recorded along with the timestamp, port number, client MAC address, and the authentication method used.   
+
+
+**Open Authentication**  
+The Open Authentication capability allows Authentication Manager to allow client traffic event before it authenticates. This is typically used to allow certain devices to allow access to network resources prior to authenticating to obtain IP address and download configuration or firmware upgrades. Once the information is downloaded, the device will authenticate to the network.  
+
+Open Authentication is configured per interface. The open authentication settings are ignored for force-authorized and force-unauthorized ports.   
+
+Open Authentication is supported for all switchport modes (access, general and trunk). It is also supported in all Authentication Manager Host modes. The number of clients that get Open access before authentication is limited by the configured host mode on the port.   
+
+When a packet is received from a client, it is allowed access in Open mode before the authentication sequence initiates. The exception to this is when the client sends an EAP packet. In this scenario the client is not placed in Open mode immediately. We should look for the first authentication method. If it is configured as 802.1x, authentication is attempted instead.   
+
+A client authorized in Open mode is considered a Data client and is authorized on the data VLAN of the port. A client given access in Open mode has its VLAN assigned reason as Default VLAN. Periodic re-authentication is not supported for these clients.   
+
+A client authentication will eventually trigger based on the available and configured authentication methods on the port and on the reception of packets from the client.   
+
+If a client fails authentication, the authentication failure actions will continue to applicable (Critical VLAN, Unauthenticated VLAN, Guest VLAN, Monitor mode etc.). If however we do not have the required configuration to authorize the client in any of these mentioned methods, the client will have access in Open mode.   
+
+If the client succeeds authentication, the authorization parameters from RADIUS will be applied as usual. However if a DACL or Filter-Id is received, the admin configured static ACLs on the port will not be removed. These will be applied on the port prior to the statically configured ACL. This is required for subsequent clients on the port that are authorized in Open mode. The static ACL would continue to apply on the traffic as intended.    
+
+**Inactivity Timer**   
+The feature is used to clean up idle data clients who have not sent any traffic for 300 seconds. The Authentication Manager Inactivity timer is a per client timer and is run when Re-authentication is not enabled for the client.   
+The inactivity timer has a value of 300 seconds and is not configurable. Once the inactivity timer expires, the timer handler:   
+- Checks the SrcHit bit for the client MAC in the hardware L2 table
+- If the bit is set, it resets the bit to 0 and the timer is reloaded.
+- If the bit is not set, the client entry is cleared from the Authentication Manager  database and also the hardware (idle client is cleaned up)   
+
+The above implies that although the Inactivity timer fires every 300 seconds, an idle client can get cleaned up after 300 seconds and up to 600 seconds of its inactivity.   
+
+The feature is:   
+- Only applicable for clients only
+- Not applicable for clients authorized in Open mode
+- Applicable for clients in single-host, multi-auth and multi-domain modes
+
+
 #### 3.3.2.3 mabd
-MAB is intended to provide 802.1x unaware clients controlled access to the network using the devices’ MAC address as an identifier. This requires that the known and allowable MAC address and corresponding access rights be pre-populated in the authentication server.  
+mabd provides the Mac-based Authentication Bypass(MAB) functionality. MAB is intended to provide 802.1x unaware clients controlled access to the network using the devices’ MAC address as an identifier. This requires that the known and allowable MAC address and corresponding access rights be pre-populated in the authentication server.  
 
 Today, 802.1x has become the recommended port-based authentication method at the access layer in enterprise networks. However, there may be 802.1x unaware devices such as printers, fax-machines etc that would require access to the network without 802.1x authentication. MAB is a supplemental authentication mechanism to allow 802.1x unaware clients to authenticate to the network. SONiC supported authentication methods are as below:
 - CHAP
@@ -790,6 +943,23 @@ The authentication server checks its pre-populated database for the authorized M
 ### 3.3.3 Other Process
 
 No change to other process.
+
+### 3.3.4 Interaction between pacd hostapd and mabd
+
+*hostapd(802.1X)*   
+
+hostapd(802.1x) comes to know of an 802.1x client attempting authentication via an EAP exchange. It informs pacd(Authentication Manager) of this client by conveying the client MAC. If the authentication method selected by pacd(Authentication Manager) is 802.1X, pacd(Authentication Manager) sends an event to hostapd(802.1X) for authenticating the user. 
+
+hostapd(802.1X) informs pacd(Authentication Manager) about the result of the authentication. hostapd(802.1X) also passes all the authorization parameters it receives from an AAA Server to the pacd(Authentication Manager). These are used for configuring the NAS to allow authenticated client traffic.
+
+*mabd(MAB)*   
+
+When user or client tries to authenticate and the method selected is MAB, the pacd(Authentication Manager) sends an event to mabd(MAB) for authenticating the user. The client’s MAC address is sent to mabd(MAB) for the same. 
+
+pacd(Authentication Manager) learns client’s MAC address through an hardware rule to copy-to-CPU the packets from unknown source MAC addresses.
+
+mabd(MAB) informs pacd(Authentication Manager) about the result of the authentication. mabd(MAB) also passes all the authorization parameters it receives from an AAA Server to the pacd(Authentication Manager). These are used for configuring the NAS to allow authenticated client traffic.
+
 
 ## 3.4 SyncD
 No changes to SyncD.
@@ -927,7 +1097,7 @@ This command configures the host mode of a port. The configuration on the interf
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication host-mode \{ multi-auth \| multi-domain \| multi-host \| single-host \| multi-domain-multi-host \} |
+| Syntax | authentication host-mode \{ multi-auth \| multi-domain \| multi-host \| single-host \} |
 | Default | multi-host  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1140,7 +1310,7 @@ This command displays the details of the dot1x configuration for a specified por
 | Mac Address | The MAC address of the client. |
 | User Name | The user name associated with the client. |
 | VLAN Assigned Reason | This can take one of the following values |
-| Host Mode | The authentication host mode configured on the interface. The possible values are multi-auth, multi-domain, multi-host, single-host and multi-domain-multi-host. |
+| Host Mode | The authentication host mode configured on the interface. The possible values are multi-auth, multi-domain, multi-host and single-host. |
 | Method | The method used to authenticate the client on the interface. The possible values are 802.1x. MAB, Captive Portal and None. |
 | Control Mode | The configured control mode for this port. Possible values are force-unauthorized, auto and unauthorized. |
 | Session Time | The amount of time the client session has been active. |
