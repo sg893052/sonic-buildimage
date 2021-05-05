@@ -1485,8 +1485,9 @@ The following is the support scale for Port Access Control. The following number
 | ------ | ------------------- |
 | ports supported by dot1x | 300 |
 | ports supported by MAB | 300 |
-| Clients per port | 48 |
-| DACLs supported | system-limit |
+| authentication history entries | 1024 |
+| authentication history entries per interface | 20 |
+| clients that can be authorized on a port configured in Multi-Auth host mode | 48 |
 
 
 # 9 Limitation
