@@ -76,7 +76,13 @@ This feature supports such deployment scenarios and provides configurability per
 
 ## 2 Topologies
 
+**Topology1**
+
 ![VlanAutostate](VlanAutostate_topo.png "Figure 1: Topology 1")
+
+**Topology2**
+
+![VlanAutostate](VlanAutostate_topo_2.png "Figure 2: Topology 2")
 
 
 
@@ -122,7 +128,7 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To Verify Vlan add/del from Portchannel with autostate disabled/enabled** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100-110 on D1 and add it as member to portchannel port<br/>2. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>3. Remove vlan membership from physical port and verify Vlans go to Inactive state with autostate enabled<br/>4. Disable autostate for all the Vlans and verify Vlans becomes Active<br/> |
+| **Steps**      | 1. Configure Vlan100-110 on D1 and add it as member to Portchannel port<br/>2. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>3. Remove vlan membership from Portchannel port and verify Vlans go to Inactive state with autostate enabled<br/>4. Disable autostate for all the Vlans and verify Vlans becomes Active<br/>5.Remove port member from Portchannel and verify Vlan is still in Active state with autostate disabled<br/> |
 
 
 
@@ -162,45 +168,67 @@ This feature supports such deployment scenarios and provides configurability per
 
 
 
-### 3.2.6  To Verify SAG configured on Vlan having autostate disabled
+
+
+### 3.2.6  To Verify routing table and static ARP table with autostate disabled
 
 | **Test ID**    | **FtSwVlanAutoFunc006**                                      |
-| -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **To Verify vlan operational state and ping to ip/ipv6 address configured on Vlan having autostate disabled** |
-| **Test Setup** | **Topology1**                                                |
-| **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure SAG ip address 12.12.1.1/24 and SAG ipv6 1212::1/64 on D1  on Vlan 100<br/>3.Configure ip address 12.12.2.1/24 and 12.12.2.2/24 on D1 and D2 respectively on Vlan 200<br/>4.COnfigure ipv6 address 1222::1/64 and 1222::2/64 on D1 and D2 respectively on Vlan 200<br/>5.Configure Static route for 12.12.1.0/24 and 1212::/64 on D2 via Vlan 100 12.12.2.1 <br/>6.Verify Vlan operational state "Up"  under "show ip/ipv6 interface" output<br/>7.Disable Vlan Autostate for the Vlan 100 and remove the vlan membership from physical  port<br/>8.Verify ping to SAG IPs12.12.1.1 and 1211::1 from D2 is successful with autostate disabled on D1 for Vlan 100<br/>9.Verify Vlan operational state still "Up" under "show ip/ipv6 interface" output with autostate disabled<br/>10.Verify Vlan is in Active state with L3 configs applied<br/> |
-
-
-
-### 3.2.7  To Verify routing table and static ARP table with autostate disabled
-
-| **Test ID**    | **FtSwVlanAutoFunc007**                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To Verify routing table and static ARP table with autostate disabled** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure ip address 12.12.1.1/24 and 1212::1/64 on Vlan 100<br/>3.Configure ip address 12.12.2.1/24 and 1222::1/64 on D1  on Vlan 200<br/>4.Configure static ARP entry for 12.12.1.3 and 1212::3 on VLan 100.<br/>7. Disable Vlan autostate and remove Vlan membership on D1<br/>8.Verify Vlan connected routes are still programmed in routing table and static ARP entries are intact since Vlan interface is operationally UP.<br/>9.Re-enable Autostate feature and verify routes and arp entries are removed<br/>10.Re-add Vlan ports to the ports and verify routes and arp entries relearnt<br/> |
 
-### 3.2.8  To Verify disable/enable autostate for a particular vlan does not impact other Vlans
+### 3.2.7  To Verify disable/enable autostate for a particular vlan does not impact other Vlans
 
-| **Test ID**    | **FtSwVlanAutoFunc008**                                      |
+| **Test ID**    | **FtSwVlanAutoFunc007**                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To Verify disable/enable autostate for a particular vlan does not impact other Vlans** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Configure Vlans 100-110 and disable autostate for all the vlans<br/>2.Verify all the VLans are in Active state<br/>3. Re-enable autostate only for vlan 110 and verify only Vlan 110 becomes Inactive<br/>4.Disable autostate on Vlan 100 and verify VLan 110 becomes Active and it does not impact vlans 100-109<br/> |
 
-### 3.2.9  To Verify Vxlan tunnel gets established with autostate disable in Leaf node
+### 3.2.8  To Verify Vxlan tunnel status with auto state enabled for L2VNI
+
+| **Test ID**    | **FtSwVlanAutoFunc008**                                      |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **To Verify Vxlan tunnel status with auto state enabled for L2VNI** |
+| **Test Setup** | **Topology2**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) setup VxLAN tunnel between Leaf1 and remote leaf node Leaf3<br/>2) Ensure there is only one L2VNI 100 is extended and autostate is enabled<br/>3) configure IP address to vlan interface 100 and advertise-default-gw in Leaf1<br/>4) shutdown all the member ports of vlan 100 in Leaf1<br/>5) Verify tunnel between Leaf1 and Leaf3 remains UP.<br/>6) Shutdown all the links between Leaf3 and Spine nodes<br/>7) Verify there is NO tunnel between Leaf1 & Leaf3<br/>8) Bring up all the links between Leaf3 and Spine nodes<br/>9) Verify the tunnel is NOT re-established between Leaf1 and Leaf3<br/>10) bring up anyone of vlan 100 member port in Leaf1<br/>11) Verify the tunnel is re-established between Leaf1 and Leaf3<br/>12) verify IP address of vlan100 is advertised to Leaf3<br/> |
+
+
+
+### 3.2.9  To Verify Vxlan tunnel status with auto state disabled for L2VNI
 
 | **Test ID**    | **FtSwVlanAutoFunc009**                                      |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **To Verify Vxlan tunnel gets established with autostate disable in Leaf node** |
+| **Test Name**  | **To Verify Vxlan tunnel status with auto state disabled for L2VNI** |
 | **Test Setup** | **Topology2**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Bring up CLOS topology with Spine and Leaf nodes<br/>2.In the border leaf,with autostate diisabled on VLan,Verify Vxlan tunnel gets established without port membership,Vlan-VNI mapping<br/> |
+| **Steps**      | 1) setup VxLAN tunnel between Leaf1 and remote leaf node Leaf3<br/>2) Ensure there is only one L2VNI 100 is extended and autostate is disabled<br/>3) configure IP address to vlan interface 100 and advertise-default-gw in Leaf1<br/>4) shutdown all the member ports of vlan 100 in Leaf1<br/>5) Verify tunnel between Leaf1 and Leaf3 remains UP.<br/>6) Shutdown all the links between Leaf3 and Spine nodes<br/>7) Verify there is NO tunnel between Leaf1 and Leaf3<br/>8) Bringup all the links between Leaf3 and Spine nodes<br/>9) Verify the tunnel is re-established between Leaf1 and Leaf3<br/>10) verify IP address of vlan100 is advertised to Leaf3<br/> |
 
 
+
+### 3.2.10  To Verify Vxlan tunnel status with auto state enabled for SAGVNI
+
+| **Test ID**    | **FtSwVlanAutoFunc010**                                      |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **To Verify Vxlan tunnel status with auto state enabled for SAGVNI** |
+| **Test Setup** | **Topology2**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) setup VxLAN tunnel between Leaf1 and remote leaf node Leaf3<br/>2) Ensure there is SAGVNI 450 and L3VNI 500 is extended<br/>3) configure autostate is enabled for vlan 450<br/>4) Ensure there is no tenant route present in Leaf1 and Leaf3<br/>5) shutdown all the member ports of vlan 450 in Leaf1<br/>6) Verify the SAG interface status is DOWN in Leaf1<br/>7) Verify tunnel between Leaf1 and Leaf3 remains UP.<br/>8) Shutdown all the links between Leaf3 and Spine nodes<br/>9) Verify there is no tunnel between Leaf1 and Leaf3<br/>10) Bringup all the links between Leaf3 and Spine nodes<br/>11) Verify the tunnel is NOT re-established between Leaf1 and Leaf3<br/>12) bring up vlan member ports of 450 in Leaf1<br/>13) Verify the SAG interface status is UP now<br/>14) Verify the tunnel is re-established between Leaf1 and Leaf3<br/>15) verify Leaf1's SAG IP is advertised to Leaf3<br/> |
+
+
+
+### 3.2.11  To Verify Vxlan tunnel status with auto state disabled for SAGVNI
+
+| **Test ID**    | **FtSwVlanAutoFunc011**                                      |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **To Verify Vxlan tunnel status with auto state disabled for SAGVNI** |
+| **Test Setup** | **Topology2**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) setup VxLAN tunnel between Leaf1 and remote leaf node Leaf3<br/>2) Ensure there is SAGVNI 450 and L3VNI 500 is extended<br/>3) configure autostate is disabled for vlan 450<br/>4) Ensure there is no tenant route present in Leaf1 and Leaf3<br/>5) shutdown all the member ports of vlan 450 in Leaf1<br/>6) Verify the SAG interface status remains UP in Leaf1<br/>7) Verify tunnel between Leaf1 and Leaf3 remains UP.<br/>8) Shutdown all the links between Leaf3 and Spine nodes<br/>9) Verify there is no tunnel between Leaf1 and Leaf3<br/>10) Bringup all the links between Leaf3 and Spine nodes<br/>11) Verify the tunnel is re-established between Leaf1 and Leaf3<br/>12) Verify the SAG interface status is UP now<br/>13) verify Leaf1's SAG IP is advertised to Leaf3<br/> |
 
 
 
@@ -244,6 +272,19 @@ This feature supports such deployment scenarios and provides configurability per
 | **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disbale Autostate for Vlans1001-1005<br/>3.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state<br/>4.Perform config save and do warmboot<br/>5.Verify Vlans 1001-1005 in Active state and other vlans in Inactive state after warmboot<br/> |
 
 
+
+### **3.4 Upgrade Test Cases**
+
+### 3.4.1 To verify Vlan autostate with firmware upgrade and downgrade between 3.3.0 and 3.2.0
+
+| **Test ID**    | **FtSwVlanAutoUpgrade001**                                   |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **To verify verify Vlan autostate with firmware upgrade and downgrade between 3.3.0 and 3.2.0** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Configure Vlan 1001-1110 <br/>2.Disable autostate for the Vlans and verify all Vlans are in Active state without member port<br/> 3. Downgrade the image to 3.2.0 and verify autostate configs are removed from the Vlans and it goes to Inactive state and becomes Active after Vlan gets added to port<br/>4. Upgrade the DUT from 3.2.0 to 3.3.0 and verify all Vlans comes up with Autostate enabled<br/>5.Disable Autostate for the Vlans after upgrade to 3.3.0 and verify Vlans in Active state |
+
+### 
 
 
 ## **Reference Links**
