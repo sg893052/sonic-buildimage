@@ -1,7 +1,7 @@
 # Feature Name
 GNMI Get Request Type Field
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 # Scope
 This document describes the high level design of supporting the 'type' field in a gNMI [GNMI](#GNMI) GetRequest Message in the management framework.
@@ -27,7 +27,7 @@ STATE - specified to be the read-only data on the target. If the data schema is 
 
 OPERATIONAL - specified to be the read-only data on the target that is related to software processes operating on the device, or external interactions of the device.
 
-CONFIG, and STATE are already described in the [Query Parameter Framework](#query-parameter-framework) requirements (https://github.com/BRCM-SONIC/sonic_doc_private/blob/9d40eeb6874060108de14a8492657f717e084f10/manageability/mgmt-framework/query_parameter_framework.md#the-content-query-parameter)
+CONFIG, and STATE are already described in the [Query Parameter Framework](#query-parameter-framework) requirements
 
 There is an expired draft that describes how OPERATIONAL data could be identified. Till a formal definition makes its way into the specification, we'll attempt to nail it down to mean any read-only data ("config false") that does not have a corresponding "config" path (i.e. "../../config/<data>" should not exist), excluding any data in "config" containers. Examples of this data are statistics, counters, and protocol negotiated values.
 
@@ -39,5 +39,5 @@ https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.
 
 ## Query Parameter Framework
 
-https://github.com/BRCM-SONIC/sonic_doc_private/blob/9d40eeb6874060108de14a8492657f717e084f10/manageability/mgmt-framework/query_parameter_framework.md
+TBD (Add link here when ready)
 
