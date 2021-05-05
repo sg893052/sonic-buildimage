@@ -148,40 +148,60 @@ This feature supports such deployment scenarios and provides configurability per
 | **Test Name**  | **To Verify Vlan is Active with Autostate disabled after physical/Portchannel port shutdown** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100-105 on D1 and add it as member of physical port<br/>2.Configure Vlan106-110 on D1  and add it as member of Portchannel port<br/>3. Verify all Vlans have autostate enabled by default and vlan state shows Active<br/>4. Disable Autostate for all the vlans <br/>5.Shutdown physical/Portchannel port and verify Vlans are still Active<br/>6. Enable autostate for all the Vlans and verify Vlans becomes InActive<br/>7.Noshut the physical and Portchannel ports and verify Vlans become Active<br/> |
+| **Steps**      | 1. Configure Vlan100-105 on D1 and add it as member of physical port<br/>2.Configure Vlan106-110 on D1  and add it as member of Portchannel port<br/>3. Verify all Vlans have autostate enabled by default and vlan state shows Active
+4. Disable Autostate for all the vlans <br/>5.Shutdown physical/Portchannel port and verify Vlans are still Active<br/>6. Enable autostate for all the Vlans and verify Vlans becomes InActive<br/>7.Noshut the physical and Portchannel ports and verify Vlans become Active<br/> |
 
 
 
-### 3.2.5  To Verify vlan operational state with ip/ipv6 address configured
+### 3.2.5  To Verify vlan operational state and ping to ip/ipv6 address configured on Vlan having autostate disabled
 
 | **Test ID**    | **FtSwVlanAutoFunc005**                                      |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **To Verify vlan operational state with ip/ipv6 address configured** |
+| **Test Name**  | **To Verify vlan operational state and ping to ip/ipv6 address configured on Vlan having autostate disabled** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure ip address 12.12.1.1/24 and 12.12.1.2/24 on D1 and D2 respectively on Vlan 100<br/>3.COnfigure ipv6 address 1212::1/64 and 1212::2/64 on D1 and D2 respectively on Vlan 100<br/>4.Configure ip address 12.12.2.1/24 and 12.12.2.2/24 on D1 and D2 respectively on Vlan 200<br/>5.COnfigure ipv6 address 1222::1/64 and 1222::2/64 on D1 and D2 respectively on Vlan 200<br/>6.Verify Vlan operational state "Up"  under "show ip/ipv6 interface" output<br/>7.Disable Vlan Autostate for the Vlans and remove the vlan membership from both physical and Portchannel port<br/>8.Verify Vlan operational state still "Up" under "show ip/ipv6 interface" output with autostate disabled<br/>9.Verify Vlan is in Active state with L3 configs applied<br/> |
+| **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure ip address 12.12.1.1/24 and 1212::1/64 on D1  on Vlan 100<br/>3.Configure ip address 12.12.2.1/24 and 12.12.2.2/24 on D1 and D2 respectively on Vlan 200<br/>4.COnfigure ipv6 address 1222::1/64 and 1222::2/64 on D1 and D2 respectively on Vlan 200<br/>5.Configure Static route for 12.12.1.0/24 and 1212::/64 on D2 via Vlan 100 12.12.2.1 <br/>6.Verify Vlan operational state "Up"  under "show ip/ipv6 interface" output<br/>7.Disable Vlan Autostate for the Vlan 100 and remove the vlan membership from physical  port<br/>8.Verify ping to 12.12.1.1 and 1211::1 from D2 is successful with autostate disabled on D1 for Vlan 100<br/>9.Verify Vlan operational state still "Up" under "show ip/ipv6 interface" output with autostate disabled<br/>10.Verify Vlan is in Active state with L3 configs applied<br/> |
 
 
 
-### 3.2.6  To Verify routing table and static ARP table with autostate disabled
+### 3.2.6  To Verify SAG configured on Vlan having autostate disabled
 
 | **Test ID**    | **FtSwVlanAutoFunc006**                                      |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **To Verify vlan operational state and ping to ip/ipv6 address configured on Vlan having autostate disabled** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure SAG ip address 12.12.1.1/24 and SAG ipv6 1212::1/64 on D1  on Vlan 100<br/>3.Configure ip address 12.12.2.1/24 and 12.12.2.2/24 on D1 and D2 respectively on Vlan 200<br/>4.COnfigure ipv6 address 1222::1/64 and 1222::2/64 on D1 and D2 respectively on Vlan 200<br/>5.Configure Static route for 12.12.1.0/24 and 1212::/64 on D2 via Vlan 100 12.12.2.1 <br/>6.Verify Vlan operational state "Up"  under "show ip/ipv6 interface" output<br/>7.Disable Vlan Autostate for the Vlan 100 and remove the vlan membership from physical  port<br/>8.Verify ping to SAG IPs12.12.1.1 and 1211::1 from D2 is successful with autostate disabled on D1 for Vlan 100<br/>9.Verify Vlan operational state still "Up" under "show ip/ipv6 interface" output with autostate disabled<br/>10.Verify Vlan is in Active state with L3 configs applied<br/> |
+
+
+
+### 3.2.7  To Verify routing table and static ARP table with autostate disabled
+
+| **Test ID**    | **FtSwVlanAutoFunc007**                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To Verify routing table and static ARP table with autostate disabled** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure ip address 12.12.1.1/24 and 1212::1/64 on Vlan 100<br/>3.Configure ip address 12.12.2.1/24 and 1222::1/64 on D1  on Vlan 200<br/>4.Configure static ARP entry for 12.12.1.3 and 1212::3 on VLan 100.<br/>7. Disable Vlan autostate and remove Vlan membership on D1<br/>8.Verify Vlan connected routes are still programmed in routing table and static ARP entries are intact since Vlan interface is operationally UP.<br/>9.Re-enable Autostate feature and verify routes and arp entries are removed<br/>10.Re-add Vlan ports to the ports and verify routes and arp entries relearnt |
+| **Steps**      | 1. Configure Vlan100 and add it to D1D2P1 and Vlan200 and add it to Portchannel 10 on both duts<br/>2.Configure ip address 12.12.1.1/24 and 1212::1/64 on Vlan 100<br/>3.Configure ip address 12.12.2.1/24 and 1222::1/64 on D1  on Vlan 200<br/>4.Configure static ARP entry for 12.12.1.3 and 1212::3 on VLan 100.<br/>7. Disable Vlan autostate and remove Vlan membership on D1<br/>8.Verify Vlan connected routes are still programmed in routing table and static ARP entries are intact since Vlan interface is operationally UP.<br/>9.Re-enable Autostate feature and verify routes and arp entries are removed<br/>10.Re-add Vlan ports to the ports and verify routes and arp entries relearnt<br/> |
 
+### 3.2.8  To Verify disable/enable autostate for a particular vlan does not impact other Vlans
 
-
-### 3.2.7  To Verify disable/enable autostate for a particular vlan does not impact other Vlans
-
-| **Test ID**    | **FtSwVlanAutoFunc007**                                      |
+| **Test ID**    | **FtSwVlanAutoFunc008**                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **To Verify disable/enable autostate for a particular vlan does not impact other Vlans** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure Vlans 100-110 and disable autostate for all the vlans<br/>2.Verify all the VLans are in Active state<br/>3. Re-enable autostate only for vlan 110 and verify only Vlan 110 becomes Inactive<br/>4.Disable autostate on Vlan 100 and verify VLan 110 becomes Active and it does not impact vlans 100-109 |
+| **Steps**      | 1. Configure Vlans 100-110 and disable autostate for all the vlans<br/>2.Verify all the VLans are in Active state<br/>3. Re-enable autostate only for vlan 110 and verify only Vlan 110 becomes Inactive<br/>4.Disable autostate on Vlan 100 and verify VLan 110 becomes Active and it does not impact vlans 100-109<br/> |
+
+### 3.2.9  To Verify Vxlan tunnel gets established with autostate disable in Leaf node
+
+| **Test ID**    | **FtSwVlanAutoFunc009**                                      |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **To Verify Vxlan tunnel gets established with autostate disable in Leaf node** |
+| **Test Setup** | **Topology2**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Bring up CLOS topology with Spine and Leaf nodes<br/>2.In the border leaf,with autostate diisabled on VLan,Verify Vxlan tunnel gets established without port membership,Vlan-VNI mapping<br/> |
+
 
 
 
