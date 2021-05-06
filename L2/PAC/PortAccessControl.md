@@ -1473,14 +1473,15 @@ This command resets the 802.1X statistics for the specified port or for all port
 | Change history | SONiC 4.0 - Introduced |
 
 # 4 Flow Diagrams
+The flow diagrams Figure 2: PAC service daemon and configuration flow, Figure 3: EAPOL receive flow, Figure 4: MAB PDU receive flow; indicates the sequence of events involved in processing of PAC configuration and EAPOL/MAB packets.
 
 # 5 Error Handling
-
+N/A
 
 # 6 Serviceability and Debug
-show commands will help to see if the PAC is active on a port.
-All processing errors will be captured in syslog.
-Debug command output will be captured as part of tech support for offline analysis.
+show commands will help to see if the PAC is active on a port.   
+All processing errors will be captured in syslog.    
+Debug command output will be captured as part of tech support for offline analysis.   
 
 # 7 Warm Boot Support
 Configured actions and counters should continue to work across warm reboot.
