@@ -31,9 +31,9 @@ High level design document version 0.3
 	- [3.2 DB Changes](#32-db-changes)
 		- [3.2.1 Config DB](#321-config-db)
 		- [3.2.2 App DB](#322-app-db)
-		- [3.2.3 ASIC DB](#324-asic-db)
-		- [3.2.4 Counter DB](#325-counter-db)
-		- [3.2.5 State DB](#323-state-db)
+		- [3.2.3 ASIC DB](#323-asic-db)
+		- [3.2.4 Counter DB](#324-counter-db)
+		- [3.2.5 State DB](#325-state-db)
 	- [3.3 Switch State Service Design](#33-switch-state-service-design)
 		- [3.3.1 Orchestration Agent](#331-orchestration-agent)
 		- [3.3.2 PAC daemons](#332-pac-daemons)
@@ -229,9 +229,12 @@ No changes to SAI spec for supporting PAC.
 
 When a client authenticates itself initially on the network, the Switch acts as the authenticator to the clients on the network and forwards the authentication request to the Radius server in the network. If the authentication succeeds then the client is placed in authorized state and the client is able to forward or receive traffic through the port.
 
-If the vlan assignment is enabled in the Radius server, then as part of the response message, Radius server sends the vlan id the client is supposed to be in the 802.1x tunnel attributes. This implies that the client can connect from any port and can get assigned to the appropriate vlan that it is supposed to be in; this is configured in the radius server. This gives flexibility for the clients to move around the network without much configuration need to be done by the administrator.
-![pac-deployment](https://user-images.githubusercontent.com/45380242/117288373-0efac480-ae89-11eb-9f00-985c431a8b7f.PNG)   
-**Figure : PAC target deployment use cases**
+If the vlan assignment is enabled in the Radius server, then as part of the response message, Radius server sends the vlan id the client is supposed to be in the 802.1x tunnel attributes. This implies that the client can connect from any port and can get assigned to the appropriate vlan that it is supposed to be in; this is configured in the radius server. This gives flexibility for the clients to move around the network without much configuration need to be done by the administrator.   
+
+![pac-deployment](https://user-images.githubusercontent.com/45380242/117295415-7157c300-ae91-11eb-99fb-6415ce79fe44.PNG)
+
+
+**Figure 1 : PAC target deployment use cases**   
 
 ## 2.2 Functional Description
 
@@ -308,13 +311,13 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 
 ## 3.1 Overview
 
-[Figure 1](#pac-config-flow) shows the high level design overview of PAC services in SONiC. PAC Services Daemon is composed of multiple sub-modules. The main module i.e. PAC daemon handles the authentication related commands and makes use of hostApd and mabd daemons to authenticate a client via dot1x and mab respectively. hostApd being a standard Linux application takes hostapd.conf as its config file. hostApdMgr takes care of listening to dot1x specific configuration and translating them to respective hostapd.conf file config entries. pacd daemon being the main module decides which authentication protocol needs to be used for a given port and also calls APIs to program the polices in hardware.
+[Figure 2](#pac-config-flow) shows the high level design overview of PAC services in SONiC. PAC Services Daemon is composed of multiple sub-modules. The main module i.e. PAC daemon handles the authentication related commands and makes use of hostApd and mabd daemons to authenticate a client via dot1x and mab respectively. hostApd being a standard Linux application takes hostapd.conf as its config file. hostApdMgr takes care of listening to dot1x specific configuration and translating them to respective hostapd.conf file config entries. pacd daemon being the main module decides which authentication protocol needs to be used for a given port and also calls APIs to program the polices in hardware.
 
 ### 3.1.1 Configuration flow
 
 ![pac-config-flow](https://user-images.githubusercontent.com/45380242/115655812-a91f2080-a351-11eb-9207-26dafc103d8e.PNG)
 
-**Figure 1: PAC service daemon and configuration flow**
+**Figure 2: PAC service daemon and configuration flow**
 
 1. Mgmt interfaces like CLI and REST writes the user provided configuration to CONFIG_DB.
 2. The pacd, mabd and hostApdMgr gets notified about their respective configuration.
@@ -330,7 +333,7 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 ![EAPOL-receive-flow](https://user-images.githubusercontent.com/45380242/115655906-ceac2a00-a351-11eb-9095-9d53ae549ad7.PNG)
 
 
-**Figure 2: EAPOL receive flow**
+**Figure 3: EAPOL receive flow**
 
 1. EAPOL packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to hostApd socket listening on EtherType 0x888E on kernel interface associated with the given front panel interface.
 2. In a multi-step process, hostApd runs the Dot1x state machine to Authenticate the client via RADIUS.
@@ -348,7 +351,7 @@ traffic for the client must still get dropped. To achieve the same, PAC installs
 ![mab-pdu-receive-flow](https://user-images.githubusercontent.com/45380242/115655929-da97ec00-a351-11eb-90d3-a602ee2b0e3e.PNG)
 
 
-**Figure 3: MAB PDU receive flow**
+**Figure 4: MAB PDU receive flow**
 
 1. DHCP packet is received by hardware on a front panel interface and trapped to CPU. The packet gets thru the KNET driver and Linux Network Stack and eventually gets delivered to pacd socket listening on the kernel interface associated with the given front panel interface.
 2. Pacd sends an Client Authenticate Unix domain socket message along with the received PDU MAC.
@@ -699,7 +702,7 @@ user_name = 1*255VCHARS ; Client user name
 pacd process links with FASTPATH components libfpinfra.so and libauthmgr.so for the infrastructure and authentication manager functionality respectvely. Below picture depicts the interal details of the pacd process.
 
 ![pacd](https://user-images.githubusercontent.com/45380242/117293455-05745b00-ae8f-11eb-9c36-f7986b0179cf.PNG)   
-**Figure 4: pacd process internals**
+**Figure 5: pacd process internals**
 
 Authentication Manager is the major component of pacd process. Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by hostapd(802.1X). These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
 
