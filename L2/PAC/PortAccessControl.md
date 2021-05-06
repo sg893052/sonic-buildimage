@@ -229,8 +229,9 @@ No changes to SAI spec for supporting PAC.
 
 When a client authenticates itself initially on the network, the Switch acts as the authenticator to the clients on the network and forwards the authentication request to the Radius server in the network. If the authentication succeeds then the client is placed in authorized state and the client is able to forward or receive traffic through the port.
 
-If the vlan assignment is enabled in the Radius server, then as part of the response message, Radius server sends the vlan id the client is supposed to be in the 802.1x tunnel attributes. This implies that the client can connect from any port and can get assigned to the appropriate vlan that it is supposed to be in; this is configured in the radius server. This gives flexibility for the clients to move around the network with out much configuration need to be done by the administrator.
-
+If the vlan assignment is enabled in the Radius server, then as part of the response message, Radius server sends the vlan id the client is supposed to be in the 802.1x tunnel attributes. This implies that the client can connect from any port and can get assigned to the appropriate vlan that it is supposed to be in; this is configured in the radius server. This gives flexibility for the clients to move around the network without much configuration need to be done by the administrator.
+![pac-deployment](https://user-images.githubusercontent.com/45380242/117288373-0efac480-ae89-11eb-9f00-985c431a8b7f.PNG)   
+**Figure : PAC target deployment use cases**
 
 ## 2.2 Functional Description
 
@@ -695,6 +696,11 @@ user_name = 1*255VCHARS ; Client user name
 #### 3.3.2.1 PAC Manager
 
 #### 3.3.2.2 Authentication Manager
+pacd process links with FASTPATH components libfpinfra.so and libauthmgr.so for the infrastructure and authentication manager functionality respectvely. Below picture depicts the interal details of the pacd process.
+
+![pacd](https://user-images.githubusercontent.com/45380242/117293455-05745b00-ae8f-11eb-9c36-f7986b0179cf.PNG)   
+**Figure 4: pacd process internals**
+
 Authentication Manager is the major component of pacd process. Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by hostapd(802.1X). These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
 
 Authentication Manager allows enforcing authentication on a port. Authentication Manager needs to be enabled for the same. This is the first step to enabling port based access control. Once authentication is enabled, the port is marked Unauthorized and traffic is blocked through it.
