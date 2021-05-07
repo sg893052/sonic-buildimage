@@ -45,14 +45,12 @@ High level design document version 0.3
 			- [3.3.2.6 ACL naming convention](#3326-acl-naming-convention)
 			- [3.3.2.7 Authentication Manager special VLANs](#3327-authentication-manager-special-vlans)
 			- [3.3.2.8 Critical VLAN processing](#3328-critical-vlan-processing)
-			- [3.3.2.9 RADIUS assigned Trunk mode](#3329-radius-assigned-trunk-mode)
-			- [3.3.2.10 Monitor Mode](#33210-monitor-mode)
-			- [3.3.2.11 Authentication History](#33211-authentication-history)
-			- [3.3.2.12 Open Authentication](#33212-open-authentication)
-			- [3.3.2.13 Inactivity Timer](#33213-inactivity-timer)
+			- [3.3.2.9 Monitor Mode](#3329-monitor-mode)
+			- [3.3.2.10 Authentication History](#33210-authentication-history)
+			- [3.3.2.11 Open Authentication](#33211-open-authentication)
 		- [3.3.3 mabd](#333-mabd)
 		- [3.3.4 hostapd](#334-hostapd)
-		- [3.3.5 pacmgr](#335-pacmgr)
+		- [3.3.5 hostapd](#335-hostapdmgr)
 		- [3.3.6 Other Process](#336-other-process)
 		- [3.3.7 Interaction between pacd hostapd and mabd](#337-interaction-between-pacd-hostapd-and-mabd)
 	- [3.4 SyncD](#34-syncd)
@@ -114,6 +112,7 @@ High level design document version 0.3
 | 0.1  | 02/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Initial version |
 | 0.2  | 04/05/2021 | Prabhu Sreenivasan, Amitabha Sen | DB schema update and Review comments |
 | 0.3  | 04/27/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated CLI commands |
+| 0.4  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated desgin section |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -782,8 +781,6 @@ Authentication Manager receives the client authorization parameters from the aut
    - *RADIUS*: Re-authentication is initiated for the client.
 - *Filter-Id*: Specifies an ACL of Diffserv policy name. This is used to apply a Static ACL or DiffServ policy on the port for the client. IPv4 and IPv6 ACLs in the “IN” direction is supported. If the Differv policy or ACL is not present in the system, or if a Diffserv policy is already configured on the port, authentication for the client is rejected. These are subject to Monitor Mode configuration. Filter-Id is supported on all Authentication Manager host modes.
 - *Downloadable ACL*: DACLs are supported on all host modes.
-- *Redirect ACL*: This is used to apply an ACL that traps matching packets to the CPU for redirection. It is typically used to match on HTTP packets from a client.
-- *Redirect URL*: This is used to specify a redirect URL and works in conjunction with the Redirect ACL.
 
 
 #### 3.3.2.5 Dynamic ACL attributes   
@@ -824,9 +821,6 @@ When an ACL is installed by Authentication Manager, the following the naming con
 | IPv6 | Filter Id / Cisco AV Pair StaticACL | IPV6-STATIC-IN-\<Client Session ID\> |
 | IPv4 | Cisco AV Pair DACL | IP-DACL-IN-\<Client Session ID\> |
 | IPv6 | Cisco AV Pair DACL | IPV6-DACL-IN-\<Client Session ID\> |
-| IPv4 | Redirect ACL | IP-REDIRECT-IN-\<Client Session ID\> |
-| IPv6 | Redirect ACL | IPV6- REDIRECT-IN-\<Client Session ID\> |
-| MAC  | Filter Id / Cisco AV Pair StaticACL | MAC-STATIC-IN-\<Client Session ID\> |
 
 
 The switch UI shall prevent the operator from creating a static ACL where the name matches any of the regular expressions that can be part of the above naming conventions.
@@ -872,40 +866,15 @@ When the alive-server action (one server alive after all were dead) is configure
 
 The number of supplicants that are re-authenticated per second is configurable. This configuration is for the entire system across all the supplicants on all ports. This is used to control the system and network load when the number of supplicants to be re-authenticated is large. These re-authentications are triggered due to alive server actions.
 
-
-#### 3.3.2.9 RADIUS assigned Trunk mode   
-
-In an 802.1X Access-Accept message, the Cisco VSA device-traffic-class=switch indicates that the connected device is capable of forwarding traffic from multiple stations using tagged and untagged traffic.   
-
-When an Access-Accept message is received that contains the VSA device-traffic-class=switch, the switch shall:   
-
-- if present in the Access-Accept, utilize the RADIUS assigned VLAN  to set the trunk port native VLAN. If not present, the port PVID is used to set the operational trunk port native VLAN.
-- Spanning-tree portfast is operationally disabled on the port.
-- The port is operationally set to trunk mode using the current trunk mode configuration.   
-
-Parsing of this VSA attribute is subject to the setting of the “radius-server vsa send authentication” command.   
-
-It is expected that the first device to be authenticated on an interface will have the trunk mode configuration in the Access-Accept and other authentications will not have trunk mode assignment. However, subsequent authentications with trunk mode assignment shall be allowed, however, only the first trunk mode assignment is processed (including the native VLAN assignment). Additional trunk mode assignments are allowed and processed with a debug level log message "Redundant trunk mode assignment for <<interface-id>> ignored"   
-
-Only the first Trunk mode native VLAN assignment received along with the first trunk mode assignment Access-Accept is processed. Typically, this will be contained in the first Access-Accept received for the port along with the trunk mode assignment, however, it need not be. Subsequent VLAN assignments - if the same as the operational PVID - are logged as a DEBUG level message "Redundant native VLAN assignment of Gi1/0/1 to VLAN P ignored" and are ignored as if the assignment was not present in the message.
-Subsequent clients authenticating with a VLAN that does not match the Native VLAN/access PVID are denied access with the message (RADIUS supplied VLAN P does not match operational native VLAN Q on \<interface id\>. Access denied".   
-
-The RADIUS supplied native VLAN must be configured on the switch. Dynamic VLAN creation is not supported for RADIUS supplied native VLANs for trunk mode.   
-
-If non-switch clients are already authenticated on a port when a Trunk mode assignment is received, the existing clients are terminated. These clients are assumed to have been behind the switch whose authentication attempt resulted in a Trunk mode assignment.   
-
-If a port is in RADIUS assigned Trunk mode, when the last 802.1X session on the port is terminated or the interface is shut down or error-disabled, the port is restored to the configuration state as it was prior to establishment of any 802.1X session. This is regardless of whether the 802.1X sessions are trunk or non-trunk.   
-
-
-#### 3.3.2.10 Monitor Mode   
+#### 3.3.2.9 Monitor Mode   
 If Monitor mode is enabled, Authentication Manager places the client in Monitor mode as applicable.   
 
 
-#### 3.3.2.11 Authentication History   
+#### 3.3.2.10 Authentication History   
 Authentication Manager maintains a database of authentication events. Events like “Authorized” or “Unauthorized” are recorded along with the timestamp, port number, client MAC address, and the authentication method used.   
 
 
-#### 3.3.2.12 Open Authentication  
+#### 3.3.2.11 Open Authentication  
 The Open Authentication capability allows Authentication Manager to allow client traffic event before it authenticates. This is typically used to allow certain devices to allow access to network resources prior to authenticating to obtain IP address and download configuration or firmware upgrades. Once the information is downloaded, the device will authenticate to the network.  
 
 Open Authentication is configured per interface. The open authentication settings are ignored for force-authorized and force-unauthorized ports.   
@@ -921,20 +890,6 @@ A client authentication will eventually trigger based on the available and confi
 If a client fails authentication, the authentication failure actions will continue to applicable (Critical VLAN, Unauthenticated VLAN, Guest VLAN, Monitor mode etc.). If however we do not have the required configuration to authorize the client in any of these mentioned methods, the client will have access in Open mode.   
 
 If the client succeeds authentication, the authorization parameters from RADIUS will be applied as usual. However if a DACL or Filter-Id is received, the admin configured static ACLs on the port will not be removed. These will be applied on the port prior to the statically configured ACL. This is required for subsequent clients on the port that are authorized in Open mode. The static ACL would continue to apply on the traffic as intended.    
-
-#### 3.3.2.13 Inactivity Timer   
-The feature is used to clean up idle data clients who have not sent any traffic for 300 seconds. The Authentication Manager Inactivity timer is a per client timer and is run when Re-authentication is not enabled for the client.   
-The inactivity timer has a value of 300 seconds and is not configurable. Once the inactivity timer expires, the timer handler:   
-- Checks the SrcHit bit for the client MAC in the hardware L2 table
-- If the bit is set, it resets the bit to 0 and the timer is reloaded.
-- If the bit is not set, the client entry is cleared from the Authentication Manager  database and also the hardware (idle client is cleaned up)   
-
-The above implies that although the Inactivity timer fires every 300 seconds, an idle client can get cleaned up after 300 seconds and up to 600 seconds of its inactivity.   
-
-The feature is:   
-- Only applicable for clients only
-- Not applicable for clients authorized in Open mode
-- Applicable for clients in single-host, multi-auth and multi-domain modes
 
 
 #### 3.3.3 mabd
@@ -972,17 +927,17 @@ No change to other process.
 
 *hostapd(802.1X)*   
 
-hostapd(802.1x) comes to know of an 802.1x client attempting authentication via an EAP exchange. It informs pacd(Authentication Manager) of this client by conveying the client MAC. If the authentication method selected by pacd(Authentication Manager) is 802.1X, pacd(Authentication Manager) sends an event to hostapd(802.1X) for authenticating the user. 
+hostapd comes to know of an 802.1x client attempting authentication via an EAP exchange. It informs pacd of this client by conveying the client MAC. If the authentication method selected by pacd is 802.1X, pacd sends an event to hostapd for authenticating the user. 
 
-hostapd(802.1X) informs pacd(Authentication Manager) about the result of the authentication. hostapd(802.1X) also passes all the authorization parameters it receives from an AAA Server to the pacd(Authentication Manager). These are used for configuring the NAS to allow authenticated client traffic.
+hostapd informs pacd about the result of the authentication. hostapd also passes all the authorization parameters it receives from an AAA Server to the pacd. These are used for configuring the NAS to allow authenticated client traffic.
 
 *mabd(MAB)*   
 
-When user or client tries to authenticate and the method selected is MAB, the pacd(Authentication Manager) sends an event to mabd(MAB) for authenticating the user. The client’s MAC address is sent to mabd(MAB) for the same. 
+When user or client tries to authenticate and the method selected is MAB, the pacd sends an event to mabd for authenticating the user. The client’s MAC address is sent to mabd for the same. 
 
-pacd(Authentication Manager) learns client’s MAC address through an hardware rule to copy-to-CPU the packets from unknown source MAC addresses.
+pacd learns client’s MAC address through an hardware rule to copy-to-CPU the packets from unknown source MAC addresses.
 
-mabd(MAB) informs pacd(Authentication Manager) about the result of the authentication. mabd(MAB) also passes all the authorization parameters it receives from an AAA Server to the pacd(Authentication Manager). These are used for configuring the NAS to allow authenticated client traffic.
+mabd informs pacd about the result of the authentication. mabd also passes all the authorization parameters it receives from an AAA Server to the pacd. These are used for configuring the NAS to allow authenticated client traffic.
 
 
 ## 3.4 SyncD
@@ -1233,7 +1188,7 @@ This command displays the authentication manager information for the interface
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication interface  \{ all \| \{ interface \<unit\/slot\/port\> \} \} |
+| Syntax | show authentication interface  \{ all \| \{ interface \<slot\/port\> \} \} |
 | Change history | SONiC 4.0 - Introduced |
 
 | Field   | Description |
@@ -1266,7 +1221,7 @@ show  authentication interface 1/0/1
 
 Authentication Manager Status.................. Enabled
 
-Interface...................................... 1/0/1
+Interface...................................... 1/1
 Authentication Restart timer................... 300
 Configured method order........................ mab undefined undefined
 Enabled method order........................... mab undefined undefined
@@ -1324,7 +1279,7 @@ This command displays the details of the dot1x configuration for a specified por
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication clients  \{ all \| \{ interface \<unit\/slot\/port\> \} \} |
+| Syntax | show authentication clients  \{ all \| \{ interface \<slot\/port\> \} \} |
 | Change history | SONiC 4.0 - Introduced |
 
 
@@ -1344,8 +1299,6 @@ This command displays the details of the dot1x configuration for a specified por
 | Filter ID | Identifies the Filter ID returned by the RADIUS server when the client was authenticated. This is a configured DiffServ policy name on the switch. |
 | ACS ACL Name | Identifies the Downloadable ACL returned by the RADIUS server when the client was authenticated. The Downloadable ACL is the same as returned using CiscoSecure-Defined-ACL AVP.|
 | DACL | Identifies the Downloadable Dynamic ACL returned by the RADIUS server when the client was authenticated. |
-| Redirect-ACL | The Redirect ACL is a static ACL sent in the RADIUS attribute redirect-acl. It is used to redirect matching packets to the CPU for further action. |
-| Redirect URL | The Redirect URL is a URL sent in the RADIUS attribute redirect-url. It is used by the Redirect component logic to redirect matching packets the redirect URL by using HTTP 302 response code. |
 | Acct Session Id | The Accounting Session Id associated with the client session. |
 
 
@@ -1372,7 +1325,7 @@ Interface  MAC-Address         Method   Host Mode    Control Mode  VLAN Assigned
 ---------  -----------------   -------  ------------ ------------  --------------------------
 0/16       10:8D:B6:C6:00:00   802.1X   multi-host   auto     RADIUS Assigned VLAN (10)
 
-(dhcp-10-130-86-200) #show authentication clients interface 1/0/2
+(dhcp-10-130-86-200) #show authentication clients interface 1/2
 
 Mac Address.................................... 58:05:94:1C:00:00
 User Name...................................... testixia
@@ -1387,8 +1340,6 @@ Session Termination Action..................... Default
 Filter-Id ..................................... None
 ACS ACL Name................................... xACSACLx-IP-FP_ACL-5ee227a2
 DACL........................................... None
-Redirect ACL................................... IP-REDIRECT-IN-00000001#d
-Redirect URL................................... http://rtpjira.rtp.broadcom.com:8080
 Session Termination Action..................... Default
 Acct SessionId:................................ testixia:200000003
 
@@ -1403,7 +1354,7 @@ This command displays the authentication manager authentication history log for 
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication authentication-history  \{ interface \<unit\/slot\/port\> \} |
+| Syntax | show authentication authentication-history  \{ interface \<slot\/port\> \} |
 | Change history | SONiC 4.0 - Introduced |
 
 Example:
@@ -1423,7 +1374,7 @@ This command is used to show a summary of the global mab configuration and summa
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show mab  \{ \<cr\> \| \{ interface \<unit\/slot\/port\> \} \}  |
+| Syntax | show mab  \{ \<cr\> \| \{ interface \<slot\/port\> \} \}  |
 | Change history | SONiC 4.0 - Introduced |
 
 Example:
@@ -1439,7 +1390,7 @@ Interface    Admin Mode     Auth-type    ---------    -----------    ---------  
 0/3          Disabled       N/A          
 
 
-(dhcp-10-130-86-142) #show  mab interface 0/10
+(dhcp-10-130-86-142) #show  mab interface 1/10
 Interface    Admin Mode     Auth-type    
 0/10         Enabled        eap-md5    
 
