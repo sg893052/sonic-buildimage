@@ -36,12 +36,25 @@ High level design document version 0.3
 		- [3.2.5 State DB](#325-state-db)
 	- [3.3 Switch State Service Design](#33-switch-state-service-design)
 		- [3.3.1 Orchestration Agent](#331-orchestration-agent)
-		- [3.3.2 PAC daemons](#332-pac-daemons)
-			- [3.3.2.1 PAC Manager](#3321-pac-manager)
-			- [3.3.2.2 Authentication Manager](#3322-authentication-manager)
-			- [3.3.2.3 mabd](#3323-mabd)
-		- [3.3.3 Other Process](#333-other-process)
-		- [3.3.4 Interaction between pacd hostapd and mabd](#334-interaction-between-pacd-hostapd-and-mabd)
+		- [3.3.2 pacd](#332-pacd)
+			- [3.3.2.1 Authentication Manager port modes](#3321-authentication-manager-port-modes)
+			- [3.3.2.2 Authentication Manager port host modes](#3322-authentication-manager-port-host-modes)
+			- [3.3.2.3 Authentication Manager Authentication method fallback and priorities](#3323-authentication-manager-authentication-method-fallback-and-priorities)
+			- [3.3.2.4 Authorization parameters](#3324-authorization-parameters)
+			- [3.3.2.5 Dynamic ACL attributes](#3325-dynamic-acl-attributes)
+			- [3.3.2.6 ACL naming convention](#3326-acl-naming-convention)
+			- [3.3.2.7 Authentication Manager special VLANs](#3327-authentication-manager-special-vlans)
+			- [3.3.2.8 Critical VLAN processing](#3328-critical-vlan-processing)
+			- [3.3.2.9 RADIUS assigned Trunk mode](#3329-radius-assigned-trunk-mode)
+			- [3.3.2.10 Monitor Mode](#33210-monitor-mode)
+			- [3.3.2.11 Authentication History](#33211-authentication-history)
+			- [3.3.2.12 Open Authentication](#33212-open-authentication)
+			- [3.3.2.13 Inactivity Timer](#33213-inactivity-timer)
+		- [3.3.3 mabd](#333-mabd)
+		- [3.3.4 hostapd](#334-hostapd)
+		- [3.3.5 pacmgr](#335-pacmgr)
+		- [3.3.6 Other Process](#336-other-process)
+		- [3.3.7 Interaction between pacd hostapd and mabd](#337-interaction-between-pacd-hostapd-and-mabd)
 	- [3.4 SyncD](#34-syncd)
 	- [3.5 SAI](#35-sai)
 	- [3.6 Manageability](#36-manageability)
@@ -694,16 +707,13 @@ user_name = 1*255VCHARS ; Client user name
 
 #### 3.3.1.1 PAC Orchestration agent
 
-### 3.3.2 PAC daemons
-
-#### 3.3.2.1 PAC Manager
-
-#### 3.3.2.2 Authentication Manager
+### 3.3.2 pacd
 pacd process links with FASTPATH components libfpinfra.so and libauthmgr.so for the infrastructure and authentication manager functionality respectvely. Below picture depicts the interal details of the pacd process.
 
 ![pacd](https://user-images.githubusercontent.com/45380242/117293455-05745b00-ae8f-11eb-9c36-f7986b0179cf.PNG)   
 **Figure 5: pacd process internals**
 
+**Authentication Manager**   
 Authentication Manager is the major component of pacd process. Authentication Manager primarily manages the order of authentication methods during a failover scenario. Majority of authentication functionalities are managed by hostapd(802.1X). These include interaction with a AAA server, applying client authorization parameters to allow authenticated client traffic, etc. These are strictly speaking not specific to 802.1X and are applicable to any authenticated methods like MAB.   
 
 Authentication Manager allows enforcing authentication on a port. Authentication Manager needs to be enabled for the same. This is the first step to enabling port based access control. Once authentication is enabled, the port is marked Unauthorized and traffic is blocked through it.
@@ -720,7 +730,7 @@ Authentication Manager allows configuring priority for each authentication metho
  
 After successful authentication, the authentication method returns the Authorization parameters for the client. Authentication Manager uses these parameters for configuring the switch for allowing traffic for authenticated clients.
 
-**Authentication Manager port modes**
+#### 3.3.2.1 Authentication Manager port modes
 
 *Auto*   
 This mode is used to enforce authentication on a port. The port is unauthorized and blocked for traffic unless a client is authenticated.
@@ -732,7 +742,7 @@ This mode is used to disable authentication on a port. All client traffic is all
 This mode is used to un-authorize a port and block any client traffic
 
 
-**Authentication Manager port host modes** 
+#### 3.3.2.2 Authentication Manager port host modes 
 
 *Single-Host mode*   
 In this mode only one data client can be authenticated on a port and the client is granted access to the port. Access is allowed only for this client and no one else. Only when this client logs off, can another client get authenticated and authorized on the port and granted port access.   
@@ -746,7 +756,7 @@ In this mode one data client and one voice client can be authenticated on a port
 *Multiple Authentication mode*   
 In this mode one voice client and multiple data clients can be authenticated on a port and these clients are then granted access. Typical use case is a network of laptops and an IP phone connected to the NAS port via a hub.   
 
-**Authentication Manager Authentication method fallback and priorities**
+#### 3.3.2.3 Authentication Manager Authentication method fallback and priorities
 
 Authentication manager controls the order in which the authentication methods are executed. Authentication manager does not make any required configuration for the respective methods to authenticate successfully. User or Administrator needs to ensure that the correct and appropriate configuration is present in the system.
 Using the Authentication manager, user can configure an authentication method fallback list, which is configured per port. If authentication using any of the method fails, then authentication of the client on the port is tried using the next or subsequent methods.   
@@ -759,7 +769,7 @@ Authentication manager allows user to modify the default method priorities using
 
 If administrator changes the priority of the methods, then all the users who are authenticated using a lower priority method will be forced to re-authenticate. If an authentication session is in progress and administrator changes the order of the authentication methods then the configuration will take effect for the next session onwards.   
 
-**Authorization parameters** 
+#### 3.3.2.4 Authorization parameters 
 
 Upon successful authentication, the authentication methods inform Authentication Manager about the result. Authentication Manager then authorizes the port and configures it for allowing traffic from the client.  
 
@@ -776,7 +786,7 @@ Authentication Manager receives the client authorization parameters from the aut
 - *Redirect URL*: This is used to specify a redirect URL and works in conjunction with the Redirect ACL.
 
 
-**Dynamic ACL attributes**   
+#### 3.3.2.5 Dynamic ACL attributes   
 
 ACL attributes from the RADIUS server can be sent using below methods:  
 
@@ -803,7 +813,7 @@ Also, the rules downloaded as part of the second Access-Request are stored (cach
 
 For each client session, one ACL of each type (IPv4, IPv6) is supported. Prior to applying ACL sent from RADIUS server, if any ACL’s were configured, they are removed and DACL’s are applied to the port. In case of the last session termination on a port, the removed static ACL’s are restored to the port after deleting the DACL’s.
 
-**ACL naming convention**   
+#### 3.3.2.6 ACL naming convention   
 
 When an ACL is installed by Authentication Manager, the following the naming convention is used.
 
@@ -821,7 +831,7 @@ When an ACL is installed by Authentication Manager, the following the naming con
 
 The switch UI shall prevent the operator from creating a static ACL where the name matches any of the regular expressions that can be part of the above naming conventions.
 
-**Authentication Manager special VLANs**   
+#### 3.3.2.7 Authentication Manager special VLANs   
 
 Authentication Manager keeps trying the next configured authentication method in case authentication method fails or times out. However if the last authentication fails, Authentication Manager authorizes the client to special VLANs like Unauthenticated VLAN, Guest VLAN, or Critical VLAN. If a client is authenticated in any of these VLANs and the VLAN is reconfigured or deleted from the system, all these clients are unauthorized.   
 
@@ -838,7 +848,7 @@ Critical VLAN allows supplicants to authenticate on a Critical VLAN when all RAD
 Critical Voice VLAN support allows a phone to continue port access on the Voice VLAN when all the RADIUS servers go dead. If the feature is not enabled, the phone will be disconnected.
 
 
-**Critical VLAN processing**   
+#### 3.3.2.8 Critical VLAN processing   
 
 When all the configured RADIUS servers are marked Dead, the existing clients are kept intact. This is true for dead action Reinitialize/Authorize/None. Critical VLAN processing begins when either a new client tries to authenticate or re-authentication kicks in for an authorized client.
  
@@ -863,7 +873,7 @@ When the alive-server action (one server alive after all were dead) is configure
 The number of supplicants that are re-authenticated per second is configurable. This configuration is for the entire system across all the supplicants on all ports. This is used to control the system and network load when the number of supplicants to be re-authenticated is large. These re-authentications are triggered due to alive server actions.
 
 
-**RADIUS assigned Trunk mode**   
+#### 3.3.2.9 RADIUS assigned Trunk mode   
 
 In an 802.1X Access-Accept message, the Cisco VSA device-traffic-class=switch indicates that the connected device is capable of forwarding traffic from multiple stations using tagged and untagged traffic.   
 
@@ -887,15 +897,15 @@ If non-switch clients are already authenticated on a port when a Trunk mode assi
 If a port is in RADIUS assigned Trunk mode, when the last 802.1X session on the port is terminated or the interface is shut down or error-disabled, the port is restored to the configuration state as it was prior to establishment of any 802.1X session. This is regardless of whether the 802.1X sessions are trunk or non-trunk.   
 
 
-**Monitor Mode**   
+#### 3.3.2.10 Monitor Mode   
 If Monitor mode is enabled, Authentication Manager places the client in Monitor mode as applicable.   
 
 
-**Authentication History**   
+#### 3.3.2.11 Authentication History   
 Authentication Manager maintains a database of authentication events. Events like “Authorized” or “Unauthorized” are recorded along with the timestamp, port number, client MAC address, and the authentication method used.   
 
 
-**Open Authentication**  
+#### 3.3.2.12 Open Authentication  
 The Open Authentication capability allows Authentication Manager to allow client traffic event before it authenticates. This is typically used to allow certain devices to allow access to network resources prior to authenticating to obtain IP address and download configuration or firmware upgrades. Once the information is downloaded, the device will authenticate to the network.  
 
 Open Authentication is configured per interface. The open authentication settings are ignored for force-authorized and force-unauthorized ports.   
@@ -912,7 +922,7 @@ If a client fails authentication, the authentication failure actions will contin
 
 If the client succeeds authentication, the authorization parameters from RADIUS will be applied as usual. However if a DACL or Filter-Id is received, the admin configured static ACLs on the port will not be removed. These will be applied on the port prior to the statically configured ACL. This is required for subsequent clients on the port that are authorized in Open mode. The static ACL would continue to apply on the traffic as intended.    
 
-**Inactivity Timer**   
+#### 3.3.2.13 Inactivity Timer   
 The feature is used to clean up idle data clients who have not sent any traffic for 300 seconds. The Authentication Manager Inactivity timer is a per client timer and is run when Re-authentication is not enabled for the client.   
 The inactivity timer has a value of 300 seconds and is not configurable. Once the inactivity timer expires, the timer handler:   
 - Checks the SrcHit bit for the client MAC in the hardware L2 table
@@ -927,7 +937,7 @@ The feature is:
 - Applicable for clients in single-host, multi-auth and multi-domain modes
 
 
-#### 3.3.2.3 mabd
+#### 3.3.3 mabd
 mabd provides the Mac-based Authentication Bypass(MAB) functionality. MAB is intended to provide 802.1x unaware clients controlled access to the network using the devices’ MAC address as an identifier. This requires that the known and allowable MAC address and corresponding access rights be pre-populated in the authentication server.  
 
 Today, 802.1x has become the recommended port-based authentication method at the access layer in enterprise networks. However, there may be 802.1x unaware devices such as printers, fax-machines etc that would require access to the network without 802.1x authentication. MAB is a supplemental authentication mechanism to allow 802.1x unaware clients to authenticate to the network. SONiC supported authentication methods are as below:
@@ -948,12 +958,17 @@ If authentication type is configured as CHAP, a randomly generated 16-octet chal
 
 The authentication server checks its pre-populated database for the authorized Mac addresses and returns an ‘Access-Accept’ or an ‘Access-Reject’ depending on if the Mac address has been found in the database. This also makes it possible for the client to be placed in a RADIUS assigned VLAN or apply a specific Filter ID to the client traffic.
 
+### 3.3.4 hostapd
+Hostapd application supplied with wpa_supplicant is an open source implementation of 802.1x standard. The wired driver module of hostapd is adapted to write information to SONiC DB instead of directly controlling the interfaces. This driver also takes care of interacting with pacd via socket interface. hostapd gets its configuration from the hostapd.conf file generated by SONiC system.
 
-### 3.3.3 Other Process
+### 3.3.5 pacmgr
+pacmgr aids standard Linux application hostapd to read its relevant configuration from SONiC DBs, populate the hostapd.conf and restart hostapd.
+
+### 3.3.6 Other Process
 
 No change to other process.
 
-### 3.3.4 Interaction between pacd hostapd and mabd
+### 3.3.7 Interaction between pacd hostapd and mabd
 
 *hostapd(802.1X)*   
 
