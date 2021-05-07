@@ -121,6 +121,7 @@ If spanning-tree is enabled and user tries to perform warm reboot an error will 
 ## 3.4 STP Container
 
 ## 3.5 SAI
+
 ## 3.6 CLI
 ### 3.6.1 Data Models
 Following Openconfig STP yang model will be supported.
