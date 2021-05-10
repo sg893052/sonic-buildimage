@@ -29,7 +29,6 @@ LLDP enhancements
       * [APP DB](#app-db)
     * [Switch State Service Design](#switch-state-service-design)
       * [Orchestration Agent](#orchestration-agent)
-      * [STP Container](#stp-container)
     * [SAI](#sai)
     * [CLI](#cli)
       * [Configuration Commands](#configuration-commands)
@@ -87,13 +86,15 @@ This document describes the high level design of LLDP feature.
 ## 1.1 Functional Requirements
 
 
- 1. Support LLDP MED voice vlan and dscp marking value for phones to use 
+ 1. Support LLDP MED voice vlan with dot1p, cos and dscp marking value for phones to use 
 
- 2. Support LLDP MED Power management functionality
+ 2. Support LLDP MED voice vlan configuration on physical interface
 
- 3. Support configuring the management IP address to be advertised by LLDP
+ 3. Support LLDP MED Power management functionality
 
-    
+ 4. Support configuring the management IP address to be advertised by LLDP
+
+     
 
 
 ## 1.2 Configuration and Management Requirements
@@ -109,7 +110,7 @@ This feature will support CLI and REST based configurations.
 
 ## 1.3 Scalability Requirements
 
-None
+No limit, all physical interfaces in the system can be enabled with LLDP and voice vlan.
 
 ## 1.4 Warm Boot Requirements
 
@@ -126,7 +127,19 @@ LLDP-MED supports below TLVs:
 
 Network policy profile -
 
-Allows the device to advertise the voice VLAN information to endpoint devices like VoIP phones. Along with voice VLAN, tagging mode, dot1p CoS  and DSCP values can be sent to the endpoint device.
+Allows the device to advertise the voice VLAN information to endpoint devices like VoIP phones. Along with voice VLAN, tagging mode, dot1p CoS  and DSCP values can be sent to the endpoint device. Voice VLAN feature enables switch ports to carry voice traffic with defined priority so as to enable separation of voice and data traffic coming onto the port. This is to ensure that sound quality of an IP phone could be safeguarded from deteriorating when the data traffic on the port is high.
+
+Note: Voice VLAN TLV should be enabled only with compatible devices
+
+Possible combinations of voice vlan traffic -
+
+
+- Assign Voice VLAN to the IP phone. Phone will send voice packets tagged with the voice vlan and the data traffic will come untagged. This is the most common deployment.
+- Assign a Dot1p priority to the IP phone. Phone will send voice packets with 802.1p tag and data traffic will be untagged.
+- Allow the IP phone to send untagged voice traffic. Voice traffic cannot be differentiated from data traffic and no QoS can be provided.
+
+  
+
 
 Power management TLV -
 
@@ -158,22 +171,29 @@ Following config DB schemas are defined for supporting this feature.
 
     ;Stores Network policy configuration for a profile number
     ;Status: work in progress
-    key                    = NETWORK_POLICY_PROFILE|number	   ; Network policy profile number
-    app_type               = "type"			                       ; app_type can be voice or voice-signalling
-    vlan                   = "id"			                         ; vlan id range 1 to 4094
-    cos                    = 1*DIGIT				                   ; cos value range 0 to 7
-    tagged                 = "tagged/untagged"                 ; vlan is tagged or untagged
-    dscp                   = 2*DIGIT                           ; dscp value range 0 to 63
+    key                    = NETWORK_POLICY_PROFILE|number     ; Network policy profile number
+
+
+### NETWORK_POLICY_APP_TABLE
+
+    ;Stores Network policy configuration for an application type
+    ;Status: work in progress
+    key                    = NETWORK_POLICY_APP|number|app_type     ; number is network policy profile number
+                                                                    ; app_type can be voice or voice-signalling
+    vlan                   = "id"                                   ; vlan id range 1 to 4094
+    priority               = 1*DIGIT                                ; priority value range 0 to 7
+    tagged                 = "true/false"                           ; vlan is tagged or untagged
+    dscp                   = 2*DIGIT                                ; dscp value range 0 to 63
 
 
 ### LLDP_PORT_TABLE
 
     ;Stores LLDP configuration for the port
     ;Status: work in progress
-    key                           = LLDP_PORT|ifname			      ; LLDP port configuration
-    enabled                       = "true/false"			          ; LLDP enabled or disabled on port
-    mode                          = "receive/transmit"			    ; LLDP mode transmit or receive
-    mgmt_ipv4                     = "ipv4 addr"				          ; IPv4 address to be advertised as management IP
+    key                           = LLDP_PORT|ifname            ; LLDP port configuration
+    enabled                       = "true/false"                ; LLDP enabled or disabled on port
+    mode                          = "receive/transmit"          ; LLDP mode transmit or receive
+    mgmt_ipv4                     = "ipv4 addr"                 ; IPv4 address to be advertised as management IP
     mgmt_ipv6                     = "ipv6 addr"                 ; IPv6 address to be advertised as management IP
     supp_med_network_policy_tlv   = "true/false"                ; Suppress LLDP-MED network policy TLV advertise
     supp_med_power_mgmt_tlv       = "true/false"                ; Suppress LLDP-MED power management TLV advertise
@@ -188,65 +208,65 @@ Below tables are updated by LLDP
 ### LLDP_MED_POWER_MGMT_TLV_TABLE
 
 ```
-;Stores LLDP-MED power management TLV received by LLDP neighbor
+;Stores LLDP-MED power management TLV received from LLDP neighbor
 ;Status: work in progress
-key                    = LLDP_MED_POWER_MGMT_TLV:ifname				; LLDP-MED power management TLV received on port
-power_type             = "type"			  ; Power type pse or pd
-power_source           = "source"     ; Power source unknown or primary or backup
-power_priority         = "priority"   ; Power priority low, high, critical or unknown
-power_level            = "level"      ; Power value in milliwatts
+key                    = LLDP_MED_POWER_MGMT_TLV:ifname   ; LLDP-MED power management TLV received on port
+power_type             = "type"                           ; Power type pse or pd
+power_source           = "source"                         ; Power source unknown or primary or backup
+power_priority         = "priority"                       ; Power priority low, high, critical or unknown
+power_level            = "level"                          ; Power value in milliwatts
 ```
 
 ### LLDP_8023AT_POWER_MGMT_TLV_TABLE
 
 ```
-;Stores LLDP 802.3at power management TLV received by LLDP neighbor
+;Stores LLDP 802.3at power management TLV received from LLDP neighbor
 ;Status: work in progress
-key                    = LLDP_8023AT_POWER_MGMT_TLV:ifname		; LLDP-MED power management TLV received on port
-power_type             = "type"			  ; Power type pse or pd
-power_supported        = "true/false" ; whether Power is supported or not
-power_enabled          = "true/false" ; whether Power is enabled or not
-pair_control           = "true/false" ; whether pair selection can be controlled or not
-power_pairs            = "pairs"      ; power pairs in use signal or spare
-class                  = 1DIGIT       ; class 0 to 4
-power_type             = 1DIGIT       ; 802.3at type 1 or type 2
-power_source           = "source"     ; Power source unknown or primary or backup
-power_priority         = "priority"   ; Power priority low, high, critical or unknown
-requested_power        = "level"      ; Requested power value in milliwatts
-allocated_power        = "level"      ; Allocated power value in milliwatts
+key                    = LLDP_8023AT_POWER_MGMT_TLV:ifname  ; LLDP 802.3 power management TLV received on port
+device-type            = "type"                             ; Device type pse or pd
+supported              = "true/false"                       ; whether Power is supported or not
+enabled                = "true/false"                       ; whether Power is enabled or not
+paircontrol            = "true/false"                       ; whether pair selection can be controlled or not
+pairs                  = "pairs"                            ; power pairs in use signal or spare
+class                  = 1DIGIT                             ; class 0 to 4
+power-type             = 1DIGIT                             ; 802.3at type 1 or type 2
+source                 = "source"                           ; Power source unknown or primary or backup
+priority               = "priority"                         ; Power priority low, high, critical or unknown
+requested              = "level"                            ; Requested power value in milliwatts
+allocated              = "level"                            ; Allocated power value in milliwatts
 ```
 
 ### LLDP_8023BT_POWER_MGMT_TLV_TABLE
 
 ```
-;Stores LLDP 802.3bt power management TLV received by LLDP neighbor
+;Stores LLDP 802.3bt power management TLV received from LLDP neighbor
 ;Status: work in progress
-key                    = LLDP_8023BT_POWER_MGMT_TLV:ifname		; LLDP-MED power management TLV received on port
-power_type             = "type"			  ; Power type pse or pd
-power_supported        = "true/false" ; whether Power is supported or not
-power_enabled          = "true/false" ; whether Power is enabled or not
-pair_control           = "true/false" ; whether pair selection can be controlled or not
-power_pairs            = "pairs"      ; power pairs in use signal or spare
-class                  = 1DIGIT       ; class 0 to 4
-power_type             = 1DIGIT       ; 802.3at type 1 or type 2
-power_source           = "source"     ; Power source unknown or primary or backup
-power_priority         = "priority"   ; Power priority low, high, critical or unknown
-pd_4pid                = "true/false" ; PD supports 4 pair power
-requested_power        = "level"      ; Requested power value in milliwatts
-allocated_power        = "level"      ; Allocated power value in milliwatts
-requested_power_mode_a = "level"      ; Requested mode A power value in milliwatts
-requested_power_mode_b = "level"      ; Requested mode B power value in milliwatts
-allocated_power_mode_a = "level"      ; Allocated mode A power value in milliwatts
-allocated_power_mode_b = "level"      ; Allocated mode B power value in milliwatts
-power_status_pd        = 1DIGIT       ; 0 to 3, 3 - 4pair dual sig, 2 - 2pair dual sig, 1 - single sig
-power_status_class_mode_a    = 1DIGIT       ; 0 to 7
-power_status_class_mode_b    = 1DIGIT       ; 0 to 7
-power_status_power_class_ext = 1*2DIGIT     ; 0 to 15
-system_setup_pt_ext    = 1DIGIT       ; 0 to 7
-system_setup_pd_load   = "true/false"  ; Power demand is electrically isolated or not
-auto_class_req         = "true/false" ; PD requests autoclass measurement
-power_down_req         = "true/false" ; PD requested power down
-power_down_time        = 1*6DIGIT     ; PD requested power down time range 0 to 262143
+key                    = LLDP_8023BT_POWER_MGMT_TLV:ifname  ; LLDP 802.3 power management TLV received on port
+device-type            = "type"                             ; Power type pse or pd
+supported              = "true/false"                       ; whether Power is supported or not
+enabled                = "true/false"                       ; whether Power is enabled or not
+paircontrol            = "true/false"                       ; whether pair selection can be controlled or not
+pairs                  = "pairs"                            ; power pairs in use signal or spare
+class                  = 1DIGIT                             ; class 0 to 4
+power-type             = 1DIGIT                             ; 1 to 4, 802.3at type 1 or type 2, 802.3bt type 3 or type 4
+source                 = "source"                           ; Power source unknown or primary or backup
+priority               = "priority"                         ; Power priority low, high, critical or unknown
+pd_4pid                = "true/false"                       ; PD supports 4 pair power 
+requested              = "level"                            ; Requested power value in milliwatts
+allocated              = "level"                            ; Allocated power value in milliwatts
+requested-a            = "level"                            ; Requested mode A power value in milliwatts
+requested-b            = "level"                            ; Requested mode B power value in milliwatts
+allocated-a            = "level"                            ; Allocated mode A power value in milliwatts
+allocated-b            = "level"                            ; Allocated mode B power value in milliwatts
+pd-powering-status     = 1DIGIT                             ; 0 to 3, 3 - 4pair dual sig, 2 - 2pair dual sig, 1 - single sig
+power-class-ext-a      = 1DIGIT                             ; 0 to 7
+power-class-ext-b      = 1DIGIT                             ; 0 to 7
+power-class-ext        = 1*2DIGIT                           ; 0 to 15
+power-type-ext         = 1DIGIT                             ; 0 to 7 system power type extension
+setup-pd-load          = "true/false"                       ; Power demand is electrically isolated or not
+auto-class-req         = "true/false"                       ; PD requests autoclass measurement
+power-down-req         = "true/false"                       ; PD requested power down
+power-down-time        = 1*6DIGIT                           ; PD requested power down time range 0 to 262143
 ```
 
 
@@ -256,65 +276,65 @@ Below tables are updated by PoE module.
 ### POE_MED_POWER_MGMT_TLV_TABLE
 
 ```
-;Stores LLDP-MED power management TLV received by LLDP neighbor
+;Stores LLDP-MED power management TLV received from LLDP neighbor
 ;Status: work in progress
-key                    = LLDP_MED_POWER_MGMT_TLV:ifname				; LLDP-MED power management TLV received on port
-power_type             = "type"			  ; Power type pse or pd
-power_source           = "source"     ; Power source unknown or primary or backup
-power_priority         = "priority"   ; Power priority low, high, critical or unknown
-power_level            = "level"      ; Power value in milliwatts
+key                    = POE_MED_POWER_MGMT_TLV:ifname   ; LLDP-MED power management TLV received on port
+device-type            = "type"                          ; Device type pse or pd
+source                 = "source"                        ; Power source unknown or primary or backup
+priority               = "priority"                      ; Power priority low, high, critical or unknown
+power                  = "level"                         ; Power value in milliwatts
 ```
 
 ### POE_8023AT_POWER_MGMT_TLV_TABLE
 
 ```
-;Stores LLDP 802.3at power management TLV received by LLDP neighbor
+;Stores LLDP 802.3at power management TLV received from LLDP neighbor
 ;Status: work in progress
-key                    = LLDP_8023AT_POWER_MGMT_TLV:ifname		; LLDP-MED power management TLV received on port
-power_type             = "type"			  ; Power type pse or pd
-power_supported        = "true/false" ; whether Power is supported or not
-power_enabled          = "true/false" ; whether Power is enabled or not
-pair_control           = "true/false" ; whether pair selection can be controlled or not
-power_pairs            = "pairs"      ; power pairs in use signal or spare
-class                  = 1DIGIT       ; class 0 to 4
-power_type             = 1DIGIT       ; 802.3at type 1 or type 2
-power_source           = "source"     ; Power source unknown or primary or backup
-power_priority         = "priority"   ; Power priority low, high, critical or unknown
-requested_power        = "level"      ; Requested power value in milliwatts
-allocated_power        = "level"      ; Allocated power value in milliwatts
+key                    = POE_8023AT_POWER_MGMT_TLV:ifname   ; LLDP 802.3 power management TLV received on port
+device-type            = "type"                             ; Device type pse or pd
+supported              = "true/false"                       ; whether Power is supported or not
+enabled                = "true/false"                       ; whether Power is enabled or not
+paircontrol            = "true/false"                       ; whether pair selection can be controlled or not
+pairs                  = "pairs"                            ; power pairs in use signal or spare
+class                  = 1DIGIT                             ; class 0 to 4
+power-type             = 1DIGIT                             ; 802.3at type 1 or type 2
+source                 = "source"                           ; Power source unknown or primary or backup
+priority               = "priority"                         ; Power priority low, high, critical or unknown
+requested              = "level"                            ; Requested power value in milliwatts
+allocated              = "level"                            ; Allocated power value in milliwatts
 ```
 
 ### POE_8023BT_POWER_MGMT_TLV_TABLE
 
 ```
-;Stores LLDP 802.3bt power management TLV received by LLDP neighbor
+;Stores LLDP 802.3bt power management TLV received from LLDP neighbor
 ;Status: work in progress
-key                    = LLDP_8023BT_POWER_MGMT_TLV:ifname		; LLDP-MED power management TLV received on port
-power_type             = "type"			  ; Power type pse or pd
-power_supported        = "true/false" ; whether Power is supported or not
-power_enabled          = "true/false" ; whether Power is enabled or not
-pair_control           = "true/false" ; whether pair selection can be controlled or not
-power_pairs            = "pairs"      ; power pairs in use signal or spare
-class                  = 1DIGIT       ; class 0 to 4
-power_type             = 1DIGIT       ; 1 to 4, 802.3at type 1 or type 2, 802.3bt type 3 or type 4
-power_source           = "source"     ; Power source unknown or primary or backup
-power_priority         = "priority"   ; Power priority low, high, critical or unknown
-pd_4pid                = "true/false" ; PD supports 4 pair power (Not required since we are PSE ??)
-requested_power        = "level"      ; Requested power value in milliwatts
-allocated_power        = "level"      ; Allocated power value in milliwatts
-requested_power_mode_a = "level"      ; Requested mode A power value in milliwatts
-requested_power_mode_b = "level"      ; Requested mode B power value in milliwatts
-allocated_power_mode_a = "level"      ; Allocated mode A power value in milliwatts
-allocated_power_mode_b = "level"      ; Allocated mode B power value in milliwatts
-power_status_pse       = 1DIGIT       ; 0 to 3, 3 - 4pair dual sig, 2 - 4pair single sig, 1 - 2pair power
-pse_power_pair_ext     = 1DIGIT       ; 0 to 3, 3 - both alt, 2 - alt B, 1 - alt A
-power_status_class_mode_a    = 1DIGIT       ; 0 to 7
-power_status_class_mode_b    = 1DIGIT       ; 0 to 7
-power_status_power_class_ext = 1*2DIGIT     ; 0 to 15
-system_setup_pt_ext    = 1DIGIT       ; 0 to 7 system power type extension
-pse_max_power          = "level"      ; Max available PSE power value in milliwatts
-pse_auto_class_support = "true/false" ; PSE supports autoclass or not
-pse_auto_class_completed = "true/false" ; PSE autoclass measurement completed
+key                    = POE_8023BT_POWER_MGMT_TLV:ifname   ; LLDP 802.3 power management TLV received on port
+device-type            = "type"                             ; Power type pse or pd
+supported              = "true/false"                       ; whether Power is supported or not
+enabled                = "true/false"                       ; whether Power is enabled or not
+paircontrol            = "true/false"                       ; whether pair selection can be controlled or not
+pairs                  = "pairs"                            ; power pairs in use signal or spare
+class                  = 1DIGIT                             ; class 0 to 4
+power-type             = 1DIGIT                             ; 1 to 4, 802.3at type 1 or type 2, 802.3bt type 3 or type 4
+source                 = "source"                           ; Power source unknown or primary or backup
+priority               = "priority"                         ; Power priority low, high, critical or unknown
+pd_4pid                = "true/false"                       ; PD supports 4 pair power (Not required since we are PSE ??)
+requested              = "level"                            ; Requested power value in milliwatts
+allocated              = "level"                            ; Allocated power value in milliwatts
+requested-a            = "level"                            ; Requested mode A power value in milliwatts
+requested-b            = "level"                            ; Requested mode B power value in milliwatts
+allocated-a            = "level"                            ; Allocated mode A power value in milliwatts
+allocated-b            = "level"                            ; Allocated mode B power value in milliwatts
+pse-powering-status    = 1DIGIT                             ; 0 to 3, 3 - 4pair dual sig, 2 - 4pair single sig, 1 - 2pair power
+power-pairs-ext        = 1DIGIT                             ; 0 to 3, 3 - both alt, 2 - alt B, 1 - alt A
+power-class-ext-a      = 1DIGIT                             ; 0 to 7
+power-class-ext-b      = 1DIGIT                             ; 0 to 7
+power-class-ext        = 1*2DIGIT                           ; 0 to 15
+power-type-ext         = 1DIGIT                             ; 0 to 7 system power type extension
+max-power              = "level"                            ; Max available PSE power value in milliwatts
+auto-class-support     = "true/false"                       ; PSE supports autoclass or not
+auto-class-completed   = "true/false"                       ; PSE autoclass measurement completed
 
 ```
 
@@ -342,11 +362,11 @@ Create a network policy profile. The profile number can range from 1 to 128.
 
 Configure the network policy profile parameters using below command -
 
-**[no] {voice | voice-signaling} vlan [** vlan-id [**{cos** value **| dscp** value **}** | **untagged** ] **| [dot1p {cos** value **| dscp** value **}] ]**
+**[no] {voice | voice-signaling} vlan [** vlan-id **{** **[** **cos** value **| dscp** value **]** | **untagged** **}**| **[dot1p { ** **cos** value **| dscp** value **}] ]**
 
 **voice** - to select application type voice
 
-**voice-signalling** - to select application type voice
+**voice-signalling** - to select application type voice-signalling
 
 **vlan** vlan-id - specify the voice vlan 
 
@@ -445,6 +465,60 @@ sonic(conf-if-Ethernet0)# no lldp tlv-select power-management
 
 ### 3.6.3 Show Commands
 
+Below is an example of show lldp neighbor with LLDP-MED power management info -
+
+sonic# show lldp neighbor
+
+Interface:   Ethernet60,via: LLDP
+  Chassis:
+    ChassisID:    3c:2c:99:2d:87:35
+    SysName:      sonic
+    SysDescr:     SONiC Software Version: SONiC-Enterprise_Advanced-dbg - HwSku: Accton-AS7816-64X - Distribution: Debian 10.9 - Kernel: 4.19.0-9-2-amd64
+    TTL:          20
+    MgmtIP:       10.59.142.201
+    MgmtIP:       fe80::3e2c:99ff:fe2d:8735
+    Capability:   MAC_BRIDGE, ON
+    Capability:   ROUTER, ON
+  Port
+    PortID:       Ethernet32
+    PortDescr:    Eth1/9
+    
+    MED Extended Power via MDI:   
+        Device type:  PSE
+        Power Source: PSE
+        Power Priority: high
+        Power Value: 0
+
+
+
+Below is an example of show lldp neighbor with LLDP 802.3at power management info -
+
+sonic# show lldp neighbor
+
+Interface:   Ethernet60,via: LLDP
+  Chassis:
+    ChassisID:    3c:2c:99:2d:87:35
+    SysName:      sonic
+    SysDescr:     SONiC Software Version: SONiC-Enterprise_Advanced-dbg - HwSku: Accton-AS7816-64X - Distribution: Debian 10.9 - Kernel: 4.19.0-9-2-amd64
+    TTL:          20
+    MgmtIP:       10.59.142.201
+    MgmtIP:       fe80::3e2c:99ff:fe2d:8735
+    Capability:   MAC_BRIDGE, ON
+    Capability:   ROUTER, ON
+  Port
+    PortID:       Ethernet32
+    PortDescr:    Eth1/9
+
+    MDI Power:    supported: yes, enabled: yes, pair control: yes
+        Device type:  PSE
+        Power pairs:  spare
+        Class:        class 1
+        Power type:   1
+        Power Source: PSE
+        Power Priority: high
+        PD requested power Value: 0
+        PSE allocated power Value: 0
+
 
 
 
@@ -476,10 +550,22 @@ Warm boot is not supported
 
 # 7 Scalability
 
-
+No limit, all physical interfaces in the system can be enabled with LLDP and voice vlan.
 
 
 # 8 Unit Test
 
 
 
+1. Verify configuring Network profile with voice application type and corresponding vlan attributes
+2. Verify configuring Network profile with voice-signaling application type and corresponding vlan attributes
+3. Verify applying and removing LLDP MED network profile to an interface
+4. Verify LLDP-MED voice vlan TLV is advertised when profile is applied on interface and advertisement is stopped when profile is removed. Verify the voice vlan TLV has the information encoded as per the profile parameters.
+5. When device is advertising the voice VLAN TLV, disable adversting this TLV (no lldp med-tlv-select network-policy) 
+6. Configure an LLDP mgmt IPv4 address on an interface and verify the LLDP mgmt TLV advertised has the corresponding mgmt IPv4 address.
+7. Configure an LLDP mgmt IPv6 address on an interface and verify the LLDP mgmt TLV advertised has the corresponding mgmt IPv6 address.
+8. Remove the LLDP mgmt IP addresses configured and verify the default system mgmt IP addresses are advertised
+8. Verify LLDP MED power management TLV exchange along with PoE
+9. Verify LLDP 802.3at power management TLV exchange along with PoE
+10. Verify LLDP MED power management TLV is not advertised when the TLV advertisement is stopped for that interface, verify the advertisement is started when enabled back.
+11. Verify LLDP 802.3 power management TLV is not advertised when the TLV advertisement is stopped for that interface, verify the advertisement is started when enabled back.
