@@ -159,11 +159,15 @@ Interface Orch call newly introduced SAI attribute to updated the MY MAC Table i
 New configuration commands is introduced to configure Peer Gateway.
 
 ##### 3.5.1.1.1 MCLAG Peer Gateway configuration
-**config mclag peer-gateway {add | del} <Vlan-interface-names>**
-- Vlan interface for which Peer Gateway can be configured;
+
+**config mclag peer-gateway {add | del} {Vlan-interface-names}**
+
+- Vlan-interface-names : Vlan interface for which Peer Gateway can be configured.
 
 ##### 3.5.1.1.2 Show MCLAG Peer Gateway configuration
+
 **mclagdctl dump peer-gateway**
+
 - Dump MCLAG peer gateway configured vlan interface
 
 ### 3.5.2 SONiC CLI
