@@ -4,7 +4,6 @@ Rev 0.1
 # Table of Contents
 
 ### Table of Contents
-- **[SONiC MCLAG Enhancements for supporting Peer Gateway](#SONiC-MCLAG-Enhancements for supporting Peer Gateway)**
 - **[List of Tables](#List-of-Tables)**
 - **[Revision](#Revision)**
 - **[About this Manual](#About-this-Manual)**
@@ -109,13 +108,12 @@ By enabling peer gateway, if traffic with gateway MAC as MAC 2 lands on MCLAG No
 
 #### 3.2.1.1 MCLAG Peer Gateway Table
 
+```
 Producer: Configuration
 Consumer: MclagSyncd 
 Description: New table to store Peer gateway configuration for Vlan interfaces. MCLAG applications can query this table to check whether a interface is configured for Peer gateway support.
 
-```
 ;New MCLAG Peer Gateway Table
-;Status: work in progress
 key              = MCLAG_PEER_GATEWAY|ifname ; Only Vlan interface supported currently
 
 ```
@@ -124,11 +122,12 @@ key              = MCLAG_PEER_GATEWAY|ifname ; Only Vlan interface supported cur
 
 #### 3.2.2.1 INTF_TABLE table
 
+```
 Producer: MclagSyncd
 Consumer: Interface Orch Agent
 Description: Interface table contains peer mac address information.
 
-```
+
 key = INTF_TABLE:ifname ; Only Vlan interface supported currently
 
 ;fields
@@ -174,9 +173,11 @@ New configuration commands is introduced to configure Peer Gateway.
 Following KLISH based CLI configuration commands are introduced to configure MCLAG peer gateway.
 
 ##### 3.5.2.1.1 MCLAG peer gateway configuration
-```
-To configure and unconfigure MCLAG peer gateway at interface configuration level use below command. Config command enabled peer gateway functionality on Vlan interface.
 
+To configure and unconfigure MCLAG peer gateway at interface configuration level use below command. 
+Config command enabled peer gateway functionality on Vlan interface.
+
+```
 sonic(conf-if-Vlan10)# [no] mclag-peer-gateway
 
 ```
