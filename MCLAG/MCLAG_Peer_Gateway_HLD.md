@@ -85,7 +85,7 @@ This document is in addition to the Nephos MLAG HLD and Broadcom MLAG Enhancemen
 
 ## 3.1 Overview
 New changes will be added on top of the existing MCLAG implementation. 
-MCLAG Peer Gateway enhancement allows interoperability with some netwrok attached storage (NAS) or load balancer devices that do not perform a typical default gateway ARP request on boot up.
+MCLAG Peer Gateway enhancement allows interoperability with some network attached storage (NAS) or load balancer devices that do not perform a typical default gateway ARP request on boot up.
 Peer gateway allows a MCLAG peer device to act as a active gateway for packets addressed to the other peer device router MAC.
 It keeps the forwarding of the traffic local the MCLAG Peer nodes and avoids use of peer link (by not bridging the traffic to the other MCLAG peer node). 
 
@@ -138,7 +138,7 @@ peer_gateway_mac        = 12HEXDIG ; system mac of MCLAG peer node.
 ## 3.3 ICCP Changes
 
 ### 3.3.1 Peer Gateway Changes
-To support peer gateway confiuration on Vlan interface for the vlans associated with MCLAG interface following changes will be done.
+To support peer gateway configuration on Vlan interface for the vlans associated with MCLAG interface following changes will be done.
 - For the vlan interface on which peer gateway is configured, update interface table in APP DB with MCLAG Peer nodes system MAC.
 - Peer node's MAC is processed by Interface Orchagent to update MY MAC Table in SAI.
 
