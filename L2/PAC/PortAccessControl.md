@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.5
+High level design document version 0.6
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -114,6 +114,7 @@ High level design document version 0.5
 | 0.3  | 04/27/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated CLI commands |
 | 0.4  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated desgin section |
 | 0.5  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated requirements and functional description section |
+| 0.6  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated docker to macsec, added configuration, scalability and warmboot requirements |
 
 
 # About this Manual
@@ -146,7 +147,7 @@ Local Area Networks (LANs) are often deployed in environments that permit unauth
 
 ### 1.1.1 Dot1x 
 
-IEEE 802.1X is an IEEE Standard for Port Access Control (PAC) that provides an authentication mechanism to devices wishing to attach to a LAN. The standard defines Extensible Authentication Protocol Over LAN (EAPOL). The 802.1X standard describes an architectural framework within with authentication and consequent actions take place. It also establishes the requirements for a protocol between the authenticator and the supplicant, as well as between the authenticator and the authentication server. 
+IEEE 802.1X is an IEEE Standard for Port Access Control (PAC) that provides an authentication mechanism to devices wishing to attach to a LAN. The standard defines Extensible Authentication Protocol Over LAN (EAPOL). The 802.1X standard describes an architectural framework within which authentication and consequent actions take place. It also establishes the requirements for a protocol between the authenticator and the supplicant, as well as between the authenticator and the authentication server. 
 
 ### 1.1.2 MAC Authentication Bypass
 Simple devices like camera or printers which do not support 802.1x authentication can make use of MAB feature where the device gets authenticated based on the device MAC address.
@@ -168,6 +169,7 @@ The following are the requirements for Port Access Control feature:
    - Named ACLs
    - Dynamic ACLs
    - Filter Id
+   - Downloadable ACLs
 7. SONiC supports Single-Host mode where only one data client can be authenticated on a port and is granted access to the port at a given time.
 8. SONiC supports Multiple Hosts mode where only one data client can be authenticated on a port and after that access is granted to all clients connected to the port
 9. SONiC supports Multiple Domain Authentication mode where only one data and one voice client can be authenticated on a port.
@@ -192,22 +194,31 @@ The following are the requirements for Port Access Control feature:
 
 *RADIUS*   
 1. User can configure RADIUS servers. However, do not use a SONiC switch as the RADIUS server.
-2. RADIUS authentication is supported with FreeRADIUS and Cisco ISE.
+2. RADIUS authentication is supported with FreeRADIUS, ClearPass and Cisco ISE.
 
 
 ### 1.3.2 Configuration and Management Requirements
+This feature supports CLI and REST based configurations.
+1. Support CLI configurations as mentioned in section 3.6.2
+2. Support show commands as mentioned in section 3.6.3
+3. Support debug commands as mentioned in section 3.6.4
+4. Support REST APIs for config and operational data
 
 ### 1.3.3 Scalability Requirements
+1. 48 clients per port, with a maxmimum of 512 clients per box/unit/system
+2. 30 ACL rules per client/host
 
 ### 1.3.4 Warm Boot Requirements
-Port Access Control feature should work seamlessly across warmboot. Statistics must be preserved across warmboot.
+Port Access Control feature should work seamlessly across warmboot.   
+Statistics must be preserved across warmboot.   
+HW and SW entries for authenticated clients are preserved across warmboot.
 
 ## 1.4 Design Overview
 
 ### 1.4.1 Basic Approach
 
 ### 1.4.2 Container
-A new container sonic-security is introduced to hold all the port security applications. Apart from sonic-security container, code changes are made to SWSS, mgmt-frameowrk containers.
+Existing container macsec holds all the port security applications. Apart from macsec container, code changes are made to SWSS, mgmt-frameowrk containers.
  
 ### 1.4.3 SAI Support
 No changes to SAI spec for supporting PAC.
@@ -240,17 +251,17 @@ A PAE is able to adopt one of two distinct roles within an access control intera
 Additionally, there exists a third role:   
 3. authentication server: Performs the authentication function necessary to check the credentials of the Supplicant on behalf of the Authenticator.  
 
-All three roles are required in order to complete an authentication exchange. SONiC supports the Authenticator role only, in which the PAE is responsible for communicating with the Supplicant. The Authenticator PAE is also responsible for submitting the information received from the Supplicant to the Authentication Server in order for the credentials to be checked, which will determine the authorization state of the Port. The Authenticator PAE controls the authorized/unauthorized state of the controlled Port depending on the outcome of the authentication process.
+All three roles are required in order to complete an authentication exchange. **SONiC supports the Authenticator role only, in which the PAE is responsible for communicating with the Supplicant.** The Authenticator PAE is also responsible for submitting the information received from the Supplicant to the Authentication Server in order for the credentials to be checked, which will determine the authorization state of the Port. The Authenticator PAE controls the authorized/unauthorized state of the controlled Port depending on the outcome of the authentication process.
 
 ### 2.2.1 RADIUS Authentication
-When RADIUS authentication is used, the Authenticator basically becomes a passthrough. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section labelled "RADIUS Authorization Attributes" in this document.
+The Authenticator is essentially a passthrough for the EAP method. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section [Authorization parameters](#3324-authorization-parameters).
 
 ### 2.2.2 Unidirectional and bidirectional control
 The controlled directions dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control directions are of two types:   
 1. Both: Control is exerted over both incoming and outgoing frames.
 2. In: Control is only exerted over incoming traffic.   
 
-**SONiC allows only unidirection(In) control. Please see "Limitations and Restrictions" section.**
+**SONiC allows only unidirection(In) control. Please see [Limitation](#9-limitation) section.**
 
 
 ### 2.2.3 Downloadable ACL
@@ -1262,7 +1273,6 @@ This command displays the details of the dot1x configuration for a specified por
 | Filter ID | Identifies the Filter ID returned by the RADIUS server when the client was authenticated. This is a configured DiffServ policy name on the switch. |
 | ACS ACL Name | Identifies the Downloadable ACL returned by the RADIUS server when the client was authenticated. The Downloadable ACL is the same as returned using CiscoSecure-Defined-ACL AVP.|
 | DACL | Identifies the Downloadable Dynamic ACL returned by the RADIUS server when the client was authenticated. |
-| Acct Session Id | The Accounting Session Id associated with the client session. |
 
 
 VLAN Assigned Reason can take one of the following values:
