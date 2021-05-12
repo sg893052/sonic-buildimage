@@ -260,34 +260,143 @@ Below table describes the summary of discrepancy and its action
 
 ## 2.2 Configuration and Management Requirements
 
+Since this is debuggabilit/reliability feature, this will not require any configurations to be done.
+Only operational commands need to be provided.
+These operational commands will enable the user to start/stop route consistency checker, set threshold for marking route as inconsistent and periodicity of route-consistency check. Additional options will allow to enable/disable rectify mode.
 
-
-
+Display commands will be provided to list the result of route consistency check.
+The actions taken to do any rectification will be logged.
 
 ## 2.3 Scalability Requirements
 
+It is recommended not to run route-consistency checker at high frequency when the system is at scale
 
+It is recommended not to run route-consistency checker when the system ie routes are volatile
 
 ## 2.4 Warm Boot Requirements
 
-TBD
+route consistency checker will need to be stopped before warm-boot, fast-reboot, reboot etc. 
+This is to ensure that route-consistency checker is not triggered when the system is volatile, thus avoiding adverse effects.
 
 ## 5 CLI
 
-route-consistency-checker [start | stop] //vrf, afi
+Configuring route-consistency checker parameters
+```
+sonic# consistency-check route interval 120 
+    (Configures periodicity to 2 minutes)
+sonic# consistency-check route threshold 30 
+    (Suppress rectification for routes having updates younger than 30 seconds)
+sonic# consistency-check route auto-rectify true|false 
+    (Suppress rectification, only reports results is auto-rectify is set to false)
+sonic# consistency-check route start [vrf Vrf1] [ ipv4|ipv6 ]
+    (Start consistency check for route)
+sonic# consistency-check route stop
+    (Stop consistency checkfor route)
 
-show route-consistency-checker
+sonic# show consistency-check status
+sonic# show consistency-check logs
+```
 
 ### 5.1 Configuration Commands
 
+Note: These are not configuration command per se. These will not be stored in the CONFIG_DB.
+Rather, these are operational commands
+
+#### Start consistency-checker for route
+This will start the consistency checker routine for routes.   
+If no parameters are configured, the defaults as below will be used:   
+- interval : 120 seconds.  
+- threshold : 30 seconds.  
+- auto-rectify : false    
+```
+sonic# consistency-check route start
 ```
 
+#### Set periodicity for consistency-checker
+If consistency-checker is already running, new-interval will take effect for the next run onwards 
+```
+sonic# consistency-check route interval 30
+```
+
+#### Set threshold for consistency-checker
+If consistency-checker is already running, threshold will take effect in the next run 
+```
+sonic# consistency-check route threshold 10
+```
+
+#### Set auto-rectify for consistency-checker
+If consistency-checker is already running, auto-rectify will take effect in the next run
+```
+sonic# consistency-check route auto-rectify true
+```
+
+#### Stop consistency-checker for route
+This will display the current status and stop the consistency checker routine for routes.
+The parameters remain unchanged
+```
+sonic# consistency-check route stop
 ```
 
 ### 5.2 Show Commands
 
+#### Display status of consistency-check
+This will display the last or ongoing result of consistency-check for routes
+```
+sonic# show consistency-check status    
+Consistency-check for routes
+Parameters:
+    Interval: 30 seconds
+    Threshold: 10 seconds
+    Auto-recify: true
+Last run: 02 seconds ago
+Next run: in 28 seconds
+
+Summary:
+Inconsistencies found: 2
+
+=============================================================================
+Routes of concern:
+Unprogrammed routes at source:
+B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03
+C>*  101.1.5.0/24 is directly connected, Vlan105, 02:24:06
+
+Unexpected routes in hardware:
+
+Unexpected routes in kernel:
+
+Routes with inconsistent next-hops:
+
+=============================================================================
+Routes of interest:(inconsistency ignored due to threshold or other reasons):
+Unprogrammed routes at source:
+B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06
+
+Unexpected routes in hardware:
+
+Unexpected routes in kernel:
+240.127.1.0/24 dev docker0 proto kernel scope link src 240.127.1.1 linkdown
+
+Routes with inconsistent next-hops:
+
+=============================================================================
 ```
 
+#### Display logs of consistency-check
+This will display the current status and stop the consistency checker routine for routes.
+The parameters remain unchanged
+```
+sonic# show consistency-check logs
+Apr 21 22:25:00 Route consistency check-started
+Apr 21 22:27:07 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" marked INCONSISTENT
+Apr 21 22:28:08 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" auto-rectify attempt 1. DEL/ADD at APP_DB
+Apr 21 22:28:35 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" auto-rectify attempt 2. DEL/ADD at APP_DB
+Apr 21 22:30:04 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" auto-rectify SUCCESS
+Apr 21 22:30:17 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" marked YELLOW (less than 10 seconds old)
+Apr 21 22:30:25 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" marked INCONSISTENT
+Apr 21 22:54:11 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" auto-rectify attempt 1. DEL/ADD at kernel
+Apr 21 22:54:11 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" auto-rectify FAILED
+Apr 21 22:54:24 Kernel Route "240.127.1.0/24 dev docker0 proto kernel scope link src 240.127.1.1 linkdown" IGNORE (host OS route)
+Apr 21 22:54:32 Route-consistency check complete. Next run after 30 seconds.
 ```
 
 ## 6 Serviceability and Debug
