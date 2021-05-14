@@ -147,4 +147,4 @@ TBD
 
 # 9 Internal Design Information
 
-In the case of Cyrus, this feature will only be available on the TD4-X11 platforms, and TH3 will be on a best effort.
+In the case of Cyrus, this feature will only be available on the TD4-X11 and TH3 platforms.
