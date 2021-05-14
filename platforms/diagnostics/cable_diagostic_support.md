@@ -228,7 +228,7 @@ module: openconfig-platform-diagnostics
 The cable-diagnostics commands are only available in exec-mode, as the test operation and report
 should not be activated or persistent across reboot.
 
-#### interface cable-diagnostics [Ethernet <Port-ID>[-<Port-ID>]]
+#### interface cable-diagnostics [Ethernet PortID[-PortID]]
 
 This command activates the cable-diagnostics test on one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
 
@@ -255,13 +255,13 @@ sonic-cli# interface cable-diagnostics Eth 1/1-1/9
 
 ### 3.3.3 CLI Show Commands
 
-#### show cable-diagnostics report [Ethernet <Port-ID>[-<Port-ID>]]
+#### show interface cable-diagnostics report [Ethernet PortID[-PortID]]
 
 This command displays the test report(s) of one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
 
 An example of displaying the reports of all the ports
 ```
-sonic# show cable-diagnostics report
+sonic# show interface cable-diagnostics report
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
@@ -282,7 +282,7 @@ Ethernet12    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
 
 An example of displaying the reports of Ethernet5
 ```
-sonic# show cable-diagnostics report Ethernet 5
+sonic# show interface cable-diagnostics report Ethernet 5
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
@@ -291,7 +291,7 @@ Ethernet5     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
 
 An example of displaying the reports of Ethernet5,Ethernet6...Ethernet12
 ```
-sonic# show cable-diagnostics report Ethernet 5-12
+sonic# show interface cable-diagnostics report Ethernet 5-12
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
@@ -306,7 +306,7 @@ Ethernet12    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
 ```
 
 
-#### show cable-diagnostics cable-length [Ethernet <Port-ID>[-<Port-ID>]]
+#### show interface cable-diagnostics cable-length [Ethernet PortID[-PortID]]
 
 This command displays the cable-length of one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
 The meaning of cable-length varies as below:
@@ -317,7 +317,7 @@ The meaning of cable-length varies as below:
 
 An example of displaying the cable-length of all the ports
 ```
-sonic# show cable-diagnostics cable-length
+sonic# show interface cable-diagnostics cable-length
 
 Interface     Type      Length
 ------------  --------  -------------------------------
@@ -338,16 +338,16 @@ Ethernet12    SFP       80m
 
 An example of displaying the cable-length of Ethernet5
 ```
-sonic# show cable-diagnostics cable-length Ethernet 5
+sonic# show interface cable-diagnostics cable-length Ethernet 5
 
 Interface     Type      Length
 ------------  --------  -------------------------------
 Ethernet5     SFP       80m
 ```
 
-An example of displaying the cable-length of Ethernet0,Ethernet1...Ethernet9, and they are native RJ45 in this case. 
+An example of displaying the cable-length of Ethernet0,Ethernet1...Ethernet9, and they are native RJ45 in this case.
 ```
-sonic# show cable-diagnostics cable-length Ethernet0-9
+sonic# show interface cable-diagnostics cable-length Ethernet0-9
 
 Interface     Type      Length
 ------------  --------  -------------------------------
@@ -398,5 +398,5 @@ The following is the list of unit test cases:
 * Verify graceful exit when test/show is executed on an invalid interface (e.g., something out of range like Ethernet300)
 
 # 9 Internal Design Information
-There are no internal design changes relative to the cable-diagnostic support in SONiC. Design architecture
-is in accordance with the SONiC design framework.
+In the case of Buzznik 3.2.x, the TDR for the native coppers will only be available on Accton AS4630
+platforms, while the SFP/QSFP cable-diagnostics should be available on all the platforms.
