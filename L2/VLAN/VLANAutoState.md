@@ -87,8 +87,8 @@ This feature supports such deployment scenarios and provides configurability per
   Autostate disable would be required for the IMR routes to be exchanged with the remote leaf. 
 - In remote leaf cases where local ports/portchannels are members of the VLAN, Autostate enable would be used by default.
   However if the user wishes to override this to avoid churn in the network then autostate can be disabled.
-- Another use case for Autostate disable is involving IRB over a default VRF. In this case we would require the tunnel 
-  to still be up when all the local vlan members go down to allow for the routing functionality over the tunnel.
+- Another use case for Autostate disable is involving Asymmetric IRB. In this case we would require the tunnel 
+  to still be up when all the local vlan members go down to allow for routing functionality over the tunnel.
   
 ## 1.2 Requirements
 
@@ -122,7 +122,7 @@ This feature supports such deployment scenarios and provides configurability per
 
 #### 1.2.2.2 OCyang requirements
 
-TBD.
+TBD
 
 #### 1.2.2.3 Click requirements
 
@@ -184,7 +184,7 @@ Schema:
 ;
 ;Status: stable
 
-key = VLAN_TABLE:VLAN_NAME ;
+key = VLAN_TABLE|VLAN_NAME ;
 autostate = "enable"/"disable" ; autostate configuration of VLAN
 
 ```
@@ -234,6 +234,19 @@ N.A
 ## 3.6 User Interface
 
 ### 3.6.1 Data Models
+
+#### 3.6.1.1 SONiC Yang
+
+containers VLAN and VLAN_TABLE will have an additional leaf autostate as below.
+
+```
+leaf autostate {
+     type scommon:mode-enable;
+}
+
+```
+#### 3.6.1.2 OpenConfig Yang
+
 TBD
 
 ### 3.6.2 CLI
@@ -252,18 +265,18 @@ sonic(conf-if-range-vl**)# [no] autostate
 sonic# show Vlan
 Q: A - Access (Untagged), T - Tagged
 NUM        Status      Q Ports        AutoState
-100        Inactive    T  Ethernet0   enable
+100        Inactive    T  Ethernet0   Enable
                        T  Ethernet1
-101        Active      T  Ethernet1   disable
-200        Inactive                   enable
-201        Inactive                   enable
-202        Inactive                   enable
-203        Active                     disable
+101        Active      T  Ethernet1   Disable
+200        Inactive                   Enable
+201        Inactive                   Enable
+202        Inactive                   Enable
+203        Active                     Disable
 
 sonic# show vlan 101
 Q: A - Access (Untagged), T - Tagged
 NUM        Status      Q Ports       AutoState
-101        Active      T  Ethernet1  disable
+101        Active      T  Ethernet1  Disable
 
 ```
 #### 3.6.2.1 Click Configuration Commands
@@ -305,6 +318,15 @@ root@sonic:/home/admin# show vlan br
 N.A
 
 ### 3.6.3 REST API Support
+
+#### 3.6.3.1 SONiC yang
+
+```
+PATCH and GET - /restconf/data/sonic-vlan:sonic-vlan/VLAN/VLAN_LIST=Vlan100/autostate
+GET - /restconf/data/sonic-vlan:sonic-vlan/VLAN_TABLE/VLAN_TABLE_LIST=Vlan100/autostate
+```
+
+### 3.6.3.2 OpenConfig yang 
 TBD
 
 ### 3.6.4 gNMI Support
@@ -340,7 +362,14 @@ Applicable on all platforms.
 N.A
 
 # 10 Unit Test
-TBD
+
+1. Create VLAN and verify that autostate is enabled by default. 
+2. Set autostate disabled when VLAN is inactive and verify state changes to active/oper_up. 
+3. Set autostate disabled when VLAN is active and verify state continues to be active/oper_up.
+4. Set autostate from disabed to enabled with all members of VLAN down and verify it is inactive/oper_down.
+5. Set autostate from disabled to enabled with atleast 1 member of VLAN as up and verify it is active/oper_up
+6. Verify reboot, config-reload with autostate enabled and disable.
+
 
 # 11 Internal Design Information
 
