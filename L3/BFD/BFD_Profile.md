@@ -118,7 +118,7 @@ If the BFD profile associated with BFD peer, BGP neighbor/peer-group, OSPF and P
 Profile will take effect after it is configured.
 
 **Scenario 2:**
-BFD profile is associated with static BFD peer and BFD params are configured in the static peer as well
+BFD profile is associated with static BFD peer and BFD params are configured in the static peer as well.
 Params configured in static peer takes precedence over BFD profile.
 
 **Scenario 3:**
