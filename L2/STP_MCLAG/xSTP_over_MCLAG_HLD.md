@@ -30,6 +30,7 @@
 | 0.5  | 11/18/2019 | Vijay Kumar Abbaraju       | Update the section 9 (Unit Test)         |
 | 0.6  | 04/24/2020 | Divya Kumaran Chandralekha | Updated all sections inline with the current design |
 | 0.7  | 05/12/2020 | Sandeep Kulambi            | Minor updates inline with latest changes |
+| 0.8  | 10/30/2020 | Sandeep Kulambi            | Updated system MCLAG MAC changes |
 
 
 <a name="about-this-manual"></a>
@@ -118,6 +119,7 @@ The salient points of this implementation of xSTP over MC-LAG are as follows:
 
 - When ICCP is operationally down, both MC-LAG peers will act as independent bridges in the network and peer link will participate in STP topology to avoid any potential loops. Both MC-LAG peers will use their own bridge identifier instead of virtual bridge identifier in this case.
 
+- When system MCLAG MAC is configured, virtual bridge identifier will be derived using system MCLAG MAC. In this case when active node goes down, standby node will continue to use the virtual bridge identifier based on system MCLAG MAC. In case active node is up but ICCP is operationally down, peer link will participate in STP topology and standby will use its own bridge identifier.
 
 ### 2.1.1 Operational theory of spanning-tree convergence in MC-LAG topology 
 
@@ -362,13 +364,15 @@ Please also refer to sections 7.3, 7.4 in the MC-LAG HLD. The following section 
 
 ### 2.4.1 Peer-Keepalive link failure
 
-- This leads to ICCP session down  and each device thinks the peer is down. 
-- Both devices switch from using virtual bridge identifier to their local system MAC based bridge identifier. 
+- This leads to ICCP session down and each device thinks the peer is down. 
+- Both devices switch from using virtual bridge identifier to their local system MAC based bridge identifier. In case system MCLAG MAC is configured, active node will continue to use the virtual bridge identifier based on system MCLAG MAC and standby node will switch to its local system MAC based bridge identifier.
 - STP will be enabled on the peer-link and will be part of the STP topology
 
 ### 2.4.2 Peer device failure
 
 When the peer device failure happens, ICCP session will go down resulting in STP-ICCP state also going down. This results in the peer device which is still up to switch to use its local system MAC as the bridge identifier. This will cause topology to reconverge again.
+
+In case system MCLAG MAC is configured, when one of the peer device failure happens, the other device will continue to use the virtual bridge identifier based on system MCLAG MAC to minimize the topology changes in the network.
 
 ### 2.4.3 Peer link failure
 - If the peer-keepalive link and the peer-link are the same, then this failure leads to a split-brain scenario and the behavior is as explained in 2.4.1.
@@ -933,3 +937,11 @@ The following scenarios need to be unit-tested:
 28)  Verify TC 27 cases when MCLAG peers acting as non root bridge where orphan bridge is root bridge 
 
 29)  Verify TC 27 cases when MCLAG peers acting as non root bridge where MCLAG client is root bridge
+
+30) Verify with system MCLAG MAC configured, virtual bridge identifier is derived from system MCLAG MAC and convergence happens correctly
+
+31) Verify with system MCLAG MAC configured, if active node reboots standby will continue to use the virtual bridge identifier derived from system MCLAG MAC
+
+32) Verify with system MCLAG MAC configured, if standby node reboot active will continue to use the virtual bridge identifier derived from system MCLAG MAC
+
+33) Verify with system MCLAG MAC configured, if peer keepalive link goes down active will continue to use the virtual bridge identifier derived from system MCLAG MAC and standby will switch to a bridge identifier based on its local MAC.
