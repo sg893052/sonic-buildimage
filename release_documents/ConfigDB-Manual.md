@@ -1601,7 +1601,7 @@ key           = POLICY_TABLE:name            ; name must be unique
                                              ; name must be 1-63 chars long
 
 ;field      = value
-TYPE        = "qos"               ; Only QoS is supported now.
+TYPE        = "qos" / "monitoring" / "forwarding" / "acl-copp" ; Policy types
 DESCRIPTION = 1*255VCHAR          ; Policy Description
 
 ;value annotations
@@ -1613,7 +1613,7 @@ Example
 {
 	"POLICY_TABLE": {
         "policy0": {
-            "DESCRIPTION": "", 
+            "DESCRIPTION": "Hello World", 
             "TYPE": "qos"
         }
     }
@@ -1625,22 +1625,60 @@ Example
 Policy details table provides information on the classifiers to use and their corresponding actions. A policy can have up to 128 classifiers
 
 ```
-key           = POLICY_SECTIONS_TABLE:policy_name:classifier_name ; name must be unique
-                                                       ; name must be 1-63 chars long
+key = POLICY_SECTIONS_TABLE:policy_name:classifier_name ; name must be unique
+                                                        ; name must be 1-63 chars long
 
-;field            = value
-PRIORITY          = 1*3DIGIT            ; Valid Range is 0-999
-DESCRIPTION       = 1*255VCHAR          ; Policy Description
-SET_DSCP          = dscp_val            
-SET_PCP           = pcp_val
-SET_POLICER_CIR   = 1*12DIGIT
-SET_POLICER_CBS   = 1*12DIGIT
-SET_POLICER_PIR   = 1*12DIGIT
-SET_POLICER_PBS   = 1*12DIGIT
+;field                  = value
+PRIORITY                = 1*4DIGIT     ; Valid Range is 0-1023
+DESCRIPTION             = 1*255VCHAR   ; Policy Description
+SET_DSCP                = dscp_val     ; Valid only when policy is of type "qos"
+SET_PCP                 = pcp_val      ; Valid only when policy is of type "qos"
+SET_TC                  = tc_val       ; Valid only when policy is of type "qos"
+SET_POLICER_CIR         = 1*12DIGIT    ; Valid only when policy is of type "qos/acl-copp"
+SET_POLICER_CBS         = 1*12DIGIT    ; Valid only when policy is of type "qos/acl-copp"
+SET_POLICER_PIR         = 1*12DIGIT    ; Valid only when policy is of type "qos/acl-copp"
+SET_POLICER_PBS         = 1*12DIGIT    ; Valid only when policy is of type "qos/acl-copp"
+SET_MIRROR_SESSION      = 1*72VCHAR   ; Valid only when policy is of type "monitoring"
+SET_IP_NEXTHOP          = [1-64]*nh-entry ; Valid only when policy is of type "forwarding"
+SET_IPV6_NEXTHOP        = [1-64]*v6nh-entry ; Valid only when policy is of type "forwarding"
+SET_INTERFACE           = [1-64]*port-entry ; Valid only when policy is of type "forwarding"
+DEFAULT_PACKET_ACTION   = "DROP" / "FORWARD" ; Valid only when policy is of type "forwarding"
+SET_TRAP_QUEUE          = cpu_queue_val ; valid only when policy is of type "acl-copp"
+SET_IP_NEXTHOP_GROUP    = [1-64]*group-entry ; Valid only when policy is of type "forwarding"
+SET_IPV6_NEXTHOP_GROUP  = [1-64]*group-entry ; Valid only when policy is of type "forwarding"
 
 ;value annotations
-dscp_val      = DIGIT / %x31-36 %x30-33
-pcp_val       = %x30-37
+dscp_val = DIGIT / %x31-36 %x30-33
+pcp_val  = %x30-37
+tc_val   = %x30-37
+cpu_queue_val =   %x30-39             ; 0-9
+                / %x31-33 %x30-39     ; 10-39
+                / "4" %x30-37         ; 40-47
+d8       =   DIGIT               ; 0-9
+           / %x31-39 DIGIT       ; 10-99
+           / "1" 2DIGIT          ; 100-199
+           / "2" %x30-34 DIGIT   ; 200-249
+           / "25" %x30-35        ; 250-255
+ip-addr  = d8 "." d8 "." d8 "." d8
+vrf-name = "default" / "Vrf"1*63VCHAR
+priority = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
+h16      = 1*4HEXDIG
+ipv6-addr =                            7(h16 ":") h16
+            /                     "::" 6(h16 ":") h16
+            / [             h16 ] "::" 5(h16 ":") h16
+            / [ *1(h16 ":") h16 ] "::" 4(h16 ":") h16
+            / [ *2(h16 ":") h16 ] "::" 3(h16 ":") h16
+            / [ *3(h16 ":") h16 ] "::" 2(h16 ":") h16
+            / [ *4(h16 ":") h16 ] "::"   h16 ":"  h16
+            / [ *5(h16 ":") h16 ] "::"            h16
+            / [ *6(h16 ":") h16 ] "::"
+port-name = "Ethernet"1*3DIGIT / "PortChannel"1*3DIGIT
+
+nh-entry    = ip-addr  "|" [ vrf-name ] "|" [ priority ]
+v6nh-entry  = ipv6-addr  "|" [ vrf-name ] "|" [ priority ]
+port-entry  = port-name  "|" [ priority ]
+group-entry = 1*72VCHAR  "|" [ priority ]
+priority    = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35```
 ```
 
 Example
@@ -1673,8 +1711,9 @@ key           = POLICY_BINDING_TABLE:port_name   ; port_name is the name of the 
 ;field                     = value
 INGRESS_QOS_POLICY         = 1*63VCHAR
 INGRESS_MONITORING_POLICY  = 1*63VCHAR
+INGRESS_FORWARDING_POLICY  = 1*63VCHAR
+INGRESS_ACL_COPP_POLICY    = 1*63VCHAR
 EGRESS_QOS_POLICY          = 1*63VCHAR
-EGRESS_MONITORING_POLICY   = 1*63VCHAR
 
 ;value annotations
 ```
@@ -1697,6 +1736,44 @@ Example:
 }
 ```
 
+### Policy based forwarding next hop group table
+The following provides information about the schema for a policy based forwarding next hop group table
+
+```
+key            = PBF_NEXTHOP_GROUP_TABLE:group_name  ; group_name is a string made up of 1-63 
+                                                     ; characters and can have a-z,A-Z,0-9,
+                                                     ; hyphen and underscore
+                                                     
+;field           = value                                                     
+GROUP_NAME       = 1*63VCHAR
+DESCRIPTION      = 1*255VCHAR   ; Group Description
+TYPE             = "IPV4" / "IPV6"
+THRESHOLD_TYPE   = "COUNT" / "PERCENTAGE"
+THRESHOLD_UP     = [1-3]DIGIT                          ; 1-100 for percentage and 1-128 for count
+THRESHOLD_DOWN   = [1-3]DIGIT                          ; 0-99 for percentage and 0-127 for count
+SET_IP_NEXTHOP   = [1-64]*ip-member-config
+SET_IPV6_NEXTHOP = [1-64]*ipv6-member-config
+
+; value annotations
+ip-member-config   = entry-id "|" ip-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" ]
+ipv6-member-config = entry-id "|" ipv6-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" ]
+entry-id           = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
+```
+
+Example
+
+```
+{
+  "PBF_NEXTHOP_GROUP": {
+    "ipv4-test": {
+      "SET_IP_NEXTHOP@": "1|10.1.1.1||,2|10.1.1.2|VrfEgress1|,3|10.1.1.3||non-recursive", 
+      "THRESHOLD_DOWN": "2", 
+      "THRESHOLD_TYPE": "COUNT", 
+      "TYPE": "IPV4"
+    }
+  }
+}
+```
 ### Port
 
 In this table the physical port configurations are defined. Each object

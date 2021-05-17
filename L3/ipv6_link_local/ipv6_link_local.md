@@ -1,7 +1,7 @@
 # IPv6 Link-local enhancements
 
 # High Level Design Document
-#### Rev 0.3
+#### Rev 0.4
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -64,6 +64,7 @@
 | 0.1 | 08/02/2019  | Abhimanyu Devarapalli | Initial version                   |
 | 0.2 | 08/09/2019  | Abhimanyu Devarapalli | Addressed review comments         |
 | 0.3 | 08/20/2019  | Santosh Doke          | Addressed review comments         |
+| 0.4 | 02/01/2021  | Santosh Doke          | Removed Netlink event processing         |
 
 # About this Manual
 This document provides general information about the IPv6 link-local enhancements in SONiC.
@@ -219,20 +220,26 @@ To support enabling/disable of IPv6 auto link-local address generation on an int
     2) "disable"
 
 ### 3.2.2 APP DB
-To support auto generated IPv6 link-local address, the APP_DB interface tables and neighbor tables are updated to store link-local addresses too.
+To support auto generated and manually configured IPv6 link-local address, the APP_DB interface tables and neighbor tables are updated to store link-local addresses too.
 
 ```
+127.0.0.1:6379> hgetall "INTF_TABLE:Ethernet48"
+1) "ipv6_use_link_local_only"
+2) "disable"
+
 127.0.0.1:6379> hgetall "INTF_TABLE:Ethernet48:fe80::ba6a:97ff:feca:b900/64"
 1) "scope"
 2) "local"
 3) "family"
 4) "IPv6"
+5) "link_local_mode"
+6) "auto"
 
 127.0.0.1:6379> keys *NEIGH*
 1) "NEIGH_TABLE:Ethernet0:fe80::5054:ff:fe03:6175"
 ```
 ### 3.2.3 STATE DB
-To support auto generated IPv6 link-local address, the STATE_DB interface tables are updated to store link-local addresses too.
+To support auto generated and manually configured IPv6 link-local address, the STATE_DB interface tables are updated to store link-local addresses too.
 
 ```
 127.0.0.1:6379[6]> hgetall "INTERFACE_TABLE|Ethernet48|fe80::ba6a:97ff:feca:b900/64"
@@ -257,6 +264,8 @@ There are no changes to COUNTER DB schema definition.
 Changes done in RouteOrch are as follows:
 - Add IP2ME /128 route for the link-local address to hardware. This enables prioritizing the traffic destined to the interface link-local address.
 - Add the fe80::/10 subnet route to the hardware. This allows for all traffic destined to link-local prefix to be copied to CPU.  Instead of adding multiple link-local routes to the hardware, a single /10 route is added to handle all link-local traffic. This helps reduce the usage of the hardware L3 route table resource.
+
+The above routes are added per-VRF. For default VRF, they are added during startup. For user VRFs, they are added/removed when VRFs are created/deleted.
 
 For all practical use-cases, the fe80::/10 route is enough to handle all IPv6 packets destined to link-local destination. The IP2ME/128 route is added to be consistent with global IPv6 address - as the underlying SAI implementation may treat these differently. Also, in some deployments, servers can be configured with a default gateway in the fe80:: range - the fe80::/10 route helps to route traffic from those servers.
 
@@ -295,10 +304,25 @@ In the absence of manually configured addresses on an interface, to enable/disab
 
 `sysctl -w net.ipv6.conf.default.disable_ipv6=1`
 
+To make the implementation simpler and less complex, the netlink event mechanism has been removed.
+
+Previous design:
+
 Since the Linux kernel auto-generates the IPv6 link-local address per interface, netlink events for IPv6 address addition and deletion are handled by the IntfMgr. All netlink messages other than RTM_NEWADDR, RTM_DELADDR are ignored. It also ignores all addresses other than IPv6 link-local addresses.
 
 - On receiving IPv6 Link local address add event on an interface, entry is created in both APP DB and STATE DB. Orchagent then creates the L3 RIF based on these entries. This is needed to ensure that the L3 routing can happen even with out any global IPv6 address configured on the interface.
 - On receiving IPv6 Link local address delete event on interface, the corresponding entries are deleted from APP DB and STATE DB. Orchagent then deletes the L3 RIF from the ASIC DB.
+
+
+New design:
+
+- On receiving Enable IPv6 event from CONFIG_DB, the INTF_TABLE entry is created in both APP DB and STATE DB. Orchagent then creates the L3 RIF based on these entries. This is needed to ensure that the L3 routing can happen even with out any global IPv6 address configured on the interface.
+
+- On receiving Disable IPv6 event from CONFIG_DB, the corresponding entries are deleted from APP DB and STATE DB. Orchagent then deletes the L3 RIF from the ASIC DB, provided there are no manually configured addresses on the interface.
+
+The link-local address is derived based on the system MAC address (DEVICE_METADATA) during INIT time, it is assumed that all the interfaces have the same MAC address. This address is used for all IPv6 enabled interfaces, unless user configures a manual link-local address.
+
+ Note that the link-local addresses are stored in APP_DB to support fetching those addresses from KLISH CLI. There is no processing involved based on these addresses in the OrchAgent.
 
 ## 3.4 SyncD
 
@@ -312,6 +336,8 @@ N/A
 ### 3.6.2 Configuration Commands
 
 ```
+CLICK CLI:
+
 # config interface ipv6 enable use-link-local-only
 Usage: config interface ipv6 [OPTIONS] COMMAND [ARGS] 
 
@@ -323,6 +349,16 @@ Options:
 Commands:
   disable  Disable IPv6 processing on interface
   enable   Enable IPv6 processing on interface
+
+
+KLISH CLI:
+
+# configure terminal
+(config)# interface Ethernet0
+(conf-if-Ethernet0)# ipv6
+  enable        Enable IPv6
+
+(conf-if-Ethernet0)# ipv6 enable
 
 ```
 

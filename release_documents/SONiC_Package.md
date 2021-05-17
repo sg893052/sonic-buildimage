@@ -3,9 +3,12 @@
 <br>
 <br>
 <br>
-# Broadcom SONiC
+
+# Enterprise SONiC
+
 ### Package Customization Guide 
-#### Version 1.0
+
+#### Version 1.1
 <br>
 <br>
 <br>
@@ -22,12 +25,12 @@ A SONiC installer image (e.g sonic-broadcom-cloud-base.bin) is a self extracting
 
 However, some customers who receive just the binary image from Broadcom would want some flexibility to influence some changes to the SONiC installer file.
 
-This is made possible by creating a SONiC package which is also a self extracting binary image. The SONiC package file can be used to install SONIC image using ONIE and the sonic\_installer command just like the SONiC installer file. SONiC package file is typically named with *.pkg* file extension (e.g sonic-cloud-base.pkg)*.*
+This is made possible by creating a SONiC package which is also a self extracting binary image. The SONiC package file can be used to install SONIC image using ONIE and the sonic\_installer command just like the SONiC installer file. SONiC package file is typically named with *.pkg* file extension (e.g sonic-broadcom-cloud-base.pkg)*.*
 
 A new tool *build\_pkg.sh* is available to create a SONiC package file. The *build\_pkg.sh* is available in the source code as
 *sonic-buildimage/build\_pkg.sh.*
 
-Below is an example to create a SONiC package file to include a user provided *sonic\_branding.yml* which contains user defined Product Name.
+Below is an example to create a SONiC package file to include a user provided *sonic\_branding.yml* which contains user defined Product Name and software version.
 
 **Command Usage:**
 
@@ -40,10 +43,11 @@ build_pkg.sh target/sonic-broadcom-cloud-base.bin sonic_branding.yml
 ```
 bash-4.2$ cat sonic_branding.yml
 product_name: SONiC by ACME Corporation Cloud Standard
+build_version: 'acme-p.q.r'
 
 bash-4.2$ build_pkg.sh target/sonic-broadcom-cloud-base.bin sonic_branding.yml
 Creating a package file to combine target/sonic-broadcom-cloud-base.bin and sonic_branding.yml
 Successfully created package file: sonic-broadcom-cloud-base.pkg
 ```
 When user installs the sonic-broadcom-cloud-base.pkg, the sonic\_branding.yml in /etc/sonic directory of the image is replaced with the one provided by user and thus *show version* shows the product
-name chosen by the user.
+name and version string chosen by the user.

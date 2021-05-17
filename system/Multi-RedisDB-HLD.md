@@ -206,15 +206,23 @@ A new configuration file *database_config.json* is defined to be used by the dat
             "port" : 6379,
             "unix_socket_path" : "/var/run/redis/redis.sock"
         },
+        "rediswb":{
+            "hostname" : "127.0.0.1",
+            "port" : 63970,
+            "unix_socket_path" : "/var/run/redis/rediswb.sock",
+            "persistence_for_warm_boot" : "yes"
+        },
         "redis2":{
             "hostname" : "127.0.0.1",
-            "port" : 26379,
+            "port" : 63792,
             "unix_socket_path" : "/var/run/redis/redis2.sock"
+            "persistence_for_warm_boot" : "yes"
         },
         "redis3":{
             "hostname" : "127.0.0.1",
-            "port" : 36379,
+            "port" : 63793,
             "unix_socket_path" : "/var/run/redis/redis3.sock"
+            "persistence_for_warm_boot" : "yes"
         }
     },
     "DATABASES" : {
@@ -286,8 +294,8 @@ The proposed Multi-DB configuration can be summarized as below:
 | RedisDB Instance | TCP Port | Unix Domain Socket         |
 | ---------------- | :------: | -------------------------- |
 | redis            |   6379   | /var/run/redis/redis.sock  |
-| redis2           |  26379   | /var/run/redis/redis2.sock |
-| redis3           |  36379   | /var/run/redis/redis3.sock |
+| redis2           |  63792   | /var/run/redis/redis2.sock |
+| redis3           |  63793   | /var/run/redis/redis3.sock |
 
 
 
@@ -449,12 +457,12 @@ To access the redis-cli shell use **-p < tcp-port number >** option. Use the [Re
 **Example:**
 
 ```
-root@sonic:/home/admin# redis-cli -p 26379
-127.0.0.1:26379> hget PORT_TABLE:Ethernet0 admin_status
+root@sonic:/home/admin# redis-cli -p 63792
+127.0.0.1:63792> hget PORT_TABLE:Ethernet0 admin_status
 "up"
-127.0.0.1:26379>
+127.0.0.1:63792>
 
-root@sonic:/home/admin# redis-cli -p 26379 hget PORT_TABLE:Ethernet0 admin_status
+root@sonic:/home/admin# redis-cli -p 63792 hget PORT_TABLE:Ethernet0 admin_status
 "up"
 
 root@sonic:/home/admin# sonic-db-cli APPL_DB hget PORT_TABLE:Ethernet0 admin_status
@@ -529,8 +537,8 @@ This command displays the current Multi-DB configuration currently in use.
 ```
 ID   Name               RedisDB Instance    TCP Port    Socket Path
 ----------------------------------------------------------------------------------
-0    APPL_DB            redis2              26379       /var/run/redis/redis2.sock
-1    ASIC_DB            redis3              36379       /var/run/redis/redis3.sock
+0    APPL_DB            redis2              63792       /var/run/redis/redis2.sock
+1    ASIC_DB            redis3              63793       /var/run/redis/redis3.sock
 2    COUNTERS_DB        redis               6379        /var/run/redis/redis.sock
 3    LOGLEVEL_DB        redis               6379        /var/run/redis/redis.sock
 4    CONFIG_DB          redis               6379        /var/run/redis/redis.sock

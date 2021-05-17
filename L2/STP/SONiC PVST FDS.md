@@ -362,10 +362,12 @@ This command allows enabling the spanning tree mode for the device.
 **config spanning_tree {enable|disable} {pvst}**
 
 Note: 
-1) When global pvst mode is enabled, by default spanning tree will be enabled on the first 255 VLANs, for rest of the VLAN spanning tree will be disabled.
-2) When multiple spanning-tree modes are supported, only one mode can be enabled at any given point of time.
-
-
+1) When global PVST or RPVST mode is enabled,
+    1. If total number of VLANs in the system is less than or equal to "MAX_STP_INSTANCES".
+        - Enable spanning tree on all the VLANs in the system,
+    2. If total number of VLANs in the system is greater than "MAX_STP_INSTANCES".
+        - Throw an error
+2) Only one mode can be enabled at any given point of time.
 
 ### 3.6.2.1.2 Per VLAN spanning-tree 
 This command allows enabling or disabling spanning-tree on a VLAN.
@@ -702,11 +704,11 @@ This section provides the industry standard CLIs that will be supported in the 2
 | 3.6.2.4.6 Port level path cost            | configure spanning_tree interface cost <ifname\> <value\>    | Config Mode:Interface<br/>(config-if)#[no] spanning-tree cost <value><br/> |
 | 3.6.2.4.7 BPDU Filter                     | Not Available                                                | Config Mode:Interface<br/>(config-if)#[no] spanning-tree bpdufilter [enable\|disable]<br/> |
 | 3.6.3 Show Commands                       | show spanning_tree                                           | show spanning-tree                                           |
-|                                           | show spanning_tree vlan <vlanid>                             | show spanning-tree [vlan <vlanid>]                           |
-|                                           | show spanning_tree vlan interface <vlanid> <ifname>          | show spanning-tree [vlan <vlanid> [interface <ifname>]]      |
+|                                           | show spanning_tree vlan <vlanid>                             | show spanning-tree [vlan <vlanid/vlan-range>]                           |
+|                                           | show spanning_tree vlan interface <vlanid> <ifname>          | show spanning-tree [vlan <vlanid/vlan-range> [interface <ifname>]]      |
 |                                           | show spanning_tree  bpdu_guard                               | show spanning-tree bpdu-guard                                |
-|                                           | show spanning_tree  root_guard                               | show spanning-tree inconsistentports  [vlan <id>]            |
-|                                           | show spanning_tree  statistics [vlan <id>]                   | show spanning-tree counters [vlan <id>]                      |
+|                                           | show spanning_tree  root_guard                               | show spanning-tree inconsistentports  [vlan <vlanid/vlan-range>]            |
+|                                           | show spanning_tree  statistics [vlan <id>]                   | show spanning-tree counters [vlan <vlanid/vlan-range>]                      |
 |                                           | show runningconfiguration spanning_tree                      | show running-config spanning-tree                            |
 | 3.6.4 Debug Commands                      | debug spanning_tree                                          | [no] debug spanning-tree                                     |
 |                                           | debug spanning_tree vlan <id>                                | [no] debug spanning-tree vlan <id>                           |
