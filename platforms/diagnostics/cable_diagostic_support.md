@@ -228,40 +228,40 @@ module: openconfig-platform-diagnostics
 The cable-diagnostics commands are only available in exec-mode, as the test operation and report
 should not be activated or persistent across reboot.
 
-#### interface cable-diagnostics [Ethernet PortID[-PortID]]
+#### test cable-diagnostics [Ethernet PortID[-PortID]]
 
 This command activates the cable-diagnostics test on one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
 
 To activate the cable-diagnostics test on all the ports
 ```
-sonic-cli# interface cable-diagnostics
+sonic-cli# test cable-diagnostics
 ```
 
 To activate the cable-diagnostics test on Ethernet0
 ```
-sonic-cli# interface cable-diagnostics Ethernet 0
+sonic-cli# test cable-diagnostics Ethernet 0
 ```
 
 To activate the cable-diagnostics test on Ethernet0,Ethernet1...Ethernet9
 ```
-sonic-cli# interface cable-diagnostics Ethernet 0-9
+sonic-cli# test cable-diagnostics Ethernet 0-9
 ```
 
 In the case of standard interface-naming mode, the ranged command is as below
 ```
-sonic-cli# interface cable-diagnostics Eth 1/1-1/9
+sonic-cli# test cable-diagnostics Eth 1/1-1/9
 ```
 
 
 ### 3.3.3 CLI Show Commands
 
-#### show interface cable-diagnostics report [Ethernet PortID[-PortID]]
+#### show cable-diagnostics report [Ethernet PortID[-PortID]]
 
 This command displays the test report(s) of one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
 
 An example of displaying the reports of all the ports
 ```
-sonic# show interface cable-diagnostics report
+sonic# show cable-diagnostics report
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
@@ -282,7 +282,7 @@ Ethernet12    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
 
 An example of displaying the reports of Ethernet5
 ```
-sonic# show interface cable-diagnostics report Ethernet 5
+sonic# show cable-diagnostics report Ethernet 5
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
@@ -291,7 +291,7 @@ Ethernet5     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
 
 An example of displaying the reports of Ethernet5,Ethernet6...Ethernet12
 ```
-sonic# show interface cable-diagnostics report Ethernet 5-12
+sonic# show cable-diagnostics report Ethernet 5-12
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
@@ -305,8 +305,28 @@ Ethernet11    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
 Ethernet12    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
 ```
 
+Note: While the *Result* is the test result, the *Status* is the state of the conducted test job, and the here is the table of the possible states.
 
-#### show interface cable-diagnostics cable-length [Ethernet PortID[-PortID]]
+| Type                       | Result      |  Description                                          |
+|:--------------------------:|:-----------:|:------------------------------------------------------|
+| TDR (RJ45 and Copper SFPs) | OK          | Cable has passed the test                             |
+| TDR (RJ45 and Copper SFPs) | OPEN        | Cable is not connected                                |
+| TDR (RJ45 and Copper SFPs) | SHORT       | Short circuit has occurred in the cable               |
+| TDR (RJ45 and Copper SFPs) | FAILED      | Internal test failures at the physical layer          |
+| Optical SFP/QSFP           | OK          | None of failure defected on this transceiver          |
+| Optical SFP/QSFP           | Lo TEMP     | Low temperature failure defected on this transceiver  |
+| Optical SFP/QSFP           | Hi TEMP     | High temperature failure defected on this transceiver |
+| Optical SFP/QSFP           | Lo VOLT     | Low voltage failure defected on this transceiver      |
+| Optical SFP/QSFP           | Hi VOLT     | High voltage failure defected on this transceiver     |
+| Optical SFP/QSFP           | Lo RxPwr    | Low RX power failure defected on this transceiver     |
+| Optical SFP/QSFP           | Hi RxPwr    | High RX power failure defected on this transceiver    |
+| Optical SFP/QSFP           | Lo TxPwr    | Low TX power failure defected on this transceiver     |
+| Optical SFP/QSFP           | Hi TxPwr    | High TX power failure defected on this transceiver    |
+| Optical SFP                | RX_LOS      | RX_LOS assertion defected on this transceiver         |
+| Optical SFP                | TX_FAULT    | TX_FAULT assertion defected on this transceiver       |
+| Optical SFP                | TX_DISABLED | TX_DISABLE assertion defected on this transceiver     |
+
+#### show cable-diagnostics cable-length [Ethernet PortID[-PortID]]
 
 This command displays the cable-length of one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
 The meaning of cable-length varies as below:
@@ -317,7 +337,7 @@ The meaning of cable-length varies as below:
 
 An example of displaying the cable-length of all the ports
 ```
-sonic# show interface cable-diagnostics cable-length
+sonic# show cable-diagnostics cable-length
 
 Interface     Type      Length
 ------------  --------  -------------------------------
@@ -338,7 +358,7 @@ Ethernet12    SFP       80m
 
 An example of displaying the cable-length of Ethernet5
 ```
-sonic# show interface cable-diagnostics cable-length Ethernet 5
+sonic# show cable-diagnostics cable-length Ethernet 5
 
 Interface     Type      Length
 ------------  --------  -------------------------------
@@ -347,7 +367,7 @@ Ethernet5     SFP       80m
 
 An example of displaying the cable-length of Ethernet0,Ethernet1...Ethernet9, and they are native RJ45 in this case.
 ```
-sonic# show interface cable-diagnostics cable-length Ethernet0-9
+sonic# show cable-diagnostics cable-length Ethernet0-9
 
 Interface     Type      Length
 ------------  --------  -------------------------------
@@ -361,6 +381,713 @@ Ethernet6               10m
 Ethernet7               10m
 Ethernet8               9m
 Ethernet9               7m
+```
+
+#### show interface transceiver dom [Ethernet PortID[-PortID]]
+
+This command displays the DOM and Threshold information of one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
+
+An example of displaying the DOM and Threshold information of all the ports
+```
+JioMcLAG# show interface transceiver dom | no-more
+
+-----------------------------------------------------------------------
+Ethernet0
+-----------------------------------------------------------------------
+alarm-rx-power-hi               N/A
+alarm-rx-power-lo               N/A
+alarm-temp-hi                   N/A
+alarm-temp-lo                   N/A
+alarm-tx-bias-hi                N/A
+alarm-tx-bias-lo                N/A
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   N/A
+alarm-volt-lo                   N/A
+rx-power                        Unknown,N/A,N/A,N/A
+temperature                     Unknown
+tx-bias                         Unknown,N/A,N/A,N/A
+tx-power                        Unknown,N/A,N/A,N/A
+type                            SFP
+vendor                          FOUNDRY NETWORKS
+vendor-part                     33210-100
+voltage                         Unknown
+warning-rx-power-hi             N/A
+warning-rx-power-lo             N/A
+warning-temp-hi                 N/A
+warning-temp-lo                 N/A
+warning-tx-bias-hi              N/A
+warning-tx-bias-lo              N/A
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 N/A
+warning-volt-lo                 N/A
+
+-----------------------------------------------------------------------
+Ethernet1
+-----------------------------------------------------------------------
+alarm-rx-power-hi               N/A
+alarm-rx-power-lo               N/A
+alarm-temp-hi                   N/A
+alarm-temp-lo                   N/A
+alarm-tx-bias-hi                N/A
+alarm-tx-bias-lo                N/A
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   N/A
+alarm-volt-lo                   N/A
+rx-power                        Unknown,N/A,N/A,N/A
+temperature                     Unknown
+tx-bias                         Unknown,N/A,N/A,N/A
+tx-power                        Unknown,N/A,N/A,N/A
+type                            SFP
+vendor                          FOUNDRY NETWORKS
+vendor-part                     33210-100
+voltage                         Unknown
+warning-rx-power-hi             N/A
+warning-rx-power-lo             N/A
+warning-temp-hi                 N/A
+warning-temp-lo                 N/A
+warning-tx-bias-hi              N/A
+warning-tx-bias-lo              N/A
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 N/A
+warning-volt-lo                 N/A
+
+-----------------------------------------------------------------------
+Ethernet2
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet3
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet4
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet5
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet6
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet7
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet8
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet9
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet10
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet11
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet12
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet13
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet14
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet15
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet16
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet17
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet18
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet19
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet20
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet21
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet22
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet23
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet24
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet25
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet26
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet27
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet28
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet29
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet30
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet31
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet32
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet33
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet34
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet35
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet36
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet37
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet38
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet39
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet40
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet41
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet42
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet43
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet44
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet45
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet46
+-----------------------------------------------------------------------
+alarm-rx-power-hi               N/A
+alarm-rx-power-lo               N/A
+alarm-temp-hi                   N/A
+alarm-temp-lo                   N/A
+alarm-tx-bias-hi                N/A
+alarm-tx-bias-lo                N/A
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   N/A
+alarm-volt-lo                   N/A
+rx-power
+tx-bias
+tx-power
+type                            SFP
+vendor                          FS
+vendor-part                     Q-4SAO05
+warning-rx-power-hi             N/A
+warning-rx-power-lo             N/A
+warning-temp-hi                 N/A
+warning-temp-lo                 N/A
+warning-tx-bias-hi              N/A
+warning-tx-bias-lo              N/A
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 N/A
+warning-volt-lo                 N/A
+
+-----------------------------------------------------------------------
+Ethernet47
+-----------------------------------------------------------------------
+alarm-rx-power-hi               N/A
+alarm-rx-power-lo               N/A
+alarm-temp-hi                   N/A
+alarm-temp-lo                   N/A
+alarm-tx-bias-hi                N/A
+alarm-tx-bias-lo                N/A
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   N/A
+alarm-volt-lo                   N/A
+rx-power
+tx-bias
+tx-power
+type                            SFP
+vendor                          FS
+vendor-part                     Q-4SAO05
+warning-rx-power-hi             N/A
+warning-rx-power-lo             N/A
+warning-temp-hi                 N/A
+warning-temp-lo                 N/A
+warning-tx-bias-hi              N/A
+warning-tx-bias-lo              N/A
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 N/A
+warning-volt-lo                 N/A
+
+-----------------------------------------------------------------------
+Ethernet48
+-----------------------------------------------------------------------
+alarm-rx-power-hi               5.3950
+alarm-rx-power-lo               -13.2975
+alarm-temp-hi                   80.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                12.0000
+alarm-tx-bias-lo                3.0020
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6304
+alarm-volt-lo                   2.9704
+rx-power                        -1.8609,-1.4539,-1.3567,-1.4758
+temperature                     27.0117
+tx-bias                         6.9780,6.9780,6.9780,6.9780
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2419
+warning-rx-power-hi             2.3955
+warning-rx-power-lo             -10.3012
+warning-temp-hi                 75.0000
+warning-temp-lo                 -5.0000
+warning-tx-bias-hi              10.0000
+warning-tx-bias-lo              4.4960
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.4648
+warning-volt-lo                 3.1352
+
+-----------------------------------------------------------------------
+Ethernet52
+-----------------------------------------------------------------------
+alarm-rx-power-hi               5.3950
+alarm-rx-power-lo               -13.2975
+alarm-temp-hi                   80.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                12.0000
+alarm-tx-bias-lo                3.0020
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6304
+alarm-volt-lo                   2.9704
+rx-power                        0.4836,0.6262,0.6915,0.3687
+temperature                     27.2422
+tx-bias                         6.9780,6.9780,6.9780,6.9780
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2433
+warning-rx-power-hi             2.3955
+warning-rx-power-lo             -10.3012
+warning-temp-hi                 75.0000
+warning-temp-lo                 -5.0000
+warning-tx-bias-hi              10.0000
+warning-tx-bias-lo              4.4960
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.4648
+warning-volt-lo                 3.1352
+
+-----------------------------------------------------------------------
+Ethernet56
+-----------------------------------------------------------------------
+alarm-rx-power-hi               5.3950
+alarm-rx-power-lo               -13.2975
+alarm-temp-hi                   80.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                12.0000
+alarm-tx-bias-lo                3.0020
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6304
+alarm-volt-lo                   2.9704
+rx-power                        -1.5633,-1.3395,-2.2505,-1.8595
+temperature                     26.4219
+tx-bias                         6.9780,6.9780,6.9780,6.9780
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2399
+warning-rx-power-hi             2.3955
+warning-rx-power-lo             -10.3012
+warning-temp-hi                 75.0000
+warning-temp-lo                 -5.0000
+warning-tx-bias-hi              10.0000
+warning-tx-bias-lo              4.4960
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.4648
+warning-volt-lo                 3.1352
+
+-----------------------------------------------------------------------
+Ethernet60
+-----------------------------------------------------------------------
+alarm-rx-power-hi               5.3950
+alarm-rx-power-lo               -13.2975
+alarm-temp-hi                   80.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                12.0000
+alarm-tx-bias-lo                3.0020
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6304
+alarm-volt-lo                   2.9704
+rx-power                        -0.3203,-0.1403,-0.4701,-0.7053
+temperature                     31.0664
+tx-bias                         7.0800,7.0800,7.0800,7.0800
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2439
+warning-rx-power-hi             2.3955
+warning-rx-power-lo             -10.3012
+warning-temp-hi                 75.0000
+warning-temp-lo                 -5.0000
+warning-tx-bias-hi              10.0000
+warning-tx-bias-lo              4.4960
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.4648
+warning-volt-lo                 3.1352
+
+-----------------------------------------------------------------------
+Ethernet64
+-----------------------------------------------------------------------
+alarm-rx-power-hi               5.3950
+alarm-rx-power-lo               -13.2975
+alarm-temp-hi                   80.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                12.0000
+alarm-tx-bias-lo                3.0020
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6304
+alarm-volt-lo                   2.9704
+rx-power                        0.6341,0.2214,0.3651,0.2776
+temperature                     23.6523
+tx-bias                         6.8740,6.8740,6.8740,6.8740
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2386
+warning-rx-power-hi             2.3955
+warning-rx-power-lo             -10.3012
+warning-temp-hi                 75.0000
+warning-temp-lo                 -5.0000
+warning-tx-bias-hi              10.0000
+warning-tx-bias-lo              4.4960
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.4648
+warning-volt-lo                 3.1352
+
+-----------------------------------------------------------------------
+Ethernet68
+-----------------------------------------------------------------------
+alarm-rx-power-hi               N/A
+alarm-rx-power-lo               N/A
+alarm-temp-hi                   N/A
+alarm-temp-lo                   N/A
+alarm-tx-bias-hi                N/A
+alarm-tx-bias-lo                N/A
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   N/A
+alarm-volt-lo                   N/A
+rx-power                        2.3431,-inf,-inf,-inf
+temperature                     0.0000
+tx-bias                         0.0000,0.0000,0.0000,0.0000
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP+
+vendor                          FS
+vendor-part                     QSFP-PC03
+voltage                         0.0000
+warning-rx-power-hi             N/A
+warning-rx-power-lo             N/A
+warning-temp-hi                 N/A
+warning-temp-lo                 N/A
+warning-tx-bias-hi              N/A
+warning-tx-bias-lo              N/A
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 N/A
+warning-volt-lo                 N/A
+
+-----------------------------------------------------------------------
+Ethernet72
+-----------------------------------------------------------------------
+alarm-rx-power-hi               N/A
+alarm-rx-power-lo               N/A
+alarm-temp-hi                   N/A
+alarm-temp-lo                   N/A
+alarm-tx-bias-hi                N/A
+alarm-tx-bias-lo                N/A
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   N/A
+alarm-volt-lo                   N/A
+rx-power                        -inf,-inf,-inf,-inf
+temperature                     23.4922
+tx-bias                         0.0000,0.0000,0.0000,0.0000
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          Fiberstore
+vendor-part                     Q28-PC05
+voltage                         3.2895
+warning-rx-power-hi             N/A
+warning-rx-power-lo             N/A
+warning-temp-hi                 N/A
+warning-temp-lo                 N/A
+warning-tx-bias-hi              N/A
+warning-tx-bias-lo              N/A
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 N/A
+warning-volt-lo                 N/A
+
+-----------------------------------------------------------------------
+Ethernet76
+-----------------------------------------------------------------------
+alarm-rx-power-hi               4.0000
+alarm-rx-power-lo               -18.0134
+alarm-temp-hi                   85.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                15.0000
+alarm-tx-bias-lo                0.0000
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6000
+alarm-volt-lo                   2.9000
+rx-power                        0.2510,0.1111,0.3197,-0.1082
+temperature                     26.0000
+tx-bias                         5.9940,5.9880,5.9800,6.0200
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2190
+warning-rx-power-hi             2.4000
+warning-rx-power-lo             -15.0031
+warning-temp-hi                 70.0000
+warning-temp-lo                 0.0000
+warning-tx-bias-hi              12.0000
+warning-tx-bias-lo              2.0000
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.5000
+warning-volt-lo                 3.1000
+
+-----------------------------------------------------------------------
+Ethernet80
+-----------------------------------------------------------------------
+None detected
+
+-----------------------------------------------------------------------
+Ethernet81
+-----------------------------------------------------------------------
+None detected
+JioMcLAG#
+```
+
+An example of displaying the DOM and Threshold information of Ethernet48
+```
+JioMcLAG# show interface transceiver dom Ethernet 48 | no-more
+
+-----------------------------------------------------------------------
+Ethernet48
+-----------------------------------------------------------------------
+alarm-rx-power-hi               5.3950
+alarm-rx-power-lo               -13.2975
+alarm-temp-hi                   80.0000
+alarm-temp-lo                   -10.0000
+alarm-tx-bias-hi                12.0000
+alarm-tx-bias-lo                3.0020
+alarm-tx-power-hi               N/A
+alarm-tx-power-lo               N/A
+alarm-volt-hi                   3.6304
+alarm-volt-lo                   2.9704
+rx-power                        -1.8675,-1.4539,-1.3501,-1.4758
+temperature                     26.7188
+tx-bias                         6.9780,6.9780,6.9780,6.9780
+tx-power                        N/A,N/A,N/A,N/A
+type                            QSFP28
+vendor                          FS
+vendor-part                     QSFP28-SR4-100G
+voltage                         3.2419
+warning-rx-power-hi             2.3955
+warning-rx-power-lo             -10.3012
+warning-temp-hi                 75.0000
+warning-temp-lo                 -5.0000
+warning-tx-bias-hi              10.0000
+warning-tx-bias-lo              4.4960
+warning-tx-power-hi             N/A
+warning-tx-power-lo             N/A
+warning-volt-hi                 3.4648
+warning-volt-lo                 3.1352
+```
+
+#### show interface transceiver dom summary [Ethernet PortID[-PortID]]
+
+This command displays the DOM information of one particular port or the ports in a specific range, or all the ports when **Ethernet** is not specified
+
+An example of displaying the DOM information of all the ports
+```
+sonic# show interface transceiver dom summary | no-more
+
+Interface   Type     Vendor           Temp(C) Volt(V) RxPwr(dBm) TxPwr(dBm)
+----------- -------- ---------------- ------- ------- ---------- ----------
+Ethernet0   SFP      Amphenol         0.0000  0.0000  -inf       -inf
+Ethernet1   SFP      Amphenol         0.0000  0.0000  -inf       -inf
+Ethernet2   SFP      Amphenol         0.0000  0.0000  -inf       -inf
+Ethernet3   SFP      Amphenol         0.0000  0.0000  -inf       -inf
+Ethernet4   SFP      FINISAR CORP.    0.0000  0.0000  -inf       -inf
+Ethernet5   SFP      FINISAR CORP.    28.4766 3.3018  -30.9691   -2.1488
+Ethernet6   SFP      FINISAR CORP.    30.0156 3.2948  -33.9794   -1.9199
+Ethernet7   SFP      JDSU             27.0625 3.3053  -29.5861   -4.9026
+Ethernet8   SFP      FINISAR CORP.    0.0000  0.0000  -inf       -inf
+Ethernet9   SFP      FINISAR CORP.    0.0000  0.0000  -inf       -inf
+Ethernet10  SFP      FINISAR CORP.    30.9141 3.3026  -36.9897   -2.0149
+Ethernet11  SFP      FINISAR CORP.    30.6602 3.2969  -inf       -1.9091
+Ethernet12  SFP      FINISAR CORP.    28.9844 3.3443  -33.9794   -2.1375
+```
+
+An example of displaying the DOM information of Ethernet5
+```
+sonic# show interface transceiver dom summary Ethernet 5
+
+Interface   Type     Vendor           Temp(C) Volt(V) RxPwr(dBm) TxPwr(dBm)
+----------- -------- ---------------- ------- ------- ---------- ----------
+Ethernet5   SFP      FINISAR CORP.    28.4766 3.3018  -30.9691   -2.1488
+```
+
+An example of displaying the DOM information of Ethernet5-12
+```
+sonic# show interface transceiver dom summary Ethernet 5-12
+
+Interface   Type     Vendor           Temp(C) Volt(V) RxPwr(dBm) TxPwr(dBm)
+----------- -------- ---------------- ------- ------- ---------- ----------
+Ethernet5   SFP      FINISAR CORP.    28.4766 3.3018  -30.9691   -2.1488
+Ethernet6   SFP      FINISAR CORP.    30.0156 3.2948  -33.9794   -1.9199
+Ethernet7   SFP      JDSU             27.0625 3.3053  -29.5861   -4.9026
+Ethernet8   SFP      FINISAR CORP.    0.0000  0.0000  -inf       -inf
+Ethernet9   SFP      FINISAR CORP.    0.0000  0.0000  -inf       -inf
+Ethernet10  SFP      FINISAR CORP.    30.9141 3.3026  -36.9897   -2.0149
+Ethernet11  SFP      FINISAR CORP.    30.6602 3.2969  -inf       -1.9091
+Ethernet12  SFP      FINISAR CORP.    28.9844 3.3443  -33.9794   -2.1375
 ```
 
 
@@ -398,5 +1125,28 @@ The following is the list of unit test cases:
 * Verify graceful exit when test/show is executed on an invalid interface (e.g., something out of range like Ethernet300)
 
 # 9 Internal Design Information
-In the case of Buzznik 3.2.x, the TDR for the native coppers will only be available on Accton AS4630
-platforms, while the SFP/QSFP cable-diagnostics should be available on all the platforms.
+
+This feature is now only available on Buzznik 3.2.x, and it will later be backported to the Cyrus.
+
+As of now, the TDR support for the native RJ45 will only be available on the following platforms
+
+- Accton AS4630
+
+In the case of 1000BASE-T transceivers (i.e. Copper SFPs with RJ45 connectors), it's commonly available on the existing platforms, and here is the list of supported modules
+
+- AVAGO ABCU-5730RZ
+- AVAGO ABCU-5740RZ
+- AVAGO ABCU-5730GZ
+- AVAGO ABCU-5730ARZ
+- AVAGO ABCU-5740ARZ
+- AVAGO ABCU-5731ARZ
+- AVAGO ABCU-5741ARZ
+- AVAGO ABCU-5741AGZ
+- FINISAR FCLF8520P2BTL
+- FINISAR FCLF8521P2BTL
+- FINISAR FCLF8522P2BTL
+
+In the case of optical transceivers, while it's commonly available on the existing platforms, it works only with the modules below
+
+- 25G/10G/1G SFPs with DOM and Threshold support
+- 100G/40G QSFP with DOM and Threshold support
