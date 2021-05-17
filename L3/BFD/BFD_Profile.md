@@ -115,10 +115,10 @@ sonic(conf-if-Ethernet32)# ip pim bfd profile test
 #### 3.1.1.6 Profile configuration scenarios
 **Scenario 1:**
 If the BFD profile associated with BFD peer, BGP neighbor/peer-group, OSPF and PIM is not configured.
-Profile will take effect after the it is configured.
+Profile will take effect after it is configured.
 
 **Scenario 2:**
-BFD profile is associated with static BFD peer and BFD params configured are in the static peer as well
+BFD profile is associated with static BFD peer and BFD params are configured in the static peer as well
 Params configured in static peer takes precedence over BFD profile.
 
 **Scenario 3:**
