@@ -364,70 +364,64 @@ Example:-
 
 ## 5 CLI
 
-Configuring route-consistency checker parameters
-```
-sonic# consistency-check route interval 120 
-    (Configures periodicity to 2 minutes)
-sonic# consistency-check route threshold 30 
-    (Suppress rectification for routes having updates younger than 30 seconds)
-sonic# consistency-check route auto-rectify true|false 
-    (Suppress rectification, only reports results is auto-rectify is set to false)
-sonic# consistency-check route start [vrf Vrf1] [ ipv4|ipv6 ]
-    (Start consistency check for route)
-sonic# consistency-check route stop
-    (Stop consistency checkfor route)
-
-sonic# show consistency-check status
-sonic# show consistency-check logs
-```
-
 ### 5.1 Configuration Commands
 
-Note: These are not configuration command per se. These will not be stored in the CONFIG_DB.
-Rather, these are operational commands
+There are no configuration command for this feature
 
-#### Start consistency-checker for route
+### 5.2 Operational Commands
+
+```
+
+Command to trigger: consistency-check route start [vrf Vrf1] [ ipv4|ipv6 ] [threshold 30] [auto-rectify]
+Command to abort: consistency-check route abort
+
+```
+
+#### Example1: Start consistency-checker for route with default parameters
 This will start the consistency checker routine for routes.   
-If no parameters are configured, the defaults as below will be used:   
-- interval : 120 seconds.  
+If no parameters are configured, the defaults as below will be used:    
 - threshold : 30 seconds.  
 - auto-rectify : false    
 ```
 sonic# consistency-check route start
 ```
 
-#### Set periodicity for consistency-checker
-If consistency-checker is already running, new-interval will take effect for the next run onwards 
+#### Example2: Start consistency-checker for route with non-default parameters
+This will start the consistency checker routine for routes with provided parameters.     
 ```
-sonic# consistency-check route interval 30
-```
-
-#### Set threshold for consistency-checker
-If consistency-checker is already running, threshold will take effect in the next run 
-```
-sonic# consistency-check route threshold 10
+sonic# consistency-check route start threshold 10 auto-rectify
 ```
 
-#### Set auto-rectify for consistency-checker
-If consistency-checker is already running, auto-rectify will take effect in the next run
+#### Example3: Start consistency-checker for routes in specific vrf and address-family
+This will start the consistency checker routine for IPv4 routes in vrf Vrf1 .     
 ```
-sonic# consistency-check route auto-rectify true
-```
-
-#### Stop consistency-checker for route
-This will display the current status and stop the consistency checker routine for routes.
-The parameters remain unchanged
-```
-sonic# consistency-check route stop
+sonic# consistency-check route start vrf Vrf1 ipv4
 ```
 
-### 5.2 Show Commands
+#### Example4: Stop consistency-checker for route
+This will display the current status and terminate the consistency checker routine for routes.
+```
+sonic# consistency-check route abort
+```
 
-#### Display status of consistency-check
+### 5.3 Show Commands
+
+The following show command will be provided
+
+```
+
+show consistency-check status
+show consistency-check logs
+
+```
+#### Example1: Display status of consistency-check
 This will display the last or ongoing result of consistency-check for routes
 ```
 sonic# show consistency-check status    
 Consistency-check for routes
+Routes considered:
+    vrf: all
+    address-family: IPv4
 Parameters:
     Interval: 30 seconds
     Threshold: 10 seconds
@@ -465,7 +459,7 @@ Routes with inconsistent next-hops:
 =============================================================================
 ```
 
-#### Display logs of consistency-check
+#### Example2: Display logs of consistency-check
 This will display the current status and stop the consistency checker routine for routes.
 The parameters remain unchanged
 ```
