@@ -76,6 +76,8 @@ sai_port_api_t functions in the PAI layer will replace the switch oid before cal
 3. External PHYs are accessed through MDIO bus. Different platform may have a different way to connect the external PHYs to the MDIO bus. In the 1st diagram, the platform uses the MDIO bus from the forwarding ASIC. The MDIO read/write function pointers are passed to PAI layer when creat_switch() function call is invoked. We propose to add a key "phy_access_lib_name": to the "phys" section in the "gearbox_config.json". The phy access lib will provide the MDIO read/write functions based on the platform hardware. 
 
    To fix the Gearbox issue found in SWSS and SAIREDIS : Since there is an attribute SAI_PORT_ATTR_INTERFACE_TYPE missing in the call of initGearboxPort from the SWSS, we add a new key system_intf_type in the "ports" section of phy_config.json. If user doesn't provide this key in the gearbox_config.json, in the gearsyncd system_intf_type will be set to XFI by default. 
+   
+   To fix the BRCM PAI 3.3 LIB compatible issue, in the middle PAI layer we implement the missing APIs, sai_object_type_query, and sai_object_type_get_availability to compatible with BRCM SONIC Gearbox solution. When moving to community version, we will also need sai_query_attribute_enum_values_capability API to be implemented in the middle PAI layer. 
 
 
 
