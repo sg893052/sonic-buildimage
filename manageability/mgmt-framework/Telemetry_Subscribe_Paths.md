@@ -56,19 +56,18 @@ Following table lists the Telemetry server's behavior for different combinations
 
 | **Mode**       | **Subscribe Path**                       | **Result** |
 |----------------|------------------------------------------|------------|
-| ON_CHANGE      | /interfaces/interface[name=\*]           | error (counters does not support ON_CHANGE) |
-| ON_CHANGE      | /interfaces/interface[name=\*]/config    | ON_CHANGE subscription                      |
-| ON_CHANGE      | /interfaces/interface[name=\*]/state     | error (counters does not support ON_CHANGE) |
-| ON_CHANGE      | /interfaces/interface[name=\*]/state/oper-status  | ON_CHANGE  subscription            |
-| ON_CHANGE      | /interfaces/interface[name=\*]/state/counters     | error (counters does not support ON_CHANGE) |
-| ON_CHANGE      | /interfaces/interface[name=\*]/state/counters/in-octets | error (counters does not support ON_CHANGE) |
-| SAMPLE         | /interfaces/interface[name=\*]           | SAMPLE subscription                         |
-| TARGET_DEFINED | /interfaces/interface[name=\*]           | SAMPLE subscription (counters does not support ON_CHANGE) |
+| ON_CHANGE      | /interfaces/interface[name=\*]           | error (child node *counters* does not support ON_CHANGE) |
+| ON_CHANGE      | /interfaces/interface[name=\*]/config    | ON_CHANGE subscription               |
+| ON_CHANGE      | /interfaces/interface[name=\*]/state     | error                                |
+| ON_CHANGE      | /interfaces/interface[name=\*]/state/oper-status  | ON_CHANGE  subscription     |
+| ON_CHANGE      | /interfaces/interface[name=\*]/state/counters     | error                       |
+| ON_CHANGE      | /interfaces/interface[name=\*]/state/counters/in-octets | error                 |
+| SAMPLE         | /interfaces/interface[name=\*]           | SAMPLE subscription                  |
 | TARGET_DEFINED | /interfaces/interface[name=\*]           | SAMPLE subscription for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE subscription for other paths |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/config    | ON_CHANGE subscription                      |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/config    | ON_CHANGE subscription               |
 | TARGET_DEFINED | /interfaces/interface[name=\*]/state     | SAMPLE subscription for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE subscription for other paths |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/state/enabled      | ON_CHANGE subscription             |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/state/counters     | SAMPLE subscription                |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/state/enabled      | ON_CHANGE subscription      |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/state/counters     | SAMPLE subscription         |
 
 Please refer to [SONiC Telemetry Subscribe HLD](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_RPC.md) for details.
 
@@ -142,14 +141,12 @@ All paths of openconfig-tam module supports ON_CHANGE except for the following p
 
 ```text
 /openconfig-tam:tam/flowgroups
-
 /openconfig-tam:tam/flowgroups/flowgroup[name=*]
-
 /openconfig-tam:tam/flowgroups/flowgroup[name=*]/state
-
 /openconfig-tam:tam/flowgroups/flowgroup[name=*]/state/statistics
-
 /openconfig-tam:tam/flowgroups/flowgroup[name=*]/state/statistics/packets
-
 /openconfig-tam:tam/flowgroups/flowgroup[name=*]/state/statistics/bytes
 ```
+
+Flowgroup statistics are actually ACL counters and are read from COUNTERS DB.
+ON_CHANGE is disabled to avoid possibility of continuous notifications.
