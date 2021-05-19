@@ -65,10 +65,12 @@
 
 # Revision
 
-| Rev |     Date    |       Author       | Change Description                |
-|:---:|:-----------:|:------------------:|-----------------------------------|
-| 0.1 | 12/23/2020  | Sachin Holla       | Initial version                   |
-| 0.2 | 04/23/2021  | Sachin Holla       | Updated requirements for Cyrus release |
+| Rev |     Date    |       Author       | Change Description                                     |
+|-----|-------------|--------------------|--------------------------------------------------------|
+| 0.1 | 12/23/2020  | Sachin Holla       | Initial version                                        |
+| 0.2 | 04/23/2021  | Sachin Holla       | Updated requirements for Cyrus release                 |
+| 0.3 | 05/19/2021  | Sachin Holla       | Move yang path listing to a separate document          |
+
 
 
 # About This Manual
@@ -584,70 +586,10 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type streaming -streaming_type ON_CHANGE \
     -query openconfig-interfaces:interfaces/interface[name=*]/config,openconfig-acl:acl/acl-sets
 ```
+
 ## 10.4 Onchange supported URI Paths
-```
-Paths Avialable on 12/31:
--------------------------
 
-openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config
-
-openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config/version
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state/version
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/version
-
-openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config/query-max-response-time
-
-openconfig-network-instance:network-instances/network-instance[name=*]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state/query-max-response-time
-
-
-Paths Avialable on 01/08:
--------------------------
-
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/config/query-interval
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=*][name=*]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/state/query-interval
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/last-member-query-interval
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/last-member-query-interval
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/fast-leave
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/fast-leave
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/last-member-query-interval
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/config/fast-leave
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=<vlan-intf-name>]/state/fast-leave
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group[group=*][source-addr=*]/config
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group[group=*][source-addr=*]/config/outgoing-interface
-
-openconfig-network-instance:network-instances/network-instance[name=default]/protocols/protocol[identifier=IGMP_SNOOPING][name=IGMP-SNOOPING]/openconfig-network-instance-deviation:igmp-snooping/interfaces/interface[name=*]/staticgrps/static-multicast-group[group=*][source-addr=*]/state/outgoing-interface
-```
+Please refer to [Subscribe YANG Path](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md) guide.
 
 # 11 Internal Design Information
 
