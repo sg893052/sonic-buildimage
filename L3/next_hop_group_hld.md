@@ -84,7 +84,7 @@ Currently the ROUTE_TABLE in APP_DB includes all next hop information for the ro
     blackhole     = BIT ; Set to 1 if this route is a blackhole (or null0)
 ```
 
-This design adds a new NEXT_HOP_GROUP_TABLE, to store next hop group information to be used by one or more routes.
+This design adds a new NEXT_HOP_GROUP_TABLE, to store next hop group information to be used by one or more routes. For EVPN VXLAN based overlay routes, the ifname field will corresponds to the local IRB Vlan interface and the vni_label will be present to identify the VNI.
 ```
 ### NEXT_HOP_GROUP_TABLE
     ;Stores a list of groups of one or more next hops
@@ -92,6 +92,7 @@ This design adds a new NEXT_HOP_GROUP_TABLE, to store next hop group information
     key           = NEXT_HOP_GROUP_TABLE:string ; arbitrary string identifying the next hop group, as determined by the programming application.
     nexthop       = *prefix,           ; IP addresses separated “,” (empty indicates no gateway)
     ifname        = *PORT_TABLE.key,   ; zero or more separated by “,” (zero indicates no interface)
+    vni_label     = VRF.vni            ; New Field. zero or more separated by ',' (empty value for non-vxlan next-hops).
 ```
 Note that the identifier for a next hop group is entirely the decision of the programming application. Whether this is done randomly or algorithmically is up to the application - this design imposes no requirements on this.
 
