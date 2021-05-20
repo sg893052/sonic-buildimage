@@ -24,15 +24,14 @@
   * [System Reboot](#system-reboot)
   * [Unit Test](#unit-test)
 * [Port Locator LED](#port-locator-led)
-  * [Requirements](#1-Requirements-Overview)
-  * [Functionality](#2-Functionality)
-  * [Design](#3-Design)
-  * [Flow Diagrams](#4-Flow-Diagrams)
-  * [Serviceability and Debug](#5-Serviceability-and-Debug)
-  * [Warm Boot Support](#6-Warm-Boot-Support)
-  * [Scalability](#7-Scalability)
-  * [Unit Test](#8-Unit-Test)
-
+  * [Requirements](#Requirements-Overview)
+  * [Functionality](#Functionality)
+  * [Design](#Port-LED-Design)
+  * [Flow Diagrams](#Flow-Diagrams)
+  * [Serviceability and Debug](#Serviceability-and-Debug)
+  * [Warm Boot Support](#Warm-Boot-Support)
+  * [Scalability](#Scalability)
+  * [Unit Test](#Unit-Test)
 * [Internal Design Information](#internal-design)
 
 
