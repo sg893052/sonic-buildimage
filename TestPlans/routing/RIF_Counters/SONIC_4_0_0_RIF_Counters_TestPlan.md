@@ -382,9 +382,9 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Configure the TG connected port as Vlan routing interface. <BR />2. From TG send L2 tagged traffic with same vlan id. <BR />3. Check that rif counters are not updated for Vlan routing interface as it is L2 traffic.|
 
-#### 3.3.1 Verify that RIF counters not updated for L3 packets received with errors.  
+#### 3.3.2 Verify that RIF counters not updated for L3 packets received with errors.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun028**                                               |
+| **Test ID**    | **FtOpSoRoRifCoFun029**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that RIF counters not updated for L3 packets received with errors.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -397,7 +397,7 @@ Topology Description -
 
 ##### 3.4.1.1 Verify interface rif counters via REST
 
-| **Test ID**    | **FtOpSoRoRifCoFun027**                                              |
+| **Test ID**    | **FtOpSoRoRifCoFun030**                                              |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **Verify interface rif counters via REST** |
 | **Test Setup** | **Topology 1**                                               |
