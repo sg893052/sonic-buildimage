@@ -1,7 +1,7 @@
 
 # ACL and Flow Based Services in SONiC
 
-High level design document version 0.6
+High level design document version 0.7
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -21,6 +21,7 @@ High level design document version 0.6
 		- [1.3.2 Configuration and Management Requirements](#132-configuration-and-management-requirements)
 		- [1.3.3 Scalability Requirements](#133-scalability-requirements)
 		- [1.3.4 Warm Boot Requirements](#134-warm-boot-requirements)
+		- [1.3.5 Consistency checker requirements](#135-consistency-checker-requirements)
 	- [1.4 Design Overview](#14-design-overview)
 		- [1.4.1 Basic Approach](#141-basic-approach)
 			- [1.4.1.1 ACL Enhancements](#1411-acl-enhancements)
@@ -70,14 +71,14 @@ High level design document version 0.6
 			- [3.2.1.2 ACL Table](#3212-acl-table)
 			- [3.2.1.3 ACL Rule](#3213-acl-rule)
 				- *[3.2.1.3.1 ACL Rule of type L2](#32131-acl-rule-of-type-l2)*
-			- [3.2.1.4 ACL Rule of type l3 or l3v6](#3214-acl-rule-of-type-l3-or-l3v6)
-			- [3.2.1.5 Classifier table](#3215-classifier-table)
-			- [3.2.1.6 Policy table](#3216-policy-table)
-			- [3.2.1.7 Policy sections table](#3217-policy-sections-table)
-			- [3.2.1.8 Policy binding table](#3218-policy-binding-table)
-			- [3.2.1.9 Policy based forwarding next hop group table](#3219-policy-based-forwarding-next-hop-group-table)
-			- [3.2.1.10 Config DB schema changes history](#32110-config-db-schema-changes-history)
-				- *[3.2.1.10.1 Schema changes in SONiC 3.1.1](#321101-schema-changes-in-sonic-311)*
+				- *[3.2.1.3.2 ACL Rule of type l3 or l3v6](#32132-acl-rule-of-type-l3-or-l3v6)*
+			- [3.2.1.4 Classifier table](#3214-classifier-table)
+			- [3.2.1.5 Policy table](#3215-policy-table)
+			- [3.2.1.6 Policy sections table](#3216-policy-sections-table)
+			- [3.2.1.7 Policy binding table](#3217-policy-binding-table)
+			- [3.2.1.8 Policy based forwarding next hop group table](#3218-policy-based-forwarding-next-hop-group-table)
+			- [3.2.1.9 Config DB schema changes history](#3219-config-db-schema-changes-history)
+				- *[3.2.1.9.1 Schema changes in SONiC 3.1.1](#32191-schema-changes-in-sonic-311)*
 		- [3.2.2 App DB](#322-app-db)
 			- [3.2.2.1 ACL Table](#3221-acl-table)
 			- [3.2.2.2 ACL Rule Table](#3222-acl-rule-table)
@@ -218,6 +219,9 @@ High level design document version 0.6
 				- *[3.6.3.10.5 Clearing the TCAM Allocation scheme.](#363105-clearing-the-tcam-allocation-scheme)*
 				- *[3.6.3.10.6 Modifying the current TCAM allocation](#363106-modifying-the-current-tcam-allocation)*
 				- *[3.6.3.10.7 Setting a custom TCAM allocation](#363107-setting-a-custom-tcam-allocation)*
+	- [3.7 Consistency checker](#37-consistency-checker)
+		- [3.7.1 ACL consistency checker](#371-acl-consistency-checker)
+		- [3.7.2 Flow based services consistency checker](#372-flow-based-services-consistency-checker)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 	- [4.1 Create a Classifier](#41-create-a-classifier)
 	- [4.2 Create a QoS Policy and Section](#42-create-a-qos-policy-and-section)
@@ -335,6 +339,15 @@ Flow based services will use the same resources as ACL. The exact numbers will b
 
 ### 1.3.4 Warm Boot Requirements
 Flow based services should work seamlessly across warmboot. Statistics must be preserved across warmboot.
+
+### 1.3.5 Consistency checker requirements
+
+ACL consistency checker must support the following
+
+1. Check consistency across all the databases involved ie Config DB, Application DB, ASIC DB
+2. Check consistency between ASIC DB and SDK/HW
+3. Output in Text and JSON format
+4. Check consistency for all ACLs, ACL type or ACL type and ACL name.
 
 ## 1.4 Design Overview
 
@@ -733,7 +746,7 @@ vlan_id      = %x31-39                     ; 1-9
 pcp_val      = %x30-37
 ```
 
-#### 3.2.1.4 ACL Rule of type l3 or l3v6
+##### 3.2.1.3.2 ACL Rule of type l3 or l3v6
 
 The following fields are supported for ACL Rule of type l3 or l3v6
 
@@ -771,7 +784,7 @@ vlan_id      = %x31-39                     ; 1-9
 tcp-flags   = h8/h8
 ```
 
-#### 3.2.1.5 Classifier table
+#### 3.2.1.4 Classifier table
 
 A classifier is used to setup the match criterion to identify a traffic flow. A flow can be either identified by an ACL or part of L2-L4 header.
 
@@ -837,7 +850,7 @@ h16         = 1*4HEXDIG
 ls32        = ( h16 ":" h16 ) / IPv4address
 ```
 
-#### 3.2.1.6 Policy table
+#### 3.2.1.5 Policy table
 
 Policy table is used to configure the policy parameters. 
 
@@ -852,7 +865,7 @@ DESCRIPTION = 1*255VCHAR          ; Policy Description
 ;value annotations
 ```
 
-#### 3.2.1.7 Policy sections table
+#### 3.2.1.6 Policy sections table
 
 Policy section table provides information on the classifiers to use and their corresponding actions. A policy can have up to 128 classifiers
 
@@ -861,7 +874,7 @@ key = POLICY_SECTIONS_TABLE:policy_name:classifier_name ; name must be unique
                                                         ; name must be 1-63 chars long
 
 ;field                  = value
-PRIORITY                = 1*4DIGIT     ; Valid Range is 0-1023
+PRIORITY                = 1*4DIGIT     ; Valid Range is 0-4095
 DESCRIPTION             = 1*255VCHAR   ; Policy Description
 SET_DSCP                = dscp_val     ; Valid only when policy is of type "qos"
 SET_PCP                 = pcp_val      ; Valid only when policy is of type "qos"
@@ -905,15 +918,14 @@ ipv6-addr =                            7(h16 ":") h16
             / [ *5(h16 ":") h16 ] "::"            h16
             / [ *6(h16 ":") h16 ] "::"
 port-name = "Ethernet"1*3DIGIT / "PortChannel"1*3DIGIT
-
-nh-entry    = ip-addr  "|" [ vrf-name ] "|" [ priority ]
-v6nh-entry  = ipv6-addr  "|" [ vrf-name ] "|" [ priority ]
-port-entry  = port-name  "|" [ priority ]
-group-entry = 1*72VCHAR  "|" [ priority ]
-priority    = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
+nh-entry    = ip-addr  "|" [ vrf-name ] "|" [ nh-priority ]
+v6nh-entry  = ipv6-addr  "|" [ vrf-name ] "|" [ nh-priority ]
+port-entry  = port-name  "|" [ nh-priority ]
+group-entry = 1*72VCHAR  "|" [ nh-priority ]
+nh-priority = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
 ```
 
-#### 3.2.1.8 Policy binding table
+#### 3.2.1.7 Policy binding table
 
 This provides information on Policy application on ports
 
@@ -931,7 +943,7 @@ EGRESS_QOS_POLICY          = 1*63VCHAR
 ;value annotations
 ```
 
-#### 3.2.1.9 Policy based forwarding next hop group table
+#### 3.2.1.8 Policy based forwarding next hop group table
 
 The following provides information about the schema for a policy based forwarding next hop group table
 
@@ -955,11 +967,11 @@ ip-member-config   = entry-id "|" ip-addr  "|" [ vrf-name ] "|" [ "recursive" / 
 ipv6-member-config = entry-id "|" ipv6-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" ]
 entry-id           = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
 ```
-#### 3.2.1.10 Config DB schema changes history
+#### 3.2.1.9 Config DB schema changes history
 
 The following table shows the DB schema changes and the details of the DB migration
 
-##### 3.2.1.10.1 Schema changes in SONiC 3.1.1
+##### 3.2.1.9.1 Schema changes in SONiC 3.1.1
 
 | Table name | Field name | Details of the change                                        | Upgrade                                                      | Downgrade                                                    |
 | ---------- | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -2414,6 +2426,210 @@ optional arguments:
 SIZE should be in format NumTablesxNumEntries if the feature supports multiple
 tables or NumEntries if the feature supports single table. Example 2x256 or
 ```
+
+## 3.7 Consistency checker
+
+### 3.7.1 ACL consistency checker
+
+The following is the CLI syntax for ACL consistency checker. The following CLIs are available in SONiC CLI (Klish) or SONiC Debug Shell.
+<table>
+  <tbody>
+    <tr>
+      <th>Mode</th>
+      <th align="left">Klish Exec Mode, SONiC Debug Shell</th>
+    </tr>
+    <tr>
+      <td>Syntax</td>
+      <td><b>show consistency-checker acl</b> [ { <b>mac</b> | <b>ip</b> | <b>ipv6</b> } <i>NAME</i> ] [ <b>brief</b> | <b>detail</b> ] [ <b>hardware</b> ] [ <b>errors</b> ] [ <b>json</b> ]</td>
+    </tr>
+    <tr>
+      <td>Arguments</td>
+      <td>
+        <ul>
+          <li>If no arguments are specified then the out will only contain final status is SUCCESS or FAIL</li>
+          <li>If ACL type is specified without name then all ACLs matching the type will be checked. Name can be specified to further narrow down the match criteria</li>
+          <li>If <b>brief</b> keyword is specified, the output will contain if there was a match in different DBs</li>
+          <li>If <b>detail</b> keyword is specified, the output will contain the entry data from all DBs</li>
+          <li>If <b>hardware</b> keyword is specified, ASIC DB entries will be checked against the SDK data. For the first release it will only check if the entry exists in SDK/HW. SDK/HW output is not parsed to match to match the fields of ASIC DB</li>
+          <li>If <b>errors</b> keyword is specified, the output will contain only errors ie the entries which are not in sync</li>
+          <li>If <b>json</b> keyword is specified the output will be in json format else by default it will be in text format. The JSON schema is as per RPC. Please refer to swagger UI for details</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Change history</td>
+      <td>SONiC 4.0 - Introduced</td>
+    </tr>
+    <tr>
+      <td>Sample Output</td>
+      <td>
+          The following is the sample output for <b>show consistency-checker acl mac</b> which will check consisteny for all MAC ACLs. It only shows the final result as <b>brief</b> or <b>detail</b> is not specified.<br/><br/>
+          <b>sonic# show consistency-checker acl mac</b><br/>
+          ACL consistency checker status: SUCCESS<br/>
+          <b>sonic# show consistency-checker acl mac</b><br/>
+          ACL consistency checker status: FAIL<br/><br/>
+          The following is the sample output for <b>show consistency-checker acl mac MAC-ACL-1 brief</b>. The command will verify  the consistency of the specified ACL <br/>
+          <table>
+          	<tbody>
+                <tr>
+                    <th>ACL Name</th>
+                    <th>ACL Type</th>
+                    <th>SequenceNo</th>
+                    <th>ConfigDB</th>
+                    <th>ApplDB</th>
+                    <th>StateDB</th>
+                    <th>ASICDB</th>
+                </tr>
+                <tr>
+                    <td>MAC-ACL-1</td>
+                    <td>MAC</td>
+                    <td></td>
+                    <td>Yes</td>
+                    <td>In sync</td>
+                    <td>In sync</td>
+                    <td>Table:In sync<br/>Group member:In sync<br/></td>
+                </tr>
+                <tr>
+                    <td>MAC-ACL-1</td>
+                    <td>MAC</td>
+                    <td>10</td>
+                    <td>Yes</td>
+                    <td>In sync</td>
+                    <td>In sync</td>
+                    <td>Entry:In sync<br/>Counter:In sync<br/></td>
+                </tr>
+                <tr>
+                    <td>MAC-ACL-1</td>
+                    <td>MAC</td>
+                    <td>20</td>
+                    <td>Yes</td>
+                    <td>In sync</td>
+                    <td>In sync</td>
+                    <td>Entry:Out of sync<br/>Counter:In sync<br/></td>
+                </tr>
+                <tr>
+                    <td>MAC-ACL-1</td>
+                    <td>MAC</td>
+                    <td>30</td>
+                    <td>Yes</td>
+                    <td>Not found</td>
+                    <td>Not found</td>
+                    <td>Entry:Not found<br/>Counter:Not found<br/></td>
+                </tr>
+            </tbody>
+          </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+For Restconf, a RPC with name ```verify-acl-consistency``` will be implemented. For Input and Output details please use swagger UI at ```https:://<IP_ADDRESS>/ui/model.html?urls.primaryName=sonic-acl.yaml```
+
+### 3.7.2 Flow based services consistency checker
+
+The following is the CLI syntax for flow based services consistency checker
+
+<table>
+  <tbody>
+    <tr>
+      <th>Mode</th>
+      <th align="left">Klish Exec Mode, SONiC Debug Shell</th>
+    </tr>
+    <tr>
+      <td>Syntax</td>
+      <td><b>show consistency-checker policy-map</b> [ { <b>qos</b> | <b>monitoring</b> | <b>forwarding</b> | <b>acl-copp</b> } <i>NAME</i> ] [ <b>brief</b> | <b>detail</b> ] [ <b>hardware</b> ] [ <b>errors</b> ] [ <b>json</b> ]</td>
+    </tr>
+    <tr>
+      <td>Arguments</td>
+      <td>
+        <ul>
+          <li>If no arguments are specified then the out will only contain final status is SUCCESS or FAIL for all policies</li>
+          <li>If policy-map type is specified without name then all policy-maps matching the type will be checked. Name can be specified to further narrow down the match criteria</li>
+          <li>If <b>brief</b> keyword is specified, the output will contain if there was a match in different DBs</li>
+          <li>If <b>detail</b> keyword is specified, the output will contain the entry data from all DBs</li>
+          <li>If <b>hardware</b> keyword is specified, ASIC DB entries will be checked against the SDK data. For the first release it will only check if the entry exists in SDK/HW. SDK/HW output is not parsed to match to match the fields of ASIC DB</li>
+          <li>If <b>errors</b> keyword is specified, the output will contain only errors ie the entries which are not in sync</li>
+          <li>If <b>json</b> keyword is specified the output will be in json format else by default it will be in text format. The JSON schema is as per RPC. Please refer to swagger UI for details</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Change history</td>
+      <td>SONiC 4.0 - Introduced</td>
+    </tr>
+    <tr>
+      <td>Sample Output</td>
+      <td>
+          The following is the sample output for <b>show consistency-checker policy-map qos</b> which will check consisteny for all QoS policies. It only shows the final result as <b>brief</b> or <b>detail</b> is not specified.<br/><br/>
+          <b>sonic# show consistency-checker policy-map qos</b><br/>
+          Policy-map consistency checker status: SUCCESS<br/>
+          <b>sonic# show consistency-checker policy-map qos</b><br/>
+          Policy-map consistency checker status: FAIL<br/><br/>
+          The following is the sample output for <b>show consistency-checker policy-map QoS-pmap brief</b>. The command will verify  the consistency of the specified policy <br/>
+          <table>
+          	<tbody>
+                <tr>
+                    <th>Policy Name</th>
+                    <th>Policy Type</th>
+                    <th>FlowPriority</th>
+                    <th>ConfigDB</th>
+                    <th>ApplDB</th>
+                    <th>StateDB</th>
+                    <th>ASICDB</th>
+                </tr>
+                <tr>
+                    <td>QoS-pmap</td>
+                    <td>QoS</td>
+                    <td></td>
+                    <td>Yes</td>
+                    <td>In sync</td>
+                    <td>In sync</td>
+                    <td>Table:In sync<br/>Group member:In sync</td>
+                </tr>
+                <tr>
+                    <td>QoS-pmap</td>
+                    <td>QoS</td>
+                    <td>100</td>
+                    <td>Yes</td>
+                    <td>In sync</td>
+                    <td>In sync</td>
+                    <td>Entry:In sync<br/>Counter:In sync<br/>Policer:In sync</td>
+                </tr>
+                <tr>
+                    <td>QoS-pmap</td>
+                    <td>QoS</td>
+                    <td>50</td>
+                    <td>Yes</td>
+                    <td>In sync</td>
+                    <td>In sync</td>
+                    <td>Entry:In sync<br/>Counter:In sync<br/>Policer:Out of sync</td>
+                </tr>
+                <tr>
+                    <td>QoS-pmap</td>
+                    <td>QoS</td>
+                    <td>20</td>
+                    <td>Yes</td>
+                    <td>Not found</td>
+                    <td>Not found</td>
+                    <td>Entry:Not found<br/>Counter:Not found<br/>Policer:Not found</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Extra entry found</td>
+                </tr>
+            </tbody>
+          </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+For Restconf, a RPC with name ```verify-policy-map-consistency``` will be implemented. For Input and Output details please use swagger UI at ```https:://<IP_ADDRESS>/ui/model.html?urls.primaryName=sonic-flow-based-services.yaml```
 
 # 4 Flow Diagrams
 
