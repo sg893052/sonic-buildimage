@@ -102,6 +102,14 @@ Lets assume load balancer device receives its first packet from MCLAG Node 2, in
 
 By enabling peer gateway, if traffic with gateway MAC as MAC 2 lands on MCLAG Node 1 (due to LAG hashing), MCLAG Node 1 will route the packet instead of switching to peer link. 
 
+Limitations :
+
+1. OSPF between MCLAG node and MCLAG client cannot be supported on the Vlan interface having Peer Gateway enabled.
+TTL will get decremented if routed by Peer MCLAG node resulting in TTL 0 in OSPF Unicast packets.
+
+2. BFD single hop sessions between MCLAG node and MCLAG client cannot be supported on the Vlan interface having Peer Gateway enabled.
+For BFD single hop sessions TTL shouldn't be decremented, BFD packet is sent with TTL of 255 and should reach the peer device without decrementing TTL.
+
 ## 3.2 DB Changes
 
 ### 3.2.1 CONFIG DB
