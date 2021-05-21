@@ -98,7 +98,7 @@ Topology Description -
 
 #### 3.1.1 Validate CLI command "show interface counters rif". 
 
-| **Test ID**    | **FtOpSoRoRifCoCli001**                                               |
+| **Test ID**    | **RIF_COUNT_CLI_001**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate CLI command "show interface counters rif".**      |
 | **Test Setup** | **Topology 1**                                               |
@@ -108,7 +108,7 @@ Topology Description -
 
 #### 3.1.2 Validate CLI command for clear interface rif counters (Command yet to be updated in HLD). 
 
-| **Test ID**    | **FtOpSoRoRifCoCli002**                                               |
+| **Test ID**    | **RIF_COUNT_CLI_002**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate CLI command for clear interface rif counters (Command yet to be updated in HLD).**|
 | **Test Setup** | **Topology 1**                                               |
@@ -118,7 +118,7 @@ Topology Description -
 
 #### 3.1.3 Validate CLI command for "interval between two consecutive read/fetch from HW" (Command yet to be updated in HLD). 
 
-| **Test ID**    | **FtOpSoRoRifCoCli003**                                               |
+| **Test ID**    | **RIF_COUNT_CLI_003**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate CLI command for "interval between two consecutive read/fetch from HW" (Command yet to be updated in HLD).**|
 | **Test Setup** | **Topology 1**                                               |
@@ -130,7 +130,7 @@ Topology Description -
 
 #### 3.2.1 Validate the Physical Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun001**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_001**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Physical Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -139,7 +139,7 @@ Topology Description -
 
 #### 3.2.2 Validate the Vlan Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun002**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_002**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Vlan Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -148,7 +148,7 @@ Topology Description -
 
 #### 3.2.3 Validate the Port Channel Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun003**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_003**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Port Channel Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -157,7 +157,7 @@ Topology Description -
 
 #### 3.2.4 Validate the Sub interface (on Physical Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun004**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_004**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Sub interface (on Physical Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -166,7 +166,7 @@ Topology Description -
 
 #### 3.2.5 Validate the Sub interface (on Physical Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic, with parent interface also having IPv4/Ipv6 address configured.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun005**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_005**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Sub interface (on Physical Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic, with parent interface also having IPv4/Ipv6 address configured.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -175,7 +175,7 @@ Topology Description -
 
 #### 3.2.6 Validate the Sub interface (on Port Channel Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun006**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_006**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Sub interface (on Port Channel Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -184,7 +184,7 @@ Topology Description -
 
 #### 3.2.7 Validate the Sub interface (on Port Channel Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic, with parent Port Channel interface also having IPv4/Ipv6 address configured.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun007**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_007**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Sub interface (on Port Channel Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic, with parent Port Channel interface also having IPv4/Ipv6 address configured.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -193,7 +193,7 @@ Topology Description -
 
 #### 3.2.8 Validate the Physical Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun008**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_008**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Physical Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -202,7 +202,7 @@ Topology Description -
 
 #### 3.2.9 Validate the Vlan Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun009**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_009**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Vlan Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -211,7 +211,7 @@ Topology Description -
 
 #### 3.2.10 Validate the Port Channel Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun010**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_010**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Port Channel Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -220,7 +220,7 @@ Topology Description -
 
 #### 3.2.11 Validate the Sub interface (on Physical Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun011**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_011**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Sub interface (on Physical Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -229,7 +229,7 @@ Topology Description -
 
 #### 3.2.12 Validate the Sub interface (on Port Channel Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in user VRF.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun012**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_012**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Sub interface (on Port Channel Interface) RIF counters (RX/TX) for IPv4 & Ipv6 traffic in default VRF.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -238,7 +238,7 @@ Topology Description -
 
 #### 3.2.13 Validate the Vlan routing (over Port channel interface) Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun013**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_013**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the Vlan routing (over Port channel interface) Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -247,7 +247,7 @@ Topology Description -
 
 #### 3.2.14 Verify that RIF counters are updated properly after vrf binding is removed and re added.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun014**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_014**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that RIF counters are updated properly after vrf binding is removed and re added.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -256,7 +256,7 @@ Topology Description -
 
 #### 3.2.15 Validate Clear counters command, clears all RIF counters.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun015**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_015**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate Clear counters command, clears all RIF counters.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -265,7 +265,7 @@ Topology Description -
 
 #### 3.2.16 Validate that after Warm boot, RIF counters are reset to zero and gets updated again.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun016**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_016**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate that after Warm boot, RIF counters are reset to zero and gets updated again.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -274,7 +274,7 @@ Topology Description -
 
 #### 3.2.17 Validate the RIF counters after reboot/fast boot. 
 
-| **Test ID**    | **FtOpSoRoRifCoFun017**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_017**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the RIF counters after reboot/fast boot.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -283,7 +283,7 @@ Topology Description -
 
 #### 3.2.18 Validate the configurability of "interval between two consecutive read/fetch from HW" and check the counters are getting updated as per configured interval. 
 
-| **Test ID**    | **FtOpSoRoRifCoFun018**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_018**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate the configurability of "interval between two consecutive read/fetch from HW" and check the counters are getting updated as per configured interval.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -292,7 +292,7 @@ Topology Description -
 
 #### 3.2.19 Verify that Port Channel routing interface RIF counters are updated properly after port channel member ports are removed and re added.
 
-| **Test ID**    | **FtOpSoRoRifCoFun019**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_019**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that Port Channel routing interface RIF counters are updated properly after port channel member ports are removed and re added.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -301,7 +301,7 @@ Topology Description -
 
 #### 3.2.20 Verify that Vlan routing interface RIF counters are updated properly after Vlan member port association is removed and re added.
 
-| **Test ID**    | **FtOpSoRoRifCoFun020**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_020**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that Vlan routing interface RIF counters are updated properly after Vlan member port association is removed and re added.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -310,7 +310,7 @@ Topology Description -
 
 #### 3.2.21 Verify that Physical routing interface RIF counters are updated properly after shut no shut on the port.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun021**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_021**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that Physical routing interface RIF counters are updated properly after shut no shut on the port.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -319,7 +319,7 @@ Topology Description -
 
 #### 3.2.22 Verify the RIF counters on Vlan interface having SAG configured for IPv4/IPv6. 
 
-| **Test ID**    | **FtOpSoRoRifCoFun022**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_022**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify the RIF counters on Vlan interface having SAG configured for IPv4/IPv6.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -328,7 +328,7 @@ Topology Description -
 
 #### 3.2.23 Verify the RIF counters over mclag peer-link (port channel) for IPv4/Ipv6 traffic. 
 
-| **Test ID**    | **FtOpSoRoRifCoFun023**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_023**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify the RIF counters over mclag peer-link (port channel) for IPv4/Ipv6 traffic.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -337,7 +337,7 @@ Topology Description -
 
 #### 3.2.24 Verify the RIF counters for control traffic - BGP/MCLAG 
 
-| **Test ID**    | **FtOpSoRoRifCoFun024**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_024**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify the RIF counters for control traffic - BGP/MCLAG.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -346,7 +346,7 @@ Topology Description -
 
 #### 3.2.25 Verify the RIF counters for ARP/ND control traffic.
 
-| **Test ID**    | **FtOpSoRoRifCoFun025**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_025**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify the RIF counters for ARP/ND control traffic.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -355,7 +355,7 @@ Topology Description -
 
 #### 3.2.26 Verify the RIF counters for different frame sizes (in supported range).
 
-| **Test ID**    | **FtOpSoRoRifCoFun026**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_026**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify the RIF counters for different frame sizes.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -364,7 +364,7 @@ Topology Description -
 
 #### 3.2.27 Verify the RIF counters when traffic is continuously set to flow and counters value increment to max value.
 
-| **Test ID**    | **FtOpSoRoRifCoFun027**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_027**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify the RIF counters when traffic is continuously set to flow and counters value increment to max value.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -375,7 +375,7 @@ Topology Description -
 
 #### 3.3.1 Verify that RIF counters not updated for L2 traffic received.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun028**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_028**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that RIF counters not updated for L2 traffic received.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -384,12 +384,12 @@ Topology Description -
 
 #### 3.3.2 Verify that RIF counters not updated for L3 packets received with errors.  
 
-| **Test ID**    | **FtOpSoRoRifCoFun029**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_029**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that RIF counters not updated for L3 packets received with errors.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Send IPv4/Ipv6 traffic with errors and check that the RIF counters are not updated for these error packets.|
+| **Steps**      | 1. Send IPv4/Ipv6 traffic with checksome (FCS) errors and check that the RIF counters are not updated for these error packets. <BR />2. Send IPv4/Ipv6 traffic with TTL=1 and check that the RIF counters are not updated for these packets.|
 
 ### 3.4 Management
 
@@ -397,7 +397,7 @@ Topology Description -
 
 ##### 3.4.1.1 Verify interface rif counters via REST
 
-| **Test ID**    | **FtOpSoRoRifCoFun030**                                              |
+| **Test ID**    | **RIF_COUNT_FUNC_030**                                              |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **Verify interface rif counters via REST** |
 | **Test Setup** | **Topology 1**                                               |
