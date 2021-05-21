@@ -1,7 +1,7 @@
 # Chassis Locater LED and Port Locator LED
 
 ## High Level Design Document
-**Rev 1.0**
+**Rev 2.0**
 
 ## Table of Contents
 
@@ -41,6 +41,7 @@ Rev   |   Date   |  Author   | Change Description
 :---: | :-----:  | :------:  | :---------
 1.0   | 12/16/20 | Precy Lee | Initial version
 2.0   | 04/15/2021  | Dante (Kuo-Jung) Su | added port_led                   |
+2.0   | 05/15/2021  | Precy Lee | Added Chassis Locator LED timer support                  |
 
 
 
@@ -225,21 +226,42 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
 
 - Examples on supported platforms:
   ```
+  root:~$ locator-led chassis on --help
+  Usage: locator-led chassis on [OPTIONS]
+
+    Enable Locator Chassis LED
+
+    Options:
+      -t, --timer INTEGER  timer value in minutes: 1-120
+      --help             Show this message and exit.
+
   root:~$ locator-led chassis on
   Success
 
-  root:~$ locator-led chassis on 5
+  root:~$ locator-led chassis on --timer 5 
   Success
+  Locator LED will be off after 5 minutes
 
   Note: LOC LED will be off automatically after a period of 5 minutes
 
   root:~$ locator-led chassis on
   Failed 
 
+  root:~$ locator-led chassis on --timer 5 
+  Failed 
+
+  root:~$ locator-led chassis on --timer 0 
+  Usage: locator-led chassis on [OPTIONS]
+
+  Error: Invalid value for "-t" / "--timer": 0 is not in the valid range of 1 to 120.
+
   ```
 - Examples on unsupported platforms:
   ```
   root:~$ locator-led chassis on
+  Not supported
+
+  root:~$ locator-led chassis on --timer 5
   Not supported
 
   ```
@@ -275,7 +297,7 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
   admin:~$ show locator-led chassis 
   State    Color
   -------  -------
-  on      blue 
+  on       blue 
 
   
   Note: Chassis Locator LED color is platform specific. The output of color can vary 
@@ -305,19 +327,27 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
   sonic# locator-led chassis on
   Success
 
-  sonic# locator-led chassis on 5
+  sonic# locator-led chassis on timer 5
   Success
+  Locator LED will be off after 5 minutes
 
   Note: LOC LED will be off automatically after a period of 5 minutes
 
   sonic# locator-led chassis on
   Failed 
 
+  sonic# locator-led chassis on timer 5
+  Failed 
+
+
   ```
 
 - Examples on unsupported platforms:
   ```
   sonic# locator-led chassis on
+  Not supported
+
+  sonic# locator-led chassis on timer 5
   Not supported
 
   ```
@@ -348,7 +378,7 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
   sonic# show locator-led chassis 
   State    Color
   -------  -------
-  on      blue 
+  on       blue 
   
   Note: Chassis Locator LED color is platform specific. The output of color can vary 
 
@@ -491,7 +521,7 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
   ```
 ## Chassis Locator LED after System Reboot 
 
-A switch can restart through warm reboot, cold reboot, or power cycle. Chassis Locator LED is back to OFF state after a system reboot. 
+A switch can restart through warm reboot, cold reboot, or power cycle. Chassis Locator LED is back to OFF state and the OFF timer will be cacneled after a system reboot. 
 
 ## Config Reload
 
@@ -512,6 +542,8 @@ Run each unit test on both Chassis Locator LED supported platforms and unsupport
     7   | Verify Chassis Locator LED after Warm/Cold Reboot
     8   | Verify Chassis Locator LED after Config Reload 
     9   | Verify Chassis Locator LED after Power Cycle
+   10   | CLI: Enable Chassis Locator LED with Timer      
+   11   | KLISH: Enable Chassis Locator LED with Timer      
 
 # Port Locator LED  
 
