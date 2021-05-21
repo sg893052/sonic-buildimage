@@ -29,6 +29,8 @@
         - [3.3.1 Data Models](#331-Data-Models)
         - [3.3.2 CLI](#332-CLI)
 	        - [3.3.2.1 Show Commands](#3321-Show-Commands)
+		        - [3.3.2.1.1 Show BFD Profile](#33211-Show-Bfd-Profile)
+		        - [3.3.2.1.1 Show BFD Peer](#33211-Show-Bfd-Peer)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-Abbreviations)
@@ -125,6 +127,10 @@ Params configured in static peer takes precedence over BFD profile.
 BGP, OSPF and PIM shares a BFD session, BFD profile associated with BGP, OSPF and PIM is different.
 To be updated based on FRR behaviour.
 
+**Scenario 4:**
+BFD profile configuration is changed dynamically. 
+All the configuration parameters will take effect immediately, BFD timers will be renegotiated using the polling method. 
+
 ### 3.1.2 BFD Passive mode:
 A CLI is added to support passive mode, when passive mode is configured BFD local peer will not initiate session  creation request but will respond to session creation request received from the peer device. By default passive mode is disabled.
 
@@ -141,7 +147,7 @@ sonic(conf-bfd-profile)# passive-mode
 ```
 
 ### 3.1.3 Minimum TTL for multi-hop peer:
-Minimum TTL cab be configured for multi-hop BFD peer, if the TTL of the received BFD packet is less than the configured TTL, the packet is discarded. Default TTL value for multi-hop peer is 254.
+Minimum TTL can be configured for multi-hop BFD peer, if the TTL of the received BFD packet is less than the configured TTL, the packet is discarded. Default TTL value for multi-hop peer is 254.
 
 Minimum TTL can be configured in BFD peer and profile as below:
 
@@ -302,6 +308,40 @@ openconfig-pim-ext.yang
 ```
 ### 3.3.2 CLI
 #### 3.3.2.1 Show Commands
+##### 3.3.2.1.1 Show BFD Profile
+A new command is added to display BFD profiles
+```
+The below command displays all the configured BFD profiles:
+
+sonic# show bfd profile 
+BFD Profile:
+    Profile-name: fast
+        Enabled: True
+        Echo-mode: Enabled
+        Passive-mode: Enabled
+        Minimum-Ttl: 254
+        Detect-multiplier: 4
+        Receive interval: 123ms
+        Transmission interval: 123ms
+        Echo transmission interval: 1234ms
+```
+
+```
+The below command displays the specified BFD profile:
+
+sonic# show bfd profile fast
+BFD Profile:
+    Profile-name: fast
+        Enabled: True
+        Echo-mode: Enabled
+        Passive-mode: Enabled
+        Minimum-Ttl: 254
+        Detect-multiplier: 4
+        Receive interval: 123ms
+        Transmission interval: 123ms
+        Echo transmission interval: 1234ms
+```
+##### 3.3.2.1.2 Show BFD Peer
 In multi-hop bfd peer two new elements Active/Passive mode and Minimum TTL has been added.
 ```
     peer 1.1.1.2 multihop local-address 1.1.1.1 vrf default
