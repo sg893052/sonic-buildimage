@@ -30,7 +30,7 @@
         - [3.3.2 CLI](#332-CLI)
 	        - [3.3.2.1 Show Commands](#3321-Show-Commands)
 		        - [3.3.2.1.1 Show BFD Profile](#33211-Show-Bfd-Profile)
-		        - [3.3.2.1.1 Show BFD Peer](#33211-Show-Bfd-Peer)
+		        - [3.3.2.1.2 Show BFD Peer](#33211-Show-Bfd-Peer)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-Abbreviations)
