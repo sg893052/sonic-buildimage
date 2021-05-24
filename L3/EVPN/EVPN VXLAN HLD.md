@@ -73,6 +73,7 @@
 | 0.8  | 24/04/2020 | Nikhil Kelapure | Updated Warm-reboot section |
 | 1.1  | 04/14/2020 | Mohanarajan Selvaraj | VXLAN QoS Changes |
 | 1.2  | 04/24/2020 | Rajesh Sankaran | VLAN interface underlay support |
+| 1.3  | 05/14/2021 | Rajesh Sankaran | VXLAN stats support |
 
 # Definition/Abbreviation
 
@@ -166,13 +167,8 @@ Following requirements are addressed by the design presented in this document:
 11. Support Tunnel ECMP and underlay path failovers.
 12. Support a common VLAN-VNI map for all the EVPN tunnels.
 13. Support Uniform and Pipe VXLAN QoS models.
-
-
-
-Following requirements will be attempted on a best effort basis. 
-
-1. Support monitoring and display of tunnel operational status.
-2. Support tunnel packet/octet  tx/rx counters.
+14. Support monitoring and display of tunnel operational status.
+15. Support per tunnel packet/octet  tx/rx counters.
 
 
 
@@ -185,6 +181,12 @@ in SONiC.
 2. Support configuration of QoS mode (Uniform / Pipe) of the VTEP.
 3. Support configuration of a global VLAN-VNI map.
 4. Support configuration of L3VNI association with VRF. 
+5. Support display of packet tx and rx stats.
+6. Support display of octet tx and rx stats. 
+7. Support display of rx and tx bit rates.
+8. Support per tunnel and all tunnel stats display.
+9. Support clearing of stats per tunnel and all tunnels. 
+10.Support Click, KLISH, REST interfaces for stats.
 
 
 
