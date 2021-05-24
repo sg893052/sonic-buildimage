@@ -58,6 +58,7 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/05/2021  | Prasanth K V       | Initial version                   |
+| 0.2 | 05/17/2021  | Madhukar K         | Modified portchannel content      |
 
 # About this Manual
 This document provides comprehensive functional and design information about the *Interface Down Reason* feature implementation in SONiC.
@@ -68,6 +69,7 @@ This document provides comprehensive functional and design information about the
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
 |  PCS                     | Physical Coding Sub-layer           |
+|  LACP                    | Link Aggregation Control Protocol   |
 
 # 1 Feature Overview
 
@@ -108,7 +110,11 @@ So an interface flap affects the system in general and hence it is important to 
 - PHY link up  
 
 1.3 - The list of reasons to be supported on port channel interfaces:  
-
+- Admin down
+- Min links criteria not met
+- Error disabled
+- All the member ports are link down
+- LACP convergence failed for member ports
 
 2 Functionality
 
@@ -248,27 +254,33 @@ Output statistics:
 ``` 
 
 #### Port channel interface
-- New “oper-status” flags in show portchannel summary command:  
-Err-disabled  
-Min-links-not-met  
+- *show interface status*  
+Along with the physical interfaces, configured portchannel interfaces are displayed in this command output. The new column, "Reason" displays the high level reason for portchannel down. The reasons are  
 Admin-down  
-LACP-convergence-failed  
+Min-links  
+Err-disabled  
+All-links-down  
+LACP-fail  
 
 ```
-sonic# show PortChannel summary
-Flags(oper-status):  E - Err-disabled M - Oper down(Min-links-not-met) A - Admin-down L - LACP  
-                               -convergence-failed D - Down U - Up (portchannel) P - Up in portchannel (members)
-------------------------------------------------------------------------------------------------
-Group           PortChannel                Type                Protocol       Member Ports
-------------------------------------------------------------------------------------------------
-1               PortChannel1   (DE)        Eth                   LACP           Ethernet48(D)
-10              PortChannel10  (U)         Eth                   LACP           Ethernet0(P) Ethernet1(D)
-12              PortChannel12  (DA)        Eth                   LACP           Ethernet3(D)
-15              PortChannel15  (DM)        Eth                   LACP           Ethernet39(D)
-16              PortChannel16  (DL)        Eth                   LACP           Ethernet52(D)
+sonic# show interface status
+Name          Description     Oper  Reason          Speed     MTU    Alternate Name
+----------------------------------------------------------------------------------
+Eth1/1         -              Down  Admin-down      100000    9100   Ethernet0
+Eth1/2/1       -              Down  Err-disabled    10000     9100   Ethernet4
+Eth1/2/2       -              Down  Phy-link-down   10000     9100   Ethernet5
+Eth1/2/3       -              Up    Link-up         10000     9100   Ethernet6
+PortChannel1   -              Down  Admin-down      20000     9100   -
+PortChannel3   -              Down  Min-links       30000     9100   -
+PortChannel5   -              Down  Err-disabled    30000     9100   -
+PortChannel7   -              Down  All-links-down  40000     9100   -
+PortChannel8   -              Down  LACP-fail       40000     9100   -
+PortChannel9   -              Up    Up              10000     9100   -
 ```
 
-show interface command to display the reason with timestamp:
+- *show interface PortChannel [id]*  
+
+show interface PortChannel command to display the reason with timestamp:  
 ```
 sonic# show interface PortChannel 1
 PortChannel1 is up, line protocol down, reason err-disable, mode LACP
@@ -288,6 +300,15 @@ LACP Partner port 0  address 00:00:00:00:00:00 key 0
 Last clearing of "show interface" counters: never
 10 seconds input rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
 10 seconds output rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
+Input statistics:
+          18378 packets, 4042580 octets
+          18378 Multicasts, 0 Broadcasts, 0 Unicasts
+          0 error, 18378 discarded
+Output statistics:
+          90435 packets, 13274184 octets
+          90435 Multicasts, 0 Broadcasts, 0 Unicasts
+          0 error, 0 discarded
+
 ```
 #### 3.6.2.3 Exec Commands
 
