@@ -61,7 +61,7 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 
 # 3 Design Overview
 
-![YANG_PATCH_DESIGN](images/yang_patch_sequence_diagram.svg)
+![YANG_PATCH_DESIGN](yang_patch_sequence_diagram.svg)
 
 ## 3.1 Basic Approach
 
