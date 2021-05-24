@@ -70,7 +70,7 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 - RESTCONF Server's Request handler will be enhanced to accept the PATCH Request with media type ["application/yang-patch+json"](https://datatracker.ietf.org/doc/html/rfc8072#section-4.2.2).
 - RESTCONF Server will enhance OPTIONS response to include “application/yang-patch+json” content type in the “Accept-Patch” header.
 - RESTCONF Server will implement the [":yang-patch" RESTCONF Capability](https://datatracker.ietf.org/doc/html/rfc8072#section-4.3).
-- RESTCONF Server's will implement below [YANG PATCH template](https://datatracker.ietf.org/doc/html/rfc8072#section-3) to accept the request and to send the response.
+- RESTCONF Server's will implement [YANG PATCH template](https://datatracker.ietf.org/doc/html/rfc8072#section-3) to accept the request and to send the response.
 
 ## 3.1.2 Translib changes
 
