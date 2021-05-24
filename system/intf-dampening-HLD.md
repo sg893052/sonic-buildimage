@@ -19,6 +19,7 @@ Port Link Flap Error Disable
 | 0.1 | 04/14/2021  |   Steven Lu        | Initial version for requirements                     |
 | 0.2 | 04/20/2021  |   Steven Lu        | Change feature name to Port Link Flap Error Disable  |
 | 0.3 | 05/11/2021  |   Steven Lu        | Add design details                                   |
+| 0.4 | 05/24/2021  | Prasanth Kunjum Veettil | Add CLI and RESTCONF details                    |
 
 # About this Manual
 This document provides general information about the Port Link Flap Error Disable feature implementation in SONiC.
@@ -96,8 +97,56 @@ The Interface Error Disable feature exist in below modules and containers:
 
 # 2 Functionality
 ## 2.1 CLI
+### 2.1.1 Configuration Commands
+- *link-error-disable flap-threshold <flap count> sampling-interval <interval in sec>  recovery-interval <recovery interval in sec>*
+Example:
+sonic(conf-if-Ethernet0)# link-error-disable flap-threshold 10 sampling-time 3 recovery-timeout 10
+
+In this example, the values for the parameters are as follows:
+
+The flap-threshold is set at 10 times. This interval is the number of times that the port's link state goes from up to down and down to up before the recovery-timeout is activated. Enter a valid value range from 1-50. Default is 3.
 
 
+The sampling-time is set to 3 seconds. This time period is the amount of time during which the specified flap-threshold can be crossed. If the flap-threshold is crossed during this sampling-time, port will be error-disabled. Enter a value between 1 and 65565 seconds. Default is 10.
+
+
+The recovery-timeout is set to 10 seconds. This period of time is the amount of time the port remains disabled (down) before it becomes enabled. Entering 0 indicates that the port will stay down until an administrative override occurs. Enter a value between 0 and 65565 seconds. Default is 30.
+
+
+This config command can be executed on a range of interfaces as well. Example:
+```
+sonic(conf-if-range-eth**)# link-error-disable flap-threshold 10 sampling-time 3 recovery-timeout 10
+```
+### 2.1.2 Show Commands
+
+"show errdisable recovery" is an existing CLI command. This output will be updated to list the ports in recovery period.
+- *show errdisable recovery*
+This command displays the err-disable recovery features. Link-flap is one among the features where in err-disable recovery option can be enabled.
+Example:
+```
+sonic#show errdisable recovery
+Err-Disable Reason    Timer Status
+-----------------------------------
+udld                  Disabled
+bpduguard             Disabled
+xcvrd                 Disabled
+link-flap             Enabled
+
+Interfaces that will be enabled at the next timeout:
+Interface      Errdisable reason      Time left(sec)
+-----------------------------------------------------
+Ethernet0      link-flap              24
+```
+- *show errdisable link-flap*
+Status and configuration details of link-flap error-disable is shown with this command.
+Example:
+```
+sonic#show errdisable link-flap
+Interface  Flap-threshold  Sampling-time   Recovery-timeout Status
+---------------------------------------------------------------------------
+Ethernet0  10              3               30              Errdisabled
+Ethernet4  10              3               60              Not-errdisabled
+```
 # 2.2 Functional Description
 
 # 3 Design
@@ -172,6 +221,47 @@ Can be reference to YANG if applicable. Also cover gNMI here.
 Refer to Functionality
 
 ### 3.6.3 REST API Support
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=<ifname>/link-flap"
+Request body:
+{
+  "openconfig-errdisable-ext:link-flap": {
+    "config": {
+      "error-disable": <string>,
+      "flap-threshold": <number>,
+      "sampling-interval": <number>,
+      "recovery-interval": <number>
+    }
+  }
+}
+
+Example:
+```
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=Ethernet24/link-flap"
+{
+  "openconfig-errdisable-ext:link-flap": {
+    "config": {
+      "error-disable": "on",
+      "flap-threshold": 10,
+      "sampling-interval": 20,
+      "recovery-interval": 300
+    }
+  }
+}
+```
+
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=<ifname>/link-flap/state"
+
+Example:
+```
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=Ethernet24/link-flap/state"
+Response data:
+{
+  "openconfig-errdisable-ext:state": {
+    "time-left": 14
+  }
+}
+```
+
 ### 3.6.4 Service and Docker Management
 No new service ot docker introduced
 
