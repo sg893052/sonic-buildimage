@@ -48,12 +48,12 @@ LLDP enhancements
 
 # Revision
 
-| Rev  |    Date    |      Author      | Change Description |
-| :--: | :--------: | :--------------: | ------------------ |
-| 0.1  | 05/03/2021 | Sandeep, Praveen | Initial version    |
-|      |            |                  |                    |
-|      |            |                  |                    |
-|      |            |                  |                    |
+| Rev  |    Date    |      Author      | Change Description        |
+| :--: | :--------: | :--------------: | ------------------------- |
+| 0.1  | 05/03/2021 | Sandeep, Praveen | Initial version           |
+| 0.2  | 05/25/2021 | Sandeep, Praveen | Addressed review comments |
+|      |            |                  |                           |
+|      |            |                  |                           |
 
 
 # About this Manual
@@ -99,27 +99,26 @@ This document describes the high level design of LLDP feature.
 
 ## 1.2 Configuration and Management Requirements
 
-This feature will support CLI and REST based configurations.
+ 1. This feature must support management via KLISH CLI, REST and gNMI interface
 
- 1. Support CLI configurations as mentioned in section 3.6.2
+   ​    
 
-    
-
-      
 
 
 ## 1.3 Scalability Requirements
 
-No limit, all physical interfaces in the system can be enabled with LLDP and voice vlan.
+No limit, all physical interfaces in the system can be enabled with LLDP and voice vlan. Each port can have a maximum of 4 neighbors.
 
 ## 1.4 Warm Boot Requirements
 
-None
+TBD
 
 
 # 2 Functionality
 
 ## 2.1 Functional Description
+
+LLDP support in SONiC is based on the open source lldpd implementation - https://github.com/lldpd/lldpd
 
 ### 2.1.1 LLDP-MED
 
@@ -138,7 +137,7 @@ Possible combinations of voice vlan traffic -
 - Assign a Dot1p priority to the IP phone. Phone will send voice packets with 802.1p tag and data traffic will be untagged.
 - Allow the IP phone to send untagged voice traffic. Voice traffic cannot be differentiated from data traffic and no QoS can be provided.
 
-  
+LLDP will not be applying QoS policies or the VLAN configuration automatically. User must configure appropriate QoS policies to proritise traffic based on cos and dscp values, and also the vlan membership on the interfaces for data and voice traffic. 
 
 
 Power management TLV -
@@ -147,11 +146,20 @@ Allows the network device and endpoint device to exchange the power information 
 
 ### 2.1.2 LLDP Power negotiation
 
-This supports inline power negotitation using LLDP as per IEEE 802.3at and 802.3bt standard.
+This feature supports inline power negotitation using LLDP as per IEEE 802.3at and 802.3bt standard.
 
 ### 2.1.3 LLDP Management TLV IP address
 
-By default, LLDP will advertise the management IP address configured in the system over management interface. In case user wants to override this and advertise a specific IP address on an interface then the same can be acheived by using the configuration commands specified in Section 3.6.2.2.1
+By default, LLDP will advertise the management IP address configured in the system over management interface. To allow user to override this and advertise specific IPv4 and IPv6 address, an option to configure the IP addresses to be advertised by LLDP on an interface is supported.
+
+### 2.1.4 lldpcli
+
+lldpcli provides an interface to configure the LLDP component within the LLDP docker. All the LLDP KLISH configurations are supported by using the lldpcli interface to configure LLDP component. 
+
+lldpcli configurations are not persistent across reboots, for the configurations to be persistent lldp configuration file (/etc/lldpd.conf) needs to be updated manually.
+
+It is recommended to use KLISH for all the LLDP configurations. In the event configurations are made from KLISH and lldpcli, then the latest one to be configured will take effect. 
+
 
 # 3 Design
 
@@ -180,25 +188,25 @@ Following config DB schemas are defined for supporting this feature.
     ;Status: work in progress
     key                    = NETWORK_POLICY_APP|number|app_type     ; number is network policy profile number
                                                                     ; app_type can be voice or voice-signalling
-    vlan                   = "id"                                   ; vlan id range 1 to 4094
-    priority               = 1*DIGIT                                ; priority value range 0 to 7
-    tagged                 = "true/false"                           ; vlan is tagged or untagged
-    dscp                   = 2*DIGIT                                ; dscp value range 0 to 63
+    vlan                   = "id"                              ; vlan id range 1 to 4094
+    priority               = 1*DIGIT                           ; priority value range 0 to 7
+    tagged                 = "true/false"                      ; vlan is tagged or untagged
+    dscp                   = 2*DIGIT                           ; dscp value range 0 to 63
 
 
 ### LLDP_PORT_TABLE
 
     ;Stores LLDP configuration for the port
     ;Status: work in progress
-    key                           = LLDP_PORT|ifname            ; LLDP port configuration
-    enabled                       = "true/false"                ; LLDP enabled or disabled on port
-    mode                          = "receive/transmit"          ; LLDP mode transmit or receive
-    mgmt_ipv4                     = "ipv4 addr"                 ; IPv4 address to be advertised as management IP
-    mgmt_ipv6                     = "ipv6 addr"                 ; IPv6 address to be advertised as management IP
-    supp_med_network_policy_tlv   = "true/false"                ; Suppress LLDP-MED network policy TLV advertise
-    supp_med_power_mgmt_tlv       = "true/false"                ; Suppress LLDP-MED power management TLV advertise
-    supp_dot3_power_mgmt_tlv      = "true/false"                ; Suppress LLDP power negotiation TLV (802.3at/bt)
-    network_policy                = 1*3DIGIT                    ; Network policy profile number
+    key                           = LLDP_PORT|ifname   ; LLDP port configuration
+    enabled                       = "true/false"       ; LLDP enabled or disabled on port
+    mode                          = "receive/transmit" ; LLDP mode transmit or receive
+    mgmt_ipv4                     = "ipv4 addr"        ; IPv4 address to be advertised as management IP
+    mgmt_ipv6                     = "ipv6 addr"        ; IPv6 address to be advertised as management IP
+    supp_med_network_policy_tlv   = "true/false"       ; Suppress LLDP-MED network policy TLV advertise (def: false)
+    supp_med_power_mgmt_tlv       = "true/false"       ; Suppress LLDP-MED power mgmt TLV advertise (def: false)
+    supp_dot3_power_mgmt_tlv      = "true/false"       ; Suppress LLDP power negotiation TLV (802.3)(def: false)
+    network_policy                = 1*3DIGIT           ; Network policy profile number
 
 
 ### 3.2.2 STATE DB
@@ -226,7 +234,7 @@ key                    = LLDP_8023AT_POWER_MGMT_TLV:ifname  ; LLDP 802.3 power m
 device-type            = "type"                             ; Device type pse or pd
 supported              = "true/false"                       ; whether Power is supported or not
 enabled                = "true/false"                       ; whether Power is enabled or not
-paircontrol            = "true/false"                       ; whether pair selection can be controlled or not
+pair-control           = "true/false"                       ; whether pair selection can be controlled or not
 pairs                  = "pairs"                            ; power pairs in use signal or spare
 class                  = 1DIGIT                             ; class 0 to 4
 power-type             = 1DIGIT                             ; 802.3at type 1 or type 2
@@ -350,6 +358,59 @@ None
 
 ### 3.6.1 Data Models
 
+A new YANG extension model is defined for Network policy.
+
+These supported YANG objects and attributes are as per below tree:
+
+module: openconfig-network-policy-ext
+  +--rw network-policies
+     +--rw network-policy* [number]
+        +--rw number          -> ../config/number
+        +--rw config
+        |  +--rw number?   uint16
+        +--ro state
+        |  +--ro number?   uint16
+        +--rw applications
+           +--rw application* [type]
+              +--rw type      -> ../config/type
+              +--rw config
+              |  +--rw type?       app-type
+              |  +--rw vlan-id?    uint16
+              |  +--rw tagged?     boolean
+              |  +--rw priority?   uint8
+              |  +--rw dscp?       uint8
+              +--ro state
+                 +--ro type?       app-type
+                 +--ro vlan-id?    uint16
+                 +--ro tagged?     boolean
+                 +--ro priority?   uint8
+                 +--ro dscp?       uint8
+
+Also LLDP Openconfig YANG model is extended to add below attributes under interface:
+
+module: openconfig-lldp
+ +--rw lldp
+
+   +--rw interfaces
+    +--rw interface* [name]
+      +--rw name     -> ../config/name
+      +--rw config
+      |  +--rw name?                   oc-if:base-interface-ref
+      |  +--rw oc-lldp-ext:management-address-ipv4?    oc-inet:ipv4-address
+      |  +--rw oc-lldp-ext:management-address-ipv6?    oc-inet:ipv6-address
+      |  +--rw oc-lldp-ext:network-policy?        -> /oc-nwp-ext:network-policies/network-policy/number
+
+​      |  +--rw oc-lldp-ext:suppress-tlv-advertisement*  identityref
+
+​      +--ro state
+​      |  +--ro name?                   oc-if:base-interface-ref
+​      |  +--ro oc-lldp-ext:management-address-ipv4?    oc-inet:ipv4-address
+​      |  +--ro oc-lldp-ext:management-address-ipv6?    oc-inet:ipv6-address
+​      |  +--ro oc-lldp-ext:network-policy?        -> /oc-nwp-ext:network-policies/network-policy/number
+​      |  +--ro oc-lldp-ext:suppress-tlv-advertisement*  identityref
+
+
+
 ### 3.6.2 Configuration Commands
 
 ### 3.6.2.1 Global level 
@@ -467,6 +528,7 @@ sonic(conf-if-Ethernet0)# no lldp tlv-select power-management
 
 Below is an example of show lldp neighbor with LLDP-MED power management info -
 
+```
 sonic# show lldp neighbor
 
 Interface:   Ethernet60,via: LLDP
@@ -482,17 +544,18 @@ Interface:   Ethernet60,via: LLDP
   Port
     PortID:       Ethernet32
     PortDescr:    Eth1/9
-    
-    MED Extended Power via MDI:   
-        Device type:  PSE
-        Power Source: PSE
-        Power Priority: high
-        Power Value: 0
 
+  MED Extended Power via MDI:   
+    Device type:  PSE
+    Power Source: PSE
+    Power Priority: high
+    Power Value: 0
+```
 
 
 Below is an example of show lldp neighbor with LLDP 802.3at power management info -
 
+```
 sonic# show lldp neighbor
 
 Interface:   Ethernet60,via: LLDP
@@ -509,63 +572,169 @@ Interface:   Ethernet60,via: LLDP
     PortID:       Ethernet32
     PortDescr:    Eth1/9
 
-    MDI Power:    supported: yes, enabled: yes, pair control: yes
-        Device type:  PSE
-        Power pairs:  spare
-        Class:        class 1
-        Power type:   1
-        Power Source: PSE
-        Power Priority: high
-        PD requested power Value: 0
-        PSE allocated power Value: 0
+  MDI Power:    supported: yes, enabled: yes, pair control: yes
+    Device type:  PSE
+    Power pairs:  spare
+    Class:        class 1
+    Power type:   1
+    Power Source: PSE
+    Power Priority: high
+    PD requested power Value: 0
+    PSE allocated power Value: 0
+```
+
+Below is an example of show lldp table which displays the neigbors information in brief -
+```
+sonic# show lldp table
+------------------------------------------------------------------------------------------------------
+LocalPort           RemoteDevice        RemotePortID        Capability          RemotePortDescr
+-------------------------------------------------------------------------------------------------------
+Ethernet4           sonic               Ethernet4           BR                  Eth1/2
+Ethernet16          L3                  Ethernet60          R                   Eth1/52
+Ethernet24          L4                  Ethernet60          R                   Eth1/52
+Ethernet32          sonic               Ethernet60          R                   Eth1/52
+Ethernet48          sonic               Ethernet60          R                   Eth1/52
+Ethernet64          sonic               Ethernet96          R                   Eth1/25
+Ethernet72          sonic               Ethernet104         R                   Eth1/27
+Ethernet96          sonic               Ethernet96          R                   Eth1/25
+Ethernet104         sonic               Ethernet104         R                   Eth1/27
+```
+
+Below is an example of show lldp statistics which displays the LLDP statistics -
+```
+sonic# show lldp statistics Ethernet4
+LLDP Statistics
+---------------------------------
+Interface: Ethernet4
+    Transmitted      : 400
+    Received         : 394
+    Discarded        : 0
+    Unrecognized TLV : 0
+    Ageout           : 0
+---------------------------------
+```
 
 
 
-
-### 3.6.4 Debug Commands
-
-
-
-### 3.6.5 Clear Commands
-
-
-
-### 3.6.6 REST API Support
+### 3.6.3 REST API Support
 
 REST APIs is supported in this release
 
-### 
+Below REST URIs are supported
+
+
+Network Policy URI:
+
+<REST-SERVER:PORT>/restconf/data/openconfig-network-policy-ext:network-policies/network-policy={number}/applications/application={type}/config/vlan-id
+
+<REST-SERVER:PORT>/restconf/data/openconfig-network-policy-ext:network-policies/network-policy={number}/applications/application={type}/config/tagged
+
+<REST-SERVER:PORT>/restconf/data/openconfig-network-policy-ext:network-policies/network-policy={number}/applications/application={type}/config/priority
+
+<REST-SERVER:PORT>/restconf/data/openconfig-network-policy-ext:network-policies/network-policy={number}/applications/application={type}/config/dscp
+
+Eg:
+
+curl -X PUT "https://10.59.143.156/restconf/data/openconfig-network-policy-ext:network-policies/network-policy=1/applications/application=VOICE/config" -H  "accept: */*" -H  "Content-Type: application/yang-data+json" -d "{\"openconfig-network-policy-ext:config\":{\"type\":\"VOICE\",\"vlan-id\":10,\"priority\":5,\"dscp\":30}}"
+
+LLDP URI:
+
+<REST-SERVER:PORT>/restconf/data/openconfig-lldp:lldp/interfaces/interface={name}/config/openconfig-lldp-ext:network-policy
+<REST-SERVER:PORT>/restconf/data/openconfig-lldp:lldp/interfaces/interface={name}/config/openconfig-lldp-ext:suppress-tlv-advertisement
+<REST-SERVER:PORT>/restconf/data/openconfig-lldp:lldp/interfaces/interface={name}/config/openconfig-lldp-ext:management-address-ipv4
+<REST-SERVER:PORT>/restconf/data/openconfig-lldp:lldp/interfaces/interface={name}/config/openconfig-lldp-ext:management-address-ipv6
+
+Eg:
+
+curl -X PATCH "https://10.59.143.156/restconf/data/openconfig-lldp:lldp/interfaces/interface=Ethernet4/config/openconfig-lldp-ext:management-address-ipv4" -H  "accept: */*" -H  "Content-Type: application/yang-data+json" -d "{\"openconfig-lldp-ext:management-address-ipv4\":\"192.168.1.1\"}"
+
+
+
+## 3.7 Warm Boot Support
+
+TBD
 
 # 4 Flow Diagrams
 
 
 
-# 5 Serviceability and Debug
+# 5 Error Handling
 
 
 
-# 6 Warm Boot Support
+# 6 Serviceability and Debug
 
-Warm boot is not supported
+
 
 # 7 Scalability
 
 No limit, all physical interfaces in the system can be enabled with LLDP and voice vlan.
 
+# 8 Platform
 
-# 8 Unit Test
+LLDP in general is supported on all platforms. LLDP PoE support will be applicable only for those platforms supporting PoE.
 
+# 9 Limitations
 
+N/A
+
+# 10 Unit Test
 
 1. Verify configuring Network profile with voice application type and corresponding vlan attributes
+
 2. Verify configuring Network profile with voice-signaling application type and corresponding vlan attributes
+
 3. Verify applying and removing LLDP MED network profile to an interface
+
 4. Verify LLDP-MED voice vlan TLV is advertised when profile is applied on interface and advertisement is stopped when profile is removed. Verify the voice vlan TLV has the information encoded as per the profile parameters.
+
 5. When device is advertising the voice VLAN TLV, disable adversting this TLV (no lldp med-tlv-select network-policy) 
+
 6. Configure an LLDP mgmt IPv4 address on an interface and verify the LLDP mgmt TLV advertised has the corresponding mgmt IPv4 address.
+
 7. Configure an LLDP mgmt IPv6 address on an interface and verify the LLDP mgmt TLV advertised has the corresponding mgmt IPv6 address.
+
 8. Remove the LLDP mgmt IP addresses configured and verify the default system mgmt IP addresses are advertised
-8. Verify LLDP MED power management TLV exchange along with PoE
-9. Verify LLDP 802.3at power management TLV exchange along with PoE
-10. Verify LLDP MED power management TLV is not advertised when the TLV advertisement is stopped for that interface, verify the advertisement is started when enabled back.
-11. Verify LLDP 802.3 power management TLV is not advertised when the TLV advertisement is stopped for that interface, verify the advertisement is started when enabled back.
+
+9. Verify LLDP MED power management TLV exchange along with PoE
+
+10. Verify LLDP 802.3at power management TLV exchange along with PoE
+
+11. Verify LLDP MED power management TLV is not advertised when the TLV advertisement is stopped for that interface, verify the advertisement is started when enabled back.
+
+12. Verify LLDP 802.3 power management TLV is not advertised when the TLV advertisement is stopped for that interface, verify the advertisement is started when enabled back.
+
+    
+
+
+# 11 Internal Design Information
+
+## 11.1 IS CLI compliance
+
+| CLI Command                                                  | Compliance             | IS-CLI Command (if applicable)                               | Link to the web site identifying the IS-CLI command (if applicable) |
+| ------------------------------------------------------------ | ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| network-policy profile  <number>                             | IS-CLI drop-in replace | network-policy profile  <number>                             |                                                              |
+| {voice \|voice-signaling} vlan [vlan-id { [ cos value \|dscp value ] \|untagged }\|[dot1p { cos value \|dscp value }] ] | IS-CLI like            | {voice \|voice-signaling} vlan [ *vlan-id* {cos cvalue\|dscp *dvalue* } ] \|[[dot1p {cos *cvalue* \|dscp *dvalue* }] \|none \|untagged] |                                                              |
+| lldp tlv-set { management-address {ipv4\|ipv6} ip-address}   | IS-CLI like            | lldp tlv-set { management-address ip-address [ipv6]}         |                                                              |
+| network-policy <number>                                      | IS-CLI drop-in replace | network-policy <number>                                      |                                                              |
+| lldp med-tlv-select [network-policy \|power-management]      | IS-CLI drop-in replace | lldp med-tlv-select [network-policy \|power-management]      |                                                              |
+| lldp tlv-select power-management                             | IS-CLI drop-in replace | lldp tlv-select power-management                             |                                                              |
+
+## 11.2 Broadcom SONiC Packaging
+
+LLDP is supported on all SONiC package variants.
+
+## 11.3 Broadcom Silicon Considerations
+
+N/A
+
+## 11.4 Design Alternatives
+
+## 11.5 Broadcom Release Matrix
+
+| Release | Change(s)                                                    |
+| ------- | ------------------------------------------------------------ |
+| 3.2.1   | LLDP MED network policy and Management IP address configuration |
+| 3.2.2   | LLDP PoE dot3af, dot3at support                              |
+| 4.0.0   | LLDP PoE dot3bt support                                      |
+
