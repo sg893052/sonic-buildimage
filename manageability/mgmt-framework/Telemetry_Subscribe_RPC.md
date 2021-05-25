@@ -5,40 +5,47 @@
 # Table of Contents
 
 - [1 Feature Overview](#1-Feature-Overview)
-    - [1.1 Target Deployment Use Cases](#11-Target-Deployment-Use-Cases)
-    - [1.2 Requirements](#12-Requirements)
-        - [1.2.1 Wildcard paths in Subscribe API](#121-wildcard-paths-in-subscribe-api)
-        - [1.2.2 ON_CHANGE subscription](#122-on_change-subscription)
-        - [1.2.3 SAMPLE subscription](#123-sample-subscription)
-        - [1.2.4 TARGET_DEFINED subscription](#124-target_defined-subscription)
-        - [1.2.5 Scalar encoding for telemetry updates](#125-scalar-encoding-for-telemetry-updates)
-        - [1.2.6 Translib Subscription Infrastructure for DB data](#126-translib-subscription-infrastructure-for-db-data)
-    - [1.3 Design Overview](#13-Design-Overview)
-        - [1.3.1 Basic Approach](#131-Basic-Approach)
-            - [1.3.1.1 ON_CHANGE Subscription for DB data](#1311-on_change-subscription-for-db-data)
-            - [1.3.1.2 SAMPLE Subscription for DB data](#1312-sample-subscription-for-db-data)
-            - [1.3.1.3 TARGET_DEFINED Subscription](#1313-target_defined-subscription)
-            - [1.3.1.4 Subscription for non-DB data](#1314-subscription-for-non-db-data)
-            - [1.3.1.5 PROTO encoded responses](#1315-proto-encoded-responses)
-        - [1.3.2 Container](#132-Container)
-        - [1.3.3 SAI Overview](#133-SAI-Overview)
+  - [1.1 Target Deployment Use Cases](#11-Target-Deployment-Use-Cases)
+  - [1.2 Requirements](#12-Requirements)
+    - [1.2.1 Wildcard paths in Subscribe RPC](#121-wildcard-paths-in-subscribe-rpc)
+    - [1.2.2 ON_CHANGE subscription](#122-on_change-subscription)
+    - [1.2.3 SAMPLE subscription](#123-sample-subscription)
+    - [1.2.4 TARGET_DEFINED subscription](#124-target_defined-subscription)
+    - [1.2.5 Scalar encoding for telemetry updates](#125-scalar-encoding-for-telemetry-updates)
+    - [1.2.6 Translib Subscription Infrastructure for DB data](#126-translib-subscription-infrastructure-for-db-data)
+  - [1.3 Design Overview](#13-Design-Overview)
+    - [1.3.1 Basic Approach](#131-Basic-Approach)
+    - [1.3.2 Container](#132-Container)
+    - [1.3.3 SAI Overview](#133-SAI-Overview)
 - [2 Functionality](#2-Functionality)
-    - [2.1 Subscribe API](#21-subscribe-api)
-    - [2.2 Wildcard Paths](#22-wildcard-paths)
+  - [2.1 Subscribe API](#21-subscribe-api)
+  - [2.2 Wildcard Paths](#22-wildcard-paths)
 - [3 Design](#3-Design)
-    - [3.1 Overview](#31-Overview)
-    - [3.2 DB Changes](#32-DB-Changes)
-    - [3.3 Switch State Service Design](#33-Switch-State-Service-Design)
-    - [3.4 SyncD](#34-SyncD)
-    - [3.5 SAI](#35-SAI)
-    - [3.6 User Interface](#36-User-Interface)
-        - [3.6.1 Data Models](#361-Data-Models)
-        - [3.6.2 CLI](#362-CLI)
-        - [3.6.3 REST API Support](#363-REST-API-Support)
-        - [3.6.4 gNMI Support](#364-gNMI-Support)
-     - [3.7 Warm Boot Support](#37-Warm-Boot-Support)
-     - [3.8 Upgrade and Downgrade Considerations](#38-Upgrade-and-Downgrade-Considerations)
-     - [3.9 Resource Needs](#39-Resource-Needs)
+  - [3.1 Framework](#31-framework)
+    - [3.1.1 Handling wildcard keys in the path](#311-handling-wildcard-keys-in-the-path)
+    - [3.1.2 DB key to Path mapping](#312-db-key-to-path-mapping)
+    - [3.1.3 Subscribe Session](#313-subscribe-session)
+    - [3.1.4 Sending Subscribe Response Data](#314-sending-subscribe-response-data)
+    - [3.1.5 ON_CHANGE Subscription for DB data](#315-on_change-subscription-for-db-data)
+    - [3.1.6 ON_CHANGE Subscription for non-DB data](#316-on_change-subscription-for-non-db-data)
+    - [3.1.7 SAMPLE Subscription for DB data](#317-sample-subscription-for-db-data)
+    - [3.1.8 SAMPLE Subscription for non-DB data](#318-sample-subscription-for-non-db-data)
+    - [3.1.9 TARGET_DEFINED Subscription](#319-target_defined-subscription)
+    - [3.1.10 ONCE Subscription](#3110-once-subscription)
+    - [3.1.11 POLL Subscription](#3111-poll-subscription)
+    - [3.1.12 Wildcard for non-DB Paths](#3112-wildcard-for-non-db-paths)
+  - [3.2 DB Changes](#32-DB-Changes)
+  - [3.3 Switch State Service Design](#33-Switch-State-Service-Design)
+  - [3.4 SyncD](#34-SyncD)
+  - [3.5 SAI](#35-SAI)
+  - [3.6 User Interface](#36-User-Interface)
+    - [3.6.1 Data Models](#361-Data-Models)
+    - [3.6.2 CLI](#362-CLI)
+    - [3.6.3 REST API Support](#363-REST-API-Support)
+    - [3.6.4 gNMI Support](#364-gNMI-Support)
+  - [3.7 Warm Boot Support](#37-Warm-Boot-Support)
+  - [3.8 Upgrade and Downgrade Considerations](#38-Upgrade-and-Downgrade-Considerations)
+  - [3.9 Resource Needs](#39-Resource-Needs)
 - [4 Flow Diagrams](#4-Flow-Diagrams)
 - [5 Error Handling](#5-Error-Handling)
 - [6 Serviceability and Debug](#6-Serviceability-and-Debug)
@@ -46,16 +53,16 @@
 - [8 Platform](#8-Platform)
 - [9 Limitations](#9-Limitations)
 - [10 Unit Test](#10-Unit-Test)
-    - [10.1 Test Cases](#101-test-cases)
-    - [10.2 gNMI UT Framework for PyNUT](#102-gnmi-ut-framework-for-pynut)
-    - [10.3 UT with gnmi_cli tool](#103-ut-with-gnmi_cli-tool)
-    - [10.4 Onchange supported URI Paths](#104-onchange-supported-paths)
+  - [10.1 Test Cases](#101-test-cases)
+  - [10.2 gNMI UT Framework for spytest](#102-gnmi-ut-framework-for-spytest)
+  - [10.3 UT with gnmi_cli tool](#103-ut-with-gnmi_cli-tool)
+  - [10.4 Supported YANG Paths](#104-supported-yang-paths)
 - [11 Internal Design Information](#11-Internal-Design-Information)
-    - [11.1 IS-CLI Compliance](#111-IS-CLI-Compliance)
-    - [11.2 Broadcom Packaging](#112-Broadcom-SONiC-Packaging)
-    - [11.3 Broadcom Silicon Considerations](#113-Broadcom-Silicon-Considerations)    
-    - [11.4 Design Alternatives](#114-Design-Alternatives)
-    - [11.5 Broadcom Release Matrix](#115-Broadcom-Release-Matrix)
+  - [11.1 IS-CLI Compliance](#111-IS-CLI-Compliance)
+  - [11.2 Broadcom Packaging](#112-Broadcom-SONiC-Packaging)
+  - [11.3 Broadcom Silicon Considerations](#113-Broadcom-Silicon-Considerations)
+  - [11.4 Design Alternatives](#114-Design-Alternatives)
+  - [11.5 Broadcom Release Matrix](#115-Broadcom-Release-Matrix)
 
 # List of Tables
 
@@ -70,8 +77,7 @@
 | 0.1 | 12/23/2020  | Sachin Holla       | Initial version                                        |
 | 0.2 | 04/23/2021  | Sachin Holla       | Updated requirements for Cyrus release                 |
 | 0.3 | 05/19/2021  | Sachin Holla       | Move yang path listing to a separate document          |
-
-
+| 0.4 | 05/24/2021  | Sachin Holla       | Include detailed design and fixes for few comments     |
 
 # About This Manual
 
@@ -95,6 +101,7 @@ HLD for individual features will be documented separately by respective feature 
 |----------------|-------------------------------------|
 | gNMI           | gRPC Network Management Interface   |
 | gRPC           | gRPC Remote Procedure Call (it is a recursive acronym!!)   |
+| YGOT           | [YANG Go Tools](https://github.com/openconfig/ygot); a Golang library to process YANG data |
 
 # References
 
@@ -104,7 +111,7 @@ https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-f
 gNMI Specification<br>
 https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.md
 
-gNMI Protobuff Definition<br>
+gNMI Protobuf Definition<br>
 https://github.com/openconfig/gnmi/blob/master/proto/gnmi/gnmi.proto
 
 # 1 Feature Overview
@@ -115,7 +122,7 @@ https://github.com/openconfig/gnmi/blob/master/proto/gnmi/gnmi.proto
 
 ## 1.2 Requirements
 
-### 1.2.1 Wildcard paths in Subscribe API
+### 1.2.1 Wildcard paths in Subscribe RPC
 
 gNMI Server should support wild cards in **path key** for all subscription modes.
 Example: `/openconfig-interfaces:interfaces/interface[name=*]/config`.
@@ -125,7 +132,7 @@ Following cases will not be supported:
 
 - Wildcard in path element (like `/openconfig-interfaces:interfaces/*/config` or `/openconfig-interfaces:interfaces/.../config`).
 - Wildcard paths pointing to non-DB data sources, like FRR socket.
-- WIldcard paths in **Get** API.
+- WIldcard paths in **Get** RPC.
 
 Server should reject the RPC with INVALID_ARGUMENT status code if the request contains
 unsupported wildcard paths.
@@ -134,10 +141,11 @@ unsupported wildcard paths.
 
 gNMI server should support ON_CHANGE subscription for all YANG paths except following:
 
-- Paths mapped to COUNTER_DB
-- Paths mapped to DB tables that can be updated frequently, like COUNTER_DB tables.
+- Paths mapped to DB tables that can be updated frequently.
+  Most of the COUNTERS_DB tables will fall in this category.
   Actual list of such paths will be decided & published by individual features.
 - Paths mapped to non-DB data sources, like FRR socket.
+- Any path whose descendent node does not support ON_CHANGE.
 
 Server should reject the Subscribe request with INVALID_ARGUMENT status code if it receives
 ON_CHANGE subscription request for unsupported paths.
@@ -202,183 +210,55 @@ Apps should be only required to provide yang path to DB mappings and subscriptio
 
 ### 1.3.1 Basic Approach
 
-#### 1.3.1.1 ON_CHANGE Subscription for DB data
+Roles of framework components and apps:
 
-ON_CHANGE subscription for DB data can be achieved using redis keyspace notifications.
-Redis also supports wildcard keyspace if registered through PSUBSCRIBE API.
-These two are combined as follows to achieve **ON_CHANGE with wildcard paths**.
+- gNMI server will manage subscribe RPC life cycle, timers, validations, response encoding.
+- Translib will provide APIs to monitor and retrieve subscribed YANG nodes.
+- App modules are only required to provide YANG path to DB entry mappings and vice-versa.
+- App modules should implement app interface function `translateSubscribe` to provide YANG path to DB/non-DB mappings.
+  Should handle wildcard keys in the yang paths.
+  Mapped DB key can have a redis wildcard pattern.
+  One YANG path can have multiple DB/non-DB mappings.
+- App modules can also return subscription preferences in `translateSubscribe` response.
+  Translib will assume default values if app did not specify the preferences.
+  Preferences includes:
+  - Whether ON_CHANGE  enabled
+  - Preferred subscription mode during TARGET_DEFINED
+  - Minimum SAMPLE interval.
+- Transformer common_app will discover the mappings and preferences from the annotations.
+  Subtree transformers should implement `Subscribe_xxx` callback function to specify the mappings and preferences.
+  Table and key transformers should handle wildcard paths.
+- App modules should implement `processSubscribe` app interface function to resolve YANG keys for a DB entry.
+  This is required to get a specific YANG path from a wildcard path template.
+- Transformer common_app will automatically support this for simple cases.
+  Apps should implement a *path transformer* to handle special cases -- subtree transformer or when there is no one-to-one mapping of YANG key to DB key.
 
-![ON_CHANGE High Level Design](images/ON_CHANGE_brief.png)
+Translib APIs:
 
-A simpler implementation of this design already exists in Translib and gNMI servers.
-But it does not handle wildcard paths and supports ON_CHANGE for YANG paths pointing to
-only leaf nodes or inner most YANG containers.
-New design addresses these limitations and supports ON_CHANGE at any level in the YANG tree.
+- `translib.IsSubscribeSupported` API returns subscription preferences for given paths.
+gNMI server uses this information to handle TARGET_DEFINED subscription and to validate ON_CHANGE, SAMPLE request parameters.
+- `translib.Stream` API will stream the current data for given paths to gNMI server using a queue.
+  This API is used to service SAMPLE, ONCE and POLL subscriptions.
+- `translib.Subscribe` API handles ON_CHANGE subscriptions.
+  It starts monitoring the mapped DB key patterns using redis PSUBSCRIBE operations.
+  Subsequent changes to the DB will be stream asynchronously using a queue.
 
-gNMI server handles all protocol specific encoding and decoding of subscribe RPC.
-It uses **translib.Subscribe** API to register for notifications and receive
-asynchrnous responses upon data change.
-gNMI server maintains queues and locks to receive asynchronous responses from Translib.
+ON_CHANGE handling:
 
-The **translib.Subscribe** API manages redis subscriptions and notifications for the YANG path.
-It uses App Module's `translateSubscribe` and `processSubscribe` functions to map YANG paths
-to redis key and vice versa.
-
-App Module's `translateSubscribe` function provides DB key mapping for YANG path.
-It should also return DB entry field to YANG leaf mappings.
-App module can return multiple redis DB and they can have wildcard components.
-
-Few examples with a simplified openconfig-interfaces YANG model:
-
-```text
-module: openconfig-interfaces
-  +--rw interfaces
-     +--rw interface*
-        +--rw name
-        +--rw config        ==> CONFIG_DB:PORT
-        |  +--rw enabled
-        +--ro state         ==> APPL_DB:PORT_TABLE
-        |  +--ro enabled
-        |  +--ro oper-status
-```
-
-| **YANG Path**                         | **DB mappings**                         |
-|---------------------------------------|-----------------------------------------|
-| /interfaces/interface[name=\*]         | {CONFIG_DB, PORT\|\*, {admin_status=config/enabled}}<br> {APPL_DB, PORT_TABLE\|\*, {admin_status=state/enabled, oper_status=state/oper-status}} |
-| /interfaces/interface[name=\*]/config  | {CONFIG_DB, PORT\|\*, {admin_status=enabled}} |
-| /interfaces/interface[name=\*]/state/oper-status  | {APPL_DB, PORT_TABLE\|\*, {oper_status=oper-status}} |
-| /interfaces/interface[name=Ethernet0]/config      | {CONFIG_DB, PORT\|Ethernet0, {admin_status=enabled}} |
-
-Translib subscribes for redis keyspace notifications (through PSUBSCRIBE operation)
-for the DB keys returned by `translateSubscribe`.
-
-gNMI Subscribe PRC requires server to stream current data values before it could
-send incremental updates.
-Translib sends this initial sync responses by doing a Get of the subscribed path.
-If the path contains wildcard keys, it must be expanded and Get operation must be performed
-for each of the expanded path.
-Get operation does not handle paths with wildcard keys (due to YGOT limitations).
-Translib uses App Module's `processSubscribe` function to expand the wildcard path keys using the DB key.
-
-Example: If the subscribed path is "/interfaces/interface[name=\*]/config" and the DB key
-is "PORT|Ethernet0", the `processSubscribe` should return the expanded path as
-"/interfaces/interface[name=**Ethernet0**]/config".
-
-Translib performs redis SCAN operation of the key pattern returned by `translateSubscribe`
-to iterate over existing DB keys.
-For each DB key, App Module's `processSubscribe` function will be called to resolve the
-wildcard keys in the path.
-Get operation is performed for the expanded path and resulting YANG data is enquened onto
-the gNMI server's response queue.
-This approach tends to result in Translib sending stream of smaller chunks of data.
-
-Once the initial data sync is complete, the `translib.Subscribe` API ends.
-Subsequent incremental updates are sent asynchronously.
-
-Redis would invoke Translib's notification handler callback function when a DB entry
-for the subscribed key pattern is modified.
-Redis notifications do not include any information about which fields of the DB entry are modified.
-To identify the modified fields, Translib maintains a cache of DB entries it is monitoring.
-Notification handler would read the current DB entry and compare with the cached DB entry to
-identify the updated and deleted DB entry fields.
-Cache will also be updated in this process.
-Translib will identify the modified YANG leaf paths using DB field to YANG leaf mapping
-returned by `translateSubscribe`.
-Redis notification is ignored if none of the monitored DB fields are changed.
-This allows to the noises close to the source and save precious CPU cycles.
-
-If the subscribe path had wildcard keys, the wildcards need to be resolved in the modified YANG paths.
-Translib uses App Module's `processSubscribe` function to achieve this.
-The Translib obtains the modified YANG value through Get operation on each of the
-modified YANG paths and enqueue them onto gNMI server's response queue.
-
-The DB entry cache will be maintained in Translib's DB Access Layer.
-This allows to automatically fill the initial values during initial data sync.
-Also the App Modules can reuse cache data during subsequent Get calls as well.
-
-#### 1.3.1.2 SAMPLE Subscription for DB data
-
-SAMPLE subscription will be handled similar to ON_CHANGE's initial data sync.
-Existing gNMI server implementation uses `translib.Get` API, but it will not support wildcard paths.
-A new API `translib.Sample` will be developed for handling SAMPLE subscription.
-This will be almost similar to `translib.Subscribe`, but will not register for redis keyspace
-notifications and will not cache the DB entries.
-
-![SAMPLE High Level Design](images/SAMPLE_brief.png)
-
-gNMI server maintains the sample timer, response queue and locks.
-It invokes the `translib.Sample` for every timer tick.
-
-POLL and ONCE subscriptions are also be implemented using `translib.Sample` API.
-
-#### 1.3.1.3 TARGET_DEFINED Subscription
-
-gNMI server already implements the TARGET_DEFINED subscription with the help of
-`translib.IsSubscribeSupported` API.
-It returns the preferred subscription type for the YANG path.
-Based on this gNMI sever starts either ON_CHANGE or SAMPLE subscription.
-
-The `translib.IsSubscribeSupported` invokes App Module's `translateSubscribe` function
-to get subscription preferences for the YANG path.
-`translateSubscribe` returns the preferences for YANG node pointed by the subscribe path
-and its descendent nodes.
-Subscriptions are created based on these preferences.
-
-- If the subscribe path and its descendent nodes prefer ON_CHANGE, then the request is treated as an ON_CHANGE subscription request.
-- If the subscribe path prefers SAMPLE, then the request is treated as a SAMPLE subscription request.
-- If the subscribe path prefers ON_CHANGE but few of its descendent nodes prefer SAMPLE,
-  then the request is treated as multiple requests internally.
-  Server starts SAMPLE subscription for the descendent nodes that prefer SAMPLE.
-  An ON_CHANGE subscription will be created for rest of the nodes.
-
-Few examples with a simplified openconfig-interfaces YANG model:
-
-```text
-module: openconfig-interfaces
-  +--rw interfaces
-     +--rw interface*
-        +--rw name
-        +--rw config        ==> CONFIG_DB:PORT
-        |  +--rw enabled
-        +--ro state         ==> APPL_DB:PORT_TABLE
-        |  +--ro enabled
-        |  +--ro oper-status
-        |  +--ro counters   ==> COUNTERS_DB:COUNTERS (on_change not supported)
-        |  |  +--ro in-octets
-```
-
-Here container /interfaces/interface/state/counters maps to COUNTERS_DB and does not support ON_CHANGE.
-Other nodes support ON_CHANGE.
-Below table lists the gNMI server's behavior for different combinations of subscription modes and paths.
-
-| **Mode**       | **Subscribe Path**                       | **Result** |
-|----------------|------------------------------------------|------------|
-| TARGET_DEFINED | /interfaces/interface[name=\*]           | SAMPLE for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE for other paths |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/config    | ON_CHANGE |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/state     | SAMPLE for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE for other paths |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/state/enabled         | ON_CHANGE  |
-| TARGET_DEFINED | /interfaces/interface[name=\*]/state/counters        | SAMPLE     |
-| ON_CHANGE      | /interfaces/interface[name=\*]           | error (counters does not support ON_CHANGE) |
-| ON_CHANGE      | /interfaces/interface[name=\*]/config    | ON_CHANGE |
-| ON_CHANGE      | /interfaces/interface[name=\*]/state     | error (counters does not support ON_CHANGE) |
-| ON_CHANGE      | /interfaces/interface[name=\*]/state/enabled         | ON_CHANGE  |
-| SAMPLE         | /interfaces/interface[name=\*]           | SAMPLE    |
-
-
-#### 1.3.1.4 Subscription for non-DB data
-
-Current design does not support ON_CHANGE for non-DB data sources, like FRR socket.
-Unlike redis, there is no standard model for detecting non-DB data modifications.
-Recommendation is to migrate such applications to use redis as data store.
-
-SAMPLE, POLL and ONCE subscriptions are supported for non-DB data only if the subscribe path
-does not contain wildcards.
-Theoretically, wildcard paths can be supported using the same `processSubscribe` App Module functions.
-However Translib cannot provide streamed responses since non-DB data sources do not provide data "iterators" (like redis SCAN operation).
-
-#### 1.3.1.5 PROTO encoded responses
-
- *FILLME*
+- Redis notifies translib when any of the monitored DB entries are updated/deleted.
+  This keyspace notification only indicates the DB key of affected entry;
+  does not indicate which fields are modified.
+- Translib may be interested in in only few fields depending on the subscribed YANG paths.
+- Translib maintains a cache of monitored DB entries to workaround redis limitations.
+- When redis keyspace notification is received, translib reads latest entry value from DB for that key and compares with the cache to identify modified fields.
+  Cache is also updated with the new value in this process.
+- Translib will ignore the redis notification if none of the subscribed fields are changed.
+  This helps to suppress noises close to the source.
+- If subscribed path had wildcard keys, translib resolves the specific path for the updated DB entry by calling app module's `processSubscribe` function.
+- If subscribed fields were updated, translib constructs individual YANG leaf paths and retrives the values using app module's `translateGet` and `processGet` functions.
+  Translib streams the {path, YGOT object} data to gNMI server through the queue.
+- If subscribed fields or DB entry was deleted, translib constructs corresponding YANG paths and
+  streams these delete paths to gNMI server through the queue.
 
 ### 1.3.2 Container
 
@@ -447,9 +327,286 @@ It should include the expanded paths.
 
 # 3 Design
 
-## 3.1 Overview
+## 3.1 Framework
 
- *FILLME*
+### 3.1.1 Handling wildcard keys in the path
+
+Every YANG node that represnets DB data can be mapped a set of (DB index, table name, key components, fields) tuples.
+Redis key pattern also supports glob like wildcards.
+When the path has wildcard keys, the mapped redis key components will have wildcard patterns.
+Translib can use these wildcard key patterns in redis KEYS, SCAN and PSUBSCRIBE calls.
+
+Few examples with a simplified openconfig-interfaces YANG model:
+
+```
+module: openconfig-interfaces
+  +--rw interfaces
+     +--rw interface*       ==> CONFIG_DB:PORT
+        +--rw name
+        +--rw config
+        |  +--rw enabled
+        +--ro state         ==> APPL_DB:PORT_TABLE
+        |  +--ro enabled
+        |  +--ro oper-status
+```
+
+| **YANG Path**                         | **DB mappings**                         |
+|---------------------------------------|-----------------------------------------|
+| /interfaces/interface[name=\*]         | {CONFIG_DB, PORT, \*, {admin_status=config/enabled}}<br> {APPL_DB, PORT_TABLE, \*, {admin_status=state/enabled, oper_status=state/oper-status}} |
+| /interfaces/interface[name=\*]/config  | {CONFIG_DB, PORT, \*, {admin_status=enabled}} |
+| /interfaces/interface[name=\*]/state/oper-status  | {APPL_DB, PORT_TABLE, \*, {oper_status=oper-status}} |
+| /interfaces/interface[name=Ethernet0]/config      | {CONFIG_DB, PORT, Ethernet0, {admin_status=enabled}} |
+
+There is also a possibility of leaf path getting mapped to multiple DB tables.
+E.g, real life `/interfaces/interface[name=*]` will map to (CONFIG_DB, PORT, \*, {...}), (CONFIG_DB, PORTCHANNEL, \*, {...}) and so on.
+
+YANG path to DB mapping should be provided by each app module through `translateSubscribe` response.
+It should return array of `notificationAppInfo` objects containing following data:
+
+- Path to mapped YANG node.
+  Should be same as request path or one of its descendent paths.
+  Can include wildcards.
+- Mapped DB index, table name, key pattern components
+- DB field name to YANG leaf subpath mappings
+- Whether ON_CHANGE supported
+- Preferred subscription mode for TARGET_DEFINED
+- Minimum SAMPLE interval
+
+Mapping should be returned even if the YANG node does not map to a DB entry.
+The DB index should set to *unknown db* to indicate the non-DB mapping.
+
+Transformer common_app can automatically derive these mappings from the annotations.
+But key transformers, table transformers should handle wildcard keys in the input path.
+Subtree transformers should implement `Subscribe_xxx` callback function to return the mapping data.
+
+### 3.1.2 DB key to Path mapping
+
+Notification messages should not include paths with specific keys.
+Hence translib requires reverse mapping of DB key to YANG keys while processing DB entries.
+
+Example: In the simplified openconfig-interfaces YANG example from previous section,
+if the subscribed path is "/interfaces/interface[name=\*]/config" and the DB key
+is "PORT|Ethernet0", the `processSubscribe` should return the expanded path as
+"/interfaces/interface[name=**Ethernet0**]/config".
+
+App modules should implement `processSubscribe` funcation to resolve specific path from the wild card path.
+Arguments for `processSubscribe` includes:
+
+- Path template - contains wildcard keys.
+- DB key info - DB index, table name, key components
+- DB entry value
+
+It should return a copy of path template with all its wildcard keys resolved.
+App module can query other DB entries if needed.
+
+Transformer common_app will automatically handle these mappings from the annotations for simple cases.
+Manual translation should be provided through a **path transformer** for subtree transformers and
+when there is no one-to-one mapping of DB key components to YANG keys in the path.
+
+### 3.1.3 Subscribe Session
+
+ON_CHANGE and SAMPLE are long running subscriptions; they will be active till the gNMI client closes the RPC.
+Translib APIs will need path to DB mappings many times at various stages.
+This metadata should be cached to avoid invoking app module `translateSubscribe` multiple times in a session.
+A session object will be introduced to maintain this cache and any other session scoped cache.
+
+gNMI server can create a session using `translib.NewSubscribeSession` API.
+It must close the session using `translib.CloseSubscribeSession` API before closing the RPC.
+
+Session object will be an optional parameter for `translib.IsSubscribeSupported`, `translib.Subscribe` and `translib.Stream` APIs.
+When session is provided, these APIs will try to resolve the metadata from the session cache.
+If the metadata is not present already, they will invoke app module `translateSubscribe` to resolve the mappings and save it in the session cache for later use.
+If session is not provided, `translateSubscribe` will be called every time.
+
+### 3.1.4 Sending Subscribe Response Data
+
+Subscribe RPC expects server to stream the data as {leaf path, value} pairs.
+Unlike Get RPC, the server should not aggregate the objects in the notification message.
+To achieve this gNMI server will share a **queue** with translib APIs to receive the data in an asynchronously.
+Translib loads smaller YGOT objects and writes {path, YGOT struct} data to the queue.
+gNMI server reads the queue in a separate goroutine, formats the YGOT structure into notification message and sends it back to the client.
+
+### 3.1.5 ON_CHANGE Subscription for DB data
+
+ON_CHANGE notifications are realized by monitoring changes to the DB through redis keyspace notifications.
+Following sequence diagram indicates overall flow of ON_CHANGE processing.
+
+![ON_CHANGE High Level Design](images/Subscribe_ONCHANGE.png)
+
+gNMI server handles all protocol specific encoding and decoding of subscribe RPC.
+RPC Will be closed with INVALID_ARGUMENTS error code if ON_CHANGE cannot be supported for any of the requested paths.
+gNMI server uses `translib.IsSubscribeSupported` API to check whether ON_CHANGE subscription can be supported for paths.
+It calls **translib.Subscribe** API to register for notifications and receive
+asynchronous responses upon data change.
+gNMI server maintains queues and locks to receive asynchronous responses from Translib.
+
+The **translib.Subscribe** API manages redis subscriptions and notifications for the YANG path.
+It uses App Module's `translateSubscribe` and `processSubscribe` functions to map YANG paths
+to redis key and vice versa.
+Translib subscribes for redis keyspace notifications (through PSUBSCRIBE operation)
+for all DB keys returned by `translateSubscribe`.
+
+gNMI Subscribe PRC requires server to stream current data values before it could
+send incremental updates.
+Translib performs redis SCAN operation of the key pattern returned by `translateSubscribe`
+to iterate over existing DB keys.
+For each DB key, App Module's `processSubscribe` function will be called to resolve the
+wildcard keys in the path.
+Get operation is performed for the expanded path and resulting YANG data is enqueued onto
+the gNMI server's response queue.
+This approach tends to result in Translib sending stream of smaller chunks of data.
+
+Once the initial data sync is complete, the `translib.Subscribe` API ends.
+Subsequent incremental updates are sent asynchronously.
+
+Redis would invoke Translib's notification handler callback function when a DB entry
+for the subscribed key pattern is modified.
+Redis notifications do not include any information about which fields of the DB entry are modified.
+To identify the modified fields, Translib maintains a cache of DB entries it is monitoring.
+Notification handler would read the current DB entry and compare with the cached DB entry to
+identify the updated and deleted DB entry fields.
+Cache will also be updated in this process.
+Translib will identify the modified YANG leaf paths using DB field to YANG leaf mapping
+returned by `translateSubscribe`.
+Redis notification is ignored if none of the monitored DB fields are changed.
+This allows to cancel such noises close to the source and save precious CPU cycles.
+
+If the subscribe path had wildcard keys, the wildcards need to be resolved in the modified YANG paths.
+Translib uses App Module's `processSubscribe` function to achieve this.
+The Translib obtains the modified YANG value through Get operation on each of the
+modified YANG paths and enqueue them onto gNMI server's response queue.
+
+The DB entry cache will be maintained in Translib's DB Access Layer.
+This allows to automatically fill the initial values during initial data sync.
+Also the App Modules can reuse cache data during subsequent Get calls as well.
+
+Subscribe session is closed and all associated caches discarded when the gNMI client closes the RPC.
+Translib will also unsubscribe from redis keyspace notifications.
+These flows is not shown in the sequence diagram.
+
+### 3.1.6 ON_CHANGE Subscription for non-DB data
+
+There is no equivalent of redis keyspace notifications for non-DB data.
+Hence ON_CHANGE will not be supported for such paths.
+`translib.Subscribe` will return error if `translateSubscribe` returned any non-DB path mapping.
+
+### 3.1.7 SAMPLE Subscription for DB data
+
+SAMPLE subscription will be handled similar to ON_CHANGE's initial data sync.
+But there will not be any redis subscriptions and DB cache.
+New `translib.Stream` API will be introduced for SAMPLE handling.
+Following sequence diagram describes the overall flow.
+
+![SAMPLE High Level Design](images/Subscribe_SAMPLE.png)
+
+gNMI server maintains the sample timer, response queue and locks.
+It invokes the `translib.Stream` for every timer tick of every SAMPLE request path.
+
+The `translib.Stream` will returns current data snapshot at every iteration.
+To detect deleted resources, gNMI server will maintain previous iteration's snapshot in a {path, YGOT object} cache.
+Current iteration's data is compared against this cache to identify deleted objects or attributes.
+YGOT API `ygot.Diff` can be used to compare two YGOT objects.
+Previous iteration's snapshot cache is replaced with current snapshot at the end of the iteration.
+
+gNMI client can set `suppress_redundant` flag in the request to avoid receiving duplicate updates at every sample interval.
+Server should not send an update for a leaf unless its value is modified since last update.
+YGOT snapshot cache will also be used to resolve updated attributes.
+
+YGOT based diff can be heavier and slower compared to DB entry based cache, like the one used for ON_CHANGE.
+However such cache cannot be used for non-DB data.
+SAMPLE subscription must be supported for every YANG path, irrespective of whether it maps to a DB entry or not.
+YGOT snapshot cache approach is chosen to keep the implementation simple.
+A mixed approach (DB entry cache in translib for DB data and YGOT cache in gNMI server for non-DB data) can be considered in future releases if we run into performance issues with YGOT cache.
+
+### 3.1.8 SAMPLE Subscription for non-DB data
+
+SAMPLE subscription will be supported for non-DB data as well.
+If `translateSubscribe` returns non-DB path mapping, the `translib.Stream` API will use Get operation to retrieve whole data and send it back on on shot.
+This can affect performance since Get operation ends up aggregating large number of child objects.
+
+Also, Get will not support wildcard paths due to YGOT limitations.
+Hence `translib.Stream` will return error for non-DB path with wildcard keys.
+
+### 3.1.9 TARGET_DEFINED Subscription
+
+TARGET_DEFINED subscription flow is similar to that of ON_CHANGE and SAMPLE.
+Preferred subscription mode for the path is discovered from the metadata returned by `translib.IsSubscribeSupported` API.
+ON_CHANGE or SAMPLE subscriptions are created based on these preferences.
+
+- If the subscribe path and its descendent nodes prefer ON_CHANGE, then the request is treated as an ON_CHANGE subscription request.
+- If the subscribe path prefers SAMPLE, then the request is treated as a SAMPLE subscription request.
+- If the subscribe path prefers ON_CHANGE but few of its descendent nodes prefer SAMPLE,
+  then the request is treated as multiple requests internally.
+  Server starts SAMPLE subscription for the descendent nodes that prefer SAMPLE.
+  An ON_CHANGE subscription will be created for rest of the nodes.
+
+Few examples with a simplified openconfig-interfaces YANG model:
+
+```text
+module: openconfig-interfaces
+  +--rw interfaces
+     +--rw interface*
+        +--rw name
+        +--rw config        ==> CONFIG_DB:PORT
+        |  +--rw enabled
+        +--ro state         ==> APPL_DB:PORT_TABLE
+        |  +--ro enabled
+        |  +--ro oper-status
+        |  +--ro counters   ==> COUNTERS_DB:COUNTERS (on_change not supported)
+        |  |  +--ro in-octets
+```
+
+Here container /interfaces/interface/state/counters maps to COUNTERS_DB and does not support ON_CHANGE.
+Other nodes support ON_CHANGE.
+Below table lists the gNMI server's behavior for different combinations of subscription modes and paths.
+
+| **Mode**       | **Subscribe Path**                       | **Result** |
+|----------------|------------------------------------------|------------|
+| TARGET_DEFINED | /interfaces/interface[name=\*]           | SAMPLE for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE for other paths |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/config    | ON_CHANGE |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/state     | SAMPLE for /interfaces/interface[name=\*]/state/counters;<br>ON_CHANGE for other paths |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/state/enabled         | ON_CHANGE  |
+| TARGET_DEFINED | /interfaces/interface[name=\*]/state/counters        | SAMPLE     |
+| ON_CHANGE      | /interfaces/interface[name=\*]           | error (counters does not support ON_CHANGE) |
+| ON_CHANGE      | /interfaces/interface[name=\*]/config    | ON_CHANGE |
+| ON_CHANGE      | /interfaces/interface[name=\*]/state     | error (counters does not support ON_CHANGE) |
+| ON_CHANGE      | /interfaces/interface[name=\*]/state/enabled         | ON_CHANGE  |
+| SAMPLE         | /interfaces/interface[name=\*]           | SAMPLE    |
+
+Following sequence diagram describes the overall flow.
+
+![TARGET_DEFINED Subscription Design](images/Subscribe_STREAM.png)
+
+Detailed flow of `translib.Subscribe` and `translib.Stream` APIs are not shown for the sake simplicity.
+Please refer to previous sections for details.
+
+### 3.1.10 ONCE Subscription
+
+ONCE subscription also uses `translib.Stream` API, but does not create a session cache.
+RPC is closed after sending telemetry updates for current data.
+Following sequence diagram describes the overall flow.
+
+![ONCE Subscription Design](images/Subscribe_ONCE.png)
+
+### 3.1.11 POLL Subscription
+
+POLL subscription is handled similar to ONCE subscription.
+Every poll message will use `translib.Stream` API to notify current data similar to ONCE.
+RPC is not closed after processing the poll message.
+
+### 3.1.12 Wildcard for non-DB Paths
+
+SAMPLE, POLL and ONCE subscriptions are supported for non-DB data only if the subscribe path
+does not contain wildcards.
+Translib retrieves current data is through the existing Get flow - using app module's `translateGet` and `processGet` functions.
+Wildcard paths cannot be passed to these functions due to a YGOT limitation.
+It requires major changes in YGOT code generator, standard YGOT libraries and almost all existing app module code.
+
+An alterante approach is to extend app module's `processSubscribe` scope to return all specific paths of a wildcard path.
+However this will not be practical for the app modules if non-DB data source does not provide APIs to retrive object keys (equivalent of redis KEYS or SCAN).
+This is individual non-DB data source's implementation specific capability and there is standard "non-DB data access" layer today.
+Hence the current design does not support wildcard paths for non-DB data.
+Future releases can enhance this based on how non-DB data access evolves in management framework.
 
 ## 3.2 DB Changes
 
@@ -483,8 +640,7 @@ No REST APIs are added/modified.
 
 ### 3.6.4 gNMI Support
 
-No REST APIs are added/modified by the infrastructure.
-However individual features will support ON_CHANGE subscription for eligible YANG paths.
+No new APIs are added/modified by the infrastructure.
 
 ## 3.7 Warm Boot Support
 
@@ -496,11 +652,17 @@ N/A
 
 ## 3.9 Resource Needs
 
- *FILLME*
+N/A
 
 # 4 Flow Diagrams
 
-N/A
+Flow diagrams are already described in section 3.1.
+Please refer to the following:
+
+- [Section 3.1.5](#315-on_change-subscription-for-db-data) for ON_CHANGE subscription
+- [Section 3.1.7](#317-sample-subscription-for-db-data) for SAMPLE subscription
+- [Section 3.1.9](#319-target_defined-subscription) for TARGET_DEFINED subscription
+- [Section 3.1.10](#3110-once-subscription) for ONCE and POLL subscription
 
 # 5 Error Handling
 
@@ -512,30 +674,115 @@ N/A
 
 # 7 Scalability
 
- *FILLME*
+SAMPLE, ON_CHANGE, TARGET_DEFINED are long running subscriptions and they maintain a data cache per session.
+Cache size is not deterministic; it depends on number of clients and the subscribed paths.
+E.g, If clients subscribe for specific leaf nodes (like `/interfaces/interface[name=*]/state/oper-status`), the cache would hold only that leaf related data (or DB entry in case of ON_CHANGE).
+But if clients subscribe for top level YANG containers/lists (like `/interfaces/interface[name=*]`) the cache would hold information for the entire data tree.
+This can drastically increase the memory consumption of telemetry service.
+But the exact numbers depend on the implementation and we do not have a correct estimate at this point.
+Resource monitoring parameters for telemetry service will have to be adjusted later - after more apps support subscription.
+
+CPU consumption telemetry service can also increase if the DB entries monitored through ON_CHANGE subscriptions change frequently.
+E,g. interface or ACL counters.
+Applications should disable ON_CHANGE for such YANG nodes through transformer annotations or subtree transformer's subscribe callback functions.
+Non-transformer based apps can directly indicate this preference in `translateSubscribe` response.
+
+gNMI server can also throttle the subscription requests based on the current device state.
+It can close the subscribe RPC with RESOURCE_EXHAUSTED status if it is oversubscribed.
+Such throttling mechanism should also consider the platform capabilities.
+This can be explored in future releases.
 
 # 8 Platform
 
 N/A
-This is platform independent feature.
+This is a platform independent feature.
 
 # 9 Limitations
 
 - ON_CHANGE not supported for YANG nodes mapped to non-DB data, like FRR socket.
 - Subscribe not supported for wildcard paths pointing to non-DB data nodes.
 - Subscribe not supported for paths with wildcard element names.
-    Only wildcard keys are allowed.
-- Wilcard paths not supported in gNMI Get RPC.
+  Only wildcard keys are allowed.
+- Wildcard paths not supported in gNMI Get RPC.
 
 # 10 Unit Test
 
 ## 10.1 Test Cases
 
- *FILLME*
+Following unit test cases require apps code changes to handle subscription.
+IGMP Snooping, ACL and TAM YANG paths can be used to cover most of them.
+Some cases may need test YANGs to simulate the condition.
+Each test will cover value create/update/delete cases wherever possible.
 
-## 10.2 gNMI UT Framework for PyNUT
+ON_CHANGE test cases:
 
- *FILLME*
+- ON_CHANGE subscription for top level container path
+- ON_CHANGE subscription for list node with wildcard key
+- ON_CHANGE subscription for list node with specific key
+- ON_CHANGE subscription for list node with specific, but non-existing key
+- ON_CHANGE subscription for nested list node with wildcard key
+- ON_CHANGE subscription for nested list node with specific key
+- ON_CHANGE subscription for top level leaf nodes (without any keys)
+- ON_CHANGE subscription for container inside a list
+- ON_CHANGE subscription for leaf node inside a list, with an initial value
+- ON_CHANGE subscription for leaf node inside a list, value does not exits
+- ON_CHANGE subscription for leaf-list node inside a list; with leaf-list mapped to a DB field
+- ON_CHANGE subscription for leaf-list node inside a list; with leaf-list mapped to its own DB entry
+- ON_CHANGE subscription for an unsupported path - for non-transformer app
+- ON_CHANGE subscription for an unsupported path - marked through transformer annotation
+- ON_CHANGE subscription for an unsupported path - marked through subtree transformer code
+- ON_CHANGE subscription for a non-DB path
+- ON_CHANGE subscription with unknown path
+- ON_CHANGE subscription with `updates_only` set to true
+
+SAMPLE subscription test cases:
+
+- SAMPLE subscription for top level container path
+- SAMPLE subscription for list node with wildcard key
+- SAMPLE subscription for list node with specific key
+- SAMPLE subscription for nested list node with wildcard key
+- SAMPLE subscription for nested list node with specific key
+- SAMPLE subscription for top level leaf nodes (without any keys)
+- SAMPLE subscription for container inside a list
+- SAMPLE subscription for leaf node inside a list
+- SAMPLE subscription for leaf-list node inside a list; with leaf-list mapped to a DB field
+- SAMPLE subscription for leaf-list node inside a list; with leaf-list mapped to its own DB entry
+- SAMPLE subscription for a non-DB path, with wildcard keys
+- SAMPLE subscription for a non-DB path, without wildcard keys
+- SAMPLE subscription with unknown path
+- SAMPLE subscription with sample_interval less than min interval supported by YANG
+- SAMPLE subscription with `suppress_redundant` set to true
+- SAMPLE subscription with `updates_only` set to true.
+- Both ON_CHANGE and SAMPLE subscriptions in a single request.
+
+TARGET_DEFINED subscription test cases:
+
+- TARGET_DEFINED for a node that prefers ON_CHANGE
+- TARGET_DEFINED for a node that prefers SAMPLE -- preference set through transformer annotation
+- TARGET_DEFINED for a node that prefers SAMPLE -- preference set through subtree transformer
+- TARGET_DEFINED for a node that prefers SAMPLE -- for non-transformer app
+- TARGET_DEFINED for a node that prefers ON_CHANGE, but a child node prefers SAMPLE -- preference set through transformer annotation
+- TARGET_DEFINED for a node that prefers ON_CHANGE, but a child node prefers SAMPLE -- preference set through subtree transformer
+- TARGET_DEFINED for a node that prefers ON_CHANGE, but a child node prefers SAMPLE -- for non-transformer app
+- TARGET_DEFINED for non-DB path
+- TARGET_DEFINED for unknown path
+
+ONCE subscription test cases:
+
+- ONCE subscription for top level container path
+- ONCE subscription for list node with wildcard key
+- ONCE subscription for list node with specific key
+- ONCE subscription for top level leaf nodes (without any keys)
+- ONCE subscription for container inside a list
+- ONCE subscription for leaf node inside a list
+- ONCE subscription for leaf-list node inside a list; with leaf-list mapped to a DB field
+- ONCE subscription for a non-DB path, with wildcard keys
+- ONCE subscription for a non-DB path, without wildcard keys
+- ONCE subscription with unknown path
+
+## 10.2 gNMI UT Framework for spytest
+
+TBD
 
 ## 10.3 UT with gnmi_cli tool
 
@@ -546,6 +793,7 @@ Alternatively, it can be obtained from the build server `sonic-buildimage/src/so
 Few of the sample usages are listed below.
 
 1\) ON_CHANGE subscription
+
 ```
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type streaming -streaming_type ON_CHANGE \
@@ -553,6 +801,7 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 ```
 
 2\) SAMPLE subscription, with sample interval of 30 seconds
+
 ```
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type streaming -streaming_type SAMPLE -streaming_sample_interval 30 \
@@ -560,6 +809,7 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 ```
 
 3\) TARGET_DEFINED subscription
+
 ```
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type streaming -streaming_type TARGET_DEFINED \
@@ -567,6 +817,7 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 ```
 
 4\) POLL subscription, with polling interval of 20 seconds
+
 ```
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type polling -polling_interval 20s \
@@ -574,6 +825,7 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 ```
 
 5\) ONCE subscription
+
 ```
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type once \
@@ -581,13 +833,14 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 ```
 
 6\) Subscribing to multiple paths (passing comma separated path list in -query option)
+
 ```
 gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query_type streaming -streaming_type ON_CHANGE \
     -query openconfig-interfaces:interfaces/interface[name=*]/config,openconfig-acl:acl/acl-sets
 ```
 
-## 10.4 Onchange supported URI Paths
+## 10.4 Supported YANG Paths
 
 Please refer to [Subscribe YANG Path](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md) guide.
 
@@ -612,5 +865,6 @@ N/A
 ## 11.5 Broadcom Release Matrix
 
 | Release | Change(s)    |
-|:-------:|:-------------------------------------------------------------------------|
-| 3.2.0   | * Subscribe RPC for paths with wildcard keys <br> * ON_CHANGE subscription for eligible YANG paths<br> * PROTO encoding in Get and Subscribe RPCs |
+|---------|--------------|
+| 3.2.0   | \* Subscribe RPC for paths with wildcard keys<br> \* ON_CHANGE subscription for eligible YANG paths |
+| 4.0.0   | \* TARGET_DEFINED, SAMPLE, POLL and ONCE subscriptions<br> \* Scalar encoded telemetry updates |
