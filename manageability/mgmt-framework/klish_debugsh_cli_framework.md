@@ -1,7 +1,7 @@
 # Feature Name
 KLISH Debug Shell CLI framework
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 
 # Revision
 
@@ -26,17 +26,13 @@ This feature provides the framework for integrating backend modules debug CLI co
 
 Currently debugsh supports 2 kinds of debug commands
 
-## debugsh commands supported
+* debugsh commands supported
 
-### Backend or remote commands 
+  * Backend or remote commands : Used to dump data stored in the heap memory of the backends. This information is typically not available in the redis DB. These commands will be supported in sonic-cli.
 
-Used to dump data stored in the heap memory of the backends. This information is typically not available in the redis DB. These commands will be supported in sonic-cli.
+* debugsh commands not supported
 
-## debugsh commands not supported
-
-### Local or flex CLIs
-
-These commands are used to gather information from various sources. For example backend, redis database, Linux commands, and the SDK shell. The information is then processed to show user friendly output like consistency checking, DB to Hardware mapping etc. These commands will not be supported.
+  * Local or flex CLIs : These commands are used to gather information from various sources. For example backend, redis database, Linux commands, and the SDK shell. The information is then processed to show user friendly output like consistency checking, DB to Hardware mapping etc. These commands will not be supported.
 
 **Only the debugsh backend commands are to be support in sonic-cli, and Management Framework.**
 
@@ -108,24 +104,16 @@ sonic-debugsh.yang
 
 The debugsh CLI tree is automatically generated/cached in the REST server using the commands that are dynamically obtained from the backend. 
 
-#### Configuration Commands
-N/A
-
-#### Show Commands
-N/A
-
 #### Debug Commands
 
-```
-sonic-cli# debugsh show system internal (...|-h)
-sonic-cli# debugsh debug system internal (...|-h)
-sonic-cli# debugsh clear system internal (...|-h)
+* **debugsh show system internal (...|-h)**
+* **debugsh debug system internal (...|-h)**
+* **debugsh clear system internal (...|-h)**
 
-sonic-cli# debugsh show system internal debugsh backend cmdtree (...|-h)
+* **debugsh show system internal debugsh backend cmdtree (...|-h)**
 
-sonic-cli# debugsh option timeout <1-180>
+* **debugsh option timeout <1-180>** (Set the backend communication timeout)
 
-```
 
 For example:
 
@@ -210,7 +198,7 @@ debugsh is a SONiC specific implementation, thus there is no need for IS-CLI com
 ### REST API Support
 See [Data Models](#data-models)
 
-# 4 Flow Diagrams
+# Flow Diagrams
 
 ```
 
