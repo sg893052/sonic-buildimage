@@ -50,11 +50,12 @@ Rev 0.1
 - [6 Serviceability and Debug](#6-Serviceability-and-Debug)
 - [7 Warm Boot Support](#7-Warm-Boot-Support)
 - [8 Scalability](#8-Scalability)
-- [9 Unit Test](#9-Unit-Test)
-  - [9.1 Functional Test Cases](#9_1-Functional-Test-Cases)
-  - [9.2 Negative Test Cases](#9_2-Negative-Test-Cases)
-  - [9.3 Warm boot Test Cases](#9_3-Warm-boot-Test-Cases)
-- [10 Configuration Example](#10-Configuration-Example)
+- [9 Upgrade and Downgrade](#9-Upgrade-and-Downgrade)
+- [10 Unit Test](#9-Unit-Test)
+  - [10.1 Functional Test Cases](#9_1-Functional-Test-Cases)
+  - [10.2 Negative Test Cases](#9_2-Negative-Test-Cases)
+  - [10.3 Warm boot Test Cases](#9_3-Warm-boot-Test-Cases)
+- [11 Configuration Example](#10-Configuration-Example)
 
 
 # List of Tables
@@ -66,6 +67,7 @@ Rev 0.1
 | Rev  | Date      | Author                                           | Change Description |
 | ---- | --------- | ------------------------------------------------ | ------------------ |
 | 0.1  | 4/30/2021 | Syed Hasan Naqvi, Rajesh Sankaran, Kishore Kunal | Initial version    |
+| 0.2  | 6/21/2021 | Syed Hasan Naqvi                                 | Review comments, show outputs, etc.|
 # About this Manual
 
 This document provides design details of EVPN Multi-Site DCI feature planned for Broadcom SONiC 4.0.0 release.
@@ -135,23 +137,25 @@ Following are functional requirements for EVPN VxLAN Multi-Site DCI:
 1. Ability to terminate and re-originate VxLAN tunnels at the BL for the traffic crossing PoD/Site.
 2. Support for Type-2, Type-3, and Type-5 EVPN routes.
 3. MCLAG redundancy for BL
-4. Ability to support termination of traffic for services locally attached to BL.
+4. Ability to support termination of traffic for (single-homed and multi-homed) services locally attached to BL.
 5. Co-existence with advertise-PIP feature on BL, while advertise-PIP not being mandatory for multi-site.
 6. Support for downstream assigned VNI for connecting to remote sites.
 7. Ability to support this feature on ToR for terminating VxLAN tunnels originating from server, and re-originating tunnel towards BL.
 8. Support all above on all available platforms on which EVPN VxLAN is supported.
-9. No impact to existing EVPN functionality if this feature is not configured.
+9. No impact to intra-site tunnels and traffic in case of failure of inter-site BGP peering or tunnel(s).
+10. No impact to existing EVPN functionality if this feature is not configured.
 
 
 
 Following are non-goals for the EVPN Multi-site DCI feature:
 
 1. Support for Type-1 and Type4 routes. These routes will not be crossing the BL.
-2. ESI based multi-homing for BL
-3. Anycast Border Gateway. Only MCLAG Border Gateway is supported.
-4. Provider Backbone Bridging
-5. Conversational MAC
-6. Conversational ARP
+2. BUM replication method other than Ingress Replication.
+3. ESI based multi-homing for BL
+4. Anycast Border Gateway. Only MCLAG Border Gateway is supported.
+5. Provider Backbone Bridging
+6. Conversational MAC
+7. Conversational ARP
 
 
 
@@ -161,6 +165,7 @@ Following are configuration and management requirements for EVPN Multi-site DCI:
 
 1. Ability to enable or disable this feature dynamically without impact to existing VxLAN configuration.
 2. Support for REST/KLISH for all of the configuration and show.
+3. OC-yang based REST URIs.
 
 
 
@@ -265,11 +270,13 @@ Once a neighbor is configured as *fabric-external*, it will belong to separate r
 
 Following will be the behavior for routes received/advertised between non-fabric-external and fabric-external neighbors:
 
-| Route Type                                 | Advertised to<br />Non-Fabric-External Neighbor | Advertised to<br />Fabric-Externa-Neighbor |
-| :----------------------------------------- | ----------------------------------------------- | ------------------------------------------ |
-| Locally originated                         | NH=VIP, RMAC=local                              | NH=external-ip, RMAC=local                 |
-| Received from Non-fabric-external neighbor | nexthop unchanged                               | NH=external-ip, RMAC=local                 |
-| Received from Fabric-external neighbor     | NH=VIP, RMAC=local                              | nexthop unchanged                          |
+| Route Type                                                   | Advertised to<br />Non-Fabric-External Neighbor | Advertised to<br />Fabric-External-Neighbor |
+| :----------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
+| Locally originated (SHD/MHD)<br />(Advertise-PIP not configured) | NH=VIP, RMAC=local (Virtual-MAC)                | NH=external-ip, RMAC=local (Virtual-MAC)    |
+| Locally originated (MHD)<br />(Advertise-PIP configured)     | NH=VIP, RMAC=local (Virtual-MAC)                | NH=VIP, RMAC=local (Virtual-MAC)            |
+| Locally originated (SHD)<br />(Advertise-PIP configured)     | NH=PIP, RMAC=local (System-MAC)                 | NH=PIP, RMAC=local (System-MAC)             |
+| Received from Non-fabric-external neighbor                   | nexthop unchanged                               | NH=external-ip, RMAC=local (Virtual-MAC)    |
+| Received from Fabric-external neighbor                       | NH=VIP, RMAC=local (Virtual-MAC)                | nexthop unchanged                           |
 
 The route-distinguisher (RD) and route-targets (RT) in the received routes will be retained as is while re-advertising the routes between fabric-external and non-fabric-external BGP neighbors. User can apply inbound and outbound policies on the fabric-external neighbors to send special communities / extended-communities in order to have custom control on the routes crossing the BL.
 
@@ -362,13 +369,12 @@ Assuming L2VNI in the route with RT 2000:1 is 2000, the corresponding MAC entry 
 
 Extra VxLAN configuration is required to pre-allocate the hw resources required for maintaining per tunnel VNI mapping. Maintaining downstream VNI per tunnel doesn't use the hw resource optimally, and therefore downstream VNI feature is disabled by default.
 
-At the Border-leaf, the downstream feature can be enabled for specific type of VTEPs (external or internal). 
+At the Border-leaf, the downstream feature can be enabled for external or specific VTEPs.
 
 ```
 sonic(config)# interface vxlan vtep-1
 sonic(conf-if-vxlan-vtep-1)# vni downstream ?
     external          External VTEPs
-    internal          Internal VTEPs
     <A.B.C.D>         Specific VTEP IP address
 ```
 
@@ -440,7 +446,7 @@ Producer:  VxlanMgr
 
 Consumer: VxlanOrch
 
-Description: Updated existing table to store primary IP.
+Description: Updated existing table to store external IP.
 
 Schema:
 
@@ -689,12 +695,12 @@ The following command is available to specify which of the VTEPs will have VNI a
 
 ```
 sonic(config)# interface vxlan vtep-1
-sonic(config-if-vxlan-vtep-1)# vni downstream {external|internal|<A.B.C.D>}
+sonic(config-if-vxlan-vtep-1)# vni downstream {external|<A.B.C.D>}
 ```
 
-The `external`/`internal` options enable capability for external/internal VTEPs to have VNI assignment separate from local configuration, respectively. The specific VTEP IP address can also be specified to enable this capability. 
+The `external` option enables capability for external VTEPs to have VNI assignment separate from local configuration. The specific VTEP IP address can also be specified to enable this capability. 
 
-
+Note that source-ip, external-ip, and vni-downstream configurations are to be applied before creating VLAN-VNI mappings.
 
 The Route-Target configuration commands for L2 VNI and L3 VNI under BGP L2VPN EVPN address-family configuration modes are enhanced to ease up the RT configuration when using downstream assigned VNI.
 
@@ -815,6 +821,55 @@ admin@sonic:~$
 
 
 
+
+
+
+
+```
+leaf2# show vxlan tunnel
+Name                SIP               DIP                 source     Group      operstatus
+=======             ======            ======              ======     ========   ==========  
+EVPN_1.0.1.1        1.0.1.255         1.0.1.1             EVPN       external   oper_down 
+EVPN_1.0.3.1        1.0.1.255         1.0.3.1             EVPN       external   oper_up   
+EVPN_1.0.3.255      1.0.1.255         1.0.3.255           EVPN       internal   oper_up   
+EVPN_1.0.4.1        1.0.1.255         1.0.4.1             EVPN       external   oper_up   
+EVPN_1.0.5.1        1.0.1.255         1.0.5.1             EVPN       external   oper_up   
+```
+
+
+
+```
+leaf2# show vxlan remote vni
+Vlan       Tunnel      Group     VNI
+======   =========     ========  =====
+Vlan1001  1.0.3.255    internal  1001
+Vlan1001  1.0.5.1      external  1001
+Vlan1002  1.0.3.255    internal  1002
+Vlan1002  1.0.5.1      external  1002
+...
+```
+
+
+
+
+
+
+
+```
+leaf2# show vxlan remote mac
+Vlan      Mac                  Type     Tunnel     Group      VNI
+======    ==============       =======  ========   ======     ======
+Vlan1001  3c:2c:99:2d:7d:38    dynamic  1.0.3.255  internal  1001
+Vlan1001  3c:2c:99:6d:da:4c    dynamic  1.0.3.255  internal  1001
+Vlan1002  3c:2c:99:2d:7d:38    dynamic  1.0.3.255  internal  1002
+Vlan1002  3c:2c:99:6d:da:4c    dynamic  1.0.3.255  internal  1002
+Vlan1003  00:c0:05:31:00:01    dynamic  1.0.5.1    external  1003
+Vlan1003  00:c0:05:31:00:02    dynamic  1.0.5.1    external  1003
+...
+```
+
+
+
 ### 3.5.5 Debug Commands
 
 TBD
@@ -853,9 +908,17 @@ No impact to scalability. Existing scale numbers will be supported with this fea
 
 
 
-# 9 Unit Test
+# 9 Upgrade and Downgrade
 
-## 9.1 Functional Test Cases
+Upgrade from previous SONiC release not supporting EVPN Multisite to this release will be supported. The Multisite feature will have to be configured afresh after upgrade.
+
+Downgrade behavior is TBD.
+
+
+
+# 10 Unit Test
+
+## 10.1 Functional Test Cases
 
 **Fabric-external peering and advertisement**
 
@@ -913,12 +976,17 @@ No impact to scalability. Existing scale numbers will be supported with this fea
 
 
 
-## 9.2 Negative Test Cases
+## 10.2 Negative Test Cases
 
 1. Configure same VTEP IP address on internal and external networks and remove one of them. Verify that Type-2,3,and5 routes from the remaining VTEP are correctly installed.
+
 2. Configure VTEPs with asymmetric VNI mapping without configuring downstream VxLAN configuration. Verify traffic is impacted. Correct the configuration and verify traffic is forwarded correctly.
 
-## 9.3 Scale Test Cases
+3. Clear internal and external BGP peers one after another and verify traffic is resumed after sessions are re-established.
+
+   
+
+## 10.3 Scale Test Cases
 
 1. Verify moving 40K MAC from internal to external peers and vice-versa.
 2. Verify downstream assigned VNI For 1K VLAN and 40K MACs
@@ -926,7 +994,7 @@ No impact to scalability. Existing scale numbers will be supported with this fea
 
 
 
-## 9.4 Warm boot Test Cases
+## 10.4 Warm boot Test Cases
 
 1. Configure fabric-external peers with internal and external peers with bidirectional traffic. Verify that traffic continues to flow after warm-reboot and fast-reboot.
 
@@ -934,7 +1002,7 @@ No impact to scalability. Existing scale numbers will be supported with this fea
 
    
 
-# 10 Configuration Example
+# 11 Configuration Example
 
 
 
@@ -943,7 +1011,7 @@ BL node1:
 sonic(config)# interface vxlan vtep-1
 sonic(conf-if-vxlan-vtep-1)# source-ip 192.168.1.1                 ! Virtual IP
 sonic(conf-if-vxlan-vtep-1)# external-ip 10.10.10.10               ! External IP
-sonic(conf-if-vxlan-vtep-1)# peer-ip 192.168.1.2                   ! Primary IP
+sonic(conf-if-vxlan-vtep-1)# primary-ip 192.168.1.2                   ! Primary IP
 sonic(conf-if-vxlan-vtep-1)# vni downstream external       ! External VTEPs will have remotely assigned VNI
 
 !! Configure local VLAN-VNI assignemts here !!
