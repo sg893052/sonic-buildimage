@@ -63,9 +63,9 @@ Rev 0.1
 
 # Revision
 
-| Rev  | Date      | Author           | Change Description |
-| ---- | --------- | ---------------- | ------------------ |
-| 0.1  | 4/30/2021 | Syed Hasan Naqvi | Initial version    |
+| Rev  | Date      | Author                                           | Change Description |
+| ---- | --------- | ------------------------------------------------ | ------------------ |
+| 0.1  | 4/30/2021 | Syed Hasan Naqvi, Rajesh Sankaran, Kishore Kunal | Initial version    |
 # About this Manual
 
 This document provides design details of EVPN Multi-Site DCI feature planned for Broadcom SONiC 4.0.0 release.
@@ -320,7 +320,7 @@ BGP EVPN route updates carry L2/L3 VNI along with Route-Targets (RTs.) In the ex
 
 Specifically, while connecting multiple sites, which will be in separate administrative control, VNI assigned to IP/MAC VRF cannot be assumed to be the same. In such a case, the routes from remote sites are imported into IP/MAC VRF by matching RTs configured locally for the IP/MAC VRF with the RTs in the incoming route. And VNI in the incoming route may not be same as the VNI configured locally for the IP/MAC VRF.
 
-
+#### 2.2.4.1 BGP configuration
 
 In the example below, administrator is importing routes matching 1000:1 and 2000:1 RTs, where RT 2000:1 is configured on the remote site.
 
@@ -334,6 +334,19 @@ vni 1000
 
 
 
+Similarly, Type-5 routes matching remote RT 20010:1 are imported into Vrf-red:
+
+```
+router bgp 10 vrf Vrf-red
+    address-family l2vpn evpn
+        rd 10010:1
+        route-target export 10010:1
+        route-target import 10010:1
+        route-target import 20010:1
+```
+
+
+
 The VNI in the incoming BGP update will be carried in the control plane and remote MAC/ARP and IMET entries will be programmed in the Linux kernel and hw with the remote VNI.
 
 ```
@@ -341,8 +354,48 @@ The VNI in the incoming BGP update will be carried in the control plane and remo
 00:09:01:0b:00:01 dev vtep1-1000 dst 1.0.3.1 vni 2000 self offload
 ```
 
-
 Assuming L2VNI in the route with RT 2000:1 is 2000, the corresponding MAC entry is programmed in Linux against vxlan netdevice of VNI 1000 with remote VNI 2000. Same will be achieved in the hw. The VXLAN_FDB_TABLE and VXLAN_REMOTE_VNI tables have VNI field that is effectively the downstream VNI.
+
+
+
+#### 2.2.4.2 VxLAN configuration
+
+Extra VxLAN configuration is required to pre-allocate the hw resources required for maintaining per tunnel VNI mapping. Maintaining downstream VNI per tunnel doesn't use the hw resource optimally, and therefore downstream VNI feature is disabled by default.
+
+At the Border-leaf, the downstream feature can be enabled for specific type of VTEPs (external or internal). 
+
+```
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# vni downstream ?
+    external          External VTEPs
+    internal          Internal VTEPs
+    <A.B.C.D>         Specific VTEP IP address
+```
+
+Typically, within the DC, the VTEPs will have the same VLAN-VNI mapping. However, the remote site(s) to which the BL is connecting to may be  in a separate administrative control and may have different VNI assignment. In such a case, it might easier to configure downstream VNI assignment for external VTEPs:
+
+```
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# vni downstream external
+```
+
+If there is only one specific VTEP(s) which have different VLAN-VNI assignment, it might be better to specify such remote VTEP IP addresses.
+
+```
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# vni downstream 10.10.10.10
+sonic(conf-if-vxlan-vtep-1)# vni downstream 10.10.10.11
+```
+
+Note that the above downstream VNI configurations have to be performed before configuring VNI-VLAN mapping.
+
+
+
+### 2.2.5 Co-existence of Primary IP on Border Leaf
+
+VxLAN Primary IP address can be configured on the Border Leaf nodes if there are services or hosts locally attached to MCLAG orphan port(s). Note that the Primary IP as next-hop will be applicable only for the local routes advertised by Border Leaf nodes. If Primary IP address is configured, Orphan MAC's Type-2 routes and Type-5 routes will be advertised to both internal and external BGP peers with the PIP as the next-hop.
+
+The routes re-advertised between external and internal peers will continue to use External IP and Virtual IP as described in previous subsections.
 
 
 
@@ -415,7 +468,7 @@ Schema:
 
 ```
 ; Existing table
-; Updated to group to identify split horizon group the mac belongs to.
+; Updated group to identify split horizon group the mac belongs to.
 
 key = VXLAN_FDB_TABLE:"Vlan"vlanid:mac_address
                           ; MAC Address and VLAN ID
@@ -437,12 +490,56 @@ Schema:
 
 ```
 ; Existing table
-; Updated to group to identify split horizon group the IMET route belongs to.
+; Updated group to identify split horizon group the IMET route belongs to.
 
 key = VXLAN_REMOTE_VNI_TABLE:"Vlan"vlanid:remote_vtep_ip
                   ; Vlan ID and Remote VTEP IP 
 ; field = value
 group = "internal" / "external" ; split-horizon group IMET route belongs to. If this field is absent, it means "internal".
+```
+
+
+
+**ROUTE_TABLE**
+
+Producer:  Fpmsyncd
+
+Consumer: RouteOrch
+
+Description: Updated existing table to store split-horizon group.
+
+Schema:
+
+```
+; Existing table
+; Updated group to identify split horizon group the Type-5 route belongs to.
+
+key = ROUTE_TABLE:vrfname:ip_prefix
+                  ; Vrf-name and IPv4/IPv6 prefix
+; field = value
+group = "internal" / "external" ; split-horizon group Type-5 route's nexthop belongs to. If this field is absent, it means "internal".
+```
+
+
+
+**NHID_TABLE**
+
+Producer:  Fpmsyncd
+
+Consumer: NhgOrch
+
+Description: Updated existing table to store split-horizon group.
+
+Schema:
+
+```
+; Existing table
+; Updated group to identify split horizon group the Next-hop group member belongs to.
+
+key = NHID_TABLE:nhid
+                  ; Nexthop group id
+; field = value
+group = "internal" / "external" ; split-horizon group Next-hop group memeber belongs to. If this field is absent, it means "internal".
 ```
 
 
@@ -461,11 +558,91 @@ No Changes
 
 
 
-## 3.3 FRR
+## 3.3 FRR, Fpmsyncd, and Fdbsyncd
 
-Following is the high level behavior of Zebra:
+Following FRR components will undergo changes to support EVPN Multi-site and downstream assigned VNI:
 
-1. 
+- BGP
+- Zebra
+
+Fpmsyncd and Fdbsyncd are also enhanced to bring awareness of external EVPN routes.
+
+There is no change required in neighsyncd as remote neighbor entries are installed against SVI interfaces and are agnostic to external vs internal VTEPs.
+
+
+
+### 3.3.1 BGP changes
+
+#### 3.3.1.1 Fabric external peers
+
+BGP peering with external DCI needs to be done as fabric-external peering. It is recommended that fabric-external command is only used in multi-site deployment. Fabric-external enables the next-hop rewrite for multi-site. By default peers will be fabric-internal peers.
+
+
+
+#### 3.3.1.2 BGP route re-advertisement between fabric-external and internal peers
+
+EVPN routes on the Border gateways will never be reflected but it will be consumed and re-advertised. Type-2 and Type-5 routes received from fabric-external or fabric-internal will be re-advertised to the other side if the route is imported and they become active routes in MAC-VRF. The route will be re-advertised as new routes with the following fields:
+
+\-     RD as BGW’s RD. 
+
+\-     RT as BGW’s RT. 
+
+\-     Next-hop as BGW fabric internal/external tunnel interface.
+
+\-     Router-Mac as BGW’s rmac
+
+ 
+
+<figure><img src="evpn_multisite_images/bgp_design.png" align="center"><figcaption align="center">Figure: FRR BGP design</figcaption></img></figure>
+
+
+
+**Ribout flow during re-advertisement**
+
+All the evpn peers are marked as fabric-external or fabric-internal peers. 
+
+- EVPN routes learned from fabric-internal will be reflected to all the fabric-internal neighbors rib-out. And imported to the MAC_VRF table.
+- EVPN routes learned from fabric-external will be reflected to all the fabric-external neighbors rib-out. And imported to the MAC_VRF table.
+- If the imported route becomes active then the routes are exported to Rin-in learned as a local route.
+- These local routes are then added to rib-out for fabric-external and fabric-internal peers.
+
+
+
+### 3.3.2 Zebra changes
+
+#### 3.3.2.1 Handling of external and internal VxLAN netdevices
+
+Zebra is enhanced to maintain two vxlan netdevice references for each VNI:
+
+- vxlan_if
+
+  The is the existing vxlan interface and routes received from internal peers are installed on this interface.
+
+- vxlan_ext_if
+
+  This is the new vxlan interface and routes received from external peers are installed on this interface.
+
+#### 3.3.2.2 Handling of downstream assigned VNI
+
+BGP is enhanced to extract VNI (label) information from the Type-2/Type-5 routes and from PMSI tunnel attribute for Type-3 routes and send to it zebra along with route updates.
+
+Zebra are enhanced to maintain downstream assigned vni (referred as label) in zebra_mac_t, zebra_neigh_t, zebra_rmac_t, and zebra_vtep_t data-structures.
+
+#### 3.3.2.3 Handling of EVPN routes received from fabric-external peers
+
+BGP is enhanced to send 'external' flag to zebra for the routes which are selected best and are received from fabric-external peers.
+
+Zebra is enhanced to maintain external flag in zebra_mac_t, zebra_neigh_t, zebra_rmac_t, and zebra_vtep_t data-structures and installed them into the kernel against vxlan_if or vxlan_ext_if accordingly. Similarly, the external flag is sent to route and NHID updates sent to fpmsyncd.
+
+### 3.3.3 Fpmsyncd changes
+
+Fpmsyncd is enhanced to extract external flag in the EVPN route updates received from zebra and populate group field in populated in ROUTE_TABLE and NHID_TABLE entries.
+
+
+
+### 3.3.4 Fdbsyncd changes
+
+Fdbsyncd is enhanced to maintain the internal/external vxlan netdevice information when receiving netlink mac events from kernel. If the mac update was received with external vxlan netdevice interface, group field is populated in VXLAN_FDB_TABLE and REMOTE_VNI_TABLE entries.
 
 
 
@@ -485,7 +662,112 @@ TBD
 
 #### 3.5.3.1 KLISH commands
 
-TBD
+The below configuration command is used to configure external IP address on the Border Leaf node:
+
+```
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# source-ip 192.168.10.1
+sonic(conf-if-vxlan-vtep-1)# external-ip 10.1.1.1
+```
+
+
+
+The following command will be used to configure BGP neighbor as fabric-external:
+
+```
+sonic(config)# router bgp 10
+sonic(config-router-bgp)# neighbor 10.1.10.1
+sonic(config-router-bgp-neighbor)# remote-as external
+sonic(config-router-bgp-neighbor)# address-family l2vpn evpn
+sonic(config-router-bgp-neighbor-af)# activate
+sonic(config-router-bgp-neighbor-af)# fabric-external     ! External peer
+```
+
+
+
+The following command is available to specify which of the VTEPs will have VNI assignments different from the local configuration.
+
+```
+sonic(config)# interface vxlan vtep-1
+sonic(config-if-vxlan-vtep-1)# vni downstream {external|internal|<A.B.C.D>}
+```
+
+The `external`/`internal` options enable capability for external/internal VTEPs to have VNI assignment separate from local configuration, respectively. The specific VTEP IP address can also be specified to enable this capability. 
+
+
+
+The Route-Target configuration commands for L2 VNI and L3 VNI under BGP L2VPN EVPN address-family configuration modes are enhanced to ease up the RT configuration when using downstream assigned VNI.
+
+
+
+Below RT configuration can be used to enable import/export of routes in the given VNI or VRF using auto-generated RT values. This configuration is to be used when manual RT values are specified.
+
+Under VNI configuration mode:
+
+```
+sonic(config)# router bgp 10
+sonic(config-router-bgp)# address-family l2vpn evpn
+sonic(config-router-bgp-af)# vni 1010
+sonic(config-router-bgp-af-vni)# route-target both 1:1010
+sonic(config-router-bgp-af-vni)# [no] route-target {import|export|both} auto
+```
+
+Under BGP VRF L2VPN EVPN configuration mode:
+
+```
+sonic(config)# router bgp 10 vrf Vrf-red
+sonic(config-router-bgp)# address-family l2vpn evpn
+sonic(config-router-bgp-af)# route-target both 1:10010
+sonic(config-router-bgp-af)# [no] route-target {import|export|both} auto
+```
+
+
+
+Below RT configuration can be used to import routes in the given VNI or VRF ignoring the Global Administrator field in the RTs of the incoming routes.
+
+Under VNI configuration mode:
+
+```
+sonic(config-router-bgp-af)# vni 1010
+sonic(config-router-bgp-af-vni)# [no] route-target import *:<value>
+```
+
+Under BGP VRF L2VPN EVPN configuration mode:
+
+```
+sonic(config-router-bgp-af)# [no] route-target import *:<value>
+```
+
+
+
+The route-target configuration is enhanced to accept Route-targets in the form of list instead of single RT in a separate configuration.
+
+Under VNI configuration mode:
+
+```
+sonic(config-router-bgp-af)# vni 1010
+sonic(config-router-bgp-af-vni)# [no] route-target {import|export|both} RTLIST
+```
+
+Under BGP VRF L2VPN EVPN configuration mode:
+
+```
+sonic(config-router-bgp-af)# [no] route-target {import|export|both} RTLIST
+```
+
+
+
+Below route-map option is introduced in KLISH:
+
+```
+sonic(config)# router bgp 10 vrf Vrf-red
+sonic(config-router-bgp)# address-family l2vpn evpn
+sonic(config-router-bgp-af)# [no] advertise ipv4|ipv6 unicast route-map <rmap>
+```
+
+The above command can be used to filter IPv4 and IPv6 routes while exporting into EVPN from BGP VRF address-families.
+
+
 
 
 #### 3.5.3.2 Click commands
@@ -494,7 +776,44 @@ TBD
 
 ### 3.5.4 Show Commands
 
-TBD
+The below KLISH command will now show the External VTEP IP address and downstream VNI configuration(s):
+
+```
+sonic# show vxlan interface
+
+VTEP Name        :  vtep1
+VTEP Source IP   :  1.1.1.1
+VTEP Primary IP  :  2.2.2.2
+VTEP External IP :  10.10.10.10
+EVPN NVO Name    :  nvo1
+EVPN VTEP        :  vtep1
+Downstream VNI   : External, 192.168.2.100
+Source Interface :  Loopback10
+Primary IP interface : Loopback20
+External IP interface: Loopback30
+sonic#
+```
+
+
+
+Below CLICK command will now show the  External VTEP IP and downstream VNI configuration(s):
+
+```
+admin@sonic:~$ show vxlan interface
+VTEP Information:
+
+        VTEP Name : vtep1, SIP  : 1.1.1.1
+        Primary IP  : 2.2.2.2
+        External IP : 10.10.10.10
+        NVO Name  : nvo1,  VTEP : vtep1
+        Downstream VNI: External, 192.168.2.100
+        Source interface  : Loopback10
+        Primary IP interface : Loopback20
+        External IP interface: Loopback30
+admin@sonic:~$
+```
+
+
 
 ### 3.5.5 Debug Commands
 
@@ -538,20 +857,129 @@ No impact to scalability. Existing scale numbers will be supported with this fea
 
 ## 9.1 Functional Test Cases
 
+**Fabric-external peering and advertisement**
+
+1. Configure 2 internal and 2 fabric-external peers and verify peer is established over BGP unnumbered, IPv4, and IPv6 links.
+
+2. Verify Type-5 routes received from internal peers are advertised to external (and vice-versa) with local nexthop and rmac.
+
+3. Verify Type-2 routes received from internal peers are advertised to external (and vice-versa) with local nexthop and rmac and both of the VNIs.
+
+4. Verify Type-3 routes received from internal peers are not advertised to external (and vice-versa). Only locally originated IMET routes are advertised to external and internal peers.
+
+5. Clear fabric-external and internal peers and verify all of the above routes are still present with corresponding parameters.
+
+6. Remove fabric-external peers and verify routes are removed from internal peers.
+
+7. Re-add fabric-external peers and verify routes are re-advertised to internal peers with correct parameters.
+
+   
+
+**Fabric-external peers route installation **
+
+1. Verify Type-2 routes received from external peers are installed in kernel on external vxlan netdevice and VXLAN_FDB_TABLE has group as external.
+
+2. Verify Type-2 host routes received from external peers are installed in ROUTE_TABLE with group as external.
+
+3. Verify Type-3 routes received from external peers are installed in kernel on external vxlan netdevice and REMOTE_VNI_TABLE has group as external.
+
+4. Verify Type-5 routes received from external peers are installed in ROUTE_TABLE with group as external.
+
+5. Move the MAC from external to internal peer and verify that MAC is moved from external to internal vxlan netdevice and group field is updated in VXLAN_FDB_TABLE.
+
+6. Verify moving the MAC from external to local, internal to local, local to external, and local to internal.
+
+7. Verify Type-2 host routes after the MAC move are updated in ROUTE_TABLE with correct internal group.
+
+8. Advertise Type-5 route from internal peer as well, and verify ECMP is formed in ROUTE_TABLE with external and internal groups
+
+9. Remove Type-5 route from external peer and verify ECMP nexthop is updated in ROUTE_TABLE.
+   Reconfigure the same VTEP IP on internal network and verify IMET route is updated.
+
+   
+
+**Downstream assigned VNI**
+
+1. Configure two VTEPs with same VLANs and L3VNI IRB VLANs but different VNI mappings. Configure RTs on the VTEPs to import each other's routes in correct MAC-VRF and IP-VRFs. Verify routes are imported into correct VRFs.
+2. Verify Type-2 routes are installed with correct remote VNI.
+3. Verify Type-3 routes are installed with correct remote VNI.
+4. Verify Type-2 converted host routes are installed with correct remote VNI
+5. Verify Type-5 routes are installed with correct remote VNI.
+6. Move the Type-2 route to another VTEP with symmetric VNI mapping. And verify Type-2 routes are installed with correct VNI.
+7. Verify above with fabric-external peers.
+8. Verify forming ECMP for Type-5 with external and internal peers with separate VNI mapping.
+9. Move the Type-2 route to another VTEP and verify MAC is updated with correct remote VNI.
+10. Move the MAC from remote to local and local to remote and verify MAC is updated with correct VNI.
+
+
+
 ## 9.2 Negative Test Cases
 
-TBD
+1. Configure same VTEP IP address on internal and external networks and remove one of them. Verify that Type-2,3,and5 routes from the remaining VTEP are correctly installed.
+2. Configure VTEPs with asymmetric VNI mapping without configuring downstream VxLAN configuration. Verify traffic is impacted. Correct the configuration and verify traffic is forwarded correctly.
 
 ## 9.3 Scale Test Cases
 
-TBD
+1. Verify moving 40K MAC from internal to external peers and vice-versa.
+2. Verify downstream assigned VNI For 1K VLAN and 40K MACs
+
+
 
 
 ## 9.4 Warm boot Test Cases
 
-TBD
+1. Configure fabric-external peers with internal and external peers with bidirectional traffic. Verify that traffic continues to flow after warm-reboot and fast-reboot.
+
+2. Configure different VLAN to VNI mappings on internal and external peers. Verify that traffic continues to flow after warm-reboot and fast-reboot.
+
+   
 
 # 10 Configuration Example
 
-# 11 Appendix
 
+
+```
+BL node1:
+sonic(config)# interface vxlan vtep-1
+sonic(conf-if-vxlan-vtep-1)# source-ip 192.168.1.1                 ! Virtual IP
+sonic(conf-if-vxlan-vtep-1)# external-ip 10.10.10.10               ! External IP
+sonic(conf-if-vxlan-vtep-1)# peer-ip 192.168.1.2                   ! Primary IP
+sonic(conf-if-vxlan-vtep-1)# vni downstream external       ! External VTEPs will have remotely assigned VNI
+
+!! Configure local VLAN-VNI assignemts here !!
+..
+
+!! Configure BGP !!
+sonic(config)# router bgp 10
+sonic(config-router-bgp)# router-id 192.168.1.2
+sonic(config-router-bgp)# address-family l2vpn evpn
+sonic(config-router-af)# advertise-all-vni
+sonic(config-router-af)# advertise-pip peer-ip 192.168.1.3
+sonic(config-router)# neighbor 192.168.10.1          ! Internal peer
+sonic(config-router-bgp-neighbor)# remote-as external
+sonic(config-router-bgp-neighbor-af)# address-family l2vpn evpn
+sonic(config-router-bgp-neighbor-af)# activate
+sonic(config-router)# neighbor 10.1.10.1
+sonic(config-router-bgp-neighbor)# remote-as external
+sonic(config-router-bgp-neighbor)# address-family l2vpn evpn
+sonic(config-router-bgp-neighbor-af)# activate
+sonic(config-router-bgp-neighbor-af)# fabric-external     ! External peer
+
+BL node2:
+sonic(config)# interface vxlan vtep-2
+sonic(conf-if-vxlan-vtep-1)# source-ip 192.168.1.1              ! Virtual IP
+sonic(conf-if-vxlan-vtep-1)# external-ip 10.10.10.10            ! External IP
+sonic(conf-if-vxlan-vtep-1)# primary-ip 192.168.1.3             ! Primary IP
+sonic(conf-if-vxlan-vtep-1)# vni downstream external      ! External VTEPs will have remotely assigned VNI
+
+!! Configure local VLAN-VNI assignemts here!!
+..
+
+!! Configure BGP !!
+sonic(config)# router bgp 10
+sonic(config-router-bgp)# router-id 192.168.1.3
+sonic(config-router-bgp)# address-family l2vpn evpn
+sonic(config-router-bgp-af)# advertise-all-vni
+sonic(config-router-bgp-af)# advertise-pip peer-ip 192.168.1.2
+!! Add the neighbors here as configured on BL node1
+```
