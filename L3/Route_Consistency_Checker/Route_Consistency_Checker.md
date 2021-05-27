@@ -423,11 +423,8 @@ Routes considered:
     vrf: all
     address-family: IPv4
 Parameters:
-    Interval: 30 seconds
     Threshold: 10 seconds
     Auto-recify: true
-Last run: 02 seconds ago
-Next run: in 28 seconds
 
 Summary:
 Inconsistencies found: 2
@@ -474,7 +471,6 @@ Apr 21 22:30:25 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet6
 Apr 21 22:54:11 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" auto-rectify attempt 1. DEL/ADD at kernel
 Apr 21 22:54:11 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" auto-rectify FAILED
 Apr 21 22:54:24 Kernel Route "240.127.1.0/24 dev docker0 proto kernel scope link src 240.127.1.1 linkdown" IGNORE (host OS route)
-Apr 21 22:54:32 Route-consistency check complete. Next run after 30 seconds.
 ```
 
 ## 6 Serviceability and Debug
