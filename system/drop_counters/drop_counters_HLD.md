@@ -513,7 +513,7 @@ DEBUG_0   RX_LEGIT  LEGIT  PORT_INGRESS_DROPS  Session1        SMAC_EQUALS_DMAC 
 #### 3.8.1.3 Show interface drop counters
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show** **interface** **dropcounters** [**interface** **Ethernet** *ID* ] |
+| Syntax | SONiC# **show** **interface** **dropcounters** [**Ethernet** *ID* ] |
 | Arguments | *ID*: Number of Ethernet port |
 ```
 sonic#show interface dropcounters
@@ -523,12 +523,10 @@ Ethernet0        U        10         100         0           0         20
 Ethernet4        U         0        1000         0           0        100
 Ethernet8        U       100          10         0           0          0
 
-sonic#show interface dropcounters interface 
+sonic#show interface dropcounters Ethernet 0
     IFACE    STATE    RX_ERR    RX_DROPS    TX_ERR    TX_DROPS   RX_LEGIT
 ---------  -------  --------  ----------  --------  ----------  ---------
 Ethernet0        U        10         100         0           0         20
-Ethernet4        U         0        1000         0           0        100
-Ethernet8        U       100          10         0           0          0
 ```
 #### 3.8.1.4 Show switch drop counters
 | Mode   | Exec |
@@ -551,7 +549,9 @@ sonic       1000
 sonic#clear dropcounters all
 Clear all drop counters [confirm y/N]: y
 sonic#clear dropcounters interface all
+Clear all interface drop counters [confirm y/N]: y
 sonic#clear dropcounters interface Ethernet 0
+Clear counters for Ethernet0 [confirm y/N]:
 ```
 ### 3.8.3 Config Commands
 ### 3.8.3.1 Create or Delete drop counter
