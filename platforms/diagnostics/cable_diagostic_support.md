@@ -54,11 +54,13 @@ This document describes the high level design of cable diagnostic support in SON
 
 | **Term**     | **Meaning**                                                  |
 | ------------ | ------------------------------------------------------------ |
+| BER          | Bit Error Rate                                               |
 | CDR          | Optical clock and data recovery circuit                      |
 | QSFP         | Quad Small Form-factor Pluggable                             |
 | RX_LOL       | Rx CDR Loss of Lock                                          |
 | RX_LOS       | Rx Loss of signal                                            |
 | SFP          | Small form-factor pluggable transceiver                      |
+| SNR          | Signal-to-Noise Ratio                                        |
 | TDR          | Time Domain Reflectometry                                    |
 | TX_DISABLE   | Tx power disabled                                            |
 | TX_FAULT     | Tx fault detected                                            |
@@ -90,7 +92,7 @@ implemented to help users easily identify the cause of link failure on the trans
 DOM and threshold support.
 
 - Native RJ45: The TDR test should be performed for the conducted test requests
-- Copper SFP(1000GBASE-T): The TDR test should be performed via the built-in copper register read/write
+- 1G Copper SFP(1000GBASE-T): The TDR test should be performed via the built-in copper register read/write
 - Other SFPs: The conducted test requests will check the current DOM information and threshold values to generate the report, and of course, the DOM information and threshold will have to be available on the modules
 - QSFP/QSFP+/QSFP28: The conducted test requests will check the current DOM information and threshold values to generate the report, and of course, the DOM information and threshold will have to be available on the modules
 
@@ -100,8 +102,7 @@ The functional requirements for adding cable-diagnostics support in SONiC are:
 
 1. Ability to activate the cable/transceiver diagnostics test
 2. Display cable/transceiver diagnostics test report
-3. Display copper cable length in the case of native RJ45
-4. Display the maximum cable length supported in the case of optical transceivers
+3. Display copper cable length in the case of TDR (e.g. Native RJ45 or 1G copper SFP)
 
 ## 1.2 Configuration and Management Requirements
 
@@ -123,6 +124,18 @@ This document provides functional design and specifications of cable-diagnostics
 1. **Native RJ45:** This is a port with both MAC and PHY mounted on the box, the connections could be easily established by cat5e and cat6 Ethernet cables. When the cable-diagnostics test is conducted on the native RJ45, the orchagent will dispatches the request to the external PHY drivers, and it could either be the SAI library on the syncd or the PAI library on the GearBox, it depends on the platform designs.
 
 2. **External SFP/QSFP ports:** This is the so-called PHYless switch design, the front panel ports are cages that allow external PHYs on SFP/QSFP modules to get connected and communicated with the MAC on the box. The conducted cable-diagnostics test will evaluate the power and thermal readings of the moudule and compared with the threshold values found in the module registers. And hence, it could only work on modules with DOM information and threshold support, which is required to optics and optional to the coppers.
+
+### 2.2.1 Limitations 
+
+#### TDR diagnostic
+
+1. It only works on the native RJ45 and 1G copper SFPs (i.e. 1000BASE-T).
+
+#### OPTIC diagnostics
+
+1. It only works on the transceivers with DOM and Threshold support.
+2. It's to help users quickly identify the possible root cause of link failures based on the thermal and power readings, the modules pass the test may or may not get linked up.
+3. It does not evaluate the BER/SNR counters, and hence, it's not for transceivers qualification, the modules pass the test may or may not experience packet loss.
 
 # 3 Design
 ## 3.1 Overview
@@ -177,9 +190,9 @@ The **CABLE_DIAG** table will have the reports of the conducted cable-diagnostic
     "value": {
       "length": "3m", 
       "part_number": "NDAQGF-0003", 
-      "result": "N/A", 
+      "result": "Not Supported", 
       "timestamp": "29-Apr-2021 00:53:44", 
-      "type": "SFP", 
+      "type": "OPTIC", 
       "vendor_name": "Amphenol"
     }
   }, 
@@ -190,11 +203,40 @@ The **CABLE_DIAG** table will have the reports of the conducted cable-diagnostic
       "part_number": "FCLF-8521-3", 
       "result": "OK", 
       "timestamp": "29-Apr-2021 00:54:34", 
-      "type": "SFP", 
+      "type": "TDR", 
       "vendor_name": "FINISAR CORP."
     }
   }, 
 ```
+
+1. type: TDR for Time Domain Reflectometry diagnostic, or OPTIC for SFP/QSFP diagnostic
+2. length: The detected cable length (TDR only)
+3. part_number: The part number of the transceiver (OPTIC only)
+4. vendor_name: The vendor number of the transceiver (OPTIC only)
+5. timestamp: The timestamp of this report
+6. result: The test result, the possible test results are as below
+
+| Type  | Result        |  Description                                          |
+|:-----:|:-------------:|:------------------------------------------------------|
+| TDR   | OK            | Cable has passed the test                             |
+| TDR   | OPEN          | Cable is not connected                                |
+| TDR   | SHORT         | Short circuit has occurred in the cable               |
+| TDR   | FAILED        | Internal test failures at the physical layer          |
+| OPTIC | PASS          | None of failure defected on this transceiver          |
+| OPTIC | Not Supported | DOM information is not available on transceiver       |
+| OPTIC | Not Present   | The transceiver is not detected on the port           |
+| OPTIC | Lo TEMP       | Low temperature failure defected on this transceiver  |
+| OPTIC | Hi TEMP       | High temperature failure defected on this transceiver |
+| OPTIC | Lo VOLT       | Low voltage failure defected on this transceiver      |
+| OPTIC | Hi VOLT       | High voltage failure defected on this transceiver     |
+| OPTIC | Lo RxPwr      | Low RX power failure defected on this transceiver     |
+| OPTIC | Hi RxPwr      | High RX power failure defected on this transceiver    |
+| OPTIC | Lo TxPwr      | Low TX power failure defected on this transceiver     |
+| OPTIC | Hi TxPwr      | High TX power failure defected on this transceiver    |
+| OPTIC | RX_LOS        | RX_LOS assertion defected on this transceiver         |
+| OPTIC | TX_FAULT      | TX_FAULT assertion defected on this transceiver       |
+| OPTIC | TX_DISABLED   | TX_DISABLE assertion defected on this transceiver     |
+
 
 ## 3.3 Data Model
 
@@ -264,20 +306,15 @@ An example of displaying the reports of all the ports
 sonic# show cable-diagnostics report
 
 Interface     Type      Length  Result        Status        Timestamp
-------------  --------  ------  ------------  ------------  ------------------
-Ethernet0     SFP       3m      N/A           COMPLETED     29-Apr-2021 08:11:39
-Ethernet1     SFP       3m      N/A           COMPLETED     29-Apr-2021 08:11:39
-Ethernet2     SFP       3m      N/A           COMPLETED     29-Apr-2021 08:11:40
-Ethernet3     SFP       3m      N/A           COMPLETED     29-Apr-2021 08:11:40
-Ethernet4     SFP       10000m  N/A           COMPLETED     29-Apr-2021 08:11:40
-Ethernet5     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
-Ethernet6     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
-Ethernet7     SFP       300m    Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
-Ethernet8     SFP       10000m  N/A           COMPLETED     29-Apr-2021 08:11:41
-Ethernet9     SFP       10000m  N/A           COMPLETED     29-Apr-2021 08:11:41
-Ethernet10    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
-Ethernet11    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
-Ethernet12    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
+------------  --------  ------  ------------- ------------  --------------------
+Ethernet0     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:39
+Ethernet1     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:39
+Ethernet2     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:40
+Ethernet3     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:40
+Ethernet4     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
+Ethernet5     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
+Ethernet6     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
+Ethernet7     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:41
 ```
 
 An example of displaying the reports of Ethernet5
@@ -286,7 +323,7 @@ sonic# show cable-diagnostics report Ethernet 5
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
-Ethernet5     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
+Ethernet5     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
 ```
 
 An example of displaying the reports of Ethernet5,Ethernet6...Ethernet12
@@ -295,36 +332,15 @@ sonic# show cable-diagnostics report Ethernet 5-12
 
 Interface     Type      Length  Result        Status        Timestamp
 ------------  --------  ------  ------------  ------------  ------------------
-Ethernet5     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
-Ethernet6     SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
-Ethernet7     SFP       300m    Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
-Ethernet8     SFP       10000m  N/A           COMPLETED     29-Apr-2021 08:11:41
-Ethernet9     SFP       10000m  N/A           COMPLETED     29-Apr-2021 08:11:41
-Ethernet10    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
-Ethernet11    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
-Ethernet12    SFP       80m     Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
+Ethernet5     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:40
+Ethernet6     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
+Ethernet7     OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
+Ethernet8     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:41
+Ethernet9     OPTIC             Not Supported COMPLETED     29-Apr-2021 08:11:41
+Ethernet10    OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:41
+Ethernet11    OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
+Ethernet12    OPTIC             Lo RxPwr      COMPLETED     29-Apr-2021 08:11:42
 ```
-
-Note: While the *Result* is the test result, the *Status* is the state of the conducted test job, and the here is the table of the possible states.
-
-| Type                       | Result      |  Description                                          |
-|:--------------------------:|:-----------:|:------------------------------------------------------|
-| TDR (RJ45 and Copper SFPs) | OK          | Cable has passed the test                             |
-| TDR (RJ45 and Copper SFPs) | OPEN        | Cable is not connected                                |
-| TDR (RJ45 and Copper SFPs) | SHORT       | Short circuit has occurred in the cable               |
-| TDR (RJ45 and Copper SFPs) | FAILED      | Internal test failures at the physical layer          |
-| Optical SFP/QSFP           | OK          | None of failure defected on this transceiver          |
-| Optical SFP/QSFP           | Lo TEMP     | Low temperature failure defected on this transceiver  |
-| Optical SFP/QSFP           | Hi TEMP     | High temperature failure defected on this transceiver |
-| Optical SFP/QSFP           | Lo VOLT     | Low voltage failure defected on this transceiver      |
-| Optical SFP/QSFP           | Hi VOLT     | High voltage failure defected on this transceiver     |
-| Optical SFP/QSFP           | Lo RxPwr    | Low RX power failure defected on this transceiver     |
-| Optical SFP/QSFP           | Hi RxPwr    | High RX power failure defected on this transceiver    |
-| Optical SFP/QSFP           | Lo TxPwr    | Low TX power failure defected on this transceiver     |
-| Optical SFP/QSFP           | Hi TxPwr    | High TX power failure defected on this transceiver    |
-| Optical SFP                | RX_LOS      | RX_LOS assertion defected on this transceiver         |
-| Optical SFP                | TX_FAULT    | TX_FAULT assertion defected on this transceiver       |
-| Optical SFP                | TX_DISABLED | TX_DISABLE assertion defected on this transceiver     |
 
 #### show cable-diagnostics cable-length [Ethernet PortID[-PortID]]
 
@@ -341,46 +357,31 @@ sonic# show cable-diagnostics cable-length
 
 Interface     Type      Length
 ------------  --------  -------------------------------
-Ethernet0     SFP       3m
-Ethernet1     SFP       3m
-Ethernet2     SFP       3m
-Ethernet3     SFP       3m
-Ethernet4     SFP       10000m
-Ethernet5     SFP       80m
-Ethernet6     SFP       80m
-Ethernet7     SFP       300m
-Ethernet8     SFP       10000m
-Ethernet9     SFP       10000m
-Ethernet10    SFP       80m
-Ethernet11    SFP       80m
-Ethernet12    SFP       80m
+Ethernet0     TDR       < 50m
+Ethernet1     TDR       < 50m
+Ethernet2     OPTIC
+Ethernet3     OPTIC
 ```
 
-An example of displaying the cable-length of Ethernet5
+An example of displaying the cable-length of Ethernet1
 ```
-sonic# show cable-diagnostics cable-length Ethernet 5
+sonic# show cable-diagnostics cable-length Ethernet 1
 
 Interface     Type      Length
 ------------  --------  -------------------------------
-Ethernet5     SFP       80m
+Ethernet1     TDR       < 50m
 ```
 
-An example of displaying the cable-length of Ethernet0,Ethernet1...Ethernet9, and they are native RJ45 in this case.
+An example of displaying the cable-length of Ethernet0,Ethernet1...Ethernet3, and they are native RJ45 in this case.
 ```
-sonic# show cable-diagnostics cable-length Ethernet0-9
+sonic# show cable-diagnostics cable-length Ethernet0-3
 
 Interface     Type      Length
 ------------  --------  -------------------------------
-Ethernet0               9m
-Ethernet1               9m
-Ethernet2               9m
-Ethernet3               9m
-Ethernet4
-Ethernet5
-Ethernet6               10m
-Ethernet7               10m
-Ethernet8               9m
-Ethernet9               7m
+Ethernet0     TDR       < 50m
+Ethernet1     TDR       < 50m
+Ethernet2     TDR       < 50m
+Ethernet3     TDR       < 50m
 ```
 
 #### show interface transceiver dom [Ethernet PortID[-PortID]]
