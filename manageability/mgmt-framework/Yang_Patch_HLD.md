@@ -69,13 +69,13 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 
 - RESTCONF Server's Request handler will be enhanced to accept the PATCH Request with media type ["application/yang-patch+json"](https://datatracker.ietf.org/doc/html/rfc8072#section-4.2.2).
 - RESTCONF Server will enhance OPTIONS response to include “application/yang-patch+json” content type in the “Accept-Patch” header.
-- RESTCONF Server will implement the [":yang-patch" RESTCONF Capability](https://datatracker.ietf.org/doc/html/rfc8072#section-4.3).
-- RESTCONF Server's will implement below [YANG PATCH template](https://datatracker.ietf.org/doc/html/rfc8072#section-3) to accept the request and to send the response.
+- RESTCONF Server will advertise the [":yang-patch" RESTCONF Capability](https://datatracker.ietf.org/doc/html/rfc8072#section-4.3).
 
 ## 3.1.2 Translib changes
 
 - Translib's Bulk API will be enhanced to process the Ordered edits. i.e. to preserve and process the edits in a order sent by a REST Client.
 - Translib's Bulk API will be enhanced to process the request atomically.
+- Translib's Bulk API currently processes the edits as per the requirement of GNMI spec, this behavior must be retained and must be used only for GNMI requests. 
 
 ## 3.1.3 DB Access Layer changes
 
@@ -89,14 +89,21 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 
 ## 4.1 Target Resource
 
-The YANG Patch operation uses the RESTCONF target resource URI to identify the resource that will be patched.  This must be a configuration data resource within the datastore resource, e.g., "{+restconf}/data/ietf-interfaces:interfaces", to edit sub-resources within a top-level configuration (data resource).
+The YANG Patch operation uses the RESTCONF target resource URI to identify the resource that will be patched.  This must be a configuration data resource within the datastore resource, e.g., "/restconf/data/openconfig-acl:acl/acl-sets", to edit sub-resources within a top-level configuration datastore (/restconf/data). SONiC does not support operation at datastore resource (/restconf/data) i.e. sub-resources can be patched.
+
+The target resource can point to any [data resource](https://datatracker.ietf.org/doc/html/rfc8040#section-3.5)
 
 ## 4.2 Yang Patch Request
 
 A YANG Patch is identified by a unique "patch-id", and it may have an optional comment.  A patch is an ordered collection of edits.  
 Each edit is identified by an "edit-id", and it has an edit operation ("create", "delete", "merge", "replace", or "remove") that is applied to the target resource.
 Each edit can be applied to a sub-resource "target" within the target resource.
-The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH method request with a representation using the media type "application/yang-patch+json" with a message body in a below template
+The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH method request with a representation using the media type "application/yang-patch+json" with a message body in a below template.
+
+The target under edit can point to any [data resource](https://datatracker.ietf.org/doc/html/rfc8040#section-3.5).
+
+Refer [Target Data Node](https://datatracker.ietf.org/doc/html/rfc8072#section-2.4) for more details on URI format for edits.
+
 
 ```text
      +---- yang-patch
@@ -106,12 +113,12 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
               +---- edit-id      string
               +---- operation    enumeration
               +---- target       target-resource-offset
-              +---- point?       target-resource-offset
-              +---- where?       enumeration
               +---- value?
 ```
 
 Note that YANG Patch can only edit data resources.  The PATCH method cannot be used to replace the datastore resource.
+
+Please refer [Unit test](#5-unit-test) examples for sample request.
 
 ## 4.3 Yang Patch Status Response
 
@@ -149,6 +156,9 @@ Below is the Response body template which RESTCONF server uses
                              +---- error-message?   string
                              +---- error-info?
 ```
+
+Please refer [Unit test](#5-unit-test) examples for sample response.
+
 ## 4.4 Edit operations
 
 Edit operations are described breifly in the [RFC8072](https://datatracker.ietf.org/doc/html/rfc8072#section-2.5)
@@ -156,7 +166,6 @@ Edit operations are described breifly in the [RFC8072](https://datatracker.ietf.
 Note: Move and Insert operations are not supported in SONiC.
 
 # 5 Unit Test
-
 
 ## 5.1 Example module
 
@@ -198,6 +207,8 @@ module: openconfig-acl
 ```
 
 ## 5.2 Positive Test case
+
+### 5.2.1 Example 1
 
 ```text
    The following example shows 4 edits are being applied to an existing ACL which is MyACL1.
@@ -311,8 +322,6 @@ module: openconfig-acl
 
       HTTP/1.1 200 OK
       Date: Thu, 26 Jan 2017 20:56:30 GMT
-      Server: sonic-restconf-server
-      Last-Modified: Thu, 26 Jan 2017 20:56:30 GMT
       Content-Type: application/yang-data+json
 
       {
@@ -321,6 +330,94 @@ module: openconfig-acl
           "ok" : [null]
         }
       }            
+```
+
+### 5.2.2 Example 2
+
+```text
+
+   o  First Edit is creating ACL 
+   o  Second Edit is creating RULE for ACL created in edit-1
+
+   Request from the RESTCONF client:
+
+      PATCH /restconf/data/openconfig-acl:acl/acl-sets \
+         HTTP/1.1
+      Host: example.com
+      Accept: application/yang-data+json
+      Content-Type: application/yang-patch+json
+      {
+        "ietf-yang-patch:yang-patch" : {
+          "patch-id" : "Add ACL And Rules",
+          "edit" : [
+            {
+              "edit-id" : "edit1",
+              "operation" : "create",
+              "target" : "/acl-set=MyACL1,ACL_IPV4",
+              "value" : {
+                "acl-set": [
+                    {
+                        "name": "MyACL1",
+                        "type": "ACL_IPV4",
+                        "config": {
+                            "name": "MyACL1",
+                            "type": "ACL_IPV4",
+                            "description": "Description for MyACL1"
+                        }
+                    }
+                ]                  
+              }
+            },              
+            {
+              "edit-id" : "edit2",
+              "operation" : "create",
+              "target" : "/acl-set=MyACL1,ACL_IPV4/acl-entries/acl-entry=1",
+              "value" : {
+                "acl-entry": [
+                    {
+                        "sequence-id": 1,
+                        "config": {
+                            "sequence-id": 1,
+                            "description": "Description for MyACL1 Rule Seq 1"
+                        },
+                        "ipv4": {
+                            "config": {
+                                "source-address": "13.1.1.1/32",
+                                "destination-address": "23.1.1.1/32",
+                                "dscp": 1,
+                                "protocol": "IP_TCP"
+                            }
+                        },
+                        "transport": {
+                            "config": {
+                                "source-port": 101,
+                                "destination-port": 201
+                            }
+                        },
+                        "actions": {
+                            "config": {
+                                "forwarding-action": "ACCEPT"
+                            }
+                        }
+                    }
+                ]
+              }
+            }           
+          ]
+        }
+      }
+
+   Response from the RESTCONF server:
+
+      HTTP/1.1 200 OK
+      Date: Thu, 26 Jan 2017 20:56:30 GMT
+      Content-Type: application/yang-data+json
+      {
+        "ietf-yang-patch:yang-patch-status" : {
+          "patch-id" : "ACL Rules",
+          "ok" : [null]
+        }
+      }
 ```
 
 ## 5.3 Negative Test case
@@ -386,10 +483,7 @@ module: openconfig-acl
       
       HTTP/1.1 409 Conflict
       Date: Thu, 26 Jan 2017 20:56:30 GMT
-      Server: example-server
-      Last-Modified: Thu, 26 Jan 2017 20:56:30 GMT
       Content-Type: application/yang-data+json
-
       {
         "ietf-yang-patch:yang-patch-status" : {
           "patch-id" : "Add ACLs",
@@ -420,4 +514,5 @@ module: openconfig-acl
 
 1. Does not support “insert” and “move” operations because SONiC does not support order by user.
 2. Does not support YANG patch for data store resource i.e. The target resource cannot be '/' (top-level).
+
 
