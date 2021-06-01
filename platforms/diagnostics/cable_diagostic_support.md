@@ -54,18 +54,8 @@ This document describes the high level design of cable diagnostic support in SON
 
 | **Term**     | **Meaning**                                                  |
 | ------------ | ------------------------------------------------------------ |
-| BER          | Bit Error Rate                                               |
-| CDR          | Optical clock and data recovery circuit                      |
-| QSFP         | Quad Small Form-factor Pluggable                             |
-| RX_LOL       | Rx CDR Loss of Lock                                          |
-| RX_LOS       | Rx Loss of signal                                            |
 | SFP          | Small form-factor pluggable transceiver                      |
-| SNR          | Signal-to-Noise Ratio                                        |
 | TDR          | Time Domain Reflectometry                                    |
-| TX_DISABLE   | Tx power disabled                                            |
-| TX_FAULT     | Tx fault detected                                            |
-| TX_LOL       | Tx CDR Loss of Lock                                          |
-| TX_LOS       | Tx Loss of signal                                            |
 | VCT          | Marvell Virtual Cable Tester                                 |
 
 # 1 Requirements Overview
@@ -113,20 +103,11 @@ within the network topology, and ensuring link quality.
 
 ## 2.2 Functional Description
 
-This document provides functional design and specifications of cable-diagnostics that helps users easily identify the cause of link failures. Based on the platform hardware designs, the front panel ports can be categorized as below:
+This document provides functional design and specifications of cable-diagnostics that helps users easily identify the cause of link failures. Based on the platform hardware designs, the supported port types are as below:
 
 1. **Native RJ45:** This is a port with both MAC and PHY mounted on the box, the connections could be easily established by cat5e and cat6 Ethernet cables. When the cable-diagnostics test is conducted on the native RJ45, the orchagent will dispatches the request to the external PHY drivers, and it could either be the SAI library on the syncd or the PAI library on the GearBox, it depends on the platform designs.
 
-2. **External Copper SFP:** This is the so-called PHYless switch design, the front panel ports are cages that allow external PHYs on SFP modules to get connected and communicated with the MAC on the box. The conducted cable-diagnostics test will leverage the TDR hardware engine on the copper SFP for this operation.
-
-### 2.2.1 Limitations 
-
-#### TDR diagnostic
-
-TDR diagnostic is only available in the following port types:
-
-1. Native RJ45 
-2. 1G copper SFPs (i.e. 1000BASE-T)
+2. **1G Copper SFP(i.e. 1000BASE-T):** This is the so-called PHYless switch design, the front panel ports are cages that allow external PHYs on SFP modules to get connected and communicated with the MAC on the box. The conducted cable-diagnostics test will leverage the TDR hardware engine on the copper SFP for this operation.
 
 # 3 Design
 ## 3.1 Overview
@@ -202,7 +183,7 @@ The **CABLE_DIAG** table will have the reports of the conducted cable-diagnostic
 | TDR   | OPEN          | Cable is not connected                                |
 | TDR   | SHORT         | Short circuit has occurred in the cable               |
 | TDR   | FAILED        | Internal test failures at the physical layer          |
-| XCVR  | Not Supported | TDR is not available on transceiver                   |
+| XCVR  | Not Supported | TDR is not available on the transceiver               |
 | XCVR  | Not Present   | The transceiver is not detected on the port           |
 
 
