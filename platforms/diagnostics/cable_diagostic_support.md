@@ -92,7 +92,8 @@ The functional requirements for adding cable-diagnostics support in SONiC are:
 
 1. The cable diagnostic support has to be managed using the SONiC management infrastructure.
 2. The cable diagnostic is port specific, and the test result should not persist across reboot.
-3. In the case of Copper SFP transceivers, the diagnostic result should be cleared upon module removal.
+3. The cable diagnostic may cause disruption of traffic, the CLI should provide a prompt confirmation.
+4. In the case of Copper SFP transceivers, the diagnostic result should be cleared upon module removal.
 
 # 2 Functionality
 
@@ -105,9 +106,11 @@ within the network topology, and ensuring link quality.
 
 This document provides functional design and specifications of cable-diagnostics that helps users easily identify the cause of link failures. Based on the platform hardware designs, the supported port types are as below:
 
-1. **Native RJ45:** This is a port with both MAC and PHY mounted on the box, the connections could be easily established by cat5e and cat6 Ethernet cables. When the cable-diagnostics test is conducted on the native RJ45, the orchagent will dispatches the request to the external PHY drivers, and it could either be the SAI library on the syncd or the PAI library on the GearBox, it depends on the platform designs.
+1. **Native RJ45:**
+    This is a port with both MAC and PHY mounted on the box, the connections could be easily established by cat5e and cat6 Ethernet cables. When the cable-diagnostics test is conducted on the native RJ45, the orchagent will dispatches the request to the external PHY drivers, and it could either be the SAI library on the syncd or the PAI library on the GearBox, it depends on the platform designs.
 
-2. **1G Copper SFP(i.e. 1000BASE-T):** This is the so-called PHYless switch design, the front panel ports are cages that allow external PHYs on SFP modules to get connected and communicated with the MAC on the box. The conducted cable-diagnostics test will leverage the TDR hardware engine on the copper SFP for this operation.
+2. **1G Copper SFP(i.e. 1000BASE-T):**
+    This is the so-called PHYless switch design, the front panel ports are cages that allow external PHYs on SFP modules to get connected and communicated with the MAC on the box. The conducted cable-diagnostics test will leverage the TDR hardware engine on the copper SFP for this operation.
 
 # 3 Design
 ## 3.1 Overview
@@ -226,21 +229,25 @@ This command activates the cable-diagnostics test on one particular port or the 
 To activate the cable-diagnostics test on all the ports
 ```
 sonic-cli# test cable-diagnostics
+!!WARNING!! This operation may cause disruption of traffic, continue? [y/N]:y
 ```
 
 To activate the cable-diagnostics test on Ethernet0
 ```
 sonic-cli# test cable-diagnostics Ethernet 0
+!!WARNING!! This operation may cause disruption of traffic, continue? [y/N]:y
 ```
 
 To activate the cable-diagnostics test on Ethernet0,Ethernet1...Ethernet9
 ```
 sonic-cli# test cable-diagnostics Ethernet 0-9
+!!WARNING!! This operation may cause disruption of traffic, continue? [y/N]:y
 ```
 
 In the case of standard interface-naming mode, the ranged command is as below
 ```
 sonic-cli# test cable-diagnostics Eth 1/1-1/9
+!!WARNING!! This operation may cause disruption of traffic, continue? [y/N]:y
 ```
 
 
