@@ -370,7 +370,7 @@ PAC interacts with FDB to modify the learning mode of a port and add static FDB 
 
 ### 3.2.1 Config DB
 
-*PAC*   
+**PAC_PORT_CONFIG_TABLE**   
 ```   
 "PAC_PORT_CONFIG_TABLE": {
   "ethernet1": {
@@ -451,9 +451,10 @@ dead_server_critical_vlan =     1*4DIGIT                        ;The Critical (d
 
 dead_server_action_voice  =     “none”/”authorize"              ;Indicates action to be taken for voice clients when all configured RADIUS servers are marked Dead.
 
+```   
 
-
-
+**PAC_GLOBAL_CONFIG_TABLE**   
+```  
 "PAC_GLOBAL_CONFIG_TABLE": {"authentication_enable": "true","monitor_mode_enable": "false"}
 
 
@@ -463,13 +464,14 @@ authentication_enable   =     "true"/"false"            ;Indicates whether PAC i
 
 monitor_mode_enable     =     "true"/"false"            ;Indicates whether monitor mode is enabled in the system.
 
-```   
-
-*hostapd*   
+```     
+ 
+**HOSTAPD_GLOBAL_CONFIG_TABLE**   
 ```
-"HOSTAPD_GLOBAL_CONFIG_TABLE ": {
+"HOSTAPD_GLOBAL_CONFIG_TABLE": {
   "dot1x_system_auth_control": "enable"
 }
+
 
 ;field = value 
 dot1x_system_auth_control "true"/"false" ; Indicates whether dot1x is enabled in the system.
@@ -483,6 +485,7 @@ None
 
 ### 3.2.4 Counter DB
 
+**HOST_APD_STATS_TABLE**   
 ```
 "HOST_APD_STATS_TABLE": [
   {
@@ -517,6 +520,7 @@ None
   }
 ]
 
+
 key = HOST_APD_STATS_TABLE : client mac; Client MAC
 ;field = value
 dot1xAuthEapolFramesRx          = 1*10DIGIT ; The number of valid EAPOL frames of any type that have been received by this Authenticator.
@@ -535,9 +539,9 @@ dot1xAuthLastEapolFrameVersion  = 1*10DIGIT ; The protocol version number carrie
 
 ### 3.2.5 State DB
 
-*PAC*   
+**PAC_PORT_OPER_TABLE**   
 ```   
-" PAC_PORT_OPER_TABLE ": {
+"PAC_PORT_OPER_TABLE": {
   "ethernet1": {
     "enabled_method_list": [
       "802.1x",
@@ -555,6 +559,7 @@ dot1xAuthLastEapolFrameVersion  = 1*10DIGIT ; The protocol version number carrie
     "dead_server_action_voice": "authorize"
   }
 }
+
 
 key                     =    PAC_PORT_OPER_TABLE:port               ;Physical port
 
@@ -578,8 +583,10 @@ dead_server_action_voice  =      “none”/”authorize"                 ;Indic
                                                                      RADIUS servers are marked Dead.
 
 
-```
+```    
 
+
+**PAC_AUTHENTICATED_CLIENT_OPER_TABLE**   
 ```
 "PAC_AUTHENTICATED_CLIENT_OPER_TABLE": {
   "ethernet1": [
@@ -624,6 +631,7 @@ dead_server_action_voice  =      “none”/”authorize"                 ;Indic
   ]
 }
 
+
 key = PAC_AUTHENTICATED_CLIENTS_OPER_TABLE: mac ; Client MAC address
 ;field               = value ;
 current_id           = 1*3DIGIT ; EAP Packet Id
@@ -653,9 +661,9 @@ session_time        = 1*10DIGIT ; Client session time.
 
 ```   
 
-
+**PAC_CLIENT_HISTORY_TABLE**   
 ```   
-" PAC_CLIENT_HISTORY_TABLE ": {
+"PAC_CLIENT_HISTORY_TABLE": {
 "ethernet1": [{
 "31-March-2021-13:46:02": {
 "client_mac_addr": "00:00:00:11:22:33",
@@ -676,15 +684,16 @@ session_time        = 1*10DIGIT ; Client session time.
 }
 
 
-key = PAC_CLIENT_HISTORY_TABLE : port ; Physical Port Clientmac; Client MAC address
+key = PAC_CLIENT_HISTORY_TABLE : port : date ; Physical Port Clientmac; Client MAC address ; Date
 ;field = value
+client_mac_addr       =  <mac-address> ; Client MAC address
 authentication_method = "802.1x"/'mab" ; Method used to authenticate the client
-backend_auth_method = "radius" ; Backend authentication method used to authorize the client.
-auth_status = "authorized"/"unauthorized" ; Authorization status of the client
+backend_auth_method   = "radius" ; Backend authentication method used to authorize the client.
+auth_status           = "authorized"/"unauthorized" ; Authorization status of the client
 
-```
+```   
 
-*hostapd*   
+**HOSTAPD_OPER_PORT_TABLE**   
 ```
 "HOSTAPD_OPER_PORT_TABLE": [{
 "ethernet1": {
@@ -698,7 +707,6 @@ auth_status = "authorized"/"unauthorized" ; Authorization status of the client
 }]
 
 
-
 key = HOSTAPD_OPER_PORT_TABLE : port ; Physical Port
 ;field            = value
 protocol_version  = 1DIGIT ; Dot1x protocol version
@@ -710,7 +718,10 @@ server_timeout    = 1*5DIGIT ; RADIUS server timeout
 max_reqs          = 1*5DIGIT ; Maximum number of EAP requests (except Req-Ids) to be sent to the supplicant before timing out.
 
 max_req_id        = 1*5DIGIT ; Maximum number of EAP Req-Ids to be sent to the supplicant before timing out.
-```
+```   
+
+
+**HOSTAPD_CLIENT_OPER_TABLE**   
 
 ```
 "HOSTAPD_CLIENT_OPER_TABLE": {
@@ -726,6 +737,8 @@ max_req_id        = 1*5DIGIT ; Maximum number of EAP Req-Ids to be sent to the s
 }
 ]
 }
+
+
 key = HOSTAPD_OPER_PORT_TABLE : port ; Physical Port: client mac; Client MAC
 ;field    = value
 user_name = 1*255VCHARS ; Client user name
