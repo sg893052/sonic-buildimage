@@ -1372,12 +1372,14 @@ Example:
 (dhcp-10-130-86-200) #show authentication clients all
 
 
-(dhcp-10-130-86-142) (Interface 0/10)#show  authentication  clients all
+(dhcp-10-130-86-142) (Interface 1/16)#show  authentication  clients all
 
 Interface  MAC-Address         Method   Host Mode    Control Mode  VLAN Assigned Reason
 ---------  -----------------   -------  ------------ ------------  --------------------------
-0/16       10:8D:B6:C6:00:00   802.1X   multi-host   auto     RADIUS Assigned VLAN (10)
+1/16       10:8D:B6:C6:00:00   802.1X   multi-host   auto     RADIUS Assigned VLAN (10)
 
+	
+	
 (dhcp-10-130-86-200) #show authentication clients interface 1/2
 
 Mac Address.................................... 58:05:94:1C:00:00
