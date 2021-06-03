@@ -1072,11 +1072,32 @@ The cable-diagnostics feature is fully scalable on a SONiC platform and is suppo
 # 8 Unit Test
 
 The following is the list of unit test cases:
-* Verify cable-diagnostics CLI test commands.
-* Verify cable-diagnostics CLI show commands.
-* Verify cable-diagnostics for p2p and breakout interfaces
-* Verify failure scenarios for cable-diagnostics (transceiver not present, fiber not plugged in, transceiver not plugged in on peer, etc.)
-* Verify graceful exit when test/show is executed on an invalid interface (e.g., something out of range like Ethernet300)
+
+* Verify 'test cable-diagnostics' with all port
+* Verify 'test cable-diagnostics' with a specific port
+* Verify 'test cable-diagnostics' with an invalid port
+* Verify 'test cable-diagnostics' with a specific range
+* Verify 'test cable-diagnostics' with an invalid range
+* Verify 'show cable-diagnostics report' with all port
+* Verify 'show cable-diagnostics report' with a specific port
+* Verify 'show cable-diagnostics report' with an invalid port
+* Verify 'show cable-diagnostics report' with a specific range
+* Verify 'show cable-diagnostics report' with an invalid range
+* Verify 'show cable-diagnostics cable-length' with all port
+* Verify 'show cable-diagnostics cable-length' with a specific port
+* Verify 'show cable-diagnostics cable-length' with an invalid port
+* Verify 'show cable-diagnostics cable-length' with a specific range
+* Verify 'show cable-diagnostics cable-length' with an invalid range
+* Verify 'show interface transceiver dom' with all ports
+* Verify 'show interface transceiver dom' with a specific port
+* Verify 'show interface transceiver dom' with a specific range
+* Verify 'show interface transceiver dom' with an invalid port
+* Verify 'show interface transceiver dom' with an invalid range
+* Verify 'show interface transceiver dom summary' with all ports
+* Verify 'show interface transceiver dom summary' with a specific port
+* Verify 'show interface transceiver dom summary' with a specific range
+* Verify 'show interface transceiver dom summary' with an invalid port
+* Verify 'show interface transceiver dom summary' with an invalid range
 
 # 9 Internal Design Information
 
