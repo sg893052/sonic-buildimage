@@ -1004,7 +1004,7 @@ This command enables PAC feature globally. By default the feature is disabled. A
 
 | Mode | Global Config |
 | ---- | ------ |
-| Syntax | authentication enable |
+| Syntax | [no] authentication enable |
 | Default | disable |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1013,7 +1013,7 @@ This command configures the number of supplicants that are re-authenticated per 
 
 | Mode | Global Config |
 | ---- | ------ |
-| Syntax | authentication critical recovery max-reauth |
+| Syntax | [no] authentication critical recovery max-reauth |
 | Default | 10 |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1024,7 +1024,7 @@ This command enables the Authentication monitor mode on the switch. The purpose 
 
 | Mode | Global Config |
 | ---- | ------ |
-| Syntax | authentication monitor |
+| Syntax | [no] authentication monitor |
 | Default | disable |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1037,6 +1037,7 @@ This command configures the authentication method for port-based access to the s
 | ---- | ------ |
 | Syntax | aaa authentication pac \{ radius \| none \} |
 | Default | radius |
+| Syntax | no aaa authentication pac |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.5 mab request format attribute 1 
@@ -1048,13 +1049,14 @@ This command sets configuration parameters that are used to format attribute1 fo
 | Default | group size=2 |
 | Default | separator is : |
 | Default | uppercase |
+| Syntax | no mab request format attribute 1 |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.6 dot1x system-auth-control 
 This command enables the dot1x authentication support on the switch. While disabled, the dot1x configuration is retained and can be changed, but is not activated.
 | Mode | Global Config |
 | ---- | ------ |
-| Syntax | dot1x system-auth-control |
+| Syntax | [no] dot1x system-auth-control |
 | Default | disable |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1066,6 +1068,7 @@ This command configures VLAN as guest vlan on an interface or a range of interfa
 | ---- | ------ |
 | Syntax | authentication event no-response action authorize vlan \<vlan-id\> |
 | Default | 0 |
+| Syntax | no authentication event no-response |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.8 authentication event fail action authorize vlan
@@ -1075,6 +1078,7 @@ This command configures the unauthenticated VLAN associated with the specified i
 | ---- | ------ |
 | Syntax | authentication event fail action authorize vlan \<vlan-id\> |
 | Default | 0 |
+| Syntax | no authentication event fail action authorize vlan |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.9 authentication event fail retry
@@ -1084,6 +1088,7 @@ This command configures the  number of times authentication may be reattempted b
 | ---- | ------ |
 | Syntax | authentication event fail retry \<max-attempts\> |
 | Default | 3 |
+| Syntax | no authentication event fail retry |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.10 authentication max-users
@@ -1093,6 +1098,7 @@ This command sets the maximum number of clients supported on an interface or ran
 | ---- | ------ |
 | Syntax | authentication max-users \<count\> |
 | Default | 48 |
+| Syntax | no authentication max-users |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.11 authentication periodic 
@@ -1100,7 +1106,7 @@ This command enables periodic reauthentication of the supplicant for the specifi
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication periodic |
+| Syntax | [no] authentication periodic |
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1111,6 +1117,7 @@ This command sets the authentication mode to use on the specified interface or r
 | ---- | ------ |
 | Syntax | authentication port-control \{ auto \| force-authorized \| force-unauthorized \} |
 | Default | auto  |
+| Syntax | no authentication port-control |
 | Change history | SONiC 4.0 - Introduced 
 
 #### 3.6.2.13 authentication host-mode 
@@ -1120,6 +1127,7 @@ This command configures the host mode of a port. The configuration on the interf
 | ---- | ------ |
 | Syntax | authentication host-mode \{ multi-auth \| multi-domain \| multi-host \| single-host \} |
 | Default | multi-host  |
+| Syntax | no authentication host-mode |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.14 authentication timer reauthentiate 
@@ -1131,6 +1139,7 @@ For reauthentication to happen after the configured or server provided timeout, 
 | ---- | ------ |
 | Syntax | authentication timer reauthenticate \{ \<seconds\> \| server \} |
 | Default | server  |
+| Syntax | no authentication timer reauthenticate |
 | Change history | SONiC 4.0 - Introduced |
 
 
@@ -1142,6 +1151,7 @@ This command configures the actions to take when all the authentication servers 
 | Syntax | authentication event server dead action \[ \{ reinitialize \| authorize \} \] \[ vlan vlan-id \] \] |
 | Default | Action: None  |
 | Default | VLAN: Port PVID  |
+| Syntax | no authentication event server dead action |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.16 authentication event server dead action authorize voice
@@ -1151,6 +1161,7 @@ This command enables authorization of voice devices on the critical voice VLAN w
 | ---- | ------ |
 | Syntax | authentication event server dead action authorize voice |
 | Default | Action: None  |
+| Syntax | no authentication event server dead action authorize |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.17 authentication event server alive action reinitialize
@@ -1160,6 +1171,7 @@ This command configures the actions to take when one authentication server comes
 | ---- | ------ |
 | Syntax | authentication event server alive action reinitialize |
 | Default | Action: None  |
+| Syntax | no authentication event server alive action |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.18 authentication open
@@ -1167,7 +1179,7 @@ This command configures Open Authentication mode on the port.
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | authentication open |
+| Syntax | [no] authentication open |
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1178,6 +1190,7 @@ This command is used to set the order of authentication methods used on a port. 
 | ---- | ------ |
 | Syntax | authentication order \{ dot1x \[ mab \] \| mab \[ dot1x \] \} |
 | Default order | dot1x, mab  |
+| Syntax | no authentication order |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.20 authentication priority
@@ -1187,6 +1200,7 @@ This command is used to set the priority for the authentication methods used on 
 | ---- | ------ |
 | Syntax | authentication priority \{ dot1x \[ mab \] \| mab \[ dot1x \] \} |
 | Default order | dot1x, mab  |
+| Syntax | no authentication priority |
 | Change history | SONiC 4.0 - Introduced |
 
 #### 3.6.2.21 mab
@@ -1194,7 +1208,7 @@ This command is used to enable MAC Authentication Bypass (MAB) on an interface. 
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | mab \[ auth-type \{ pap \| eap-md5 \} \| chap \] |
+| Syntax | [no] mab \[ auth-type \{ pap \| eap-md5 \} \| chap \] |
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1211,7 +1225,7 @@ This command sets the value, in seconds, of the timers used by the authenticator
 
 | Mode | Interface Config |
 | ---- | ------ |
-| Syntax | dot1x timeout \{ quiet-period \| tx-period \| server-timeout \| supp-timeout \| auth-period \| start-period \| held-period \} |
+| Syntax | [no] dot1x timeout \{ quiet-period \| tx-period \| server-timeout \| supp-timeout \| auth-period \| start-period \| held-period \} |
 | Default | quiet-period: 60 seconds  |
 | Default | tx-period: 30 seconds  |
 | Default | supp-timeout: 30 seconds  |
