@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.7
+High level design document version 0.8
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -116,6 +116,7 @@ High level design document version 0.7
 | 0.5  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated requirements and functional description section |
 | 0.6  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated docker to macsec, added configuration, scalability and warmboot requirements |
 | 0.7  | 05/26/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
+| 0.8  | 06/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -129,7 +130,7 @@ This document describes the high level design details about Port Access Control 
 ## Table 1 Abbreviations
 | **Term** | **Meaning**          |
 | -------- | -------------------- |
-| Authenticator | An entity that enforces authentication before allowing access to services available via that Port |
+| Authenticator | An entity that enforces authentication on a port before allowing access to services available on that port |
 | CoPP     | Control Plane Policing |
 | Dot1x    | IEEE 802.1 standard  |
 | EAPOL    | Extensible Authentication Protocol over LAN  |
@@ -138,7 +139,7 @@ This document describes the high level design details about Port Access Control 
 | PAE      | Port Access Entity |
 | RADIUS   | Remote Authentication Dial In User service |
 | SONiC-CLI | Klish CLI used by management framework |
-| Supplicant | An entity that attempts to access services offered by the Authenticator |
+| Supplicant | A client that attempts to access services offered by the Authenticator |
 
 # 1 Feature Overview
 
@@ -253,8 +254,8 @@ Port Access Control provides a means of preventing unauthorized access by Suppli
 Access control is achieved by enforcing authentication of Supplicants that are attached to an Authenticator's controlled Ports. The result of the authentication process determines whether the Supplicant is authorized to access services on that controlled Port.   
 
 A PAE is able to adopt one of two distinct roles within an access control interaction:   
-1. authenticator: A Port that enforces authentication before allowing access to services available via that Port.
-2. supplicant: A Port that attempts to access services offered by the Authenticator.   
+1. authenticator: An entity that enforces authentication on a port before allowing access to services available on that port.
+2. supplicant: A client that attempts to access services offered by the Authenticator.   
 
 Additionally, there exists a third role:   
 3. authentication server: Performs the authentication function necessary to check the credentials of the Supplicant on behalf of the Authenticator.  
@@ -265,7 +266,7 @@ All three roles are required in order to complete an authentication exchange. **
 The Authenticator is essentially a passthrough for the EAP method. The Supplicant and the RADIUS server exchange EAP messages which are encapsulated in either EAPOL or RADIUS frames (depending on the direction of the frame) by the Authenticator switch. The Authenticator determines the authorization status of the port based on RADIUS Access-Accept or Access-Reject frames. The Authenticator switch also needs to send and process all appropriate RADIUS attributes. For more information on these attributes, see the section [Authorization parameters](#3324-authorization-parameters).
 
 ### 2.2.2 Unidirectional and bidirectional control
-The controlled directions dictate the degree to which protocol exchanges take place between Supplicant and Authenticator. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control directions are of two types:   
+The controlled directions (from the authenticator perspective) dictate the degree to which data traffic flow is controlled for an unauthenticated client. This affects whether the unauthorized controlled Port exerts control over communication in both directions (disabling both incoming and outgoing frames) or just in the incoming direction (disabling only the reception of incoming frames). The control directions are of two types:   
 1. Both: Control is exerted over both incoming and outgoing frames.
 2. In: Control is only exerted over incoming traffic.   
 
@@ -273,11 +274,11 @@ The controlled directions dictate the degree to which protocol exchanges take pl
 
 
 ### 2.2.3 Downloadable ACL
-PAC (Port access control) feature brings in DACL (downloadable ACL) support into SONiC. As a part of PAC, once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Downloadable ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The downloadable ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.   
+Once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Downloadable ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The downloadable ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.   
 
-The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. Essentially, the DACL configuration is temporary (applied for the duration of the authenticated client session) and not persistent. The downloadable ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The ACLs created by the applications are owned by the internal application and hence cannot be deleted by a user.   
+The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. The DACL configuration is only applied on the client-connected-port for the duration of the authenticated client session and is not persistent. The downloadable ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The DACLs on the switch are managed by the PAC application and hence cannot be deleted by the user.   
 
-Generally, any static ACLs (created by user) applied on the port are removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However in certain situations, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. In situations where the client IP address changes, PAC gets to know about it via dhcp-snooping binding tables and the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.   
+Generally, any static ACLs (created by user) applied on the port are removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However if Open Authentication is configured on the port, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. In situations where the client IP address changes, PAC gets to know about it via dhcp-snooping binding tables and the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.   
 
 
 ### 2.2.4 Named ACLs
@@ -296,7 +297,7 @@ PAC interacts with FDB to modify the learning mode of a port and add static FDB 
 - Note that FDB entries thus added are not persistent and are operational config only (entries added as a result of the client getting authenticated).   
 - The entries get removed once the client logs off.   
 - FDB entries added operationally follows a similar config sequence like user created FDB entries.   
-- The learning mode of a port (or bridge port) was configured and controlled completely at the orchestration layer. With PAC, the application layer (pacd) also manages the learning mode to
+- Prior to the introduction of PAC, the learning mode of a port (or bridge port) was configured and controlled completely at the orchestration layer. With PAC, the application layer (pacd) also manages the learning mode to
 	1. Once PAC is enabled on a port, all incoming traffic on the port are blocked/dropped except certain protocol traffic.
 	2. PAC turns off learning on the port essentially dropping all unknown source MAC packets. This achieves the requirement of blocking ingress traffic.
 	3. Egress traffic on the port is not blocked.
@@ -371,69 +372,103 @@ PAC interacts with FDB to modify the learning mode of a port and add static FDB 
 
 *PAC*   
 ```   
- "PAC_PORT_CONFIG_TABLE": {
-"ethernet1": {
-"method_list": [
-"802.1x",
-"mab"
-],
-"priority_list": [
-"802.1x",
-"mab"
-],
-"port_control_mode": "auto",
-"host_control_mode": "multi_auth",
-"quiet_period": 10,
-"reauth_period": 60,
-"reauth_enable": "true",
-"max_users_per_port": 48,
-"max_reauth_attempts": 1,
-"guest_vlan": 10,
-"auth_fail_vlan": 100
+"PAC_PORT_CONFIG_TABLE": {
+  "ethernet1": {
+    "method_list": [
+      "802.1x",
+      "mab"
+    ],
+    "priority_list": [
+      "802.1x",
+      "mab"
+    ],
+    "port_control_mode": "auto",
+    "host_control_mode": "multi_auth",
+    "quiet_period": 10,
+    "reauth_period": 60,
+    "reauth_enable": "true",
+    "max_users_per_port": 48,
+    "max_reauth_attempts": 1,
+    "guest_vlan": 10,
+    "auth_fail_vlan": 100,
+    "open_authentication_mode": "disabled",
+    "dead_server_action": "reinitialize",
+    "dead_server_alive_action": "reinitialize",
+    "dead_server_critical_vlan": 200,
+    "dead_server_action_voice": "authorize"
+  }
 }
-}
 
 
-key = PAC_PORT_CONFIG_TABLE:port ; Physical port
-;field = value
-method_list         = "dot1x"/"mab" ; List of methods to be used for authentication
-priority_list       = "dot1x"/"mab"; Relative priority of methods to be used for authentication
-port_control_mode   = "auto"/"force_authorized"/"force_unauthorized"; Port control mode
-                                                                  ; 'auto": authentication enforced on port
-								  ; 'force_authorized": authentication not enforced on port
-								  ; 'force_unauthorized": authentication not enforced on port but port is blocked for all traffic
-								  
-host_control_mode   = "multi-host"/"multi-domain"/"multi-auth"/"single-auth" ; Host control mode
-                                                    ; "multi-host": One data client can be authenticated on the port. Rest of the clients tailgate once the first client is authenticated.
-						    ; "multi-domain": One data client and one voice client can be authenticated on the port.
-						    ; "multi-auth": Multiple data client and one voice client can be authenticated on the port.
-						    ; "single-auth": One data client or one voice client can be authenticated on the port.
+key                       =      PAC_PORT_CONFIG_TABLE:port     ;Physical port
+     
+;field                    =      value
+     
+method_list               =      "dot1x"/"mab"                  ;List of methods to be used for authentication
+     
+priority_list             =      "dot1x"/"mab"                  ;Relative priority of methods to be used for authentication
+     
+port_control_mode         =      "auto"/"force_authorized"/     'auto": authentication enforced on port
+                                "force_unauthorized" ;         'force_authorized": authentication not enforced on port
+                                                                'force_unauthorized": authentication not enforced on port but port is blocked for all traffic
+     
+host_control_mode         =      "multi-host"/"multi-domain"/   ;"multi-host": One data client can be authenticated on the port. Rest of the
+                                "multi-auth"/"single-auth"      clients tailgate once the first client is authenticated.
+                                                                "multi-domain": One data client and one voice client can be authenticated on the port.
+                                                                "multi-auth": Multiple data client and one voice client can be authenticated on the port.
+                                                                "single-auth": One data client or one voice client can be authenticated on the port.
+     
+quiet_period              =      1*5DIGIT                       ;The initial value of the timer that defines the period during which the
+                                                                 Authenticator will not attempt to authenticate the Supplicant.
+                                                                 Range is 0-65535 seconds.
+     
+reauth_period             =      1*10DIGIT                      ;The initial value of the timer that defines the period after which the will
+                                                                 reauthenticate the Supplicant. Range is 3600 - 4294967296 seconds.
 
-quiet_period = 1*5DIGIT ; The initial value of the timer that defines the period during which the Authenticator will not attempt to authenticate the Supplicant. Range is 0-65535 seconds.
-reauth_period = 1*10DIGIT;The initial value of the timer that defines the period after which the Authenticator will reauthenticate the Supplicant. Range is 3600 - 4294967296 seconds.
-reauth_enable = "true"/"false";Indicates whether Reauthentication is enabled on the port.
-max_users_per_port=1*2DIGIT; Maximum number of clients that can be authenticated on the port. This is applicable only for "multi-auth" host mode.Range is 1 - 64 clients.
-guest_vlan_id= 1*4DIGIT;The Guest VLAN Id for the port. Range is 1 - 4093
-auth_fail_vlan_id=1*4DIGIT;The Authentication Fail VLAN Id for the port. Range is 1 - 4093
-max_auth_attempts=1DIGIT;The maximum number of authentication retries in the event of authentication failure.Range is 1 - 5
-```   
+reauth_enable             =     "true"/"false"                  ;Indicates whether Reauthentication is enabled on the port.
+     
+max_users_per_port        =     1*2DIGIT                        ;Maximum number of clients that can be authenticated on the port. This is applicable
+                                                                 only for "multi-auth" host mode. Range is 1 - 64 clients.
 
-```   
-"PAC_GLOBAL_CONFIG_TABLE": {
-"authentication_enable": "true",
-"monitor_mode_enable": "false"
-}
-    
-;field=value
-authentication_enable = "true"/"false";Indicates whether PAC is enabled in the system.
-monitor_mode_enable   = "true"/"false";Indicates whether monitor mode is enabled in the system.
+guest_vlan_id             =     1*4DIGIT                        ;The Guest VLAN Id for the port.Range is 1 - 4093
+     
+auth_fail_vlan_id         =     1*4DIGIT                        ;The Authentication Fail VLAN Id for the port.Range is 1 - 4093
+     
+     
+max_auth_attempts         =     1DIGIT                          ;The maximum number of authentication retries in the event of authentication
+                                                                 failure. Range is 1 - 5
+
+open_authentication_mode  =     "enable"/"disable"              ;Indicates whether Open Authentication mode is enabled on the port.
+
+
+dead_server_action        =     "none"/"reinitialize"/"authorize" ;Indicates action to be taken for data clients when all configured RADIUS
+                                                                   servers are marked Dead.
+
+dead_server_alive_action  =“none”/"reinitialize"                ;Indicates action to be taken for date clients when one of the configured RADIUS
+                                                                 servers is marked Alive after all were marked Dead.
+
+dead_server_critical_vlan =     1*4DIGIT                        ;The Critical (data) VLAN Id for the port.Range is 1 - 4093
+
+dead_server_action_voice  =     “none”/”authorize"              ;Indicates action to be taken for voice clients when all configured RADIUS servers are marked Dead.
+
+
+
+
+"PAC_GLOBAL_CONFIG_TABLE": {"authentication_enable": "true","monitor_mode_enable": "false"}
+
+
+;field                  =     value
+
+authentication_enable   =     "true"/"false"            ;Indicates whether PAC is enabled in the system.
+
+monitor_mode_enable     =     "true"/"false"            ;Indicates whether monitor mode is enabled in the system.
 
 ```   
 
 *hostapd*   
 ```
-" HOSTAPD_GLOBAL_CONFIG_TABLE ": {
-"dot1x_system_auth_control": "enable"
+"HOSTAPD_GLOBAL_CONFIG_TABLE ": {
+  "dot1x_system_auth_control": "enable"
 }
 
 ;field = value 
@@ -449,36 +484,37 @@ None
 ### 3.2.4 Counter DB
 
 ```
-"HOST_APD_STATS_TABLE": [{
-"00:00:00:11:22:33": {
-"dot1xAuthEapolFramesRx": 311,
-"dot1xAuthEapolFramesTx": 380,
-"dot1xAuthEapolStartFramesRx": 71,
-"dot1xAuthEapolLogoffFramesRx": 15,
-"dot1xAuthEapolRespIdFramesRx": 67,
-"dot1xAuthEapolRespFramesRx": 212,
-"dot1xAuthEapolReqIdFramesTx": 250,
-"dot1xAuthEapolReqFramesTx": 250,
-"dot1xAuthInvalidEapolFramesRx": 250,
-"dot1xAuthEapLengthErrorFramesRx": 250,
-"dot1xAuthLastEapolFrameVersion": 2
-}
-},
-{
-"00:00:00:22:22:34": {
-"dot1xAuthEapolFramesRx": 311,
-"dot1xAuthEapolFramesTx": 380,
-"dot1xAuthEapolStartFramesRx": 71,
-"dot1xAuthEapolLogoffFramesRx": 15,
-"dot1xAuthEapolRespIdFramesRx": 67,
-"dot1xAuthEapolRespFramesRx": 212,
-"dot1xAuthEapolReqIdFramesTx": 250,
-"dot1xAuthEapolReqFramesTx": 250,
-"dot1xAuthInvalidEapolFramesRx": 250,
-"dot1xAuthEapLengthErrorFramesRx": 250,
-"dot1xAuthLastEapolFrameVersion": 2
-}
-}
+"HOST_APD_STATS_TABLE": [
+  {
+    "00:00:00:11:22:33": {
+      "dot1xAuthEapolFramesRx": 311,
+      "dot1xAuthEapolFramesTx": 380,
+      "dot1xAuthEapolStartFramesRx": 71,
+      "dot1xAuthEapolLogoffFramesRx": 15,
+      "dot1xAuthEapolRespIdFramesRx": 67,
+      "dot1xAuthEapolRespFramesRx": 212,
+      "dot1xAuthEapolReqIdFramesTx": 250,
+      "dot1xAuthEapolReqFramesTx": 250,
+      "dot1xAuthInvalidEapolFramesRx": 250,
+      "dot1xAuthEapLengthErrorFramesRx": 250,
+      "dot1xAuthLastEapolFrameVersion": 2
+    }
+  },
+  {
+    "00:00:00:22:22:34": {
+      "dot1xAuthEapolFramesRx": 311,
+      "dot1xAuthEapolFramesTx": 380,
+      "dot1xAuthEapolStartFramesRx": 71,
+      "dot1xAuthEapolLogoffFramesRx": 15,
+      "dot1xAuthEapolRespIdFramesRx": 67,
+      "dot1xAuthEapolRespFramesRx": 212,
+      "dot1xAuthEapolReqIdFramesTx": 250,
+      "dot1xAuthEapolReqFramesTx": 250,
+      "dot1xAuthInvalidEapolFramesRx": 250,
+      "dot1xAuthEapLengthErrorFramesRx": 250,
+      "dot1xAuthLastEapolFrameVersion": 2
+    }
+  }
 ]
 
 key = HOST_APD_STATS_TABLE : client mac; Client MAC
@@ -502,81 +538,91 @@ dot1xAuthLastEapolFrameVersion  = 1*10DIGIT ; The protocol version number carrie
 *PAC*   
 ```   
 " PAC_PORT_OPER_TABLE ": {
-"ethernet1": {
-"enabled_method_list": [
-"802.1x",
-"mab"
-],
-"enabled_priority_list": [
-"802.1x",
-"mab"
-],
-"num_clients_authenticated": 10
-}
+  "ethernet1": {
+    "enabled_method_list": [
+      "802.1x",
+      "mab"
+    ],
+    "enabled_priority_list": [
+      "802.1x",
+      "mab"
+    ],
+    "num_clients_authenticated": 10,
+    "open_authentication_mode": "enabled",
+    "dead_server_action": "reinitialize",
+    "dead_server_alive_action": "reinitialize",
+    "dead_server_critical_vlan": 200,
+    "dead_server_action_voice": "authorize"
+  }
 }
 
-key = PAC_PORT_OPER_TABLE : port ; Physical port
-;field = value
-enabled_method_list       = "dot1x"/"mab" ; List of methods to be used for authentication
-enabled_priority_list     = "dot1x"/"mab" ; Relative priority of methods to be used for authentication
-num_clients_authenticated = 1*2DIGIT ; Number of clients authenticated on the port.
+key                     =    PAC_PORT_OPER_TABLE:port               ;Physical port
+
+;field                  =    value
+
+enabled_method_list       =     "dot1x"/"mab"                       ;List of methods to be used for authentication
+enabled_priority_list     =     "dot1x"/"mab"                       ;Relative priority of methods to be used for authentication
+num_clients_authenticated =     1*2DIGIT                            ;Number of clients authenticated on the port.
+       
+open_authentication_mode  =     "enabled"/"disabled"                ;Indicates if open authentication mode is enabled on the port.
+
+dead_server_action        =     "none"/"reinitialize"/"authorize"   ;Indicates action to be taken for data clients when all configured
+                                                                     RADIUS servers are marked Dead.
+
+dead_server_alive_action  =     “none”/"reinitialize"               ;Indicates action to be taken for date clients when one of the
+                                                                     configured RADIUS servers is marked Alive after all were marked Dead.
+
+dead_server_critical_vlan =      1*4DIGIT                           ;The Critical (data) VLAN Id for the port.Range is 1 - 4093
+
+dead_server_action_voice  =      “none”/”authorize"                 ;Indicates action to be taken for voice clients when all configured
+                                                                     RADIUS servers are marked Dead.
 
 
 ```
 
 ```
-" PAC_AUTHENTICATED_CLIENT_OPER_TABLE ": {
-"ethernet1": [{
-"00:00:00:11:02:33": {
-"current_id": 21,
-"auth_status": "authorized",
-"authenticated_method": "802.1X",
-"server_state": "36 34 43 50 4d 53 65 73 73 69 6f 6e 49 44 3d 30 61 38 32 62 39 37 36 4c 49
-50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d
-6e 4a 33 31 42 6a 5a 34 51 49 3b 33 34 53 65 73 73 69 6f 6e 49 44 3d 43 69 73 63 6f 49 53 45
-2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35 3b",
-"server_state_len": 106,
-"server_class": "43 41 43 53 3a 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55
-39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49
-3a 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35",
-"server_class_len": 83,
-"session_timeout": 60,
-"user_name": "sonic_user",
-"user_name_len": 9,
-"termination_action": 0,
-"vlan_id": 194,
-"vlan_type": "radius",
-"backend_auth_method": "radius",
-"session_time": 511
+"PAC_AUTHENTICATED_CLIENT_OPER_TABLE": {
+  "ethernet1": [
+    {
+      "00:00:00:11:02:33": {
+        "current_id": 21,
+        "auth_status": "authorized",
+        "authenticated_method": "802.1X",
+        "server_state": "36 34 43 50 4d 53 65 73 73 69 6f 6e 49 44 3d 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49 3b 33 34 53 65 73 73 69 6f 6e 49 44 3d 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35 3b",
+        "server_state_len": 106,
+        "server_class": "43 41 43 53 3a 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49 3a 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35",
+        "server_class_len": 83,
+        "session_timeout": 60,
+        "user_name": "sonic_user",
+        "user_name_len": 9,
+        "termination_action": 0,
+        "vlan_id": 194,
+        "vlan_type": "radius",
+        "backend_auth_method": "radius",
+        "session_time": 511
+      }
+    },
+    {
+      "00:00:00:21:00:30": {
+        "current_id": 28,
+        "auth_status": "authorized",
+        "authenticated_method": "802.1X",
+        "server_state": "36 34 43 50 4d 53 65 73 73 69 6f 6e 49 44 3d 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49 3b 33 34 53 65 73 73 69 6f 6e 49 44 3d 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35 3b",
+        "server_state_len": 106,
+        "server_class": "43 41 43 53 3a 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49 3a 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35",
+        "server_class_len": 83,
+        "session_timeout": 60,
+        "user_name": "sonic_user1",
+        "user_name_len": 9,
+        "termination_action": 0,
+        "vlan_id": 194,
+        "vlan_type": "radius",
+        "backend_auth_method": "radius",
+        "session_time": 51
+      }
+    }
+  ]
 }
-},
-{
-"00:00:00:21:00:30": {
-"current_id": 28,
-"auth_status": "authorized",
-"authenticated_method": "802.1X",
-"server_state": "36 34 43 50 4d 53 65 73 73 69 6f 6e 49 44 3d 30 61 38 32 62 39 37 36 4c 49
-50 5a 44 45 4d 32 74 64 35 55 39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d
-6e 4a 33 31 42 6a 5a 34 51 49 3b 33 34 53 65 73 73 69 6f 6e 49 44 3d 43 69 73 63 6f 49 53 45
-2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35 3b",
-"server_state_len": 106,
-"server_class": "43 41 43 53 3a 30 61 38 32 62 39 37 36 4c 49 50 5a 44 45 4d 32 74 64 35 55
-39 44 31 4c 37 43 56 44 37 5a 48 56 44 4f 70 74 4a 47 6b 7a 4d 6e 4a 33 31 42 6a 5a 34 51 49
-3a 43 69 73 63 6f 49 53 45 2f 33 33 32 35 38 39 38 35 33 2f 38 36 36 33 35",
-"server_class_len": 83,
-"session_timeout": 60,
-"user_name": "sonic_user1",
-"user_name_len": 9,
-"termination_action": 0,
-"vlan_id": 194,
-"vlan_type": "radius",
-"backend_auth_method": "radius",
-"session_time": 51
-}
-}
-]
-}
-
 
 key = PAC_AUTHENTICATED_CLIENTS_OPER_TABLE: mac ; Client MAC address
 ;field               = value ;
@@ -880,7 +926,7 @@ If the client succeeds authentication, the authorization parameters from RADIUS 
 #### 3.3.3 mabd
 mabd provides the Mac-based Authentication Bypass(MAB) functionality. MAB is intended to provide 802.1x unaware clients controlled access to the network using the devices’ MAC address as an identifier. This requires that the known and allowable MAC address and corresponding access rights be pre-populated in the authentication server.  
 
-Today, 802.1x has become the recommended port-based authentication method at the access layer in enterprise networks. However, there may be 802.1x unaware devices such as printers, fax-machines etc that would require access to the network without 802.1x authentication. MAB is a supplemental authentication mechanism to allow 802.1x unaware clients to authenticate to the network. SONiC supported authentication methods are as below:
+MAB is a supplemental authentication mechanism to allow 802.1x unaware clients to authenticate to the network. SONiC supported authentication methods for mab are as given below:
 - CHAP
 - EAP-MD5
 - PAP
@@ -941,7 +987,7 @@ Since Openconfig models are not available, Openconfig dot1x and mab are propriet
 The following commands are used to configure PAC.  
 
 #### 3.6.2.1 authentication enable
-This command enables PAC feature globally. By default the value is disabled. If enabled only, the configuration on the interface would take effect.
+This command enables PAC feature globally. By default the feature is disabled. Any interface PAC configuration is effective only when PAC is enabled globally.
 
 | Mode | Global Config |
 | ---- | ------ |
@@ -1433,7 +1479,9 @@ All processing errors will be captured in syslog.
 Debug command output will be captured as part of tech support for offline analysis.   
 
 # 7 Warm Boot Support
-Configured actions and counters should continue to work across warm reboot.
+- Configured actions and counters continue to work across warm reboot.
+- Already authenticated sessions continues to work.
+- Authentication is restarted for the Clients being authenticated at the time of warmboot.
 
 # 8 Scalability
 
@@ -1453,13 +1501,7 @@ The following is the support scale for Port Access Control. The following number
 
 - SONiC PAC allows only unidirectional (In) control where the incoming traffic is blocked while the port is not authenticated. PAC does not have any control on traffic egressing out of the port.
 
-- Authentication Manager does not make any required configuration for the respective methods to authenticate successfully. The administrator needs to ensure that the correct and appropriate configuration is present in the system. For example, if the authentication order method includes the 802.1x port authentication method, 802.1X should be enabled for the authentication to succeed. Authentication manager will not enable/disable and make the configurations related to 802.1X. Administrator should make the necessary configurations.
-
-- In the default configuration, all traffic that is not EAP over LAN (EAPoL) traffic (including DHCP) is dropped until 802.1X  and MAB times out. Therefore, the value of the timeout can significantly affect the DHCP client on the end host. Longer 802.1X timeouts may prevent DHCP from functioning correctly after the  802.1X timeout expires.
-
-- To prevent DHCP clients from timing out, SONiC recommends testing the DHCP clients in respective network to discover how long they take to time out and setting the  802.1X timers accordingly.
-
-- After configuration Save and reload, if the session Id in the PDU, that is sent by the client doesn’t match with the session Id expected by the 802.1X, then the received PDU is ignored and SONiC will re-try for 802.1X authentication. If the PDU is processed and the authentication fails or times out, then only the authentication moves to the next method.
+- Authentication Manager does not automatically apply any additional configuration for the respective authentication methods to authenticate successfully. The administrator needs to ensure that the correct and appropriate configuration is present in the system. For example, if the authentication order method includes the 802.1x port authentication method, 802.1X should be enabled for the authentication to succeed. Authentication manager will not enable/disable and make the configurations related to 802.1X. Administrator should make the necessary configurations.
 
 - Authentication Manager cannot be enabled on LAG interfaces. Enabling Authentication Manager on ports which are member of LAGs or including an Unauthorized port into a LAG will result in unpredictable results.
 
@@ -1488,7 +1530,7 @@ configure
 authentication enable
 aaa authentication dot1x default radius
 
-interface 1/0/1
+interface 1/1
 authentication order dot1x mab
 authentication priority dot1x mab
 authentication host-mode multi-auth
