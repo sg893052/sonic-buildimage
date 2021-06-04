@@ -100,8 +100,9 @@ The Interface Error Disable feature exist in below modules and containers:
 ### 2.1.1 Configuration Commands
 - *link-error-disable flap-threshold <flap count> sampling-interval <interval in sec>  recovery-interval <recovery interval in sec>*
 Example:
+```
 sonic(conf-if-Ethernet0)# link-error-disable flap-threshold 10 sampling-time 3 recovery-timeout 10
-
+```
 In this example, the values for the parameters are as follows:
 
 The flap-threshold is set at 10 times. This interval is the number of times that the port's link state goes from up to down and down to up before the recovery-timeout is activated. Enter a valid value range from 1-50. Default is 3.
@@ -117,6 +118,26 @@ This config command can be executed on a range of interfaces as well. Example:
 ```
 sonic(conf-if-range-eth**)# link-error-disable flap-threshold 10 sampling-time 3 recovery-timeout 10
 ```
+Example for disabling link-flap error-disable on a port:
+```
+sonic(conf-if-Ethernet0)#no link-error-disable
+```
+This command shall be supported on interface range as well. Example:
+```
+sonic(conf-if-range-eth**)#no link-error-disable
+```
+
+- *[no] errdisable recovery cause link-flap*
+This is a global command to enable the link-flap error-disable feature. This is an existing command tree and link-flap CLI node is added.
+
+Link-flap feature has to be enabled globally to start this feature even when port level configurations are already present.
+When the user executes 'no errdisable recovery cause link-flap' to disable the feature at system level, the current monitoring for link-flaps on all the ports will be stopped.
+
+```
+sonic(config)# errdisable recovery cause link-flap
+sonic(config)# no errdisable recovery cause link-flap
+```
+
 ### 2.1.2 Show Commands
 
 "show errdisable recovery" is an existing CLI command. This output will be updated to list the ports in recovery period.
