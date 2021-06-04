@@ -51,8 +51,9 @@ High level design document version 0.8
 		- [3.3.3 mabd](#333-mabd)
 		- [3.3.4 hostapd](#334-hostapd)
 		- [3.3.5 hostapd](#335-hostapdmgr)
-		- [3.3.6 Other Process](#336-other-process)
-		- [3.3.7 Interaction between pacd hostapd and mabd](#337-interaction-between-pacd-hostapd-and-mabd)
+		- [3.3.6 fpinfra Library](#336-fpinfra-library)
+		- [3.3.7 Other Process](#337-other-process)
+		- [3.3.8 Interaction between pacd hostapd and mabd](#338-interaction-between-pacd-hostapd-and-mabd)
 	- [3.4 SyncD](#34-syncd)
 	- [3.5 SAI](#35-sai)
 	- [3.6 Manageability](#36-manageability)
@@ -963,11 +964,31 @@ Hostapd is an open source implementation of 802.1x standard and the Linux applic
 ### 3.3.5 hostapdmgr
 hostapdmgr reads hostapd specific configuration from SONiC DBs and populates the hostapd.conf. It further notifies the hostapd to re-read the configuration file.
 
-### 3.3.6 Other Process
+### 3.3.6 fpinfra Library
+fpInfra provides OS layer and Network layer abstractions for authentication manager and mab modules. It is implemented as a shared library *libfpinfra.so* and can be included in C or C++ applications. Only one instance of the library can run in a program (Linux process).  The library needs to be initialized via the ``` int fpinfraInit(void) ``` API before making any fpinfra API calls. During fpinfra library initialization, it starts multiple threads (fpinfraTask, nimHpcTask, osapiTimerHandler) to achieve the functionality. The major modules of fpinfra are as given below:   
+	
+	- Network Interface Manager (NIM) 
+	- osapi Layer (memory, string, network)
+	- sysapi Layer
+	- Semaphore
+	- Message Queue
+	- SLL
+	- Timer
+	- AVL
+	- Buffer Pool
+	- Task creation / deletion
+	- osapiTimer
+	- Configurator
+	- resource constants
 
+The fpinfra(nim) listens to netlink notifications from the kernel, translates them to respective NIM events and delivers them to the registered applications via callbacks.
+
+### 3.3.7 Other Process
+
+	
 No change to other process.
 
-### 3.3.7 Interaction between pacd hostapd and mabd
+### 3.3.8 Interaction between pacd hostapd and mabd
 
 *hostapd(802.1X)*   
 
