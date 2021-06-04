@@ -49,6 +49,7 @@ RPVST+.
 | Rev |     Date    |       Author         | Change Description                |
 | --- | ----------- | -------------------- | --------------------------------- |
 | 0.1 | 06/07/2019  | Gunavardhani Bandaru | Initial version                   |
+| 0.2 | 07/27/2020  | Sandeep Kulambi | Add loop guard details |
 
 <a name="References"></a>
 # References
@@ -95,6 +96,7 @@ This document describes the high level design of RPVST+  feature in SONiC.
 - DA MAC in case of RPVST+ should be Cisco Shared Spanning Tree Protocol Address 01:00:0C:CC:CC:CD
 - Support protocol operation on static breakout ports
 - Support protocol operation on physical and Port-channel interfaces
+- Support loop guard functionality
 
 <a name="12-config-mgmt-reqmts"></a>
 ## 1.2 Configuration and Management Requirements
@@ -132,7 +134,7 @@ RPVST+ is IEEE 802.1w (RSTP) standard implemented per VLAN. A single instance of
 	- Alternate - Provides the best alternate path to the root bridge when the root port goes down
 	- Backup - Provides a redundant path to the same network segment. The purpose of Alternate and Backup ports is to provide connectivity when other network components fail. 
 	- Disabled - Has no role in the topology
- 
+
 - Allows ports that are configured as Edge ports to be present in an RPVST+ topology. Edge ports are ports of a switch that are connected to work stations or computers. Edge ports do not register for any incoming BPDU related events. RSTP does not consider edge ports in the spanning tree calculations. Hence, any port flaps on edge ports do not cause spanning tree topology changes. 
 
 - Supports the following bridge port states:
@@ -168,6 +170,7 @@ Following config DB schemas are defined / modified for supporting this feature:
 	;Status: work in progress
 	key                    = STP|GLOBAL            ; Global STP table key
 	mode                   = "rpvst"               ; spanning-tree mode - "pvst" or "rpvst"
+	loop_guard             = "true/false"          ; Enable/disable global loop guard
 
 
 "rpvst" is added as one of the modes to existing STP_GLOBAL_TABLE.
@@ -179,6 +182,7 @@ Following config DB schemas are defined / modified for supporting this feature:
 	key                   = STP_INTF|ifname         ; ifname with prefix STP_INTF, ifname can be physical or port-channel name
 	edge_port             = BIT                     ; enabled or disabled. If set to enabled, then the port becomes an edge port in the domain.
 	link_type             = "link_type"             ; auto, point-to-point or shared link type.
+	loop_guard            = "true/false/none"       ; Enable/disable loop guard on interface, none - disable global loop guard configuratio on interface
 
 The following fields are added to existing STP_INTF_TABLE - edge_port and link_type.
 
@@ -194,6 +198,13 @@ The following fields are added to existing STP_INTF_TABLE - edge_port and link_t
 
 The following fields are added to existing STP_INTF_TABLE - edge_port and link_type.
 
+#### STP_VLAN_PORT_TABLE ####
+
+    ;Stores STP VLAN port details 
+    ;Status: work in progress
+    key                 = STP_VLAN_PORT:"Vlan"vlanid:ifname     ; VLAN+Port with prefix "STP_VLAN_PORT"
+    port_state          = "state"                               ; STP state - disabled, block, listen, learn, forward, root-inc, loop-inc, bpdu-dis
+
 #### STP_VLAN_INTF_FLUSH_TABLE ####
 
 	;Defines vlan and port for which flush needs to happen
@@ -202,7 +213,7 @@ The following fields are added to existing STP_INTF_TABLE - edge_port and link_t
 	state               = "true"                                                        ; if true - perform flush.
 
 New table STP_VLAN_INTF_FLUSH_TABLE is created as stated above.
-  
+
 <a name="33-switch-state-service-design"></a>
 ## 3.3 Switch State Service Design
 
@@ -217,7 +228,7 @@ All STP operations for programming the HW are be handled as part of OrchAgent. O
 Orchagent listens to updates related to flush per port per vlan on APP DB. When flush per port per vlan request is set due to topology change, Orchagent performs FDB/MAC flush for the vlan and the port.
 
  * FDB/MAC flush - STP_VLAN_INTF_FLUSH_TABLE
- 
+
 ### 3.3.2 Other Process 
 
 Please see SONIC PVST+ Functional specification for more details.
@@ -255,6 +266,12 @@ Use the no form of this command to return to the default setting.
 
 **no spanning-tree mode**
 
+Eg:
+```
+spanning-tree mode pvst
+no spanning-tree mode
+```
+
 **Syntax Description:**
 
 | Keyword    | Description                                |
@@ -267,43 +284,58 @@ Use the no form of this command to return to the default setting.
 **Command Mode**: Global Config
 
 Note: 
-1) When global PVST or RPVST mode is enabled, by default, spanning tree will be enabled on the first 255 VLANs. For rest of the VLANs, spanning tree is disabled.
-The 255 VLANs are selected in the following order:
-1. If spanning tree instances are configured first followed by VLANs, configuration order is used to count the first 255 spanning tree instances.
-2. If VLANs are configured first followed by spanning tree instances, then VLANs are sorted by VLAN Id and first 255 VLAN Ids are used.
 
+1) When global PVST or RPVST mode is enabled,
+    1. If total number of VLANs in the system is less than or equal to "MAX_STP_INSTANCES".
+        - Enable spanning tree on all the VLANs in the system,
+    2. If total number of VLANs in the system is greater than "MAX_STP_INSTANCES".
+        - Throw an error
 2) Only one mode can be enabled at any given point of time.
 
- 
 #### 3.6.2.1.2 Per VLAN spanning-tree  ####
 
 This command allows enabling or disabling spanning-tree on a VLAN. Use this command to disable or enable PVST / RPVST+ on a VLAN. Changing the PVST+ / RPVST+ state in a VLAN affects only that VLAN. This command enables PVST+ / RPVST+ for all ports in a VLAN.
 
-Use the no form of this command to return to the default setting.
+Use the no form of this command to disable STP for a VLAN. 
 
-**spanning-tree vlan <vlan-id> **
+**spanning-tree vlan <vlan-id/vlan-range>**
 
-**no spanning-tree vlan <vlan-id> **
+**no spanning-tree vlan <vlan-id/vlan-range>**
+
+Eg:
+```
+spanning-tree vlan 2
+spanning-tree vlan 3,50-100,200,1000-1200
+no spanning-tree vlan 75-90,200,1100-1150
+```
 
 **Syntax Description**:
 
 | Keyword        | Description                                                                                                                                                                                         |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vlan <vlan-id> | Configure spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
+| vlan <vlan-id/vlan-range> | Configure spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
 
 **Default**: Spanning tree is enabled on all VLANs subject to scaling limits.
 
 **Command Mode**: Global Config
-
 
 #### 3.6.2.1.3 Changing RPVST+ bridge parameters ####
 #### 3.6.2.1.3 Forward delay ####
 
 This command allows configuring the forward delay time in seconds.
 
-** spanning-tree [vlan <vlan-id>] forward-time <seconds\>**
+Use the no form of this command to return to the default setting.
 
-** no spanning-tree [vlan <vlan-id>] forward-time **
+**spanning-tree [vlan <vlan-id/vlan-range>] forward-time <seconds\>**
+
+**no spanning-tree [vlan <vlan-id/vlan-range>] forward-time**
+
+Eg:
+```
+spanning-tree vlan 2 forward-time 5
+spanning-tree vlan 3,50-100,200,1000-1200 forward-time 6
+no spanning-tree vlan 75-90,200,1100-1150 forward-time
+```
 
 **Syntax description**: 
 
@@ -318,10 +350,20 @@ This command allows configuring the forward delay time in seconds.
 #### 3.6.2.1.4 Hello time ####
 
 This command allows configuring the hello interval in seconds for transmission of BPDUs.
+Use the no form of this command to return to the default setting.
 
-**spanning-tree [vlan <vlan-id>] hello-time <seconds\>**
+Use the no form of this command to return to the default setting.
 
-**no spanning-tree [vlan <vlan-id>] hello-time **
+**spanning-tree [vlan <vlan-id/vlan-range>] hello-time <seconds\>**
+
+**no spanning-tree [vlan <vlan-id/vlan-range>] hello-time**
+
+Eg:
+```
+spanning-tree vlan 2 hello-time 1
+spanning-tree vlan 3,50-100,200,1000-1200 hello-time 3
+no spanning-tree vlan 75-90,200,1100-1150 hello-time
+```
 
 **Syntax description**: 
 
@@ -336,10 +378,20 @@ This command allows configuring the hello interval in seconds for transmission o
 #### 3.6.2.1.5 Max-age ####
 
 This command allows configuring the maximum time to listen for root bridge in seconds.
+Use the no form of this command to return to the default setting.
 
-**spanning-tree [vlan <vlan-id>] max-age <seconds\>**
+Use the no form of this command to return to the default setting.
 
-**no spanning-tree [vlan <vlan-id>] max-age **
+**spanning-tree [vlan <vlan-id/vlan-range>] max-age <seconds\>**
+
+**no spanning-tree [vlan <vlan-id/vlan-range>] max-age**
+
+Eg:
+```
+spanning-tree vlan 2 max-age 6
+spanning-tree vlan 3,50-100,200,1000-1200 max-age 7
+no spanning-tree vlan 75-90,200,1100-1150 max-age
+```
 
 **Syntax description**: 
 
@@ -354,10 +406,20 @@ Default: The max-age is 20 seconds
 #### 3.6.2.1.6 Priority ####
 
 This command allows configuring the bridge priority in increments of 4096 (default = 32768), range 0-61440.
+Use the no form of this command to return to the default setting.
 
-**spanning-tree [vlan <vlan-id>] priority <value\>**
+Use the no form of this command to return to the default setting.
 
-**no spanning-tree [vlan <vlan-id>] priority **
+**spanning-tree [vlan <vlan-id/vlan-range>] priority <value\>**
+
+**no spanning-tree [vlan <vlan-id/vlan-range>] priority**
+
+Eg:
+```
+spanning-tree vlan 2 priority 0
+spanning-tree vlan 3,50-100,200,1000-1200 priority 4096
+no spanning-tree vlan 75-90,200,1100-1150 priority
+```
 
 **Syntax description**: 
 
@@ -369,6 +431,29 @@ This command allows configuring the bridge priority in increments of 4096 (defau
 
 **Command Mode**: Global Config
 
+#### 3.6.2.1.7 Loop guard ####
+
+This command allows configuring the loop guard on all the ports. 
+
+By default, when spanning-tree stops receiving the BPDUs on a blocking port, it transitions to forwarding state which can result in a loop in the network. Loop guard feature when enabled, avoids this transition of non-designated ports to forwarding state and instead moves the port to a loop inconsistent state where the port continues to block the traffic to avoid the loop.
+Use the no form of this command to disable loopguard by default on all the ports.
+
+Use the no form of this command to disable loopguard by default on all the ports.
+
+**spanning-tree loopguard default**
+
+**no spanning-tree loopguard default**
+
+**Syntax description**: 
+
+| Keyword           | Description                                   |
+| ----------------- | --------------------------------------------- |
+| loopguard default | Enable loop guard by default on all the ports |
+
+**Default**: Global loop guard is disabled
+
+**Command Mode**: Global Config
+
 ### 3.6.2.3 VLAN, interface level 
 
 Below configurations allow STP parameters to be configured on per VLAN, interface basis.
@@ -377,10 +462,18 @@ Below configurations allow STP parameters to be configured on per VLAN, interfac
 
 This command allows to configure the port level cost value for a VLAN, range 1 - 200000000.
 
-**spanning-tree [vlan <vlan-id>] cost <value\>**
+Use the no form of this command to return to the default setting.
 
-**no spanning-tree [vlan <vlan-id>] cost **
+**spanning-tree [vlan <vlan-id/vlan-range>] cost <value\>**
 
+**no spanning-tree [vlan <vlan-id/vlan-range>] cost**
+
+Eg:
+```
+spanning-tree vlan 2 cost 1
+spanning-tree vlan 3,50-100,200,1000-1200 cost 100
+no spanning-tree vlan 75-90,200,1100-1150 cost
+```
 
 **Syntax description**: 
 
@@ -409,9 +502,16 @@ This command allows to configure the port level cost value for a VLAN, range 1 -
 ### 3.6.2.3.2 Port priority
 This command allows to configure the port level priority value for a VLAN.
 
-**spanning-tree [vlan <vlan-id>] port-priority <value\>**
+**spanning-tree [vlan <vlan-id/vlan-range>] port-priority <value\>**
 
-**no spanning-tree [vlan <vlan-id>] port-priority **
+**no spanning-tree [vlan <vlan-id/vlan-range>] port-priority**
+
+Eg:
+```
+spanning-tree vlan 2 port-priority 0
+spanning-tree vlan 3,50-100,200,1000-1200 port-priority 1
+no spanning-tree vlan 75-90,200,1100-1150 port-priority
+```
 
 **Syntax description**: 
 
@@ -429,10 +529,10 @@ This command allows to configure the port level priority value for a VLAN.
 
 This command allows enabling or disabling of STP on an interface.
 
-**spanning-tree enable **
+**spanning-tree enable**
 
-**no spanning-tree enable ** 
- 
+**no spanning-tree enable** 
+
 **Syntax description**:
 This command has no arguments or keywords. 
 
@@ -444,9 +544,9 @@ This command has no arguments or keywords.
 
 Can be set to enabled or disabled. The port becomes an edge port in the domain when set to enabled. Enabling edge port transitions the port quickly to spanning tree forwarding state without passing through blocking or learning states.
 
-**spanning-tree port type edge **
+**spanning-tree port type edge**
 
-**no spanning-tree port type **
+**no spanning-tree port type**
 
 **Syntax description**: 
 
@@ -480,20 +580,41 @@ Can be set to point-to-point or shared. Port is connected to another port throug
 
 **Command Mode**: Interface Config
 
+### 3.6.2.4.4 Guard type
+
+This command allows configuring loop guard or root guard on an interface.
+
+**spanning-tree guard {loop | root | none}**
+
+**no spanning-tree guard**
+
+**Syntax description**: 
+
+| Keyword | Description                                                  |
+| ------- | ------------------------------------------------------------ |
+| loop    | Enable loop guard on the interface                           |
+| root    | Enable root guard on the interface                           |
+| none    | Disable both loop guard and root guard on the interface. This option allows loop guard to be disabled on an interface even while global level loopguard is enabled. |
+
+**Default**: Both loop guard and root guard are disabled on the interface
+
+**Command Mode**: Interface Config
+
 <a name="363-show-commands"></a>
+
 ### 3.6.3 Show Commands
 
 #### 3.6.3.1 Show spanning-tree vlan ####
 
 Display spanning-tree information on the given vlan.
 
-**show spanning-tree vlan <vlan\>**
- 
+**show spanning-tree vlan <vlan-id/vlan-range\>**
+
 Syntax Description:
 
 | Keyword        | Description                                                                                                                                                                                         |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vlan <vlan-id> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
+| vlan <vlan-id/vlan-range> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
 
 **Command Mode**: User EXEC
 
@@ -507,23 +628,23 @@ Example:
 	Identifier        MaxAge  Hello   FwdDly  Hold                           
 	hex               sec     sec     sec     cnt                            
 	0001000480a04000  20      2       15      3                              
-
+	
 	RootBridge        RootPath  DesignatedBridge  Root  Max  Hel  Fwd                 
 	Identifier        Cost      Identifier        Port  Age  lo   Dly                 
 	hex                         hex                     sec  sec  sec                 
 	0001000480a04000  0         0001000480a04000  Root  20   2    15                  
-
+	
 	RSTP (IEEE 802.1w) Port Parameters:                                                    
-	Port        Prio  PortPath  link    Edge  BPDU   Role      State     Designa-  Designated          
-	Num         rity  Cost      type    Port  Filter                     ted cost  bridge           
-	Ethernet3    128  20000     P2P     F     N      DISABLED  DISABLED  0         0000000000000000           
-	Ethernet13   128  20000     P2P     F     N      DISABLED  DISABLED  0         0000000000000000           
+	Port        Prio  PortPath  link    Edge  BPDU   Guard Role      State   Designa- Designated          
+	Num         rity  Cost      type    Port  Filter Type                    ted cost  bridge           
+	Ethernet3    128  20000     P2P     F     N      Loop  DISABLED  DISABLED  0         0000000000000000           
+	Ethernet13   128  20000     P2P     F     N      -     DISABLED  DISABLED  0         0000000000000000           
 
 #### 3.6.3.2 show spanning-tree counters vlan ####
 
 **show spanning-tree counters**
 
-**show spanning-tree counters vlan <vlanid\>** 
+**show spanning-tree counters vlan <vlan-id/vlan-range\>** 
 
 This command displays the spanning-tree counters. counters will be synced to APP DB every 10 seconds.
 
@@ -531,7 +652,7 @@ Syntax Description:
 
 | Keyword        | Description                                                                                                                                                                                         |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| vlan <vlan-id> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
+| vlan <vlan-id/vlan-range> | Display spanning-tree information for the given VLAN. User can specify a single VLAN ID, a range of VLANs separated by a hyphen, or a series of VLANs separated by a comma. The range is 1 to 4094. |
 
 **Command Mode**: User EXEC
 
@@ -549,6 +670,19 @@ Note:
  - In RPVST+ mode, Config BPDU TX / RX counters will get updated only upon receiving STP BPDUs.  
 
 <a name="364-debug-commands"></a>
+
+-show spanning-tree inconsistentports
+This command displays the root inconsistent and loop inconsistent ports
+
+```
+Root guard timeout: 120 secs
+Loop guard default: Enabled
+
+PortNum      VLAN    Inconsistency State
+-------------------------------------------------
+Ethernet8    100     Loop Inconsistent
+```
+
 ### 3.6.4 Debug Commands
 
 Following is a common debug command for PVST+ / RPVST+
@@ -634,6 +768,7 @@ Warm boot is not supported.
 34) Verify CLI to display spanning-tree counters
 35) Verify CLI to display BPDU guard port information
 36) Verify CLI for clear spanning tree counters
+37) Verify global and interface level loop guard CLIs
 
 
 **Functionality:**
@@ -675,6 +810,12 @@ Warm boot is not supported.
 36) Verify bridge id encoding includes the VLAN id of the respective RPVST+ instance
 37) Verify RPVST+ operational data is sync to APP DB
 38) Verify RPVST+ over static breakout ports
+39) Verify global loopguard functionality, stop the BPDUs on blocking port and verify the port moves to loop inconsistent state
+40) In above test case, resume BPDU reception and verify port moves back to its original state, i.e. root forwarding or alternate blocking.
+41) Verify interface loopguard functionality
+42) Verify configuring guard option as none disables both root guard and loop guard, and also when global loop guard is enabled, port level loop guard is disabled
+
+
 
 
 **Scaling**

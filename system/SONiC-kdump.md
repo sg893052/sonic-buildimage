@@ -31,6 +31,7 @@
 - [Data Models](#data-models)		
   - [Configuration commands:](#configuration-commands)
   - [Show Commands](#show-commands)
+  - [REST API Support](#rest-api-support)
 - [How to use the kernel core dump files](#how-to-use-the-kernel-core-dump-files)
 	- [Introduction](#introduction)
 	- [Use the kernel core dump file on the switch](#use-the-kernel-core-dump-file-on-the-switch)
@@ -203,21 +204,24 @@ kdump configuration and status parameters are defined in the openconfig-kump yan
 
 ```
      +--rw oc-sys-ext:kdump
-        +--rw oc-sys-ext:config
-        |  +--rw oc-sys-ext:enable?      boolean
-        |  +--rw oc-sys-ext:memory?      string
-        |  +--rw oc-sys-ext:max-dumps?   uint8
-        +--ro oc-sys-ext:state
-           +--ro oc-sys-ext:enable?             boolean
-           +--ro oc-sys-ext:memory?             string
-           +--ro oc-sys-ext:max-dumps?          uint8
-           +--ro oc-sys-ext:current-state?      kdump-current-state
-           +--ro oc-sys-ext:allocated-memory?   uint64
-           +--ro oc-sys-ext:kdump-record* [id]
-              +--ro oc-sys-ext:id                                string
-              +--ro oc-sys-ext:vmcore-diagnostic-message?        string
-              +--ro oc-sys-ext:vmcore-diagnostic-message-file?   string
-              +--ro oc-sys-ext:vmcore?                           string
+     |  +--rw oc-sys-ext:config
+     |  |  +--rw oc-sys-ext:enable?      boolean
+     |  |  +--rw oc-sys-ext:memory?      string
+     |  |  +--rw oc-sys-ext:max-dumps?   uint8
+     |  +--ro oc-sys-ext:state
+     |  |  +--ro oc-sys-ext:enable?             boolean
+     |  |  +--ro oc-sys-ext:memory?             string
+     |  |  +--ro oc-sys-ext:max-dumps?          uint8
+     |  |  +--ro oc-sys-ext:current-state?      kdump-current-state
+     |  |  +--ro oc-sys-ext:allocated-memory?   uint64
+     |  +--ro oc-sys-ext:kdump-records
+     |     +--ro oc-sys-ext:kdump-record* [id]
+     |        +--ro oc-sys-ext:id       -> ../state/id
+     |        +--ro oc-sys-ext:state
+     |           +--ro oc-sys-ext:id?                               string
+     |           +--ro oc-sys-ext:vmcore-diagnostic-message?        string
+     |           +--ro oc-sys-ext:vmcore-diagnostic-message-file?   string
+     |           +--ro oc-sys-ext:vmcore?                           string
 ```
 #### CLI
 
@@ -317,6 +321,7 @@ Record Key           Filename
 
 ```
 
+
 **show kdump log [X]**
 
  This command is used to display the last *X* lines of the kernel log ring buffer. If *X* is not provided, the default value *100* is being used. The kernel log buffer typically contains the kernel back-trace. The crash dump can be specified by using either the Record number or the the Key name. The Filenames are displayed for reference.
@@ -338,6 +343,21 @@ File: /var/crash/202005111225/dmesg.202005111225
 [  160.853765] RIP  [<ffffffffa1a2a562>] sysrq_handle_crash+0x12/0x20
 [  160.860079]  RSP <ffffa799c6f6be78>
 [  160.863629] CR2: 0000000000000000
+```
+
+##### REST API Support
+
+The following REST URIs are supported to manage kdump configuration and view kernel core files information.
+
+```
+PATCH "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/config" -d "{  \"openconfig-system-ext:config\": {\"enable\": true}}"
+PATCH "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/config" -d "{  \"openconfig-system-ext:config\": {\"enable\": false}}"
+PATCH "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/config" -d "{  \"openconfig-system-ext:config\": {\"memory\": "512M"}}"
+PATCH "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/config" -d "{  \"openconfig-system-ext:config\": {\"max-dumps\": 5}}"
+
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/kdump-records"
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/config"
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-system:system/openconfig-system-ext:kdump/state"
 ```
 
 ##### Debug Commands

@@ -1,0 +1,295 @@
+# Feature Name
+
+PHY PCS/PMD status monitoring
+
+# High Level Design Document
+
+#### Rev 0.1
+
+# Table of Contents
+
+* [List of Tables](#list-of-tables)
+
+* [Revision](#revision)
+
+* [About This Manual](#about-this-manual)
+
+* [Scope](#scope)
+
+* [Definition/Abbreviation](#definitionabbreviation)
+
+# List of Tables
+
+[Table 1: Abbreviations](#table-1-abbreviations)
+
+# Revision
+
+|  Rev  |  Date      |  Author       | Change Description   |
+| ----- | ---------- | ------------- | -------------------- |
+|  0.1  | 04/14/2021   | Steven Lu     | Initial proposal
+|  0.2  | 05/21/2021   | Vishnu Shetty | Phase 1 and 2 design |
+
+# About this Manual
+
+This document provides details of PCS/PMD error status monitoring feature.
+
+# Scope
+
+This document captures feature requirement and high level design.
+
+# Definition/Abbreviation
+
+### Table 1: Abbreviations
+  
+| Term | Meaning |
+| ---- | ---- |
+| PHY  | PHYsical Layer |
+| PCS  | Physical Coding Sublayer |
+| PMD  | Physical Medium Dependent |
+| PMA  | Physical Medium Attachment |
+| BIP  | Bit Interleave Parity |
+| BER  | Bit Error Rate |
+| AM   | Alignment Marker |
+| AMPS | Alignment Marker Payload Sequence |
+
+# 1 Feature Overview
+
+This feature provides user to monitor and debug serdes link qulity and link down reason.
+
+## 1.1 Requirements
+
+High Level Requirements:
+
+Collect PCS error stats and status at regular interval. The interval should be by default 60 sec and configurable. The last non-zero count and "nok" status timestamp should be recorded along with last poll timestamp. The port should be in diagnostic mode to collect some set of PCS status.
+
+Stats:
+  BER count
+  Errored block count
+  BIP error count
+  FEC correctable errors
+  FEC uncorrectable error
+  FEC symbol error
+ 
+PMD status:
+  PMD Signal Detect
+  PMD CDR Lock
+
+PCS status (phase-2, diag mode only):
+  PCS Sync state
+  PCS Link state
+  PCS Local fault
+  PCS Remote fault
+  PCS AM lock
+  PCS AMPS lock
+  PCS Deskew state
+  PCS HI_BER state
+
+Phase-1 support: Falcon-16 (TH2) and Blackhawk-7 (TH3)
+Phase-2 support: Remaining SerDeses (Merlin, Eagle etc)
+
+### 1.1.1 Functional (detail) Requirements
+
+### 1.1.2 Scalability Requirements
+
+### 1.1.3 Warm Boot Requirements
+
+The STATE_DB and COUNTER_DB entries should be preserved across warm-reboot.
+
+## 1.2 Design Overview
+
+## 2.1 Target Deployment Use Cases
+
+## 2.2 Functional Description  
+
+# 3 Design
+
+## 3.1 Overview
+
+The orchagent initialises PCS/PMD status and counter collection. The syncd container polls counter/status from SAI at configured interval and updates COUNTER_DB and STATE_DB. There is an extra poll during link state change. Non zero and "nok" status timestamp will be recorded for each object. The stat gives an indication of link quality.
+
+There are some PCS/PMD objects which are listed above under phase-2 cant be fetched without stopping link scan thread (asic limitation). This feature is primarily required to debug link down reason. New command would be availble to put port under diagnostic mode. In diagnostic mode status will be polled and updated in state DB.
+
+## 3.2 DB Changes 
+
+### 3.2.1 CONFIG DB
+
+**PORT_TABLE:**
+
+In phase 2: 
+Field:
+"diag_mode" 
+Value:
+"on"
+"off"
+
+### 3.2.2 APP DB 
+
+**PORT_TABLE:**
+
+In phase 2:
+Field:
+"diag_mode" 
+Value:
+"on"
+"off"
+
+### 3.2.3 STATE DB
+
+**PORT_TABLE:**
+
+Phase 1:
+
+Field:
+  PMD_SIGNAL_DETECT_STATUS/TIMESTAMP
+  PMD_CDR_LOCK_STATUS/TIMESTAMP
+
+Value:
+  "ok"
+  "nok"
+
+Phase 2:
+
+Field:
+  PCS_SYNC_STATUS/TIMESTAMP
+  PCS_LINK_STATUS/TIMESTAMP
+  PCS_LOCAL_FAULT_STATUS/TIMESTAMP
+  PCS_REMOTE_FAULT_STATUS/TIMESTAMP
+  PCS_AM_LOCK_STATUS /TIMESTAMP
+  PCS_AMPS_LOCK_STATUS/TIMESTAMP
+  PCS_DESKEW_STATUS/TIMESTAMP
+  PCS_HI_BER_STATUS/TIMESTAMP
+
+Value:
+  "ok"
+  "nok"
+
+### 3.2.4 ASIC DB
+
+In phase 2: 
+SAI_PORT_ATTR_DIAG_MODE
+"true"/"false"
+
+### 3.2.5 COUNTER DB
+
+  SAI_PORT_STAT_IF_IN_BER_COUNT/TIMESTAMP
+  SAI_PORT_STAT_IF_IN_ERROR_BLOCK_COUNT/TIMESTAMP
+  SAI_PORT_STAT_IF_IN_BIP_ERROR_COUNT/TIMESTAMP
+  SAI_PORT_STAT_IF_IN_FEC_CORRECTABLE_FRAMES/TIMESTAMP
+  SAI_PORT_STAT_IF_IN_FEC_NOT_CORRECTABLE_FRAMES/TIMESTAMP
+  SAI_PORT_STAT_IF_IN_FEC_SYMBOL_ERRORS/TIMESTAMP
+
+### 3.2.6 FLEX_COUNTER DB 
+
+FLEX_COUNTER_GROUP_TABLE:PORT_STAT_COUNTER
+"PCS_POLL_INTERVAL"
+"60"
+
+## 3.3 Switch State Service Design
+
+### 3.3.1 Orchestration Agent
+
+Enables the flex counter thread to poll the counters and status. 
+
+## 3.4 SyncD
+
+The periodically polls SAI to collect the counters and status. In phase 2, status will be collected only if port is in diag mode.
+The stats will be updated in COUNTERS_DB with last non-zero occurance. The PCS/PMD status will be updated in STATE_DB with last "nok" occurance time stamp.
+
+## 3.5 SAI
+
+The following attributes will be part of SAI extension.
+
+  SAI_PORT_ATTR_PMD_SIGNAL_DETECT_STATUS
+  SAI_PORT_ATTR_PMD_CDR_LOCK_STATUS
+  SAI_PORT_ATTR_PCS_SYNC_STATUS
+  SAI_PORT_ATTR_PCS_LINK_STATUS
+  SAI_PORT_ATTR_PCS_LOCAL_FAULT_STATUS
+  SAI_PORT_ATTR_PCS_REMOTE_FAULT_STATUS
+  SAI_PORT_ATTR_PCS_AM_LOCK_STATUS
+  SAI_PORT_ATTR_PCS_AMPS_LOCK_STATUS
+  SAI_PORT_ATTR_PCS_DESKEW_STATUS
+  SAI_PORT_ATTR_PCS_HI_BER_STATUS
+
+  SAI_PORT_STAT_IF_IN_BER_COUNT 
+  SAI_PORT_STAT_IF_IN_ERROR_BLOCK_COUNT 
+  SAI_PORT_STAT_IF_IN_BIP_ERROR_COUNT 
+
+## 3.6 User Interface
+
+### 3.6.1 Data Models 
+
+### 3.6.2 CLI
+
+#### 3.6.2.1 Configuration Commands
+
+**config interface Ethernet X diag_mode <enable/disable>**
+
+```
+sonic-cli# configure terminal
+sonic-cli(config)# interface Ethernet 0
+sonic(conf-if-Ethernet0)# diag-mode enable
+sonic(conf-if-Ethernet0)# no diag-mode enable
+sonic(conf-if-Ethernet0)# diag-mode ?
+  enable         enable port diag mode
+```
+
+PCS status polling gets enabled in port diag mode. In diag mode port oper status gets freezed, renables back after disable.
+
+**config pcs polling-interval <0-999>**
+
+```
+sonic-cli# configure terminal
+sonic-cli(config)# pcs polling-interval
+  0-999         interval in sec, 0 disable
+```
+
+By default polling interval is 60 sec. In port diag mode, to get close to real time status adjust the polling interval.
+Its suggested to use between 1 to 5 sec.
+
+#### 3.6.2.2 Show Commands
+
+**show interface pcs status**
+```
+ show interface pcs status [EthernetX]
+ Last update time  : May-05-2021 16:49:12
+ PMD signal detect : nok since May-05-2021 16:49:12
+ PMD cdr lock      : ok  since May-04-2021 10:40:00
+```
+
+The time stamp show last "nok" recorded status.
+
+**show interface pcs counters**
+```
+ show interface pcs counter [EthernetX]
+ Last update time    : May-27-2021 16:49:12
+ BER                 : 1234 at May-05-2021 16:49:12
+ Error Block         : 1234 at May-04-2021 10:40:00
+ BIP error           : 1234 at May-04-2021 10:40:00
+ FEC correctable     : 1234 at May-05-2021 16:49:12
+ FEC non correctable : 1234 at May-05-2021 16:49:12
+ FEC symbol errors   : 1234 at May-05-2021 16:49:12
+```
+
+Show last non-zero value and time stamp. Future enahncement needed to count number of non-zero updates and cumulative counter.
+
+#### 3.6.2.3 Debug Commands
+
+#### 3.6.2.4 IS-CLI Compliance
+  
+### 3.6.3 REST API Support
+
+### 3.6.4 Service and Docker Management
+  
+# 4 Flow Diagrams 
+
+# 5 Error Handling
+
+# 6 Serviceability and Debug
+
+# 7 Warm Boot Support
+
+# 8 Scalability
+
+# 9 Unit Test
+
+# 10 Internal Design Information
