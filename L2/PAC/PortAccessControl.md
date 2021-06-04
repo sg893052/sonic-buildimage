@@ -208,11 +208,30 @@ The following are the requirements for Port Access Control feature:
 
 
 ### 1.3.2 Configuration and Management Requirements
-This feature supports CLI and REST based configurations.
-1. Support CLI configurations as mentioned in section 3.6.2
-2. Support show commands as mentioned in section 3.6.3
-3. Support debug commands as mentioned in section 3.6.4
-4. Support REST APIs for config and operational data
+This feature shall support CLI and REST based configurations.
+
+List of configuration shall include the following:
+- enable PAC feature globally.
+- configure the number of supplicants that are re-authenticated per second.
+- enable the Authentication monitor mode on the switch.
+- configure the authentication method for port-based access to the switch.
+- configuration parameters that needed to format attribute1 for MAB requests to the RADIUS server.
+- enable the dot1x authentication support on the switch.
+- configure VLAN as guest vlan on an interface or a range of interfaces.
+- configure the unauthenticated VLAN associated with the specified interface or range of interfaces.
+- configure the number of times authentication may be reattempted by the client before a port moves to the authentication fail VLAN.
+- set the maximum number of clients supported on an interface or range of interfaces when multi-authentication host mode is enabled on the port.
+- enable periodic reauthentication of the supplicant for the specified interface or range of interfaces.
+- set the authentication mode to use on the specified interface or range of interfaces.
+- configure the host mode of a port.
+- configure the period of time after which the Authenticator attempts to reauthenticate a supplicant on the port.
+- configure the actions to take when all the authentication servers are dead.
+- enable authorization of voice devices on the critical voice VLAN when all the authentication servers are dead.
+- configure the actions to take when one authentication server comes back alive after all were dead.
+- configure Open Authentication mode on the port.
+- set the order of authentication methods used on a port.
+- set the priority for the authentication methods used on a port.
+- enable MAC Authentication Bypass (MAB) on an interface.
 
 ### 1.3.3 Scalability Requirements
 1. 48 clients per port, with a maxmimum of 512 clients per switch
