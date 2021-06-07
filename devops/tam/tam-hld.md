@@ -387,7 +387,6 @@ The following collector attribtes are supported.
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
 | `name`               | A string that uniquely identifies the collector, and will be referrenced from other configurations        |
-| `ip-address-type`            | Specifies the version of IP protocol to be used for reaching the collector. Valid values are `"IPv4"` and `"IPv6"`           |
 | `ip-address`               | The IP address of the collector        |
 | `protocol`            | Specifies the transport protocol to be used for reaching the collector. Valid values are `"UDP"` and `"TCP"`. When not specified, `"UDP"` is used as default.           |
 | `port`               | Port number on which the Collector is listening for the reports.        |
@@ -395,7 +394,7 @@ The following collector attribtes are supported.
 The command syntax for setting up the collectors are as follows:
 
 ```
-sonic (config-tam)# collector <name> type {ipv4 | ipv6} ip <ip-address> port <port-number> [protocol { UDP | TCP }] 
+sonic (config-tam)# collector <name> ip <ip-address> port <port-number> [protocol { UDP | TCP }] 
 
 sonic (config-tam)# no collector <name> 
 ```
