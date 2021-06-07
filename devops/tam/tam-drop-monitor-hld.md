@@ -531,7 +531,7 @@ sonic (config-if-Ethernet44)# flow-group websrvflows
 
 ; setup the collector
 
-collector dmcol1 type ipv4 ip 20.20.20.4 port 9091 protocol UDP
+collector dmcol1 ip 20.20.20.4 port 9091 protocol UDP
 
 ; Enable Drop Monitor on the switch
 
