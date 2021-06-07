@@ -78,6 +78,7 @@
 | 0.2 | 04/23/2021  | Sachin Holla       | Updated requirements for Cyrus release                 |
 | 0.3 | 05/19/2021  | Sachin Holla       | Move yang path listing to a separate document          |
 | 0.4 | 05/24/2021  | Sachin Holla       | Include detailed design and fixes for few comments     |
+| 0.5 | 06/07/2021  | Sachin Holla       | Mention app's role in wildcard path support            |
 
 # About This Manual
 
@@ -137,6 +138,10 @@ Following cases will not be supported:
 Server should reject the RPC with INVALID_ARGUMENT status code if the request contains
 unsupported wildcard paths.
 
+**Note:** Wildcard key handling requires changes in application code.
+Not all applications are supporting it in this release.
+Supported applications and paths are listed in [Telemetry_Subscribe_Paths.md](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md).
+
 ### 1.2.2 ON_CHANGE subscription
 
 gNMI server should support ON_CHANGE subscription for all YANG paths except following:
@@ -149,6 +154,9 @@ gNMI server should support ON_CHANGE subscription for all YANG paths except foll
 
 Server should reject the Subscribe request with INVALID_ARGUMENT status code if it receives
 ON_CHANGE subscription request for unsupported paths.
+
+**Note:** Not all applications are supporting ON_CHANGE subscription in this release.
+Supported paths are listed in [Telemetry_Subscribe_Paths.md](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md).
 
 ### 1.2.3 SAMPLE subscription
 
@@ -165,6 +173,10 @@ Special case - notification message should not be sent if there are no changes.
 Server should include delete paths for the YANG nodes deleted during
 the sample interval in the notification message.
 Existing implementation was not notifying deleted paths.
+
+**Note:** SAMPLE subscription for wildcard paths require application code changes.
+Wildcard supported yang modules are listed in [Telemetry_Subscribe_Paths.md](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md).
+SAMPLE subscription will be supported for all non-wildcard paths.
 
 ### 1.2.4 TARGET_DEFINED subscription
 
@@ -572,6 +584,8 @@ Below table lists the gNMI server's behavior for different combinations of subsc
 | ON_CHANGE      | /interfaces/interface[name=\*]/state     | error (counters does not support ON_CHANGE) |
 | ON_CHANGE      | /interfaces/interface[name=\*]/state/enabled         | ON_CHANGE  |
 | SAMPLE         | /interfaces/interface[name=\*]           | SAMPLE    |
+| SAMPLE         | /interfaces/interface[name=\*]/config    | SAMPLE    |
+| SAMPLE         | /interfaces/interface[name=\*]/state     | SAMPLE    |
 
 Following sequence diagram describes the overall flow.
 
