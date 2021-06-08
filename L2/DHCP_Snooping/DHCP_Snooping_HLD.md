@@ -49,7 +49,8 @@
 	| Rev |     Date    |       Author       | Change Description                |
 	|:---:|:-----------:|:------------------:|-----------------------------------|
 	| 0.1 | 02/22/2021  |   Phanindra TV     | Initial version                   |
-    | 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                |
+        | 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                |
+        | 0.3 | 06/07/2021  |   Ravi Vemuri      | Address review comments.          |
 	
 # About this Manual
 This document provides general information about the support for DHCPv4 snooping and DHCPv6 snooping in SONiC.
@@ -78,13 +79,11 @@ When a rogue device acting as a DHCP server manages to reply back to clients' re
 
 DHCP snooping mitigates DHCP starvation attacks and DHCP spoofing attacks.
 
-DHCP snooping prevents unauthorized DHCP servers from offering IP addresses to DHCP clients by checking trust state of the port thereby mitigating spoofing attacks. By verifying the client hardware MAC address against the source MAC in the ethernet header minimizes the scope of starvation attacks.
-
-Refer [Configuration commands](#configuration-commands) for corresponding command for each of the listed requirements.
+DHCP Snooping works by trapping all DHCP packets to CPU and applying the dhcp snooping logic on those packets. DHCP snooping prevents unauthorized DHCP servers from offering IP addresses to DHCP clients by checking trust state of the port thereby mitigating spoofing attacks. And by verifying the client hardware MAC address against the source MAC in the ethernet header minimizes the scope of starvation attacks.
 
 Support for DHCP snooping is added in SONiC 4.0.
 
-The number of snooping binding entries in DHCP DB is limited to 1K. More details are listed in [Scalability](#scalability) section.
+The number of snooping binding entries in DHCP DB is limited to 8K. More details are listed in [Scalability](#scalability) section.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 
@@ -95,11 +94,12 @@ Go back to [Beginning of the document](#dhcp-snooping).
 3. Trust can be enabled on physical interfaces and port-channels.
 4. Support for enabling DHCP snooping on a per-VLAN basis
 5. Provide configurable options to verify client's hardware MAC address against the source MAC in ethernet header and drop those that mismatch.
-6. Maintain DHCP bindings for all the clients that have IP address and lease time allotted by the server.
-7. Log invalid DHCP messages.
-8. Support for simultaneously enabling both DHCPv4 snooping and DHCPv6 snooping.
-9. Support statistics for DHCPv4 and DHCPv6 snooping.
-10. DHCP Snooping feature and DHCP L3 Relay feature are mutually exclusive.
+6. Snoop all DHCP messages.
+7. Maintain DHCP bindings for all the clients that have IP address and lease time allotted by the server.
+8. Log invalid and malicious DHCP messages.
+9. Support for simultaneously enabling both DHCPv4 snooping and DHCPv6 snooping.
+10. Support statistics for DHCPv4 and DHCPv6 snooping.
+11. DHCP Snooping feature and DHCP L3 Relay feature are mutually exclusive. 
  
 
 Go back to [Beginning of the document](#dhcp-snooping).
@@ -113,7 +113,7 @@ Configuration and management for DHCP Snooping is supported via the following in
 List of configuration and display aspects: 
 
 1. Enable DHCP snooping globally.
-2. Configure ports connected to DHCP server as trusted.
+2. Configure ports/port-channels connected to DHCP server as trusted.
 3. Enable DHCP snooping on a single VLAN or a range of VLANs.
 4. For additional security, enable source MAC verification.
 5. Configure static DHCP Snooping binding entries.
@@ -123,8 +123,9 @@ List of configuration and display aspects:
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 1.3 Scalability Requirements
 
-1. DHCP Snooping feature is qualified to handle upto 1024 clients. 
-2. DHCP Snooping feature is qualified to handle 64 static binding entries.   
+1. DHCP Snooping feature is qualified to handle upto 4096 DHCPv4 clients. 
+1. DHCP Snooping feature is qualified to handle upto 4096 DHCPv6 clients. 
+2. DHCP Snooping feature is qualified to handle upto 1024 static binding entries.   
 
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 1.4 Warm Boot Requirements
@@ -136,12 +137,11 @@ Go back to [Beginning of the document](#dhcp-snooping).
 
 ![DHCP snooping deployment](ds_deployment.png)
 
-DHCP clients connect through untrusted ports. DHCP messages from clients received on untrusted ports are forwarded to the trusted ports in the same VLAN.
+DHCP clients connect through untrusted ports. Ports connected to DHCP servers are configured as trusted ports. DHCP messages from clients received on untrusted ports are forwarded to the trusted ports in the same VLAN.
 
-In enterprise and campus networks, the most common denial of service issue encountered is that of an end-user connecting a consumer-grade router at their desk ignorant that the device they plugged in could act as a DHCP server by default. This DHCP server could potentially begin assigning IP addresses to hosts within the network thereby causing network connectivity issues and in many cases, major service disruptions:
- 
- - Best case being DHCP clients being assigned an invalid IP address disconnecting them from the rest of the network. 
- - Worst case being DHCP clients been assigned an IP address used by core network infrastructure devices (example:  VLAN interface on the core switch or a firewall interface) causing serious network disruptions and conflicts. 
+By configuring ports connected to DHCP servers as trusted, DHCP snooping drops any DHCP server to client messages received on untrusted ports. This prevents DHCP spoofing attacks by rogue DHCP servers which are connected to ports which are untrusted. 
+
+By checking the source MAC address in the Ethernet header with the client MAC address in the DHCP header, DHCP snooping can minimize malicious DHCP clients from acquiring a lease and as a result deny resources to legitimate clients. By checking the interface/vlan for an incoming DHCP packet against a binding entry for an existing client, it is possible to stop a malicious clients to masquerade as a legitimate client. 
 
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 2.2 Functional Description
@@ -157,7 +157,46 @@ Go back to [Beginning of the document](#dhcp-snooping).
 
 	•	On untrusted interfaces, the switch drops DHCP packets whose source MAC address does not match the client hardware address. This feature is a configurable option.
 
+The following table captures the action taken for each DHCPv4 message type.
 
+	|   DHCP Message Type   |     Direction      |    Trusted port   |     Untrusted port      |
+	|:----------------------|:------------------:|:-----------------:|------------------------:|
+	|  DHCPDISCOVER         |  Client to Server  |   Drop            |  Process                |
+	|  DHCPOFFER            |  Server to Client  |   Process         |  Drop                   |
+	|  DHCPREQUEST          |  Client to Server  |   Drop            |  Process                |
+	|  DHCPDECLINE          |  Client to Server  |   Drop            |  Process                |
+	|  DHCPACK              |  Server to Client  |   Process         |  Drop                   |
+	|  DHCPNAK              |  Server to Client  |   Process         |  Drop                   |
+	|  DHCPRELEASE          |  Client to Server  |   Drop            |  Process                |
+	|  DHCPINFORM           |  Client to Server  |   Drop            |  Process                |
+	|  DHCPFORCERENEW       |  Server to Client  |   Process         |  Drop                   | 
+	|  DHCPLEASEQUERY       |  to Server         |   Drop            |  Process                |
+	|  DHCPLEASEUNASSIGNED  |  from Server       |   Process         |  Drop                   |
+	|  DHCPLEASEUNKNOWN     |  from Server       |   Process         |  Drop                   |
+	|  DHCPLEASEACTVE       |  from Server       |   Process         |  Drop                   |
+	|  DHCPBULKLEASEQUERY   |  to Server         |   Drop            |  Process                |
+	|  DHCPLEASEQUERYDONE   |  from Server       |   Process         |  Drop                   |
+	|  DHCPACTIVELEASEQUERY |  to Server         |   Drop            |  Process                |
+	|  DHCPLEASEQUERYSTATUS |  from Server       |   Process         |  Drop                   |
+	|  DHCPTLS              |  bidirectional     |   Process         |  Process                |
+
+The following table captures the action taken for each DHCPv6 message type.
+
+        |   DHCPv6 Message Type   |     Direction      |    Trusted port   |     Untrusted port      |
+	|:------------------------|:------------------:|:-----------------:|------------------------:|
+        |   SOLICIT               |  Client to Server  |   Drop            |  Process                |
+        |   ADVERTISE             |  Server to Client  |   Process         |  Drop                   |
+        |   REQUEST               |  Client to Server  |   Drop            |  Process                |
+        |   CONFIRM               |  Client to Server  |   Drop            |  Process                |
+        |   RENEW                 |  Client to Server  |   Drop            |  Process                |
+        |   REBIND                |  Client to Server  |   Drop            |  Process                |
+        |   REPLY                 |  Server to Client  |   Process         |  Drop                   |
+        |   RELEASE               |  Client to Server  |   Drop            |  Process                |
+        |   DECLINE               |  Client to Server  |   Drop            |  Process                |
+        |   RECONFIGURE           |  Server to Client  |   Process         |  Drop                   |
+        |   INFORMATION-REQUEST   |  Client to Server  |   Drop            |  Process                |
+        |   RELAY-FORW            |  to Server         |   Drop            |  Process                |
+        |   RELAY-REPLY           |  from Server       |   Process         |  Drop                   |
 2. DHCPv6 snooping works only with DHCPv6 stateful server.
 
 3. When proper COPP rules for DHCP L2 packets are installed, the DHCP packets are trapped to CPU. The application needs to process the packet if DHCP Snooping is enabled globally and that the port is a member of a VLAN where DHCP Snooping is enabled. 
@@ -182,6 +221,8 @@ Go back to [Beginning of the document](#dhcp-snooping).
 10. DHCP Server messages received on non-trusted ports are dropped. 
  
 11. VLANs on which DHCP snooping is enabled cannot be deleted without first disabling DHCP snooping.
+
+12. DHCP Snooping is not applied to VLANs on which it is not enabled. DHCP packets received in this VLAN are forwarded.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 # 3 Design
@@ -399,13 +440,17 @@ This command is executed in config mode.
 
 	To bind a static IPv4 address to a Layer 2 interface
 	sonic(config)#[no] ip source binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
-    To clear all IP DHCP Snooping binding entries 
+        To clear all IP DHCP Snooping binding entries 
 	sonic(config)# clear ip dhcp snooping binding
+        To clear a specific IP DHCP Snooping binding entry
+        sonic(config)# clear ip dhcp snooping binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
 
 	To bind a static IPv6 address to a Layer 2 interface
 	sonic(config)#[no] ipv6 source binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
-    To clear all IPv6 DHCP Snooping binding entries 
+        To clear all IPv6 DHCP Snooping binding entries 
 	sonic(config)# clear ipv6 dhcp snooping binding
+        To clear a specific IPv6 DHCP Snooping binding entry
+        sonic(config)# clear ipv6 dhcp snooping binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
 
 ##### 3.7.1.1.5 Configure an interface as trusted
 This command is executed in interface mode.
@@ -441,9 +486,7 @@ For example,
 
 	Interface   Trusted 
 	----------- ----------
-	Ethernet0   No
 	Ethernet1   Yes
-	Ethernet2   No
 	...
 
 	(Config)#show ip dhcp snooping binding 
@@ -456,6 +499,12 @@ For example,
 	-----------------  ---------------  ----   -----------  -------  -----------
 	00:00:00:00:00:01  1.1.1.1          10     Ethernet0    STATIC   - 
 	00:00:A8:5F:34:52  192.168.10.39    20     Ethernet2    DYNAMIC  86396
+
+        To display DHCP Snooping statistics
+        sonic# show ip dhcp snooping statistics
+
+        To display DHCPv6 Snooping statistics
+        sonic# show ipv6 dhcp snooping statistics
 
 ### 3.7.2 REST API Support
 
@@ -492,7 +541,7 @@ The DHCP Snooping binding DB is updated to the APP_DB. Post a warm boot, this ta
 Go back to [Beginning of the document](#dhcp-snooping).
 # 7 Scalability
 
-DHCP Snoopoing feature allows 64 Static entries to be configured. A total of 1K clients are supported. Beyond 1K clients, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
+DHCP Snoopoing feature allows 1024 Static entries to be configured. A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 # 8 Unit Test
