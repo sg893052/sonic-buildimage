@@ -807,6 +807,7 @@ This feature will only be available on Broadcom CMICx platforms, and the accurat
 
 - Broadcom TD4-X11
 - Broadcom TD3-X7
-- Broadcom TD3-X5(i.e. HX5)
+- Broadcom TD3-X3(i.e. HX5)
 - Broadcom TH3
+- Broadcom TD3-X5 (i.e. MV2)
 
