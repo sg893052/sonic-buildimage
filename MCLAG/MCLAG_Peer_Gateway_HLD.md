@@ -29,9 +29,10 @@ Rev 0.1
 	- [3.5 CLI](#3_5-CLI)
 		- [3.5.1 Click based CLI](#3_5_1-Click-based-CLI)
 			- *[3.5.1.1 Configuration and show commands](#3_5_1_1-Configuration-and-show-commands)*
-		- [3.5.2 Sonic CLI](#3_5_1-Sonic-CLI)
+		- [3.5.2 Sonic CLI](#3_5_2-Sonic-CLI)
 			- *[3.5.2.1 Configuration commands](#3_5_2_1-Configuration-commands)*
 			- *[3.5.2.2 Show commands](#3_5_2_2-Show-commands)*
+		- [3.5.3 REST API Support](#3_5_3-REST-API-Support)
 - **[4 Unit Test](#4-Unit-Test)**
 	- [4.1 Redis DB table updates](#4_1-Redis-DB-table-updates)
 	- [4.2 Config handling](#4_2-Config-handling)
@@ -211,6 +212,29 @@ Vlan10
 Total count :    1
 ==============
 ```
+
+### 3.5.3 REST API Support
+
+#### 3.5.3.1 PUT API
+
+curl -X PUT "https://10.175.124.134:7080/restconf/data/openconfig-mclag:mclag/vlan-if/vlan-interface=Vlan20" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-mclag:vlan-interface\":[{\"name\":\"Vlan20\",\"config\":{\"name\":\"Vlan20\",\"peer-gateway-enable\":\"ENABLE\"}}]}"
+
+#### 3.5.3.2 GET API
+
+curl -X GET "https://10.175.124.134:7080/restconf/data/openconfig-mclag:mclag/vlan-if/vlan-interface=Vlan20" -H "accept: application/yang-data+json"
+
+#### 3.5.3.3 DELETE API
+
+curl -X DELETE "https://10.175.124.134:7080/restconf/data/openconfig-mclag:mclag/vlan-if/vlan-interface=Vlan20" -H "accept: */*"
+
+#### 3.5.3.4 PATCH API
+
+curl -X PATCH "https://10.175.124.134:7080/restconf/data/openconfig-mclag:mclag/vlan-if/vlan-interface=Vlan20" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-mclag:vlan-interface\":[{\"name\":\"Vlan20\",\"config\":{\"name\":\"Vlan20\",\"peer-gateway-enable\":\"ENABLE\"}}]}"
+
+#### 3.5.3.5 POST API
+
+curl -X POST "https://10.175.124.134:7080/restconf/data/openconfig-mclag:mclag/vlan-if" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-mclag:vlan-interface\":[{\"name\":\"Vlan30\",\"config\":{\"name\":\"Vlan30\",\"peer-gateway-enable\":\"ENABLE\"}}]}"
+
 
 # 4 Unit Test
 
