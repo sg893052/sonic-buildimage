@@ -92,9 +92,11 @@ This design adds a new NEXT_HOP_GROUP_TABLE, to store next hop group information
     key           = NEXT_HOP_GROUP_TABLE:string ; arbitrary string identifying the next hop group, as determined by the programming application.
     nexthop       = *prefix,           ; IP addresses separated “,” (empty indicates no gateway)
     ifname        = *PORT_TABLE.key,   ; zero or more separated by “,” (zero indicates no interface)
-    vni_label     = VRF.vni            ; New Field. zero or more separated by ',' (empty value for non-vxlan next-hops).
+    vni_label     = VRF.vni            ; New Field. zero or more separated by ',' (empty value for non-vxlan next-hops)
+    nexthop_group = NEXT_HOP_GROUP_TABLE:key, ; index within the NEXT_HOP_GROUP_TABLE seperated by "," used for recursice/ecmp routes. ( When this field is present, other fields will not be present)
 ```
 Note that the identifier for a next hop group is entirely the decision of the programming application. Whether this is done randomly or algorithmically is up to the application - this design imposes no requirements on this.
+Recursive/ecmp routes are represented by referencing a list of nexthop group ids in the nexthop_group field. When this field is used, other fields will not be present.
 
 The ROUTE_TABLE is then extended to allow a reference to the next hop group to be specified, instead of the current nexthop and intf fields.
 ```
@@ -116,7 +118,7 @@ With FRR 7.5 the zebra component already creates the nexthop group id and object
 
 ### 3.4.2 fpmsyncd
 
-fpmsyncd will be modified to receive the nexthop group object from Zebra FPM and populate the NEXT_HOP_GROUP_TABLE in the APP_DB.  The route processing in fpmsyncd will be modified to process the nexthop group id reference in the route info if it is present.
+fpmsyncd will be modified to receive the nexthop group object from Zebra FPM and populate the NEXT_HOP_GROUP_TABLE in the APP_DB.  The route processing in fpmsyncd will be modified to process the nexthop group id reference in the route info if it is present. fpmsyncd will get the zebra allocated nexthop group id and will allocate and map it to fpm allocated nexthop group id when writing to APP_DB. During warm-reboot this will help to reconcile the newly received zebra alocated nexthop group id and remap it to the older fpm allocated nexthop group id based on the groups content. This will ensure that the nexthop group id programmed to APP_DB is maintained accross warm-reboot and hence reprogramming to hardware is avoided.
 
 ## 3.4 Switch State Service Design
 
