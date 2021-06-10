@@ -125,11 +125,15 @@ Params configured in static peer takes precedence over BFD profile.
 
 **Scenario 3:**
 BGP, OSPF and PIM shares a BFD session, BFD profile associated with BGP, OSPF and PIM is different.
-To be updated based on FRR behaviour.
+The latest configured profile either in BGP, OSPF or PIM takes effect.
 
 **Scenario 4:**
 BFD profile configuration is changed dynamically. 
 All the configuration parameters will take effect immediately, BFD timers will be renegotiated using the polling method. 
+
+**Scenario 5:**
+BFD profile associated with BGP, OSPF, PIM or BFD peer is deleted.
+The associated BFD session reverts to default values. The profile configuration should be deleted from BGP, OSPF, PIM or BFD peer as well and reconfigured to take effect.
 
 ### 3.1.2 BFD Passive mode:
 A CLI is added to support passive mode, when passive mode is configured BFD local peer will not initiate session  creation request but will respond to session creation request received from the peer device. By default passive mode is disabled.
