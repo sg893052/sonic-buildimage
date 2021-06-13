@@ -13,17 +13,17 @@
 * [Feature Overview](#feature-overview)
     * [Functional Requirements](#functional-requirements)
 * [Design](#design)
-    * [Chassis Locator LED](#chassis-locator-led-design)
-    * [Port Locator LED](#Port-LED-Design)
+    * [Chassis Locator LED](#chassis-locator-led)
+    * [Port Locator LED](#port-led-design)
 * [CLI](#cli)
-  * [CLICK](#click-cli)
-  * [KLISH](#klish-cli)
+  * [CLICK](#click)
+  * [KLISH](#klish)
   * [Data Models](#data-models) 
   * [REST API Support](#rest-api-support) 
 * [Serviceability and Debug](#Serviceability-and-Debug)
 * [System Reboot](#system-reboot)
 * [Config Reload](#config-reload)
-* [Scalabili](#Scalability)
+* [Scalability](#Scalability)
 * [Unit Test](#Unit-Test)
 * [Internal Design Information](#internal-design)
 
@@ -695,27 +695,26 @@ No impact to scalability. Existing scale numbers will be supported with both fea
 
 # Unit Test 
 
-**Chassis Locator LED**
+**Chassis Locater LED**
 
 Run each unit test on both Chassis Locator LED supported platforms and unsupported platforms. 
 
-  | SNO |  Unit Testcase 
- :------| :----------------------------------------------------
-    1   | CLI: Enable Chassis Locator LED       
-    2   | CLI: Disable Chassis Locator LED  
-    3   | CLI: Show Status of Chassis Locator LED   
-    4   | KLISH: Enable Chassis Locator LED  
-    5   | KLISH: Disable Chassis Locator LED 
-    6   | KLISH: Show Status of Chassis Locator LED 
-    7   | Verify Chassis Locator LED after Warm/Cold Reboot
-    8   | Verify Chassis Locator LED after Config Reload 
-    9   | Verify Chassis Locator LED after Power Cycle
-   10   | CLI: Enable Chassis Locator LED with Timer      
-   11   | KLISH: Enable Chassis Locator LED with Timer      
+* CLI: Enable Chassis Locator LED       
+* CLI: Disable Chassis Locator LED  
+* CLI: Show Status of Chassis Locator LED   
+* KLISH: Enable Chassis Locator LED  
+* KLISH: Disable Chassis Locator LED 
+* KLISH: Show Status of Chassis Locator LED 
+* Verify Chassis Locator LED after Warm/Cold Reboot
+* Verify Chassis Locator LED after Config Reload 
+* Verify Chassis Locator LED after Power Cycle
+* CLI: Enable Chassis Locator LED with Timer      
+* KLISH: Enable Chassis Locator LED with Timer      
 
 **Port Locator LED**
 
 The following is the list of unit test cases:
+
 * Verify port-locator CLI configuration commands.
 * Verify port-locator CLI show commands.
 
