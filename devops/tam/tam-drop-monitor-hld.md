@@ -82,6 +82,8 @@
 |---|-----------|------------------|-----------------------------------|
 | 0.1 | 10/15/2019  | Shirisha Dasari  | Initial Version            |
 | 0.2 | 07/01/2020  | Bandaru Viswanath  | Major update to accomodate enhancements to use new TAM infrastructure, DB schmas and UI              |
+| 0.3 | 06/11/2021  | Bandaru Viswanath  | Introduce the Local Mode              |
+
 
 ## About This Manual
 
@@ -810,6 +812,8 @@ TBD
 
 * Drop Monitor feature is an *advanced* feature that is not available in all the Broadcom SONiC packages.
 
+* The Drop Monitor feature is a BroadcomSONiC-Only feature. This will not be contributed to Community.
+
 ## Specific Limitations
 
 Drop Monitor feature in SONiC inherits the limitations of the underlying firmware and the hardware. These are listed below.
@@ -817,6 +821,18 @@ Drop Monitor feature in SONiC inherits the limitations of the underlying firmwar
 1. Only a single collector is supported
 2. Drop Monitor flows must be IPv4 flows
 3. Drop Monitor is supported on TD3-X7, TH2 and TH3 platforms only.
+
+## Local Mode design notes
+
+The 'Local' mode is meant for limited number of flows (<100 flows) for drop monitoring on the Switch. Otherwise, the number of reports may overwhelm  the CPU. A specific CPU queue is assigned for this traffic and is ratelimited to 500pps for preventing CPU spikes.
+
+A side effect of this rate-limiting is that some drop reports may get dropped. 
+
+1. If the drop-start reports are dropped, then the associated flows won't be reported (as dropped) in COUNTERS_DB.
+2. If the drop-active reports are dropped, then the drop-reasons are not updated COUNTERS_DB.
+3. If the drop-stop reports are dropped,  then the flows remain in the COUNTERS_DB until they are explicitly cleared via the clear command. 
+
+However, given Local mode is used for limited debugguing - less than 100 flows - the worst-case number of drop-reports hitting CPU should always remain less than the rate-limit of 500pps.
 
 ## Supported Drop Reasons
 
