@@ -683,7 +683,7 @@ Existing serviceability and debug applicable to both features. No new debugging 
 
 # System Reboot 
 
-A switch can restart through warm reboot, cold reboot, or power cycle. Chassis Locator LED is back to OFF state and the OFF timer will be cacneled after a system reboot. 
+A switch can restart through warm reboot, cold reboot, or power cycle. Chassis Locator LED and Port Locator LEDs are back to OFF state and the OFF timer will be cacneled after a system reboot. 
 
 # Config Reload
 
