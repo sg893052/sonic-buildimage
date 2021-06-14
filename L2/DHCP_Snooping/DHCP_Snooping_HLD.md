@@ -46,11 +46,11 @@
 
 # Revision
 	
-	| Rev |     Date    |       Author       | Change Description                |
-	|:---:|:-----------:|:------------------:|-----------------------------------|
-	| 0.1 | 02/22/2021  |   Phanindra TV     | Initial version                   |
-        | 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                |
-        | 0.3 | 06/07/2021  |   Ravi Vemuri      | Address review comments.          |
+| Rev |     Date    |       Author       | Change Description                |
+|-----|-------------|--------------------|-----------------------------------|
+| 0.1 | 02/22/2021  |   Phanindra TV     | Initial version                   |
+| 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                |
+| 0.3 | 06/07/2021  |   Ravi Vemuri      | Address review comments.          |
 	
 # About this Manual
 This document provides general information about the support for DHCPv4 snooping and DHCPv6 snooping in SONiC.
@@ -129,7 +129,7 @@ Go back to [Beginning of the document](#dhcp-snooping).
 
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 1.4 Warm Boot Requirements
-DHCP snooping bindings are retained during warm restart. 
+DHCP snooping bindings (static and dynamic) are retained after a warm restart.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 # 2 Functionality
@@ -159,44 +159,43 @@ Go back to [Beginning of the document](#dhcp-snooping).
 
 The following table captures the action taken for each DHCPv4 message type.
 
-	|   DHCP Message Type   |     Direction      |    Trusted port   |     Untrusted port      |
-	|:----------------------|:------------------:|:-----------------:|------------------------:|
-	|  DHCPDISCOVER         |  Client to Server  |   Drop            |  Process                |
-	|  DHCPOFFER            |  Server to Client  |   Process         |  Drop                   |
-	|  DHCPREQUEST          |  Client to Server  |   Drop            |  Process                |
-	|  DHCPDECLINE          |  Client to Server  |   Drop            |  Process                |
-	|  DHCPACK              |  Server to Client  |   Process         |  Drop                   |
-	|  DHCPNAK              |  Server to Client  |   Process         |  Drop                   |
-	|  DHCPRELEASE          |  Client to Server  |   Drop            |  Process                |
-	|  DHCPINFORM           |  Client to Server  |   Drop            |  Process                |
-	|  DHCPFORCERENEW       |  Server to Client  |   Process         |  Drop                   | 
-	|  DHCPLEASEQUERY       |  to Server         |   Drop            |  Process                |
-	|  DHCPLEASEUNASSIGNED  |  from Server       |   Process         |  Drop                   |
-	|  DHCPLEASEUNKNOWN     |  from Server       |   Process         |  Drop                   |
-	|  DHCPLEASEACTVE       |  from Server       |   Process         |  Drop                   |
-	|  DHCPBULKLEASEQUERY   |  to Server         |   Drop            |  Process                |
-	|  DHCPLEASEQUERYDONE   |  from Server       |   Process         |  Drop                   |
-	|  DHCPACTIVELEASEQUERY |  to Server         |   Drop            |  Process                |
-	|  DHCPLEASEQUERYSTATUS |  from Server       |   Process         |  Drop                   |
-	|  DHCPTLS              |  bidirectional     |   Process         |  Process                |
+|  DHCP Message Type    |     Direction      |    Trusted port   |     Untrusted port      |
+|-----------------------|--------------------|-------------------|-------------------------|
+|  DHCPDISCOVER         |  Client to Server  |   Drop            |  Process                |
+|  DHCPOFFER            |  Server to Client  |   Process         |  Drop                   |
+|  DHCPREQUEST          |  Client to Server  |   Drop            |  Process                |
+|  DHCPDECLINE          |  Client to Server  |   Drop            |  Process                |
+|  DHCPACK              |  Server to Client  |   Process         |  Drop                   |
+|  DHCPNAK              |  Server to Client  |   Process         |  Drop                   |
+|  DHCPRELEASE          |  Client to Server  |   Drop            |  Process                |
+|  DHCPINFORM           |  Client to Server  |   Drop            |  Process                |
+|  DHCPFORCERENEW       |  Server to Client  |   Process         |  Drop                   | 
+|  DHCPLEASEQUERY       |  to Server         |   Drop            |  Process                |
+|  DHCPLEASEUNASSIGNED  |  from Server       |   Process         |  Drop                   |
+|  DHCPLEASEUNKNOWN     |  from Server       |   Process         |  Drop                   |
+|  DHCPLEASEACTVE       |  from Server       |   Process         |  Drop                   |
+|  DHCPBULKLEASEQUERY   |  to Server         |   Drop            |  Process                |
+|  DHCPLEASEQUERYDONE   |  from Server       |   Process         |  Drop                   |
+|  DHCPACTIVELEASEQUERY |  to Server         |   Drop            |  Process                |
+|  DHCPLEASEQUERYSTATUS |  from Server       |   Process         |  Drop                   |
+|  DHCPTLS              |  bidirectional     |   Process         |  Process                |
 
 The following table captures the action taken for each DHCPv6 message type.
 
-        |   DHCPv6 Message Type   |     Direction      |    Trusted port   |     Untrusted port      |
-	|:------------------------|:------------------:|:-----------------:|------------------------:|
-        |   SOLICIT               |  Client to Server  |   Drop            |  Process                |
-        |   ADVERTISE             |  Server to Client  |   Process         |  Drop                   |
-        |   REQUEST               |  Client to Server  |   Drop            |  Process                |
-        |   CONFIRM               |  Client to Server  |   Drop            |  Process                |
-        |   RENEW                 |  Client to Server  |   Drop            |  Process                |
-        |   REBIND                |  Client to Server  |   Drop            |  Process                |
-        |   REPLY                 |  Server to Client  |   Process         |  Drop                   |
-        |   RELEASE               |  Client to Server  |   Drop            |  Process                |
-        |   DECLINE               |  Client to Server  |   Drop            |  Process                |
-        |   RECONFIGURE           |  Server to Client  |   Process         |  Drop                   |
-        |   INFORMATION-REQUEST   |  Client to Server  |   Drop            |  Process                |
-        |   RELAY-FORW            |  to Server         |   Drop            |  Process                |
-        |   RELAY-REPLY           |  from Server       |   Process         |  Drop                   |
+|   DHCPv6 Message Type   |     Direction      |    Trusted port   |     Untrusted port    |
+|-------------------------|--------------------|-------------------|-----------------------|
+|   SOLICIT               |  Client to Server  |   Drop            |  Process              |
+|   ADVERTISE             |  Server to Client  |   Process         |  Drop                 |
+|   REQUEST               |  Client to Server  |   Drop            |  Process              |
+|   CONFIRM               |  Client to Server  |   Drop            |  Process              |
+|   RENEW                 |  Client to Server  |   Drop            |  Process              |
+|   REBIND                |  Client to Server  |   Drop            |  Process              |
+|   REPLY                 |  Server to Client  |   Process         |  Drop                 |
+|   RELEASE               |  Client to Server  |   Drop            |  Process              |
+|   DECLINE               |  Client to Server  |   Drop            |  Process              |
+|   RELAY-FORW            |  to Server         |   Drop            |  Process              |
+|   RELAY-REPLY           |  from Server       |   Process         |  Drop                 |
+
 2. DHCPv6 snooping works only with DHCPv6 stateful server.
 
 3. When proper COPP rules for DHCP L2 packets are installed, the DHCP packets are trapped to CPU. The application needs to process the packet if DHCP Snooping is enabled globally and that the port is a member of a VLAN where DHCP Snooping is enabled. 
@@ -440,20 +439,24 @@ This command is executed in config mode.
 
 	To bind a static IPv4 address to a Layer 2 interface
 	sonic(config)#[no] ip source binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
+        
         To clear all IP DHCP Snooping binding entries 
 	sonic(config)# clear ip dhcp snooping binding
+        
         To clear a specific IP DHCP Snooping binding entry
         sonic(config)# clear ip dhcp snooping binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
 
 	To bind a static IPv6 address to a Layer 2 interface
 	sonic(config)#[no] ipv6 source binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
+        
         To clear all IPv6 DHCP Snooping binding entries 
 	sonic(config)# clear ipv6 dhcp snooping binding
+        
         To clear a specific IPv6 DHCP Snooping binding entry
         sonic(config)# clear ipv6 dhcp snooping binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
 
 ##### 3.7.1.1.5 Configure an interface as trusted
-This command is executed in interface mode.
+This command is executed in interface mode. This command can be applied on a range of interfaces.
 
 	To configure/unconfigure trust for an interface for DHCPv4 Snooping
 	sonic(config-if)#[no] ip dhcp snooping trust
@@ -475,6 +478,12 @@ This command is executed in interface mode.
 
 	To display the DHCPv6 Snooping binding database
 	sonic# show ipv6 dhcp snooping binding
+        
+        To display DHCP Snooping statistics
+        sonic# show ip dhcp snooping statistics
+        
+        To display DHCPv6 Snooping statistics
+        sonic# show ipv6 dhcp snooping statistics
 
 For example,
 
@@ -499,12 +508,6 @@ For example,
 	-----------------  ---------------  ----   -----------  -------  -----------
 	00:00:00:00:00:01  1.1.1.1          10     Ethernet0    STATIC   - 
 	00:00:A8:5F:34:52  192.168.10.39    20     Ethernet2    DYNAMIC  86396
-
-        To display DHCP Snooping statistics
-        sonic# show ip dhcp snooping statistics
-
-        To display DHCPv6 Snooping statistics
-        sonic# show ipv6 dhcp snooping statistics
 
 ### 3.7.2 REST API Support
 
