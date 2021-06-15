@@ -107,7 +107,11 @@ The threshold feature allows configuration of a threshold on supported buffers i
 
 2.0.2.3 SAI\_QUEUE\_STAT\_SHARED\_WATERMARK\_BYTES -- Current egress queue buffer usage in bytes.
 
-2.0.3 The counters listed in 2.0.2.1, 2.0.2.2 and 2.0.2.3 are to be supported for all ports on SONiC.
+2.0.2.4 SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES -- Current device buffer usage in bytes.
+
+2.0.2.5 SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES -- Current ingress and egress buffer pool usage on global and per port in bytes.
+
+2.0.3 The per port counters are to be supported for all ports on SONiC.
 
 2.0.4 The threshold can be configured on one or more of the 8 priority-groups of a port.
 
@@ -184,6 +188,19 @@ The supported buffers for threshold are:
 2. Egress port queues
 	1. Unicast 
 	2. Multicast
+3. Egress CPU queue
+    1. Multicast 
+4. Ingress port buffer pool
+	1. Shared- Specifies the ingress unicast and multicast shared buffer usage on a port buffer pool
+5. Ingress buffer pool
+    1. Shared- Specifies the ingress unicast and multicast shared buffer usage on a global buffer pool
+6. Egress port buffer pool
+    1. Unicast - Specifies the egress unicast buffer usage on a port buffer pool
+    2. Multicast - Specifies the egress multicast buffer usage on a port buffer pool
+7. Egress service pool
+    1. Multicast - Specifies the egress multicast buffer usage on a global buffer pool
+    2. Shared - Specifies the egress unicast and multicast buffer usage on a global buffer pool
+8.  Device Buffer - Specifies buffer usage on device globally
  
 
 # 3 Design
@@ -258,7 +275,7 @@ Once the dynamic port breakout feature is available, ThresholdMgr needs to be en
     ; Defines buffer pool threshold configuration.
 
     key                      = pool_name; pool_name can be buffer pool profiles configured in the system.
-    threshold                = 1*3DIGIT                ; Threshold in % (1-100)
+    threshold                = 1*3DIGIT ; Threshold in % (1-100)
 
     Example:
 
@@ -270,6 +287,44 @@ Once the dynamic port breakout feature is available, ThresholdMgr needs to be en
 	1) "threshold"
 	2) "80"
 	
+#### THRESHOLD\_BUFFERPOOL\_INTERFACE\_TABLE
+
+    ; New table
+    ; Defines buffer pool threshold configuration on an interface.
+
+    key                      = pool_name|alias|index   ; pool_name can be buffer pool profiles configured in the system.
+                                                       ; alias is unique across all DBs
+                                                       ; index (buffer index per port)
+    threshold                = 1*3DIGIT                ; Threshold in % (1-100)
+
+    Example:
+
+    Buffer pool threshold per interface configuration:
+    127.0.0.1:6379[4]> keys *THRESHOLD_BUFFERPOOL_INTERFACE_TABLE*
+    1) "THRESHOLD_BUFFERPOOL_INTERFACE_TABLE|ingress_lossless_pool|Ethernet40|6"
+
+	127.0.0.1:6379[4]> HGETALL "THRESHOLD_BUFFERPOOL_INTERFACE_TABLE|ingress_lossless_pool|Ethernet40|6"
+	1) "threshold"
+	2) "80"
+
+#### THRESHOLD\_DEVICE\_TABLE
+
+    ; New table
+    ; Defines buffer pool threshold configuration.
+
+    key                      = type; type can be device.
+    threshold                = 1*3DIGIT ; Threshold in % (1-100)
+
+    Example:
+
+    Device threshold configuration:
+    127.0.0.1:6379[4]> keys *THRESHOLD_DEVICE_TABLE*
+    1) "THRESHOLD_DEVICE_TABLE|device"
+
+	127.0.0.1:6379[4]> HGETALL "THRESHOLD_DEVICE_TABLE|device"
+	1) "threshold"
+	2) "80"
+
 
 ### 3.2.2 APP DB
 N/A
@@ -358,12 +413,16 @@ Following is an example of the ASIC\_DB configuration on applying a configuratio
 
     key                     =  breach-report:index     ; Breach report index.
                                                         
-    buffer                  = 1*255VCHAR               ; Buffer - "priority-group" or "queue".
+    buffer                  = 1*255VCHAR               ; Buffer - "priority-group" or "queue" or "buffer-pool" or "device".
     type                    = 1*255VCHAR               ; Buffer type -
                                                        ; "shared"
                                                        ; "headroom"
                                                        ; "unicast"
                                                        ; "multicast"
+                                                       ; "ingress-shared"
+                                                       ; "egress-shared"
+                                                       ; "egress-unicast"
+                                                       ; "egress-multicast"
     port                    = 1*64VCHAR                ; Port on which breach occurred. Unique across all DBs.
     index                   = 1*2DIGIT                 ; Priority group/queue index. 
     breach_value            = 1*3DIGIT                 ; Counter value in % at breach.
@@ -412,6 +471,46 @@ Following is an example of the ASIC\_DB configuration on applying a configuratio
     13) "time-stamp"
 	14) "2019-06-14 - 11:29:33"
 	
+	Egress buffer pool breach entry for Shared buffer:
+	
+	127.0.0.1:6379[2]> KEYS THRESHOLD*
+	1) "THRESHOLD_BREACH_TABLE:breach-report:4"
+	127.0.0.1:6379[2]> HGETALL THRESHOLD_BREACH_TABLE:breach-report:4
+	1) "buffer"
+	2) "buffer-pool"
+    3) "type"
+    4) "egress-shared"
+	5) "port"
+    6) ""
+    7) "index"
+	8) ""
+    9) "breach_value"
+    10) "71"
+    11) "SAI_BUFFER_POOL_STAT_WATERMARK_BYTES"
+    12) "8100"
+    13) "time-stamp"
+	14) "2019-06-14 - 11:29:33"
+
+	Egress Port buffer pool breach entry for unicast buffer:
+	
+	127.0.0.1:6379[2]> KEYS THRESHOLD*
+	1) "THRESHOLD_BREACH_TABLE:breach-report:5"
+	127.0.0.1:6379[2]> HGETALL THRESHOLD_BREACH_TABLE:breach-report:5
+	1) "buffer"
+	2) "buffer-pool"
+    3) "type"
+    4) "egress-unicast"
+	5) "port"
+    6) "Ethernet32"
+    7) "index"
+	8) ""
+    9) "breach_value"
+    10) "71"
+    11) "SAI_BUFFER_POOL_STAT_WATERMARK_BYTES"
+    12) "8100"
+    13) "time-stamp"
+	14) "2019-06-14 - 11:29:33"
+
 
 ## 3.3 Switch State Service Design
 ### 3.3.1 Orchestration Agent
@@ -529,11 +628,19 @@ This command is used to configure a threshold for a specific unicast/multicast q
 
 This command is used to configure a threshold for a specific multicast queue of a CPU port. The threshold value is provided in %. Valid values are 1-100.
 
-4) buffer-pool threshold {bufferpoolname} {threshold_value}
+4) threshold buffer-pool {bufferpoolname} {threshold_value}
 
-   Example : sonic(config)# buffer-pool threshold ingress_lossless_pool 77
+   Example : sonic(config)# threshold buffer-pool ingress_lossless_pool 77
+             sonic(config-if-Ethernet0)# threshold buffer-pool ingress_port0_lossless_pool 82
 
-This command is used to configure buffer-pool threshold on ingress and egress buffers. The threshold value is provided in %. Valid values are 1-100.
+This command is used to configure buffer-pool threshold on ingress and egress buffers globally or an interface. The threshold value is provided in %. Valid values are 1-100.
+
+
+5) threshold device {threshold_value}
+
+   Example : sonic(config)# threshold device 65
+
+This command is used to configure device threshold buffer. The threshold value is provided in %. Valid values are 1-100.
 
 ### 3.7.2 KLISH show commands
 
@@ -555,6 +662,12 @@ This show command shows the threshold configuration for the unicast/multicast qu
 
 This show command shows the threshold configuration of buffer-pools. Buffer pools will have ingress/egress buffer pools-lossy/lossless.
 
+4) show threshold device
+
+   Example : sonic# show threshold device
+
+This show command shows device threshold configuration.
+
 ### 3.7.3 KLISH clear commands
 
 1) no threshold priority-group {PGindex} {headroom \| shared}
@@ -575,11 +688,17 @@ This command can be used to clear a previously configured threshold on unicast/m
 
 This command can be used to clear previously configured threshold on multicast queue buffer of a CPU port.
 
-4) no buffer-pool threshold
+4) no threshold buffer-pool
 
-  Example : sonic(config)# no buffer-pool threshold
+  Example : sonic(config)# no threshold buffer-pool
 
 This command can be used to remove buffer-pool threshold configured on ingress and egress buffers.
+
+5) no threshold device
+
+  Example : sonic(config)# no threshold device
+
+This command can be used to remove device threshold configured.
 
 5) clear threshold breach {all/eventid}
 
@@ -624,18 +743,27 @@ There is no limit enforced on the threshold configuration and breach event entri
 
 1.  Verify CLI command to configure shared/headroom priority-group threshold on a port.
 2.  Verify CLI command to configure unicast/multicast queue threshold on a port.
-3.  Verify if priority-group shared and priority-group headroom thresholds can be configured on a port.
-4.  Verify if queue unicast and queue multicast thresholds can be configured on a port.
-5.  Verify if priority-group and queue threshold configuration can be done on a port.
-6.  Verify if the same threshold value can be configured on multiple port's priority-group/queue. 
-7. Verify if configured threshold for priority-group can be cleared using the clear command.
-8. Verify if configured threshold for queue can be cleared using the clear command.
-9. Verify CLI show command to display all the currently configured thresholds across priority-groups on each port.
-10. Verify CLI show command to display all the currently configured thresholds across queues on each port.
-11. Verify CLI show command to display threshold breaches.
-12. Verify CLI clear command to clear priority-group threshold.
-13. Verify CLI clear command to clear queue threshold.
-14. Verify CLI clear command to clear threshold breaches.
+3.  Verify CLI command to configure buffer pool threshold globally.
+4.  Verify CLI command to configure buffer pool threshold on a port.
+5.  Verify CLI command to configure device threshold.
+6.  Verify if priority-group shared and priority-group headroom thresholds can be configured on a port.
+7.  Verify if queue unicast and queue multicast thresholds can be configured on a port.
+8.  Verify if service pool thresholds can be configured globally.
+9.  Verify if service pool thresholds can be configured on a port.
+10. Verify if device threshold can be configured.
+11. Verify if priority-group, queue and service-pool threshold configuration can be done on a port.
+12. Verify if the same threshold value can be configured on multiple port's priority-group/queue/pool. 
+13. Verify if configured threshold for priority-group can be cleared using the clear command.
+14. Verify if configured threshold for queue can be cleared using the clear command.
+15. Verify if configured threshold for service-pool can be cleared using the clear command.
+16. Verify if configured threshold for device can be cleared using the clear command.
+17. Verify CLI show command to display all the currently configured thresholds across priority-groups on each port.
+18. Verify CLI show command to display all the currently configured thresholds across queues on each port.
+19. Verify CLI show command to display all the currently configured thresholds across service pools globally or on each port.
+20. Verify CLI show command to display threshold breaches.
+21. Verify CLI clear command to clear priority-group threshold.
+22. Verify CLI clear command to clear queue threshold.
+23. Verify CLI clear command to clear threshold breaches.
 
 ## ThresholdOrch
 1. Verify if threshold configuration from config DB is received by ThresholdOrch.
@@ -668,8 +796,18 @@ There is no limit enforced on the threshold configuration and breach event entri
 6. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for queue unicast buffer on port once traffic is started.
 7. Verify if a threshold on a queue multicast buffer of a port can be configured successfully. 
 8. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for queue multicast buffer on port once traffic is started.
-9. Verify that there is no crash encountered at any of the layers with an invalid threshold configuration. 
-10. Verify that an invalid configuration is rejected gracefully at appropriate layers. 
+9.  Verify if a threshold on a ingress service pool buffer of a port can be configured successfully.
+10. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for ingress service pool buffer on port once traffic is started.
+11. Verify if a threshold on a egress service pool buffer of a port can be configured successfully.
+12. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for egress service pool buffer on port once traffic is started.
+13. Verify if a threshold on a ingress service pool buffer globally can be configured successfully.
+14. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for ingress service pool buffer globally once traffic is started.
+15. Verify if a threshold on a egress service pool buffer globally can be configured successfully.
+16. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for egress service pool buffer globally once traffic is started.
+17. Verify if a threshold on a device buffer can be configured successfully.
+18. Verify if a threshold breach event gets generated by SAI and an entry is populated in THRESHOLD\_BREACH table for device buffer once traffic is started.
+19. Verify that there is no crash encountered at any of the layers with an invalid threshold configuration. 
+20. Verify that an invalid configuration is rejected gracefully at appropriate layers. 
 
 ## Negative test cases
 1. Verify if CLI throws an error if the threshold value is <1% or >100%.
