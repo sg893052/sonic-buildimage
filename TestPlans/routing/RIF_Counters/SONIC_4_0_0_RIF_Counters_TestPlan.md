@@ -73,6 +73,9 @@
   - Verify the RIF counters when traffic is continuously set to flow and counters value increment to max value.
   - Verify that RIF counters not updated for L2 traffic received.  
   - Verify that RIF counters not updated for L3 packets received with errors.  
+  - Validate the Physical routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/IPv6 address is removed and re added.
+  - Validate the Vlan routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/IPv6 address is removed and re added.
+  - Validate the Port Channel routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/IPv6 address is removed and re added.
   
 
 
@@ -371,11 +374,38 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Let the Ipv4/IPv6 traffic (with random frame size in supported range) flow continuously for longer duration in the setup such that RIF counters of the different routing interfaces increment to its max values. <BR />2. Check that after increment to max value, they are gracefully reset to zero and update again.|
 
+#### 3.2.28 Validate the Physical Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/Ipv6 address is removed and re added.  
+
+| **Test ID**    | **RIF_COUNT_FUNC_028**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validate the Physical Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/Ipv6 address is removed and re added.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Remove and Re add the Ipv4/Ipv6 address on the physical routing interface. From TG1, send IPv4 traffic destined to a network (route having physical routing interface as next hop). <BR />2. While traffic is forwarding, in DUT1, verify the TX_BPS, TX_PPS counters corresponding to that physical routing interface. <BR />3. While traffic is forwarding, in DUT2, verify the RX_BPS, RX_PPS counters corresponding to that physical routing interface. <BR />4.Stop the traffic. <BR />5. Verify the TX_OK counters in DUT1 and RX_OK counters in DUT2 corresponding to the physical routing interface. <BR />6. Clear the interface counters for rif, verify the counters are cleared successfully. <BR />7. From TG1, send IPv6 traffic destined to a network (having physical routing interface as next hop). <BR />8. While traffic is forwarding, in DUT1, verify the TX_BPS, TX_PPS counters corresponding to that physical routing interface. <BR />9. While traffic is forwarding, in DUT2, verify the RX_BPS, RX_PPS counters corresponding to that physical routing interface. <BR />10.Stop the traffic. <BR />11. Verify the TX_OK counters in DUT1 and RX_OK counters in DUT2 corresponding to the physical routing interface. <BR />12. Clear the rif counters and check the counters are cleared successfully.|
+
+#### 3.2.29 Validate the Vlan Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/Ipv6 address is removed and re added.  
+
+| **Test ID**    | **RIF_COUNT_FUNC_029**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validate the Vlan Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/Ipv6 address is removed and re added.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Remove and Re add the Ipv4/Ipv6 address on the Vlan routing interface. From TG1, send IPv4 traffic destined to a network (route having Vlan routing interface as next hop). <BR />2. While traffic is forwarding, in DUT1, verify the TX_BPS, TX_PPS counters corresponding to that Vlan routing interface. <BR />3. While traffic is forwarding, in DUT2, verify the RX_BPS, RX_PPS counters corresponding to that Vlan routing interface. <BR />4.Stop the traffic. <BR />5. Verify the TX_OK counters in DUT1 and RX_OK counters in DUT2 corresponding to the Vlan routing interface. <BR />6. Clear the interface counters for rif, verify the counters are cleared successfully. <BR />7. From TG1, send IPv6 traffic destined to a network (having Vlan routing interface as next hop). <BR />8. While traffic is forwarding, in DUT1, verify the TX_BPS, TX_PPS counters corresponding to that Vlan routing interface. <BR />9. While traffic is forwarding, in DUT2, verify the RX_BPS, RX_PPS counters corresponding to that Vlan routing interface. <BR />10.Stop the traffic. <BR />11. Verify the TX_OK counters in DUT1 and RX_OK counters in DUT2 corresponding to the Vlan routing interface. <BR />12. Clear the rif counters and check the counters are cleared successfully.|
+
+#### 3.2.30 Validate the Port Channel Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/Ipv6 address is removed and re added.  
+
+| **Test ID**    | **RIF_COUNT_FUNC_030**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validate the Port Channel Routing Interface RIF counters (RX/TX) for IPv4 & Ipv6 traffic after IPv4/Ipv6 address is removed and re added.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. FRemove and Re add the Ipv4/Ipv6 address on the Port Channel routing interface. rom TG1, send IPv4 traffic destined to a network (route having Port Channel routing interface as next hop). <BR />2. While traffic is forwarding, in DUT1, verify the TX_BPS, TX_PPS counters corresponding to that Port Channel routing interface. <BR />3. While traffic is forwarding, in DUT2, verify the RX_BPS, RX_PPS counters corresponding to that Port Channel routing interface. <BR />4.Stop the traffic. <BR />5. Verify the TX_OK counters in DUT1 and RX_OK counters in DUT2 corresponding to the Port Channel routing interface. <BR />6. Clear the interface counters for rif, verify the counters are cleared successfully. <BR />7. From TG1, send IPv6 traffic destined to a network (having Port Channel routing interface as next hop). <BR />8. While traffic is forwarding, in DUT1, verify the TX_BPS, TX_PPS counters corresponding to that Port Channel routing interface. <BR />9. While traffic is forwarding, in DUT2, verify the RX_BPS, RX_PPS counters corresponding to that Port Channel routing interface. <BR />10.Stop the traffic. <BR />11. Verify the TX_OK counters in DUT1 and RX_OK counters in DUT2 corresponding to the Port Channel routing interface. <BR />12. Clear the rif counters and check the counters are cleared successfully.|
+
 ### 3.3 Negative Test Cases
 
 #### 3.3.1 Verify that RIF counters not updated for L2 traffic received.  
 
-| **Test ID**    | **RIF_COUNT_FUNC_028**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_031**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that RIF counters not updated for L2 traffic received.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -384,7 +414,7 @@ Topology Description -
 
 #### 3.3.2 Verify that RIF counters not updated for L3 packets received with errors.  
 
-| **Test ID**    | **RIF_COUNT_FUNC_029**                                               |
+| **Test ID**    | **RIF_COUNT_FUNC_032**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that RIF counters not updated for L3 packets received with errors.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -397,7 +427,7 @@ Topology Description -
 
 ##### 3.4.1.1 Verify interface rif counters via REST
 
-| **Test ID**    | **RIF_COUNT_FUNC_030**                                              |
+| **Test ID**    | **RIF_COUNT_FUNC_033**                                              |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **Verify interface rif counters via REST** |
 | **Test Setup** | **Topology 1**                                               |
