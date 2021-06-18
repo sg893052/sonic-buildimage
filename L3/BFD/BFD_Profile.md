@@ -31,6 +31,8 @@
 	        - [3.3.2.1 Show Commands](#3321-Show-Commands)
 		        - [3.3.2.1.1 Show BFD Profile](#33211-Show-Bfd-Profile)
 		        - [3.3.2.1.2 Show BFD Peer](#33211-Show-Bfd-Peer)
+    - [3.4 Upgrade Downgrade Considerations](#34-Upgrade-Downgrade-Considerations)
+    - [3.5 UT Cases](#35-UT-Cases)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-Abbreviations)
@@ -39,6 +41,7 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 05/17/2021  |   Sumit Agarwal    | Initial version                   |
+| 1.0 | 06/18/2021  |   Sumit AGarwal    | Updated review comments           |
 
 # About this Manual
 This document provides comprehensive functional and design information about the *Profile configuration support in BFD* feature implementation in SONiC.
@@ -69,7 +72,7 @@ BFD profile is a template which can be applied to multiple BFD peers, making it 
 ### 3.1.1 BFD Profile
 #### 3.1.1.1 BFD Profile configuration
 BFD profile is a template wherein all BFD params can be configured and then the profile can be applied to BFD peers. 
-Below CLI's are added to configure BFD profile and its params.
+Below CLI's are added to configure BFD profile and its params. Profile name in all the configurations is a string of 63 characters.
 ```
 sonic(config)# bfd
 sonic(conf-bfd)# profile test
@@ -134,6 +137,10 @@ All the configuration parameters will take effect immediately, BFD timers will b
 **Scenario 5:**
 BFD profile associated with BGP, OSPF, PIM or BFD peer is deleted.
 The associated BFD session reverts to default values. The profile configuration should be deleted from BGP, OSPF, PIM or BFD peer as well and reconfigured to take effect.
+
+**Scenario 6:**
+BFD profile is deleted. 
+BFD profile can be deleted from BFD without un-configuring the profile from the protocols if any. Similarly BFD profile can be un-configured from protocols without deleting the profile in BFD. BFD profile configuration is allowed to be overwritten with new profile without un-configuring the existing profile.
 
 ### 3.1.2 BFD Passive mode:
 A CLI is added to support passive mode, when passive mode is configured BFD local peer will not initiate session  creation request but will respond to session creation request received from the peer device. By default passive mode is disabled.
@@ -391,3 +398,26 @@ In single-hop bfd peer a new elements Active/Passive mode has been added.
             Transmission interval: 1000ms
             Echo transmission interval: 0ms
 ```
+
+## 3.4 Upgrade Downgrade considerations
+There is no impact on upgrading the image to latest version.
+
+On downgrading to previous release version BFD profile and associated configuration will be lost. BFD configuration supported in the earlier release will be retained.
+
+## 3.5 UT Cases
+1. Verify configuring BFD profile in static BFD peer with non default values.
+2. Verify configuring BFD profile in BGP with non default values.
+3. Verify configuring BFD profile in OSPF with non default values.
+4. Verify configuring BFD profile in PIM with non default values.
+5. Verifying BFD peer after changing default profile params.
+6. Verify configuring different BFD profile in BGP/OSPF/PIM for the same destination.
+7. Verify BFD passive mode functionality.
+8. Verify BFD multi-hop TTL functionality.
+9. Verify active/passive mode display in BFD peer.
+10. Verify multi-hop TTL value display in BFD peer. 
+11. Verify all BFD profile display.
+12. Verify BFD profile display by name.
+13. Verify config restore with BFD profile config.
+14. Verify BFD profile config restore in BGP/OSPF/PIM.
+15. Verify un-configuration of BFD profile from BFD.
+16. Verify un-configuration of BFD profile from BGP/OSPF/PIM.
