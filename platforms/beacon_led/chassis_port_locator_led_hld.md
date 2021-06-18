@@ -10,28 +10,21 @@
 * [About This Manual](#about-this-manual)
 * [Scope](#scope)
 * [Definition/Abbreviation](#definitionabbreviation)
-* [Chassis Locator LED](#chassis-locator-led)
-  * [Feature Overview](#feature-overview)
+* [Feature Overview](#feature-overview)
     * [Functional Requirements](#functional-requirements)
-  * [Design](#design)
-    * [SONiC Platforms with the platform APIs](#platforms)
-    * [SONiC PDDF Platforms with the platform APIs](#pddf-platforms)
-    * [SONiC Platforms with the 1.0 plugins](#plugins-1-0)
-    * [Chassis Locator LED CLIs](#chassis-locator-led-clis)
-  * [CLI](#cli)
-  * [KLISH CLI](#klish-cli)
-  * [Openconfig URI](#openconfig-uri)
-  * [System Reboot](#system-reboot)
-  * [Unit Test](#unit-test)
-* [Port Locator LED](#port-locator-led)
-  * [Requirements](#Requirements-Overview)
-  * [Functionality](#Functionality)
-  * [Design](#Port-LED-Design)
-  * [Flow Diagrams](#Flow-Diagrams)
-  * [Serviceability and Debug](#Serviceability-and-Debug)
-  * [Warm Boot Support](#Warm-Boot-Support)
-  * [Scalability](#Scalability)
-  * [Unit Test](#Unit-Test)
+* [Design](#design)
+    * [Chassis Locator LED](#chassis-locator-led)
+    * [Port Locator LED](#port-led-design)
+* [CLI](#cli)
+  * [CLICK](#click)
+  * [KLISH](#klish)
+  * [Data Models](#data-models) 
+  * [REST API Support](#rest-api-support) 
+* [Serviceability and Debug](#Serviceability-and-Debug)
+* [System Reboot](#system-reboot)
+* [Config Reload](#config-reload)
+* [Scalability](#Scalability)
+* [Unit Test](#Unit-Test)
 * [Internal Design Information](#internal-design)
 
 
@@ -70,12 +63,17 @@ This document describes the high level design of Chassis Locator LED feature and
 | SWSS         | SWitch State Service                                         |
 
 
-# Chassis Locator LED 
-## Feature Overview 
+# Feature Overview 
 
 Chassis Locator LED feature provides an adminstrator to identify a particular switch among others. Chassis Locator LED is typically located on the front panel of a switch and labelled as LOC or loc. The LED status provides a visual indication for the location of a switch. An adminstrator can execute commands to enable, disable, or show the LOC LED. Some of platforms do not have the LOC LED. Another front panel LED will be used as a locator LED.        
 
-### Functional Requirements
+Port Locator LED is an easy mechanism to identify ports that are the result of networ cabling errors and/or cabling complications (miss-wiring). The
+design is to provide a command that blinks a single interface's LED or the LEDs of multiple interfaces and turn off all other interface LEDs so that
+the network manager can easily see the miss-wired interface or interfaces.
+
+## Functional Requirements
+
+**Chassis Locator LED** 
 
 Functional requirements include capabilities of operating the Chassis Locator LED via CLI and KLISH to
 
@@ -84,7 +82,39 @@ Functional requirements include capabilities of operating the Chassis Locator LE
  - Disable Chassis Locator LED: Turn off the LED immediately. 
  - Show the State Chassis Locator LED: Find out the status of the LED, on or off. 
 
-## Design
+**Port Locator LED** 
+
+When the first interface locator is enabled, all other interface LEDs are turned OFF except
+those interfaces that are linked up. Subsequent interface locator enables do not modify the
+previous interfaces that were enabled. When the last interface locator is disabled, port LEDs
+return to normal operation.
+
+The port-locator may be enabled on a physical port, or on a group of physical ports as allowed
+through the interface command. Likewise, the port-locator may be disabled on a physical port,
+or disabled on a group of physical ports as allowed through the interface command.
+
+In the case of 100G ports that have hardware support for an LED for 25G lane,
+enabling port-locator on a 100G port will only turn on the first LED. Consequently, if
+a 100G port has been expanded to 4x25G, each 25G lane's LED can be enabled/disabled individually.
+
+Several CLI configuration commands support this feature. The commands are available in
+exec-mode.
+
+- A CLI show command lists which ports have their LED ON.
+- A ranged disable command to restore LEDs to their normal behavior.
+
+The port-locator function does not interfere with any aspect of the data plane or interface
+with any protocols of SONiC, therefore the port-locator feature bypasses the configurator
+application and is not affected by the switch configuration application.
+
+- Clearing the switch configuration will not restore the LEDs to their normal operating mode.
+- Saving the switch configuration will not save any port-locator settings.
+- Showing the switch configuration will not show any port-locator settings.
+- The LEDs of all ports should revert to normal behavior during hard and soft reboots.
+
+# Design
+
+## Chassis Locator LED 
 
 Chassis Locator LED feature supports the platform base classes from src/sonic-platform-common.  
 Two abstract methods and Locator LED related class variables are proposed in the ChassisBase class in sonic-platform-common/sonic_platform_base/chassis_base.py
@@ -217,8 +247,68 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
 
   ```
 
- 
-## CLI:
+## Port Locator LED 
+
+- The normal port LED indication will be disabled if the port-locator is enabled on anyone of the interfaces.
+- The blink rate will be 1 second on followed by 1 second off.
+- The LED of interfaces that are linked up will have their LEDs solidly lit only if port-locator is not enabled on that interface.
+- The LED of interfaces that are linked down will have their LEDs solidly extinguished.
+- Traffic present on any interface will not blink the LED to indicate traffic.
+- A port-locator enabled interface will blink and not light solid if link is up.
+
+In the case that an interface has two LEDs, one for link and a second for activity,
+only the link LED is used for the port-locator function. The activity LED will be
+turned off while the port-locator feature is active.
+
+In the case that an interface has one LED for link and activity, the LED will not
+blink if activity is present on the interface while the port-locator feature is active.
+
+Port Locator support can be divided into the following components:
+
+#### Switch Abstraction Interface (SAI)
+
+The Switch Abstraction Interface(SAI) defines the API to provide a
+vendor-independent way of controlling forwarding elements, such as
+a switching ASIC, an NPU or a software switch in a uniform manner,
+and new SAI port attributes will be introduced for port-locator.
+
+#### SWitch State Service (SWSS)
+
+The SWitch State Service (SWSS) is a collection of software that provides a database
+interface for communication with and state representation of network applications and
+network switch hardware.
+
+For port-locator support, the **orchagent** will be enhanced to support the new table
+in APPL_DB and the new SAI port attributes in SAI.
+
+#### SONiC Management Framework
+
+Management framework is a SONiC application which is responsible for providing various common
+North Bound Interfaces (NBIs) for the purposes of managing configuration and status on SONiC switches.
+The application manages coordination of NBI<92>s to provide a coherent way to validate, apply and show
+configuration.
+
+The Industry Standard CLI in SONiC is built on top of this framework, and the port-locator commands
+will only be availble in this CLI.
+
+### Database
+
+#### APPL_DB
+
+The **port_locator** attribute will be newly introduced into the **PORT_TABLE** of **APPL_DB**.
+
+```
+  "PORT_TABLE:Ethernet16": {
+                "type": "hash",
+                "value": {
+                    "port_locator": "on",
+                }
+   },
+```
+
+# CLI:
+
+## CLICK 
 
 **Enable Chassis Locator LED**
 
@@ -318,7 +408,7 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
 
   ```
 
-## KLISH CLI:
+## KLISH
 
 **Enable Chassis Locator LED**
 
@@ -407,7 +497,74 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
   Not supported
 
   ```
-## Openconfig URI:
+
+**Port Locator LED Configuration Commands**
+
+This feature does not interact with the configurator application and therefore
+any port-locator settings are not saved across a reset and also will not be
+displayed in **show running-config**, and the CLIs should be executed in exec-mode
+rather than config-mode.
+
+##### [no] interface port-locator [Ethernet PortID[-PortID] [timer MINUTE]]
+
+To enable the port-locator on all interfaces, please use the following command.
+
+```
+sonic# interface port-locator
+```
+
+To enable the port-locator on all interfaces with a timer to automatically have the port-locator disabled after 5 minutes timeout.
+
+```
+sonic# interface port-locator timer 5
+```
+
+To disable the port-locator on all interfaces, please use the following command.
+
+```
+sonic# no interface port-locator
+```
+
+
+To enable/disable the port-locator on one particular interface, please use the following command.
+
+```
+sonic# interface port-locator Ethernet 0
+sonic# no interface port-locator Ethernet 0
+```
+
+To enable/disable the port-locator on Ethernet4,Ethernet5...Ethernet64, please use the following command.
+
+```
+sonic# interface port-locator Ethernet 4-64
+sonic# no interface port-locator Ethernet 4-64
+```
+
+**show interface port-locator**
+
+This command displays which interface or interfaces currently have the port-locator mode enabled.
+
+```
+sonic-cli# show interface port-locator
+
+Interface    Locator Mode
+-----------  --------
+Ethernet0    Enable
+Ethernet1    Disable
+Ethernet2    Enable
+Ethernet3    Disable
+```
+
+## Data Models:
+
+#### openconfig-platform-diagnostics.yang
+
+The Port Locator LED YANG tree is as below:
+```
+TBD
+```
+
+## REST API Support:
 
 **Enable Chassis Locator LED**
 
@@ -519,244 +676,47 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
   }
 
   ```
-## Chassis Locator LED after System Reboot 
 
-A switch can restart through warm reboot, cold reboot, or power cycle. Chassis Locator LED is back to OFF state and the OFF timer will be cacneled after a system reboot. 
+# Serviceability and Debug
 
-## Config Reload
+Existing serviceability and debug applicable to both features. No new debugging commands are added.
 
-Chassis Locator LED state remains the same after config realod.
+# System Reboot 
+
+A switch can restart through warm reboot, cold reboot, or power cycle. Chassis Locator LED and Port Locator LEDs are back to OFF state and the OFF timer will be cacneled after a system reboot. 
+
+# Config Reload
+
+Chassis Locator LED state and Port Locatr LED state remain the same after config realod.
  
-## Unit Test 
+# Scalability
+
+No impact to scalability. Existing scale numbers will be supported with both features.
+
+# Unit Test 
+
+**Chassis Locater LED**
 
 Run each unit test on both Chassis Locator LED supported platforms and unsupported platforms. 
 
-  | SNO |  Unit Testcase 
- :------| :----------------------------------------------------
-    1   | CLI: Enable Chassis Locator LED       
-    2   | CLI: Disable Chassis Locator LED  
-    3   | CLI: Show Status of Chassis Locator LED   
-    4   | KLISH: Enable Chassis Locator LED  
-    5   | KLISH: Disable Chassis Locator LED 
-    6   | KLISH: Show Status of Chassis Locator LED 
-    7   | Verify Chassis Locator LED after Warm/Cold Reboot
-    8   | Verify Chassis Locator LED after Config Reload 
-    9   | Verify Chassis Locator LED after Power Cycle
-   10   | CLI: Enable Chassis Locator LED with Timer      
-   11   | KLISH: Enable Chassis Locator LED with Timer      
-
-# Port Locator LED  
-
-## Requirements Overview
-
-Port Locator is an easy mechanism to identify ports that are the result of network
-cabling errors and/or cabling complications (miss-wiring). The design is to provide
-a command that blinks a single interface's LED or the LEDs of multiple interfaces
-and turn off all other interface LEDs so that the network manager can easily see the
-miss-wired interface or interfaces.
-
-### Functional Requirements
-
-When the first interface locator is enabled, all other interface LEDs are turned OFF except
-those interfaces that are linked up. Subsequent interface locator enables do not modify the
-previous interfaces that were enabled. When the last interface locator is disabled, port LEDs
-return to normal operation.
-
-The port-locator may be enabled on a physical port, or on a group of physical ports as allowed
-through the interface command. Likewise, the port-locator may be disabled on a physical port,
-or disabled on a group of physical ports as allowed through the interface command.
-
-In the case of 100G ports that have hardware support for an LED for 25G lane,
-enabling port-locator on a 100G port will only turn on the first LED. Consequently, if
-a 100G port has been expanded to 4x25G, each 25G lane's LED can be enabled/disabled individually.
-
-### Configuration and Management Requirements
-
-Several CLI configuration commands support this feature. The commands are available in
-exec-mode.
-
-- A CLI show command lists which ports have their LED ON.
-- A ranged disable command to restore LEDs to their normal behavior.
-
-The port-locator function does not interfere with any aspect of the data plane or interface
-with any protocols of SONiC, therefore the port-locator feature bypasses the configurator
-application and is not affected by the switch configuration application.
-
-- Clearing the switch configuration will not restore the LEDs to their normal operating mode.
-- Saving the switch configuration will not save any port-locator settings.
-- Showing the switch configuration will not show any port-locator settings.
-- The LEDs of all ports should revert to normal behavior during hard and soft reboots.
-
-## Functionality
-
-### Target Deployment Use Cases
-
-Port Locator is an easy mechanism to identify ports that are the result of network
-cabling errors and/or cabling complications (miss-wiring). The design is to provide
-a command that blinks a single interface's LED or the LEDs of multiple interfaces
-and turn off all other interface LEDs so that the network manager can easily see the
-miss-wired interface or interfaces.
-
-### Functional Description
-
-- The normal port LED indication will be disabled if the port-locator is enabled on anyone of the interfaces.
-- The blink rate will be 1 second on followed by 1 second off.
-- The LED of interfaces that are linked up will have their LEDs solidly lit only if port-locator is not enabled on that interface.
-- The LED of interfaces that are linked down will have their LEDs solidly extinguished.
-- Traffic present on any interface will not blink the LED to indicate traffic.
-- A port-locator enabled interface will blink and not light solid if link is up.
-
-In the case that an interface has two LEDs, one for link and a second for activity,
-only the link LED is used for the port-locator function. The activity LED will be
-turned off while the port-locator feature is active.
-
-In the case that an interface has one LED for link and activity, the LED will not
-blink if activity is present on the interface while the port-locator feature is active.
-
-## Design
-### Overview
-
-Port Locator support can be divided into the following components:
-
-#### Switch Abstraction Interface (SAI)
-
-The Switch Abstraction Interface(SAI) defines the API to provide a
-vendor-independent way of controlling forwarding elements, such as
-a switching ASIC, an NPU or a software switch in a uniform manner,
-and new SAI port attributes will be introduced for port-locator.
-
-#### SWitch State Service (SWSS)
-
-The SWitch State Service (SWSS) is a collection of software that provides a database
-interface for communication with and state representation of network applications and
-network switch hardware.
-
-For port-locator support, the **orchagent** will be enhanced to support the new table
-in APPL_DB and the new SAI port attributes in SAI.
-
-#### SONiC Management Framework
-
-Management framework is a SONiC application which is responsible for providing various common
-North Bound Interfaces (NBIs) for the purposes of managing configuration and status on SONiC switches.
-The application manages coordination of NBI<92>s to provide a coherent way to validate, apply and show
-configuration.
-
-The Industry Standard CLI in SONiC is built on top of this framework, and the port-locator commands
-will only be availble in this CLI.
-
-### Database
-
-#### APPL_DB
-
-The **port_locator** attribute will be newly introduced into the **PORT_TABLE** of **APPL_DB**.
-
-```
-  "PORT_TABLE:Ethernet16": {
-          "type": "hash",
-          "value": {
-             "port_locator": "on",
-          }
-  },
-```
-
-### Data Model
-
-#### openconfig-platform-diagnostics.yang
-
-The YANG tree is as below:
-```
-TBD
-```
-
-#### Configuration Commands
-
-This feature does not interact with the configurator application and therefore
-any port-locator settings are not saved across a reset and also will not be
-displayed in **show running-config**, and the CLIs should be executed in exec-mode
-rather than config-mode.
-
-##### [no] interface port-locator [Ethernet PortID[-PortID] [timer MINUTE]]
-
-To enable the port-locator on all interfaces, please use the following command.
-
-```
-sonic# interface port-locator
-```
-
-To enable the port-locator on all interfaces with a timer to automatically have the port-locator disabled after 5 minutes timeout.
-
-```
-sonic# interface port-locator timer 5
-```
-
-To disable the port-locator on all interfaces, please use the following command.
-
-```
-sonic# no interface port-locator
-```
-
-
-To enable/disable the port-locator on one particular interface, please use the following command.
-
-```
-sonic# interface port-locator Ethernet 0
-sonic# no interface port-locator Ethernet 0
-```
-
-To enable/disable the port-locator on Ethernet4,Ethernet5...Ethernet64, please use the following command.
-
-```
-sonic# interface port-locator Ethernet 4-64
-sonic# no interface port-locator Ethernet 4-64
-```
-
-#### CLI Show Commands
-
-##### show interface port-locator
-
-This command displays which interface or interfaces currently have the port-locator mode enabled.
-
-```
-sonic-cli# show interface port-locator
-
-Interface    Locator Mode
------------  --------
-Ethernet0    Enable
-Ethernet1    Disable
-Ethernet2    Enable
-Ethernet3    Disable
-```
-
-#### Debug Commands
-
-No debug commands are planned at this time.
-
-#### REST API Support
-
-This is supported by default with the new management framework.
-
-## Flow Diagrams
-
-None
-
-## Serviceability and Debug
-
-The port-locator feature does not require serviceability or debug capability.
-
-## Warm Boot Support
-
-The port-locator feature does not impact warm-boot.
-
-## Scalability
-
-The port-locator feature is fully scalable on a SONiC platform and is supported on any physical port/interface.
-
-## Unit Test
+* CLI: Enable Chassis Locator LED       
+* CLI: Disable Chassis Locator LED  
+* CLI: Show Status of Chassis Locator LED   
+* KLISH: Enable Chassis Locator LED  
+* KLISH: Disable Chassis Locator LED 
+* KLISH: Show Status of Chassis Locator LED 
+* Verify Chassis Locator LED after Warm/Cold Reboot
+* Verify Chassis Locator LED after Config Reload 
+* Verify Chassis Locator LED after Power Cycle
+* CLI: Enable Chassis Locator LED with Timer      
+* KLISH: Enable Chassis Locator LED with Timer      
+
+**Port Locator LED**
 
 The following is the list of unit test cases:
+
 * Verify port-locator CLI configuration commands.
 * Verify port-locator CLI show commands.
-
 
 # Internal Design Information:
 
