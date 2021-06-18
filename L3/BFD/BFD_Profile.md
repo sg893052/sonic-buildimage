@@ -72,7 +72,7 @@ BFD profile is a template which can be applied to multiple BFD peers, making it 
 ### 3.1.1 BFD Profile
 #### 3.1.1.1 BFD Profile configuration
 BFD profile is a template wherein all BFD params can be configured and then the profile can be applied to BFD peers. 
-Below CLI's are added to configure BFD profile and its params. Profile name in all the configurations is a string of 63 characters.
+Below CLI's are added to configure BFD profile and its params. Profile name is a string of 63 characters.
 ```
 sonic(config)# bfd
 sonic(conf-bfd)# profile test
@@ -86,33 +86,33 @@ sonic(conf-bfd-profile)#
   transmit-interval  Configure peer transmit interval
 ```
 #### 3.1.1.2 BFD Profile with static peer
-BFD profile can be associated with a BFD peer using below CLI, BFD params configured in static BFD peer takes precedence over profile.
+BFD profile can be associated with a BFD peer using below CLI, BFD params configured in static BFD peer takes precedence over profile. Profile name is a string of 63 characters.
 ```
 sonic(config)# bfd
 sonic(conf-bfd)# peer 1.1.1.1 interface Ethernet32  
 sonic(conf-bfd-peer)# profile test
 ```
 #### 3.1.1.3 BFD Profile with BGP
-BFD profile can be associated with a  BGP neighbor using below CLI
+BFD profile can be associated with a  BGP neighbor using below CLI. Profile name is a string of 63 characters.
 ```
 sonic(config)# router bgp 1
 sonic(config-router-bgp)# neighbor 1.1.1.1               
 sonic(config-router-bgp-neighbor)# bfd profile test
 ```
-BFD profile can be associated with a BGP peer-group using below CLI
+BFD profile can be associated with a BGP peer-group using below CLI. Profile name is a string of 63 characters.
 ```
 sonic(config)# router bgp 1
 sonic(config-router-bgp)# peer-group test 
 sonic(config-router-bgp-pg)# bfd profile test
 ```
 #### 3.1.1.4 BFD Profile with OSPF
-BFD profile can be associated with OSPF by enabling it on the interface using below CLI
+BFD profile can be associated with OSPF by enabling it on the interface using below CLI. Profile name is a string of 63 characters.
 ```
 sonic(config)# interface Ethernet 32
 sonic(conf-if-Ethernet32)# ip ospf bfd profile test
 ```
 #### 3.1.1.5 BFD Profile with PIM
-BFD profile can be associated with PIM by enabling it on the interface using below CLI
+BFD profile can be associated with PIM by enabling it on the interface using below CLI. Profile name is a string of 63 characters.
 ```
 sonic(config)# interface Ethernet 32
 sonic(conf-if-Ethernet32)# ip pim bfd profile test
