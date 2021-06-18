@@ -65,7 +65,7 @@ This document provides comprehensive functional and design information about the
 5. Support BFD profile configuration for PIM.
 
 # 2 Functionality
-BFD profile is a template which can be applied to multiple BFD peers, making it easier to change default configuration without configuring each of the peer separately. Profile also enables changing BFD timers of dynamic session without configuring static BFD peers.
+BFD profile is a template which can be applied to multiple BFD peers, making it easier to change default configuration without configuring each of the peer separately. Profile also enables changing BFD timers of dynamic session without configuring static BFD peers. All BFD configurations are supported in Klish only.
 
 # 3 Design
 ## 3.1 Overview
