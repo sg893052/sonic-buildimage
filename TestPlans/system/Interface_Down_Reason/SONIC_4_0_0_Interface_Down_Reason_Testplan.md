@@ -9,6 +9,7 @@
 | 0.1  | 6/11/2021  | Jagadish Ch     | Initial Version    |
 | 0.2  | 6/14/2021  | Jagadish Ch     | Addressed review comments provided by Prasanth Kunjum Vettil |
 | 0.3  | 6/15/2021  | Jagadish Ch     | Addressed review comments provided by Naveen Nagaraju |
+| 0.4  | 6/21/2021  | Jagadish Ch     | Addressed review comments provided by Madhukar Kamarapu |
 
 ## List of Reviewers
 
@@ -56,6 +57,7 @@
   - Validate interface down reason "Min-links-not-met" for PortChannel interface.
   - Validate interface down reason "Admin-down" for PortChannel interface.
   - Validate interface down reason "LACP-convergence-failed" for PortChannel interface.
+  - Validate interface down reason "All-links-down" for PortChannel interface.
   - Below interface down reasons will be added later.<BR/>
   Link training failed<BR/>
   Link training not completed<BR/>
@@ -77,8 +79,21 @@
 
 #### 								Topology 1
 Topology Description -
-- Configure PortChannel in DUT1 and DUT2 and add inter connected ports as members of that PortChannel.<BR/>
-**Note:**  This configuration is applicable only for the PortChannel test cases.
+- Configure PortChannel7 in DUT1 and DUT2 and add inter connected ports as members of that PortChannel.<BR/>
+**Note:**  This configuration is applicable only for the PortChannel test cases except test cases INTERFACE_DOWN_REASON_FUNC_015 and INTERFACE_DOWN_REASON_FUNC_016.
+
+<span style="color:red"> </span>![Topology](Interface_Down_Reason2.png "Figure: Topology 1")
+
+
+#### 								Topology 2
+Topology Description -
+- Configure PortChannel7 in DUT1, DUT2, DUT3 and PortChannel8 only in DUT2.<BR/>
+- Configure Ethernet1, Ethernet2, Ethernet3, Ethernet4, Ethernet5 and Ethernet6 as members of PortChannel7 in DUT1.<BR/>
+- Configure Ethernet1 and Ethernet2 as members of PortChannel8 in DUT2.<BR/>
+- Configure Ethernet3 and Ethernet4 as members of PortChannel7 in DUT2.<BR/>
+- Configure Ethernet5 and Ethernet6 as members of PortChannel7 in DUT3.<BR/>
+**Note:**  This configuration is applicable only for the PortChannel test case INTERFACE_DOWN_REASON_FUNC_015.
+
 
 
 ## 3 Test Case and objectives
@@ -183,7 +198,7 @@ Topology Description -
 | **Test Name**  | **Validate interface down reason "STP error disabled" for PortChannel interface with STP mode as "pvst".** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure VLAN-10 in DUT1 and DUT2.<BR/>2. Add PortChannel7 as tagged member of VLAN-10 in DUT1 and DUT2.<BR/>3. Configure Spanning tree mode as "pvst" in DUT1 and DUT2.<BR/>4. Enable spanning on VLAN-10 in DUT1 and DUT2.<BR/>5. Enable spanning tree on PortChannel7 of DUT1 and DUT2.<BR/>6. Configure errdisable recovery cause bpduguard in DUT1.<BR/>7. Configure errdisable recovery interval as 30 seconds in DUT1.<BR/>8. Now enable bpdu guard on PortChannel7 of DUT1 with port shutdown on bpdu guard violation.<BR/>9. Observe PortChannel7 will go down and the interface down reason will be updated as "Err-disabled" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1.<BR/>10. Observe the event is displayed as "STP-down" for PortChannel7 in the "show interface status err-disabled" output of DUT1.<BR/>11. Disable spanning tree on PortChannel7 of DUT2<BR/>12. Observe after the recovery interval(30 seconds) PortChannel7 will come Up in DUT1.|
+| **Steps**      | 1. Configure VLAN-10 in DUT1 and DUT2.<BR/>2. Add PortChannel7 as tagged member of VLAN-10 in DUT1 and DUT2.<BR/>3. Configure Spanning tree mode as "pvst" in DUT1 and DUT2.<BR/>4. Enable spanning on VLAN-10 in DUT1 and DUT2.<BR/>5. Enable spanning tree on PortChannel7 of DUT1 and DUT2.<BR/>6. Configure errdisable recovery cause bpduguard in DUT1.<BR/>7. Configure errdisable recovery interval as 30 seconds in DUT1.<BR/>8. Now enable bpdu guard on PortChannel7 of DUT1 with port shutdown on bpdu guard violation.<BR/>9. Observe PortChannel7 will go down and the interface down reason will be updated as "Err-disabled" in "show interface PortChannel" and "show interface status" outputs of DUT1.<BR/>10. Observe the event is displayed as "STP-down" for PortChannel7 in the "show interface status err-disabled" output of DUT1.<BR/>11. Disable spanning tree on PortChannel7 of DUT2<BR/>12. Observe after the recovery interval(30 seconds) PortChannel7 will come Up in DUT1.|
 
 #### 3.1.12 Validate interface down reason "STP error disabled" for PortChannel interface with STP mode as "rapid-pvst".  
 
@@ -192,7 +207,7 @@ Topology Description -
 | **Test Name**  | **Validate interface down reason "STP error disabled" for PortChannel interface with STP mode as "rapid-pvst".** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure VLAN-10 in DUT1 and DUT2.<BR/>2. Add PortChannel7 as tagged member of VLAN-10 in DUT1 and DUT2.<BR/>3. Configure Spanning tree mode as "rapid-pvst" in DUT1 and DUT2.<BR/>4. Enable spanning on VLAN-10 in DUT1 and DUT2.<BR/>5. Enable spanning tree on PortChannel7 of DUT1 and DUT2.<BR/>6. Configure errdisable recovery cause bpduguard in DUT1.<BR/>7. Configure errdisable recovery interval as 30 seconds in DUT1.<BR/>8. Now enable bpdu guard on PortChannel7 of DUT1 with port shutdown on bpdu guard violation.<BR/>9. Observe PortChannel7 will go down and the interface down reason will be updated as "STP error disabled" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1.<BR/>10. Observe the event is displayed as "STP-down" for PortChannel7 in the "show interface status err-disabled" output of DUT1.<BR/>11. Disable spanning tree on PortChannel7 of DUT2<BR/>12. Observe after the recovery interval(30 seconds) PortChannel7 will come Up in DUT1.|
+| **Steps**      | 1. Configure VLAN-10 in DUT1 and DUT2.<BR/>2. Add PortChannel7 as tagged member of VLAN-10 in DUT1 and DUT2.<BR/>3. Configure Spanning tree mode as "rapid-pvst" in DUT1 and DUT2.<BR/>4. Enable spanning on VLAN-10 in DUT1 and DUT2.<BR/>5. Enable spanning tree on PortChannel7 of DUT1 and DUT2.<BR/>6. Configure errdisable recovery cause bpduguard in DUT1.<BR/>7. Configure errdisable recovery interval as 30 seconds in DUT1.<BR/>8. Now enable bpdu guard on PortChannel7 of DUT1 with port shutdown on bpdu guard violation.<BR/>9. Observe PortChannel7 will go down and the interface down reason will be updated as "Err-disabled" in "show interface PortChannel" and "show interface status" outputs of DUT1.<BR/>10. Observe the event is displayed as "STP-down" for PortChannel7 in the "show interface status err-disabled" output of DUT1.<BR/>11. Disable spanning tree on PortChannel7 of DUT2<BR/>12. Observe after the recovery interval(30 seconds) PortChannel7 will come Up in DUT1.|
 
 
 #### 3.1.13 Validate interface down reason "Min-links-not-met" for PortChannel interface.  
@@ -202,7 +217,7 @@ Topology Description -
 | **Test Name**  | **Validate interface down reason "Min-links-not-met" for PortChannel interface.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure the PortChannels with min-links as 4 in both the DUTs.<BR/>2. Remove one of the member ports from PortChannel in DUT1.<BR/>3. Observe that interface down reason will be updated as "Min-links-not-met(DM)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1.<BR/>4. Add the member port back to the PortChannel and observe PortChannel is Up in both the devices.<BR/>5. Shutdown one of the member ports of PortChannel in DUT1.<BR/>6. Observe that interface down reason will be updated as "Min-links-not-met(DM)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1.<BR/>7. no shutdown the member port of PortChannel in DUT1 and observe PortChannel is Up in both the devices.<BR/>8. Remove one of the member ports from PortChannel in DUT2.<BR/>9. Observe that interface down reason will be updated as "Min-links-not-met(DM)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1.<BR/>10. Add the member port back to the PortChannel and observe PortChannel is Up in both the devices.<BR/>|
+| **Steps**      | 1. Configure the PortChannels with min-links as 4 in both the DUTs.<BR/>2. Remove one of the member ports from PortChannel in DUT1.<BR/>3. Observe that interface down reason will be updated as "Min-links" in "show interface status" and "show interface PortChannel" outputs of DUT1.<BR/>4. Add the member port back to the PortChannel and observe PortChannel is Up in both the devices.<BR/>5. Shutdown one of the member ports of PortChannel in DUT1.<BR/>6. Observe that interface down reason will be updated as "Min-links" in "show interface status" and "show interface PortChannel" outputs of DUT1.<BR/>7. no shutdown the member port of PortChannel in DUT1 and observe PortChannel is Up in both the devices.<BR/>8. Remove one of the member ports from PortChannel in DUT2.<BR/>9. Observe that interface down reason will be updated as "Min-links" in "show interface status" and "show interface PortChannel" outputs of DUT1.<BR/>10. Add the member port back to the PortChannel and observe PortChannel is Up in both the devices.<BR/>|
 
 #### 3.1.14 Validate interface down reason "Admin-down" for PortChannel interface. 
 
@@ -211,16 +226,16 @@ Topology Description -
 | **Test Name**  | **Validate interface down reason "Admin-down" for PortChannel interface.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Shutdown the PortChannel in DUT1 and observe the down reason for that PortChannel is updated as "Admin down(DA)" in the "show PortChannel summary" output of DUT1.<BR/>2. Do no-shutdown the PortChannel in DUT1 and shutdown the PortChannel in DUT2.<BR/>3. Observe the interface down reason is shown as "LACP-convergence-failed(DL)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1 and shown as "Admin-down(DA)" in DUT2.|
+| **Steps**      | 1. Shutdown the PortChannel in DUT1 and observe the down reason for that PortChannel is updated as "Admin down" in the "show interface PortChannel" and "show interface status" outputs of DUT1.<BR/>2. Do no-shutdown the PortChannel in DUT1 and shutdown the PortChannel in DUT2.<BR/>3. Observe the interface down reason is shown as "All-links-down" in "show interface PortChannel" and "show interface status" outputs of DUT1 and shown as "Admin-down" in DUT2.|
 
 #### 3.1.15 Validate interface down reason "LACP-convergence-failed" for PortChannel interface.  
 
 | **Test ID**    | **INTERFACE_DOWN_REASON_FUNC_015**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validate interface down reason "LACP-convergence-failed" for PortChannel interface.** |
-| **Test Setup** | **Topology 1**                                               |
+| **Test Setup** | **Topology 2**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure PortChannel7 in DUT1 and DUT3, PortChannel7 and PortChannel8 in DUT2.<BR/>2. Add Ethernet1, Ethernet2, Ethernet3, Ethernet4, Ethernet5, Ethernet6 as members of PortChannel7 in DUT1.<BR/>3. Add Ethernet1, Ethernet2 as members of PortChannel8.<BR/> 4. Add Ethernet3, Ethernet4 as members of PortChannel7 in DUT2.<BR/>5. Add Ethernet5, Ethernet6 as members of PortChannel7 in DUT3.<BR/>6. Observe PortChannel7 is Up with Ethernet1 and Ethernet2 as the only active members in DUT1.<BR/>7. Observe the interface down reason for PortChannel7 is shown as "LACP-convergence-failed(DL)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT2 and DUT3.<BR/>**Note:** Strictly follow the sequence of above steps.|
+| **Steps**      | 1. Configure PortChannel7 in DUT1, DUT2 and DUT3, PortChannel8 only in DUT2.<BR/>2. Add Ethernet1, Ethernet2, Ethernet3, Ethernet4, Ethernet5, Ethernet6 as members of PortChannel7 in DUT1.<BR/>3. Add Ethernet1, Ethernet2 as members of PortChannel8 in DUT2.<BR/> 4. Add Ethernet3, Ethernet4 as members of PortChannel7 in DUT2.<BR/>5. Add Ethernet5, Ethernet6 as members of PortChannel7 in DUT3.<BR/>6. Observe PortChannel7 is Up with Ethernet1 and Ethernet2 as the only active members in DUT1.<BR/>7. Observe the interface down reason for PortChannel7 is shown as "LACP-fail" in "show interface status" and "show interface PortChannel" outputs of DUT2 and DUT3.<BR/>**Note:** Strictly follow the sequence of above steps.|
 
 #### 3.1.16 Validate interface down reason "LACP-convergence-failed" for PortChannel interface with reboot.  
 
@@ -229,7 +244,7 @@ Topology Description -
 | **Test Name**  | **Validate interface down reason "LACP-convergence-failed" for PortChannel interface with reboot.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure PortChannel7 in DUT1, PortChannel7 and PortChannel8 in DUT2.<BR/>2. Add Ethernet1, Ethernet2, Ethernet3, Ethernet4 as members of PortChannel7 in DUT1.<BR/>3. Add Ethernet1, Ethernet2 as members of PortChannel8.<BR/> 4. Add Ethernet3, Ethernet4 as members of PortChannel7 in DUT2.<BR/>5. Observe PortChannel7 is Up with Ethernet1 and Ethernet2 as the only active members in DUT1.<BR/>6. Observe PortChannel8 is Up with Ethernet1 and Ethernet2 as the only active members in DUT2.<BR/>7. Observe the interface down reason for PortChannel7 is shown as "LACP-convergence-failed(DL)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT2.<BR/>8. Save the configuration and reboot DUT1 and DUT2.<BR/>9. After the devices Up PortChannel7 will come up with either Ethernet1, Ethernet2 or Ethernet3, Ethernet4 in DUT1.<BR/>10. Either PortChannel7 or PortChannel8 will Up in DUT2 depending on the port Up after the device up after reboot.<BR/>Here considering the member ports of PortChannel8 will come up first in DUT2.<BR/>11. Observe the interface down reason for PortChannel7 is shown as "LACP-convergence-failed(DL)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT2<BR/>**Note:** Strictly follow the sequence of above steps.|
+| **Steps**      | 1. Configure PortChannel7 in DUT1, PortChannel7 and PortChannel8 in DUT2.<BR/>2. Add Ethernet1, Ethernet2, Ethernet3, Ethernet4 as members of PortChannel7 in DUT1.<BR/>3. Add Ethernet1, Ethernet2 as members of PortChannel8.<BR/> 4. Add Ethernet3, Ethernet4 as members of PortChannel7 in DUT2.<BR/>5. Observe PortChannel7 is Up with Ethernet1 and Ethernet2 as the only active members in DUT1.<BR/>6. Observe PortChannel8 is Up with Ethernet1 and Ethernet2 as the only active members in DUT2.<BR/>7. Observe the interface down reason for PortChannel7 is shown as "LACP-fail" in "show interface status" and "show interface PortChannel" outputs of DUT2.<BR/>8. Save the configuration and reboot DUT1 and DUT2.<BR/>9. After the devices Up PortChannel7 will come up with either Ethernet1, Ethernet2 or Ethernet3, Ethernet4 in DUT1.<BR/>10. Either PortChannel7 or PortChannel8 will Up in DUT2 depending on the port Up after the device up after reboot.<BR/>Here considering the member ports of PortChannel8 will come up first in DUT2.<BR/>11. Observe the interface down reason for PortChannel7 is shown as "LACP-fail" in "show interface status" and "show interface PortChannel" outputs of DUT2<BR/>**Note:** Strictly follow the sequence of above steps.|
 
 #### 3.1.17 Validate interface down reason "Min-links-not-met" for PortChannel interface by pulling the cable manually.  
 
@@ -238,7 +253,17 @@ Topology Description -
 | **Test Name**  | **Validate interface down reason "Min-links-not-met" for PortChannel interface by pulling the cable manually.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      |  1. Configure the PortChannel7 with min-links as 4 in DUT1 and DUT2.<BR/>2. Add Ethernet1, Ethernet2, Ethernet3, Ethernet4 as members of PortChannel7 in DUT1 and DUT2.<BR/>3. Observe the PortChannel7 is up with Ethernet1, Ethernet2, Ethernet3, Ethernet4 as active members in DUT1 and DUT2.<BR/>4. Plug out the cable connected to Ethernet1 of DUT2.<BR/>5. Observe that interface down reason will be updated as "Min-links-not-met(DM)" in "show PortChannel summary" and "show interface PortChannel" outputs of DUT1 and DUT2.<BR/>6. Plug in the cable back and observe PortChannel is Up in both the devices.|
+| **Steps**      |  1. Configure the PortChannel7 with min-links as 4 in DUT1 and DUT2.<BR/>2. Add Ethernet1, Ethernet2, Ethernet3, Ethernet4 as members of PortChannel7 in DUT1 and DUT2.<BR/>3. Observe the PortChannel7 is up with Ethernet1, Ethernet2, Ethernet3, Ethernet4 as active members in DUT1 and DUT2.<BR/>4. Plug out the cable connected to Ethernet1 of DUT2.<BR/>5. Observe that interface down reason will be updated as "Min-links" in "show interface status" and "show interface PortChannel" outputs of DUT1 and DUT2.<BR/>6. Plug in the cable back and observe PortChannel is Up in both the devices.|
+
+#### 3.1.18 Validate interface down reason "All-links-down" for PortChannel interface. 
+
+| **Test ID**    | **INTERFACE_DOWN_REASON_FUNC_018**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validate interface down reason "All-links-down" for PortChannel interface.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Shutdown the PortChannel in DUT2.<BR/> 2. Observe the interface down reason for that PortChannel is updated as "Admin down" in the "show interface PortChannel" and "show interface status" outputs of DUT2.<BR/>3. Observe the interface down reason for PortChannel is updated as "All-links-down" in the "show interface PortChannel" and "show interface status" outputs of DUT1.<BR/>4. Do no-shutdown the PortChannel in DUT2.<BR/>5. Observe the PortChannel is Up in both DUT1 and DUT2.<BR/>6. Shutdown Ethernet1, Ethernet2, Ethernet3 and Ethernet4 in DUT2 which are members of PortChannel.<BR/>7. Observe the interface down reason for PortChannel is updated as "All-links-down" in the "show interface PortChannel" and "show interface status" outputs of DUT1.|
+
 
 <BR/>
 <BR/>
@@ -254,4 +279,4 @@ Topology Description -
 
 ## Reference Links
 
-https://github.com/BRCM-SONIC/sonic_doc_private/blob/195022db0525816d61edeb31ebc1dee1615398e1/system/Interface_Down_Reason.md
+https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/system/Interface_Down_Reason.md
