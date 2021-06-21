@@ -1,5 +1,5 @@
 #  SQA Test Plan
-#  Power Over Ethernet - PoE/PoE+/UPOE/802.3bt
+#  Power Over Ethernet - PoE/PoE+/802.3bt
 #  SONiC 3.2.2 Release 
 
 [TOC]
@@ -9,6 +9,7 @@
 | :--: | :--------: | :----------------------------: | :--------------------------: |
 | 0.1  | 6/14/2021  | Mohan Sai Vara Prasad Pedavala |      Initial version         |
 | 0.2  | 6/17/2021  | Mohan Sai Vara Prasad Pedavala |      Addressed review comments by Sukanya Kalluri|
+| 0.3  | 6/21/2021  | Mohan Sai Vara Prasad Pedavala |      Addressed review comments by Ramakrishna Koduri|
 
 # List of Reviewers
 | Function  |         Name         |
@@ -39,16 +40,15 @@
 | Dot3at   | IEEE 802.3at Specification (PoE+, High Power Mode)         |
 | Dot3bt   | IEEE 802.3bt Specification (Standardized High Power Mode)  |
 | LLDP     | Link Layer Discovery Protocol                              |
-| UPOE     | Universal POE                                              |
 
 ### Objective 
-The main objective of this document is to cover the test cases that will be executed to verify the complete PoE (PoE/PoE+/UPOE/802.3bt) functionality.
+The main objective of this document is to cover the test cases that will be executed to verify the complete PoE (PoE/PoE+/802.3bt) functionality.
 Topologies and test cases  for testing the feature will be discussed as part of this document.
 
 PoE feature going to be supported in the SONiC 3.2.2 release.
 
 ### Scope
-This test plan will cover the PoE (PoE/PoE+/UPOE/802.3bt) functionality in different combinations. 
+This test plan will cover the PoE (PoE/PoE+/802.3bt) functionality in different combinations. 
 
 # Feature Overview
 Power over Ethernet technology allows IP telephones, wireless LAN Access Points, Web-Cameras and many other appliances to receive power as well as data over existing LAN cabling, without needing to modify the existing Ethernet infrastructure.
@@ -251,10 +251,10 @@ Power over Ethernet technology allows IP telephones, wireless LAN Access Points,
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Connect PD1 & PD2 and configure high power mode on PD connected ports as dot3bt <br/> 2) Configure power management type as Static and power limit type as none on PD connected ports <br/> 3) Using PD1 and PD2 request class range power from class-0 to class-8 <br/> 4) Verify that PSE reserves max power as per the high power mode (dot3bt) for the ports irrespective of the power delivery and the requested class <br/> 5) Verify that PSE ports move to the 'Overload' state when PD's are requesting more than high mode (dot3bt) power <br/> 6) Change the power management type to Dynamic <br/> 7) Repeat Step-3 <br/> 8) Verify that PSE is delivering only the PD's requested power <br/> 9) Repeat Step-5 <br/> |
 
-### 3.1.21 Verify the different detection modes with Type-1 to Type-4, UPoE, and legacy PD's.
+### 3.1.21 Verify the different detection modes with Type-1 to Type-4 and legacy PD's.
 | **Test ID**    | **PoE_Functional_021**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify the different detection modes with Type-1 to Type-4, UPoE, and legacy PD's** |
+| **Test Name**  | **Verify the different detection modes with Type-1 to Type-4 and legacy PD's** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Configure detection type as ‘4ptdot3af’ and connect Type1/Type2 <br/> 2) Verify that Type1/Type2 PD is detected and assigned power based on its class value <br/> 3) Configure detection type as ‘4ptdot3af+legacy’ and connect Type1/Type2/Legacy PD <br/> 4) Verify that Type1/Type2/Legacy PD is detected and assigned power based on its class value <br/> 5) Configure detection type as ‘legacy’ and connect Legacy PD <br/> 6) Verify that Legacy PD only is detected and assigned power based on its class value <br/> 7) Configure detection type as ‘auto’ and connect Type1/Type2/Legacy PD <br/> 8) Verify that Type1/Type2/	Legacy PD is detected and assigned power based on its class value <br/> 9) Repeat the test with different high power modes <br/> 10) Verify the applicable types of PD's are detected and powered up corresponding to the configured high power modes <br/> |
