@@ -2,7 +2,7 @@
 
 # High Level Design Document
 
-Rev 0.1
+Rev 0.2
 
 # Table of Contents
 
@@ -139,11 +139,12 @@ Following are functional requirements for EVPN VxLAN Multi-Site DCI:
 3. MCLAG redundancy for BL
 4. Ability to support termination of traffic for (single-homed and multi-homed) services locally attached to BL.
 5. Co-existence with advertise-PIP feature on BL, while advertise-PIP not being mandatory for multi-site.
-6. Support for downstream assigned VNI for connecting to remote sites.
-7. Ability to support this feature on ToR for terminating VxLAN tunnels originating from server, and re-originating tunnel towards BL.
-8. Support all above on all available platforms on which EVPN VxLAN is supported.
-9. No impact to intra-site tunnels and traffic in case of failure of inter-site BGP peering or tunnel(s).
-10. No impact to existing EVPN functionality if this feature is not configured.
+6. Compliance with EVPN VxLAN interconnect procedure as per **RFC 9014** (wherever applicable.)
+7. Support for downstream assigned VNI for connecting to remote sites.
+8. Ability to support this feature on ToR for terminating VxLAN tunnels originating from server, and re-originating tunnel towards BL.
+9. Support all above on all available platforms on which EVPN VxLAN is supported.
+10. No impact to intra-site tunnels and traffic in case of failure of inter-site BGP peering or tunnel(s).
+11. No impact to existing EVPN functionality if this feature is not configured.
 
 
 
@@ -230,15 +231,33 @@ No changes to the Tunnel SAI specification.
 
 Following are the potential use-cases for EVPN Multi-site feature:
 
-- Connecting multiple DC/sites.
-- Connecting multiple PoDs within the DC/site.
-- Scaling VxLAN on server use-case by allowing VxLAN tunnels from server to be terminated on ToRs instead of BL.
+1. Connecting multiple DC/sites.
+2. Connecting multiple PoDs within the DC/site.
+3. Scaling VxLAN on server use-case by allowing VxLAN tunnels from server to be terminated on ToRs instead of BL.
+
+
+
+Figure below attempts to describe the VxLAN on server/VM and DCI use-cases of EVPN multi-site.
+
+<figure><img src="evpn_multisite_images/multisite_tunnel_types.png" align="center"><figcaption align="center">Figure: VxLAN internal, external, and pass-through tunnels.</figcaption></img></figure>
+
+**VxLAN on VM use-case**
+
+In this use-case, hosts/VMs attached to the ToR/Leaf nodes are capable of termination and origination of VxLAN. The green VxLAN tunnels are originated and terminated on the hosts. The Leaf-Spine network in this case acts as underlay network.
+
+However, internet or inter-site traffic originated at the hosts has to exit via BL nodes in a given site. Typically, hosts/VM form direct VxLAN tunnel to the BL to reach the external network. Since the number of VMs may reach thousands in number, the BL will have severe scaling challenge maintaining VxLAN tunnel to each and every VM.
+
+Using the multisite feature, administrator can configure BGP EVPN neighbors to VMs as fabric-external such that routes originated by the BL are terminated and re-originated to VM with Leaf's next-hop. This will allow tunnels originated at VM to be terminated at the Leaf nodes.
+
+
+
+**DCI use-case**
+
+In this use-case, BL in a given site connects to multiple remote sites. BGP EVPN neighbors to the remote BLs are configured as fabric-external. Traffic originated from within the site is VxLAN terminated at the BL and re-originated to the remote sites. However, the routes between the remote BLs are exchanged without changing the next-hop allowing remote BLs to create passthrough tunnel in order to communicate directly.
 
 
 
 ## 2.2 Functional Description
-
-### 
 
 ### 2.2.1 VxLAN External IP address
 
@@ -266,19 +285,54 @@ sonic(config-router)# address-family l2vpn evpn
 sonic(config-router-af)# neighbor <remote-ip> fabric-external
 ```
 
-Once a neighbor is configured as *fabric-external*, it will belong to separate rib-out group isolated from the non-fabric-external group of neighbors.
+Once a neighbor is configured as *fabric-external*, it will belong to separate rib-out group isolated from non-fabric-internal group of neighbors. For explaining purposes, let's use ***fabric-internal*** to refer to non-fabric-external neighbors.
 
-Following will be the behavior for routes received/advertised between non-fabric-external and fabric-external neighbors:
 
-| Route Type                                                   | Advertised to<br />Non-Fabric-External Neighbor | Advertised to<br />Fabric-External-Neighbor |
-| :----------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
-| Locally originated (SHD/MHD)<br />(Advertise-PIP not configured) | NH=VIP, RMAC=local (Virtual-MAC)                | NH=external-ip, RMAC=local (Virtual-MAC)    |
-| Locally originated (MHD)<br />(Advertise-PIP configured)     | NH=VIP, RMAC=local (Virtual-MAC)                | NH=VIP, RMAC=local (Virtual-MAC)            |
-| Locally originated (SHD)<br />(Advertise-PIP configured)     | NH=PIP, RMAC=local (System-MAC)                 | NH=PIP, RMAC=local (System-MAC)             |
-| Received from Non-fabric-external neighbor                   | nexthop unchanged                               | NH=external-ip, RMAC=local (Virtual-MAC)    |
-| Received from Fabric-external neighbor                       | NH=VIP, RMAC=local (Virtual-MAC)                | nexthop unchanged                           |
 
-The route-distinguisher (RD) and route-targets (RT) in the received routes will be retained as is while re-advertising the routes between fabric-external and non-fabric-external BGP neighbors. User can apply inbound and outbound policies on the fabric-external neighbors to send special communities / extended-communities in order to have custom control on the routes crossing the BL.
+**Re-origination of Type-2 and Type-5 routes**
+
+Following will be the behavior for Type-2 routes received/advertised between fabric-internal and fabric-external neighbors:
+
+| Route Type                                                   | Advertised to<br />Fabric-Internal Neighbor | Advertised to<br />Fabric-External Neighbor |
+| :----------------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| Locally originated (SHD/MHD)<br />(Advertise-PIP not configured) | NH=VIP, RMAC=local (Virtual-MAC)            | NH=External-IP, RMAC=local (Virtual-MAC)    |
+| Locally originated (MHD)<br />(Advertise-PIP configured)     | NH=VIP, RMAC=local (Virtual-MAC)            | NH=External-IP, RMAC=local (Virtual-MAC)            |
+| Locally originated (SHD)<br />(Advertise-PIP configured)     | NH=PIP, RMAC=local (System-MAC)             | NH=PIP, RMAC=local (System-MAC)             |
+| Received from fabric-internal neighbor<br />(Advertise-PIP not configured) | next-hop unchanged                          | NH=External-IP, RMAC=local (Virtual-MAC)    |
+| Received from fabric-internal neighbor<br />(Advertise-PIP configured) | next-hop unchanged                          | NH=External-IP, RMAC=local (Virtual-MAC)    |
+| Received from Fabric-external neighbor<br />(Advertise-PIP not configured) | NH=VIP, RMAC=local (Virtual-MAC)            | next-hop unchanged                          |
+| Received from Fabric-external neighbor<br />(Advertise-PIP configured) | NH=VIP, RMAC=local (Virtual-MAC)            | next-hop unchanged                          |
+
+Following will be the behavior for Type-5 routes received/advertised between fabric-internal and fabric-external neighbors:
+
+| Route Type                                                   | Advertised to<br />Fabric-Internal Neighbor | Advertised to<br />Fabric-External Neighbor |
+| :----------------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| Locally originated <br />(Advertise-PIP not configured) | NH=VIP, RMAC=local (Virtual-MAC)            | NH=External-IP, RMAC=local (Virtual-MAC)    |
+| Locally originated <br />(Advertise-PIP configured)     | NH=PIP, RMAC=local (System-MAC)            | NH=PIP, RMAC=local (System-MAC)            |
+| Received from fabric-internal neighbor<br />(Advertise-PIP not configured) | next-hop unchanged                          | NH=External-IP, RMAC=local (Virtual-MAC)    |
+| Received from fabric-internal neighbor<br />(Advertise-PIP configured) | next-hop unchanged                          | NH=PIP, RMAC=local (System-MAC)    |
+| Received from Fabric-external neighbor<br />(Advertise-PIP not configured) | NH=VIP, RMAC=local (Virtual-MAC)            | next-hop unchanged                          |
+| Received from Fabric-external neighbor<br />(Advertise-PIP configured) | NH=PIP, RMAC=local (System-MAC)            | next-hop unchanged                          |
+
+When one or more fabric-external neighbors are configured, Type-2/5 routes received from fabric-internal or fabric-external neighbors will be re-originated with local route-distinguisher (RD) and route-targets (RT) configured for the MAC-VRF or IP-VRF. The original route-targets in the route are stripped in the re-originated route. If the route is received from fabric-external neighbor, the re-originated route is advertised only to fabric-internal neighbor(s), and vice-versa.
+
+The Type-2 routes converted to (/32 or /128) host-routes will not be re-originated as Type-5 routes. 
+
+
+
+**Behavior of Type-3 routes**
+
+The Type-3 (IMET) routes received from fabric-external or fabric-internal neighbors are not re-originated. Instead, these are consumed locally. Only the local IMET routes are advertised to fabric-external and fabric-internal neighbors.
+
+
+
+**Behavior of Type-1 and Type-4 routes**
+
+The Type-1 and Type-4 routes are not advertised by BL as these route types are currently not supported. Any such route received from fabric-internal or fabric-external neighbor will be locally consumed and will not be re-originated.
+
+
+
+Note that user can apply inbound and outbound policies on the fabric-external/fabric-internal neighbors to send special communities or extended-communities in order to have custom control on the routes crossing the BL.
 
 
 
@@ -369,39 +423,53 @@ Assuming L2VNI in the route with RT 2000:1 is 2000, the corresponding MAC entry 
 
 Extra VxLAN configuration is required to pre-allocate the hw resources required for maintaining per tunnel VNI mapping. Maintaining downstream VNI per tunnel doesn't use the hw resource optimally, and therefore downstream VNI feature is disabled by default.
 
-At the Border-leaf, the downstream feature can be enabled for external or specific VTEPs.
+At the Border-leaf, the downstream VNI feature can be enabled for external or specific VTEPs.
 
 ```
 sonic(config)# interface vxlan vtep-1
-sonic(conf-if-vxlan-vtep-1)# vni downstream ?
+sonic(conf-if-vxlan-vtep-1)# vni-downstream ?
     external          External VTEPs
     <A.B.C.D>         Specific VTEP IP address
 ```
 
-Typically, within the DC, the VTEPs will have the same VLAN-VNI mapping. However, the remote site(s) to which the BL is connecting to may be  in a separate administrative control and may have different VNI assignment. In such a case, it might easier to configure downstream VNI assignment for external VTEPs:
+Typically, within the DC, the VTEPs will have the same VLAN-VNI mapping. However, the remote site(s) to which the BL is connecting to may be  in a separate administrative control and may have different VNI assignment. In such a case, it will be easier to configure downstream VNI assignment for all of the external VTEPs as shown below:
 
 ```
 sonic(config)# interface vxlan vtep-1
-sonic(conf-if-vxlan-vtep-1)# vni downstream external
+sonic(conf-if-vxlan-vtep-1)# vni-downstream external
 ```
 
-If there is only one specific VTEP(s) which have different VLAN-VNI assignment, it might be better to specify such remote VTEP IP addresses.
+
+
+However, if there are only specific external VTEP(s) which have different VLAN-VNI assignment, it might be better to specify such remote VTEP IP address(es), instead of configuring downstream VNI for all of the external VTEPs.
 
 ```
 sonic(config)# interface vxlan vtep-1
-sonic(conf-if-vxlan-vtep-1)# vni downstream 10.10.10.10
-sonic(conf-if-vxlan-vtep-1)# vni downstream 10.10.10.11
+sonic(conf-if-vxlan-vtep-1)# vni-downstream 10.10.10.10
+sonic(conf-if-vxlan-vtep-1)# vni-downstream 10.10.10.11
 ```
 
-Note that the above downstream VNI configurations have to be performed before configuring VNI-VLAN mapping.
+Even though very unlikely, but in case an internal VTEP has a distinct VLAN-VNI assignment, downstream-VNI can be configured for that VTEP using the above configuration.
+
+It does not make sense to specify external VTEP IP address(es) if *"vni-downstream external"* is already configured.
+
+Note that all of the above downstream VNI configurations have to be performed before configuring VNI-VLAN mapping.
 
 
 
 ### 2.2.5 Co-existence of Primary IP on Border Leaf
 
-VxLAN Primary IP address can be configured on the Border Leaf nodes if there are services or hosts locally attached to MCLAG orphan port(s). Note that the Primary IP as next-hop will be applicable only for the local routes advertised by Border Leaf nodes. If Primary IP address is configured, Orphan MAC's Type-2 routes and Type-5 routes will be advertised to both internal and external BGP peers with the PIP as the next-hop.
+VxLAN Primary IP configuration is not mandatory for supporting Multisite. However, in order to avoid usage of peer-link of MCLAG Border Leaf, VxLAN Primary IP address can be configured if there are services/hosts locally attached to orphan port(s). 
 
-The routes re-advertised between external and internal peers will continue to use External IP and Virtual IP as described in previous subsections.
+If VxLAN Primary IP is configured on the BL, the Primary IP as next-hop will be applicable only for the local routes advertised by the MCLAG Border Leaf. The Type-2 routes for orphan hosts and Type-5 routes will be advertised to both internal and external BGP peers with PIP as the next-hop.
+
+The routes re-advertised between external and internal peers will continue to use External IP and Virtual IP, respectively, as described in previous subsections.
+
+
+
+### 2.2.6 Neighbor suppression on Border Leaf
+
+Neighbor suppression is an optional configuration that avoids unnecessary flooding of ARP requests and ND solicit messages over VxLAN tunnels. Neighbor suppression can be enabled on Border Leaf in order to allow BL to respond to ARP/ND request messages locally. ARP/ND requests arriving from local edge ports on the BorderLeaf will be suppressed. Neighbor suppression will not work for the ARP/ND requests transiting over VxLAN between internal and external VTEPs.
 
 
 
@@ -434,6 +502,19 @@ Schema:
 key = VXLAN_TUNNEL:VTEP_NAME ; VTEP name as a string
 external_ip = ipv4 ; external IP associated with VTEP.
 
+```
+
+
+
+**VXLAN_DOWNSTREAM_VNI_TUNNEL_TABLE**
+
+```;
+;New table
+;Specifies VTEPs for which remote VNI assignment will be different from local mapping.
+;
+; Status: stable
+key = VXLAN_DOWNSTREAM_VNI_TUNNEL:remote_vtep_ip  ; Remote VTEP IPv4 address
+                                    ; 0.0.0.0 VTEP IP address stands for all of the external VTEPs
 ```
 
 
@@ -506,6 +587,26 @@ group = "internal" / "external" ; split-horizon group IMET route belongs to. If 
 
 
 
+**VXLAN_DOWNSTREAM_VNI_TUNNEL_TABLE**
+
+Producer: VxlanMgr
+
+Consumer: VxlanOrch
+
+Description: New table to maintain VxLAN tunnels which will have VNI assignment different from local mapping.
+
+Schema:
+
+```
+; New table
+; Specifies VTEPs for which remote VNI assignment will be different from local mapping.
+
+key = VXLAN_DOWNSTREAM_VNI_TUNNEL_TABLE:remote_vtep_ip ; Remote VTEP IP
+                                          ; 0.0.0.0 VTEP IP stands for all of the external VTEPs.
+```
+
+ 
+
 **ROUTE_TABLE**
 
 Producer:  Fpmsyncd
@@ -552,7 +653,28 @@ group = "internal" / "external" ; split-horizon group Next-hop group memeber bel
 
 ### 3.2.3 STATE DB
 
-No Changes
+**VXLAN_TUNNEL_TABLE**
+
+Producer:  VxlanOrch
+
+Consumer: VxlanOrch
+
+Description: Updated existing table to store VTEP's internal/external split-horizon group and downstream-vni state.
+
+Schema:
+
+```
+;Existing table
+;defines VTEP. Updated to store tunnel's external/internal classification and downstream-vni assignment state.
+;
+;Status: stable
+
+key = VXLAN_TUNNEL:VTEP_NAME ; VTEP name as a string
+"external" = boolean ; true if VTEP is external. Absense of this field indicates VTEP is internal.
+"downstream_vni" : boolean ; true if VTEP has remote assignment of vni-vlan. Absense of this field means VNI assignment is global.
+```
+
+
 
 ### 3.2.4 ASIC DB
 
@@ -587,15 +709,20 @@ BGP peering with external DCI needs to be done as fabric-external peering. It is
 
 #### 3.3.1.2 BGP route re-advertisement between fabric-external and internal peers
 
-EVPN routes on the Border gateways will never be reflected but it will be consumed and re-advertised. Type-2 and Type-5 routes received from fabric-external or fabric-internal will be re-advertised to the other side if the route is imported and they become active routes in MAC-VRF. The route will be re-advertised as new routes with the following fields:
+EVPN routes on the Border gateways between fabric-external and fabric-internal peers will never be reflected but it will be consumed and re-advertised. The route-reflection (or re-advertisement) between fabric-external peers or  between fabric-internal peers will continue to be done without changing the next-hop and path attributes.
+
+Type-2 and Type-5 routes received from fabric-external will be re-advertised to fabric-internal (and vice-versa) if the route is imported and they become active routes in MAC-VRF. The route will be re-advertised as new routes with the following fields:
 
 \-     RD as BGW’s RD. 
 
 \-     RT as BGW’s RT. 
 
-\-     Next-hop as BGW fabric internal/external tunnel interface.
+\-     Next-hop as BGW's VTEP IP
 
-\-     Router-Mac as BGW’s rmac
++ Virtual IP (VIP) when re-advertising route from fabric-external to fabric-internal peer.
++ External IP (EIP) when sending route from fabric-internal to fabric-external peer.
+
+\-     Router-Mac as BGW’s router-mac (common to both of the LVTEP nodes.)
 
  
 
@@ -607,10 +734,10 @@ EVPN routes on the Border gateways will never be reflected but it will be consum
 
 All the evpn peers are marked as fabric-external or fabric-internal peers. 
 
-- EVPN routes learned from fabric-internal will be reflected to all the fabric-internal neighbors rib-out. And imported to the MAC_VRF table.
-- EVPN routes learned from fabric-external will be reflected to all the fabric-external neighbors rib-out. And imported to the MAC_VRF table.
-- If the imported route becomes active then the routes are exported to Rin-in learned as a local route.
-- These local routes are then added to rib-out for fabric-external and fabric-internal peers.
+- EVPN routes learned from fabric-internal will be reflected to all the fabric-internal neighbors RIB-out. And imported to the MAC_VRF / IP_VRF tables.
+- EVPN routes learned from fabric-external will be reflected to all the fabric-external neighbors RIB-out. And imported to the MAC_VRF / IP_VRF tables.
+- If the route imported from fabric-external (/fabric-internal) neighbor becomes active then the same route with local next-hop, RD, and attributes is exported to RIB-in as a local route.
+- These locally re-originated routes are then added to rib-out of  fabric-external neighbor if the original route was received from fabric-internal, and vice-versa.
 
 
 
@@ -652,9 +779,40 @@ Fdbsyncd is enhanced to maintain the internal/external vxlan netdevice informati
 
 
 
+### 3.3.5 VxlanOrch and VxlanMgr changes
+
+Support for external tunnels.
+
+- External IP handling in VxlanMgr and population of the APP DB. 
+- External IP kernel programming changes in VxlanMgr. 
+- Maintain a separate P2MP tunnel for external tunnels and also associated external P2P tunnels.
+- Interface with IsolationGroup Orch to create an Isolation group for the first external tunnel and delete the isolation group for the last  tunnel. 
+- Set the Isolation group as part of the tunnel bridge port creation. 
+
+Support for downstream assigned VNI
+
+- Downstream VNI configuration handling in VxlanMgr.
+- Create Separate encap-mapper based on the VNI downstream configuration. 
+- Maintain a refcnt of the number of routes per VNI per remote IP.
+- Add/remove encap mapping entries based on when the refcnt becomes non-zero/zero. 
+
+
+
 ## 3. 4 SAI
 
-TBD
+**Support for external tunnels ** 
+
+- A new P2MP Tunnel object with the source IP as the external IP will be created.
+- A new Isolation Group will be created for external tunnels. 
+- The bridge-port created for external tunnels will carry the above isolation group id as an attribute.
+- No changes to the SAI interface for internal tunnel programming.
+
+**Support for Downstream Assigned VNI **
+
+- Encap Mappers of type VLAN-VNI and VRF-VNI will be created for each P2P Tunnel object.
+- Encap mapping entry against the encap mapper created above will be created for every downstream assigned VNI. 
+- No change to encap and decap mapper/mapping entry for internal tunnels. 
+- Decap mappers and mapping entries for external tunnels shall be the same as for internal tunnels.
 
 
 
@@ -695,7 +853,7 @@ The following command is available to specify which of the VTEPs will have VNI a
 
 ```
 sonic(config)# interface vxlan vtep-1
-sonic(config-if-vxlan-vtep-1)# vni downstream {external|<A.B.C.D>}
+sonic(config-if-vxlan-vtep-1)# vni-downstream {external|<A.B.C.D>}
 ```
 
 The `external` option enables capability for external VTEPs to have VNI assignment separate from local configuration. The specific VTEP IP address can also be specified to enable this capability. 
@@ -706,7 +864,9 @@ The Route-Target configuration commands for L2 VNI and L3 VNI under BGP L2VPN EV
 
 
 
-Below RT configuration can be used to enable import/export of routes in the given VNI or VRF using auto-generated RT values. This configuration is to be used when manual RT values are specified.
+Typically, BL supporting Multisite will be required to import routes from internal VTEPs using auto-RT, and import routes from external VTEPs using manually specified RT values. Before this release, auto-RT and manual RT cannot co-exist. That is, by default auto-RT is enabled, but when user configures manual RT, the manual RT takes precedence and route import/export using auto-RT is disabled.
+
+Below RT configuration is newly introduced in this release and allows user to explicitly configure import/export of routes in the given VNI or VRF using auto-generated RT values. When manual RT is not configured, auto-RT is enabled by default. However, when manual RT values are configured, the import/export of routes using auto-RT has to be configured explicitly (if required). 
 
 Under VNI configuration mode:
 
@@ -746,20 +906,7 @@ sonic(config-router-bgp-af)# [no] route-target import *:<value>
 
 
 
-The route-target configuration is enhanced to accept Route-targets in the form of list instead of single RT in a separate configuration.
-
-Under VNI configuration mode:
-
-```
-sonic(config-router-bgp-af)# vni 1010
-sonic(config-router-bgp-af-vni)# [no] route-target {import|export|both} RTLIST
-```
-
-Under BGP VRF L2VPN EVPN configuration mode:
-
-```
-sonic(config-router-bgp-af)# [no] route-target {import|export|both} RTLIST
-```
+**Note:** The user may choose to use auto-RT for both local and remote sites. In that case, there will not be a need to configure manual RTs or explicitly configure auto-RT.
 
 
 
@@ -775,12 +922,55 @@ The above command can be used to filter IPv4 and IPv6 routes while exporting int
 
 
 
-
 #### 3.5.3.2 Click commands
 
-TBD
+All of the BGP commands mentioned in this document will be available in FRR Vtysh as well.
+
+
+
+Below are corresponding VxLAN config commands in CLICK:
+
+```
+config vxlan external_ip {add|del} <vtep-name> <external-ip>
+```
+
+```
+config vxlan vni-downstream {add|del} <vtep-name> {external | <remote-vtep-ip>}
+```
+
+
 
 ### 3.5.4 Show Commands
+
+BGP show neighbor command output is updated to show Fabric-external status:
+
+```
+BGP neighbor on Ethernet0: fe80::5054:ff:fece:4c39, remote AS 10, local AS 20, external link
+Hostname: sonic
+  BGP version 4, remote router ID 100.0.0.1, local router ID 2.2.2.2
+  BGP state = Established, up for 00:00:45
+..
+
+ For address family: IPv4 Unicast
+  Update group 3, subgroup 3
+  Packet Queue length 0
+  Community attribute sent to this neighbor(all)
+  0 accepted prefixes
+
+ For address family: L2VPN EVPN
+  Update group 4, subgroup 4
+  Packet Queue length 0
+  Fabric-external
+  NEXT_HOP is propagated unchanged to this neighbor
+  Community attribute sent to this neighbor(all)
+  1 accepted prefixes
+
+  Connections established 3; dropped 2
+  ..
+
+```
+
+
 
 The below KLISH command will now show the External VTEP IP address and downstream VNI configuration(s):
 
@@ -793,7 +983,6 @@ VTEP Primary IP  :  2.2.2.2
 VTEP External IP :  10.10.10.10
 EVPN NVO Name    :  nvo1
 EVPN VTEP        :  vtep1
-Downstream VNI   : External, 192.168.2.100
 Source Interface :  Loopback10
 Primary IP interface : Loopback20
 External IP interface: Loopback30
@@ -812,7 +1001,6 @@ VTEP Information:
         Primary IP  : 2.2.2.2
         External IP : 10.10.10.10
         NVO Name  : nvo1,  VTEP : vtep1
-        Downstream VNI: External, 192.168.2.100
         Source interface  : Loopback10
         Primary IP interface : Loopback20
         External IP interface: Loopback30
@@ -823,29 +1011,34 @@ admin@sonic:~$
 
 
 
+Below show output is enhanced to show:
 
+- Group ("external" or "external") a given remote VTEP belongs to.
+- DVNI (Downstream-assigned VNI) enabled or disabled for the given VTEP.
 
 ```
 leaf2# show vxlan tunnel
-Name                SIP               DIP                 source     Group      operstatus
-=======             ======            ======              ======     ========   ==========  
-EVPN_1.0.1.1        1.0.1.255         1.0.1.1             EVPN       external   oper_down 
-EVPN_1.0.3.1        1.0.1.255         1.0.3.1             EVPN       external   oper_up   
-EVPN_1.0.3.255      1.0.1.255         1.0.3.255           EVPN       internal   oper_up   
-EVPN_1.0.4.1        1.0.1.255         1.0.4.1             EVPN       external   oper_up   
-EVPN_1.0.5.1        1.0.1.255         1.0.5.1             EVPN       external   oper_up   
+Name                SIP               DIP                 source     Group      DVNI   operstatus
+=======             ======            ======              ======     ========   ====   ======  
+EVPN_1.0.1.1        1.0.1.255         1.0.1.1             EVPN       external   yes    oper_up 
+EVPN_1.0.3.1        1.0.1.255         1.0.3.1             EVPN       external   yes    oper_up   
+EVPN_1.0.3.255      1.0.1.255         1.0.3.255           EVPN       internal   no     oper_up   
+EVPN_1.0.4.1        1.0.1.255         1.0.4.1             EVPN       external   yes    oper_up   
+EVPN_1.0.5.1        1.0.1.255         1.0.5.1             EVPN       external   yes    oper_up   
 ```
 
 
+
+Below show output is enhanced to show group ("external" / "internal") from which the IMET route is received from.
 
 ```
 leaf2# show vxlan remote vni
 Vlan       Tunnel      Group     VNI
 ======   =========     ========  =====
 Vlan1001  1.0.3.255    internal  1001
-Vlan1001  1.0.5.1      external  1001
+Vlan1001  1.0.5.1      external  100001
 Vlan1002  1.0.3.255    internal  1002
-Vlan1002  1.0.5.1      external  1002
+Vlan1002  1.0.5.1      external  100002
 ...
 ```
 
@@ -853,7 +1046,7 @@ Vlan1002  1.0.5.1      external  1002
 
 
 
-
+Below show output is enhanced to show the group ("external"/"internal") from which given MAC is received from.
 
 ```
 leaf2# show vxlan remote mac
@@ -863,10 +1056,12 @@ Vlan1001  3c:2c:99:2d:7d:38    dynamic  1.0.3.255  internal  1001
 Vlan1001  3c:2c:99:6d:da:4c    dynamic  1.0.3.255  internal  1001
 Vlan1002  3c:2c:99:2d:7d:38    dynamic  1.0.3.255  internal  1002
 Vlan1002  3c:2c:99:6d:da:4c    dynamic  1.0.3.255  internal  1002
-Vlan1003  00:c0:05:31:00:01    dynamic  1.0.5.1    external  1003
-Vlan1003  00:c0:05:31:00:02    dynamic  1.0.5.1    external  1003
+Vlan1003  00:c0:05:31:00:01    dynamic  1.0.5.1    external  10003
+Vlan1003  00:c0:05:31:00:02    dynamic  1.0.5.1    external  10003
 ...
 ```
+
+
 
 
 
@@ -1012,7 +1207,7 @@ sonic(config)# interface vxlan vtep-1
 sonic(conf-if-vxlan-vtep-1)# source-ip 192.168.1.1                 ! Virtual IP
 sonic(conf-if-vxlan-vtep-1)# external-ip 10.10.10.10               ! External IP
 sonic(conf-if-vxlan-vtep-1)# primary-ip 192.168.1.2                   ! Primary IP
-sonic(conf-if-vxlan-vtep-1)# vni downstream external       ! External VTEPs will have remotely assigned VNI
+sonic(conf-if-vxlan-vtep-1)# vni-downstream external       ! External VTEPs will have remotely assigned VNI
 
 !! Configure local VLAN-VNI assignemts here !!
 ..
@@ -1038,7 +1233,7 @@ sonic(config)# interface vxlan vtep-2
 sonic(conf-if-vxlan-vtep-1)# source-ip 192.168.1.1              ! Virtual IP
 sonic(conf-if-vxlan-vtep-1)# external-ip 10.10.10.10            ! External IP
 sonic(conf-if-vxlan-vtep-1)# primary-ip 192.168.1.3             ! Primary IP
-sonic(conf-if-vxlan-vtep-1)# vni downstream external      ! External VTEPs will have remotely assigned VNI
+sonic(conf-if-vxlan-vtep-1)# vni-downstream external      ! External VTEPs will have remotely assigned VNI
 
 !! Configure local VLAN-VNI assignemts here!!
 ..
