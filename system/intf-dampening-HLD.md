@@ -38,9 +38,9 @@ The Port Link Flap Error Disable feature uses an exponential decay mechanism to 
 
 When Port Link Flap Error Disable is enabled, the system monitors the number of times a port link state toggles from "up to down", and not from "down to up".
 
-The sampling time or window (the time during which the specified toggle threshold can occur before the wait period is activated) is triggered when the first "up to down" transition occurs.
+The sampling interval or window (the time during which the specified toggle threshold can occur before the recovery wait period is activated) is triggered when the first "up to down" transition occurs.
 
-If the port link state toggles from up to down for a specified number of times within a specified period, the interface is physically disabled for the specified wait period. Once the wait period expires, the port link state is re-enabled. However, if the wait period is set to zero (0) seconds, the port link state will remain disabled until it is manually disabled and re-enabled or Port Link Flap Error Disable is disabled on this port.
+If the port link state toggles from up to down for a specified number of times within a specified period, the interface is physically disabled for the specified recovery wait period. Once the recovery wait period expires, the port link state is re-enabled. However, if the recovery wait period is set to zero (0) seconds, the port link state will remain disabled until it is manually disabled and re-enabled or Port Link Flap Error Disable is disabled on this port.
 
 
 ## 1.1 Requirements
@@ -48,7 +48,7 @@ System shall be able to suppress interfaces state change events to protect syste
 User shall be able to enable or disable the feature on individual interfaces and globally.
 The feature must be disabled on all interfaces by default.
 The feature shall be supported on physical interfaces.
-There must be two sets of configuration parameters (sample-interval, recovery-interval, and flap-threshold) a per-interface set and a global set. If both global and per-interface are configured, the per-interface values are used only for given interfaces. Global values are used for all other physical interfaces.
+There must be two sets of configuration parameters (sampling-interval, recovery-interval, and flap-threshold) a per-interface set and a global set. If both global and per-interface are configured, the per-interface values are used only for given interfaces. Global values are used for all other physical interfaces.
 If no values are specified by user, a default set of parameters are applied to all interfaces.
 User shall be able to save configuration parameters (both global and per-interface).
 The configuration parameters (both global and per-interface) must be preserved across device reboot.
@@ -56,9 +56,9 @@ The configuration parameters (both global and per-interface) must be preserved a
 ### 1.1.1 Functional Requirements
 Port Link Flap Error Disable shall use below parameters to supress and protect system.
 - flap-threshold
-Specifies the number of times a port link state goes from up to down before the wait period is activated. The value ranges from 1 through 50.
-- sample-interval
-Specifies the amount of time, in seconds, during which the specified toggle threshold can occur before the wait period is activated. The value ranges from 1 through 65535.
+Specifies the number of times a port link state goes from up to down before the recovery wait period is activated. The value ranges from 1 through 50.
+- sampling-interval
+Specifies the amount of time, in seconds, during which the specified toggle threshold can occur before the recovery wait period is activated. The value ranges from 1 through 65535.
 - recovery-interval
 Specifies the amount of time in seconds, for which the port remains disabled (down) before it becomes enabled. The value ranges from 0 through 65534. A value of 0 indicates that the port will stay down until an administrative override occurs.
 
@@ -66,9 +66,9 @@ Specifies the amount of time in seconds, for which the port remains disabled (do
 - Port Link Flap Error Disable feature default is OFF on all physical interfaces and port-channels
 - When Port Link Flap Error Disable is enabled, use below default values:
   flap-threshold: 3
-  sample-interval: 10
+  sampling-interval: 10
   recovery-interval: 300
-- User shall be able to specify different sample-interval, flap-threshold and recovery-interval on a physical interface
+- User shall be able to specify different sampling-interval, flap-threshold and recovery-interval on a physical interface
 - User shall be able to display current Port Link Flap Error Disable confiuration values.
 - User shall be able to display current interface status if it was surpresed by Port Link Flap Error Disable
 - User shall be able to display Link-Down-Reason if a port is disabled by Port Link Flap Error Disable feature
@@ -101,23 +101,37 @@ The Interface Error Disable feature exist in below modules and containers:
 - *link-error-disable flap-threshold <flap count> sampling-interval <interval in sec>  recovery-interval <recovery interval in sec>*
 Example:
 ```
-sonic(conf-if-Ethernet0)# link-error-disable flap-threshold 10 sampling-time 3 recovery-timeout 10
+sonic(conf-if-Ethernet0)# link-error-disable flap-threshold 10 sampling-interval 3 recovery-interval 10
 ```
 In this example, the values for the parameters are as follows:
 
-The flap-threshold is set at 10 times. This interval is the number of times that the port's link state goes from up to down and down to up before the recovery-timeout is activated. Enter a valid value range from 1-50. Default is 3.
+The flap-threshold is set at 10 times. This interval is the number of times that the port's link state goes from up to down and down to up before the recovery-interval is activated. Enter a valid value range from 1-50. Default is 3.
 
 
-The sampling-time is set to 3 seconds. This time period is the amount of time during which the specified flap-threshold can be crossed. If the flap-threshold is crossed during this sampling-time, port will be error-disabled. Enter a value between 1 and 65535 seconds. Default is 10.
+The sampling-interval is set to 3 seconds. This time period is the amount of time during which the specified flap-threshold can be crossed. If the flap-threshold is crossed during this sampling-interval, port will be error-disabled. Enter a value between 1 and 65535 seconds. Default is 10.
 
 
-The recovery-timeout is set to 10 seconds. This period of time is the amount of time the port remains disabled (down) before it becomes enabled. Entering 0 indicates that the port will stay down until an administrative override occurs. Enter a value between 0 and 65534 seconds. Default is 300.
+The recovery-interval is set to 10 seconds. This period of time is the amount of time the port remains disabled (down) before it becomes enabled. Entering 0 indicates that the port will stay down until an administrative override occurs. Enter a value between 0 and 65534 seconds. Default is 300.
 
 
 This config command can be executed on a range of interfaces as well. Example:
 ```
-sonic(conf-if-range-eth**)# link-error-disable flap-threshold 10 sampling-time 3 recovery-timeout 10
+sonic(conf-if-range-eth**)# link-error-disable flap-threshold 10 sampling-interval 3 recovery-interval 10
 ```
+
+The following command is used to enable the link-error-disable with default values for flap-threhsold, sampling-interval and recovery-interval:
+
+```
+sonic(conf-if-Ethernet0)#link-error-disable
+```
+
+This command to enable link-error-disable with default parameters is supported for the range of interfaces as well, as shown in the below example:
+
+```
+sonic(conf-if-range-eth**)# link-error-disable
+```
+
+
 Example for disabling link-flap error-disable on a port:
 ```
 sonic(conf-if-Ethernet0)#no link-error-disable
@@ -165,11 +179,11 @@ The ports which does not have non-default error disable configurations will not 
 Example:
 ```
 sonic#show errdisable link-flap
-Interface  Flap-threshold  Sampling-time   Recovery-timeout Status
+Interface  Flap-threshold  Sampling-interval   Recovery-timeout Status
 ---------------------------------------------------------------------------
-Ethernet0  10              3               30               Errdisabled
-Ethernet4  10              3               60               Not-errdisabled
-Ethernet8  5               10              300              Off
+Ethernet0  10              3                   30               Errdisabled
+Ethernet4  10              3                   60               Not-errdisabled
+Ethernet8  5               10                  300              Off
 ```
 # 2.2 Functional Description
 
