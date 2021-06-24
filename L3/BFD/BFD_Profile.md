@@ -34,7 +34,7 @@
     - [3.4 Upgrade Downgrade Considerations](#34-Upgrade-Downgrade-Considerations)
     - [3.5 Scale Considerations](#35-Scale-Considerations)
     - [3.6 UT Cases](#36-UT-Cases)
-    - [3.7 References](#36-References)
+    - [3.7 References](#37-References)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-Abbreviations)
