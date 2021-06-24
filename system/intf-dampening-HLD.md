@@ -185,6 +185,13 @@ Ethernet0  10              3                   30                Errdisabled
 Ethernet4  10              3                   60                Not-errdisabled
 Ethernet8  5               10                  300               Off
 ```
+
+The possible status values are  
+1. Errdisabled: The number of link flaps in a sampling interval crossed the threshold and port is currently in err-disabled state.  
+2. Not-errdisabled: The err-disable is enabled, but number of flaps in sampling intervals did not cross the configured threshold.  
+3. Off: The err-disable parameters are configured but it is not enabled.  
+4. On: The err-disable is enabled, and no link flaps since then.  
+
 # 2.2 Functional Description
 
 # 3 Design
