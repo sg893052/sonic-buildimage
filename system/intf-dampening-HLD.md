@@ -179,11 +179,11 @@ The ports which does not have non-default error disable configurations will not 
 Example:
 ```
 sonic#show errdisable link-flap
-Interface  Flap-threshold  Sampling-interval   Recovery-timeout Status
+Interface  Flap-threshold  Sampling-interval   Recovery-interval Status
 ---------------------------------------------------------------------------
-Ethernet0  10              3                   30               Errdisabled
-Ethernet4  10              3                   60               Not-errdisabled
-Ethernet8  5               10                  300              Off
+Ethernet0  10              3                   30                Errdisabled
+Ethernet4  10              3                   60                Not-errdisabled
+Ethernet8  5               10                  300               Off
 ```
 # 2.2 Functional Description
 
