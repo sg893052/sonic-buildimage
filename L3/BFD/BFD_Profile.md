@@ -32,7 +32,9 @@
 		        - [3.3.2.1.1 Show BFD Profile](#33211-Show-Bfd-Profile)
 		        - [3.3.2.1.2 Show BFD Peer](#33211-Show-Bfd-Peer)
     - [3.4 Upgrade Downgrade Considerations](#34-Upgrade-Downgrade-Considerations)
-    - [3.5 UT Cases](#35-UT-Cases)
+    - [3.5 Scale Considerations](#35-Scale-Considerations)
+    - [3.6 UT Cases](#36-UT-Cases)
+    - [3.7 References](#36-References)
 
 # List of Tables
 [Table 1: Abbreviations](#table-1-Abbreviations)
@@ -404,7 +406,11 @@ There is no impact on upgrading the image to latest version.
 
 On downgrading to previous release version BFD profile and associated configuration will be lost. BFD configuration supported in the earlier release will be retained.
 
-## 3.5 UT Cases
+## 3.5 Scale Considerations
+FRR do not restricts number of profiles that can be configured as scale depends on the processing power and memory availability in the device and one size wouldn't fit all. Similar approach will be taken and number of profiles will not be restricted.
+Actual scale numbers can only be derived from SQA test on scaled setup, since maximum of 128 BFD sessions are claimed to be supported(depending on the device type) it wouldn't make sense to configure more than 128 profiles.
+
+## 3.6 UT Cases
 1. Verify configuring BFD profile in static BFD peer with non default values.
 2. Verify configuring BFD profile in BGP with non default values.
 3. Verify configuring BFD profile in OSPF with non default values.
@@ -421,3 +427,6 @@ On downgrading to previous release version BFD profile and associated configurat
 14. Verify BFD profile config restore in BGP/OSPF/PIM.
 15. Verify un-configuration of BFD profile from BFD.
 16. Verify un-configuration of BFD profile from BGP/OSPF/PIM.
+
+## 3.6 References
+[https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/L3/BFD/BFD_featureSpecification_Arlo.md](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/L3/BFD/BFD_featureSpecification_Arlo.md)
