@@ -369,6 +369,7 @@ Example response data:
 GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-ethernet:ethernet/state/openconfig-interfaces-ext:reason-events
 
 Example response data:
+```
 {
   "openconfig-interfaces-ext:reason-events": {
     "down-reason-event": [
@@ -382,7 +383,27 @@ Example response data:
     ]
   }
 }
+```
 
+Example response data for link down scenario:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "PHY_LINK_DOWN",
+          "event": "Remote-fault",
+          "timestamp": "2021-06-07 04:17:13.456626"
+        }
+      }
+    ]
+  }
+}
+```
+
+The values for reason can be OPER_UP, PHY_LINK_DOWN, ERR_DISABLED or ADMIN_DOWN.  
+The list of values for event is mentioned in the CLI section.  
 
 ### 3.6.4 gNMI Support
 *Generally this is covered by the YANG specification. This section should also cover objects where on-change and interval based telemetry subscriptions can be configured.*
