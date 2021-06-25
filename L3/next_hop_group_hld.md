@@ -1,6 +1,6 @@
 
 # Routing and Next Hop Table Enhancement
-#### Rev 0.1
+#### Rev 0.2
 
 # Table of Contents
   * [Revision](#revision)
@@ -28,9 +28,10 @@
 
 
 # Revision
-| Rev  | Date         | Author           | Change Description |
-| :--: | :----------: | :--------------: | ------------------ |
-| 0.1  | 06/25/2021   | Nikhil Kelapure  |  Initial version   |
+| Rev  | Date         | Author             | Change Description |
+| :--: | :----------: | :----------------: | ------------------ |
+| 0.1  | 06/25/2021   | Nikhil Kelapure    |  Initial version   |
+| 0.2  | 06/26/2021   | Utpal Kant Pintoo  |  Recursive NHG     |
 
 
 # About this Manual
