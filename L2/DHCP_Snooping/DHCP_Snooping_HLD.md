@@ -351,7 +351,23 @@ DHCP_SNOOPING_BINDING_GLOBAL_TABLE
 
 #### 3.2.3.1 DHCP Snooping Counters DB
 
-Counters will be added to capture statistics. Rest of the section is TBD. 
+The following counters will be added to capture statistics. This section is TBD. 
+
+Error receiving from DHCP snooping socket
+DHCP message too big                    
+Error sending from DHCP snooping socket 
+Illegal source IP address in snooped packet  
+Number of DHCP messages intercepted         
+Number of DHCP messages processed          
+Number of DHCP messages filtered          
+Number of DHCP messages forwarded        
+Number of DHCP message tx failures              
+Rx REL or DECL from client not in bindings db     
+Number of bindings added to bindings table       
+Number of bindings removed from bindings table 
+Number of DHCP messages dropped as static binding exists  
+Packets discarded on unsupported outgoing interface
+Packets dropped due to no outgoing interface
 
 ## 3.3 COPP
 
@@ -509,6 +525,19 @@ For example,
 	00:00:00:00:00:01  1.1.1.1          10     Ethernet0    STATIC   - 
 	00:00:A8:5F:34:52  192.168.10.39    20     Ethernet2    DYNAMIC  86396
 
+	(Config)#show ip dhcp snooping statistics
+
+        Interface    MAC Verify   Client Ifc   DHCP Server
+                     Failures     Mismatch     Msgs Recvd
+        -----------  ----------   ----------   -----------
+
+	(Config)#show ipv6 dhcp snooping statistics
+
+        Interface    MAC Verify   Client Ifc   DHCP Server
+                     Failures     Mismatch     Msgs Recvd
+        -----------  ----------   ----------   -----------
+
+### 3.7.2 REST API Support
 ### 3.7.2 REST API Support
 
 TBD
