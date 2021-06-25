@@ -172,10 +172,6 @@ Warm boot support must not be affected by this enhancement. Specifically, this m
 
 Fast reboot is not affected by this change. The requirements on the BGP application in terms of graceful restart remain the same - the only affect this change has is to give an alternative approach for what the BGP application programs into APP_DB.
 
-# 4.1 Warm Upgrade
-
-Existing applications will not be affected by this enhancement, so no warm upgrade support is needed. If in future an existing application is changed to use this feature, then a further enhancement should be made to handle warm upgrade. Adding warm upgrade support now would be untestable, due to no application using that code, and so is outside the scope of this design.
-
 # 5 Unit Test
 ## 5.1 Underlay routes TC:
 - Verify route programming with single path route add/del/updates
