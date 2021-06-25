@@ -28,9 +28,9 @@
 
 
 # Revision
-| Rev  | Date | Author | Change Description |
-| :--: | :--: | :----: | ------------------ |
-| 0.1  |      |        | Initial version    |
+| Rev  | Date         | Author           | Change Description |
+| :--: | :----------: | :--------------: | ------------------ |
+| 0.1  | 06/25/2021   | Nikhil Kelapure  |  Initial version   |
 
 
 # About this Manual
