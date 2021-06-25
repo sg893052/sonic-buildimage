@@ -124,10 +124,12 @@ fpmsyncd will be modified to receive the nexthop group object from Zebra FPM and
 
 ### 3.4.1 Orchestration Agent
 
-A new orchestration agent will be written to handle the new NEXT_HOP_GROUP_TABLE in APP_DB. For a new or updated entry in the NEXT_HOP_GROUP_TABLE, programming will depend on whether the group is configured with 1 or multiple next hops.
+A new orchestration agent will be written to handle the new NEXT_HOP_GROUP_TABLE in APP_DB. For adding or updating an entry in the NEXT_HOP_GROUP_TABLE, programming will depend on whether the group is configured with one or multiple next hops or is a recursive nexthop group i.e. it contains one or more nexthop group.
 
  - If the group has a single next hop, the next hop group orchagent will simply get the SAI identifier for that next hop from the neighbor orchagent, and use that as the SAI identifier for the group.
  - If the group has multiple next hops, the next hop group orchagent will add a next hop group to ASIC_DB and then add a next hop group member to ASIC_DB for every member of that group that is available to be used. Changes to the membership of the group will result in next hop group members being added to or removed from ASIC_DB. The next hop group orchagent will then maintain an association between the identifer of the group from APP_DB and the SAI identifier assigned to the next hop group.
+ - When the parent nexthop group has a single nexthop group member, the parent nexthop group will simply use the SAI identifier for the member nexthop group from NHG-Orch. The parent nexthop group will maintain its own reference count within NHG-Orch. The member nexthop group's reference count will also include parent nexthop group which implies that the member nexthop group cannot be deleted till parent nexthop group is deleted. Deletion of the parent nexthop group will not result in SAI identifier deletion.
+ - When the parent nexthop group has more than one nexthop group members, all the nexthops from each of these member nexthop groups will be combined to form the parent nexthop group. The parent nexthop group, hereafter, will behave like any other nexthop group maintained by NHG Orch.
 
 Dummy code for this logic:
 ```
