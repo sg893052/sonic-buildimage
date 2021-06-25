@@ -177,7 +177,23 @@ Fast reboot is not affected by this change. The requirements on the BGP applicat
 Existing applications will not be affected by this enhancement, so no warm upgrade support is needed. If in future an existing application is changed to use this feature, then a further enhancement should be made to handle warm upgrade. Adding warm upgrade support now would be untestable, due to no application using that code, and so is outside the scope of this design.
 
 # 5 Unit Test
+## 5.1 Underlay routes TC:
+- Verify route programming with single path route add/del/updates
+- Verify route programming with multipath routes add/del/Path-add/Path-delete
+- Verify route programming with routes from multiple source  BGP/static/connected add/remove/update source
+- Verify route programming for recursive routes
+- Verify route programming for blackhole/Null routes
+- Vefiry route programming for routes in user Vrfs
 
-1. Verify that next hop group is added/updated/removed in hardware when next hop group table entry is added/updated/removed (for both a single next hop and a multiple next hop group).
-2. Verify that a route with a reference to the next hop group table get programmed into hardware (for the group having a single next hop and multiple next hops).
+## 5.2 Overlay routes TC:
+- Verify route programming for EVPN VXLAN Overlay routes 
+- Vefiry route programming for various triggers advertise/withdraw/updates for overlay routes
 
+## 5.3 Scale TC:
+- Vefiry route programming for max scale routes
+- Verify route programming for max ecmp paths
+- Vefiry route programming for more than max ecmp paths
+
+## 5.4 warm-reboot:
+- Verify route programming after system warm-reboot
+- Vefiry route programming after docker warm-reboot
