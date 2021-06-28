@@ -38,6 +38,8 @@
 
   - Validation of CLI config command "link-error-disable flap-threshold sampling-interval recovery-interval" to configure the feature on interface level.
   - Validation of CLI config command "link-error-disable flap-threshold sampling-interval recovery-interval" to enable the feature on interface range mode.
+  - Validation of CLI config command "link-error-disable" on interface and interface range mode.
+  - Validation of CLI config command "errdisable recovery cause link-flap".
   - Validation of CLI show command "show errdisable link-flap" and "show errdisable recovery".
 
 ### 1.2 Functional Testing
@@ -47,7 +49,7 @@
   - Verify that with Link Flap Error Disable recovery-interval is set to 0, port remains in operationally down state until administrator overrides it.
   - Verify that with Link Flap Error Disable flap-threshold is set to 1, port goes down (or suppressed) immediately after one port flap (one time up to down).
   - Verify that corresponding syslog is generated when port is suppressed or released by Link Flap Error Disable.
-  - Verify that after config/un config of Link Flap Error Disable feature on the interface, port gets suppressed/released correctly as per config.
+  - Verify that after disable and re enable of 'errdisable recovery cause link-flap' globally and Link Flap Error Disable and re enable on the interface, port gets suppressed/released correctly as per config.
   - Verify the Port Channel interface (with 2 member ports) status is properly updated when both member ports are suppressed/released by Link Flap Error Disable.
   - Verify that on a port routing interface ARP/ND, static routes and dynamic routes are removed(/added) and IPv4/IPv6 traffic stops(/resume) forwarding when the port gets suppressed(/released) by Link Flap Error Disable.
   - Verify that on a port channel routing interface ARP/ND, static routes and dynamic routes are removed(/added) and IPv4/IPv6 traffic stops(/resume) forwarding when both the member ports gets suppressed(/released) by Link Flap Error Disable.
@@ -103,15 +105,32 @@ Topology Description -
 | **Steps**      | 1. Validate CLI options for command "link-error-disable flap-threshold sampling-interval recovery-interval" to configure the feature on interface range mode.<BR /> 2. Check the running-config is updated correctly.|
 
 
-#### 3.1.3 Validation of CLI show command "show errdisable link-flap" and "show errdisable recovery". 
+#### 3.1.3 Validation of CLI config command "link-error-disable" on interface and interface range mode. 
 
 | **Test ID**    | **LinkFlapErrorDisable_CLI_003**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validation of CLI config command "link-error-disable" on interface and interface range mode.**|
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **CLI**                                               |
+| **Steps**      | 1. Validate CLI options for show commands "show errdisable link-flap" and "show errdisable recovery".|
+
+#### 3.1.4 Validation of CLI config command "errdisable recovery cause link-flap". 
+
+| **Test ID**    | **LinkFlapErrorDisable_CLI_004**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validation of CLI config command "errdisable recovery cause link-flap".**|
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **CLI**                                               |
+| **Steps**      | 1. Validate CLI options for show commands "show errdisable link-flap" and "show errdisable recovery".|
+
+#### 3.1.5 Validation of CLI show command "show errdisable link-flap" and "show errdisable recovery". 
+
+| **Test ID**    | **LinkFlapErrorDisable_CLI_005**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Validation of CLI show command "show errdisable link-flap" and "show errdisable recovery".**|
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **CLI**                                               |
 | **Steps**      | 1. Validate CLI options for show commands "show errdisable link-flap" and "show errdisable recovery".|
-
 
 ### 3.2 Functional Test Cases
 
@@ -122,7 +141,7 @@ Topology Description -
 | **Test Name**  | **Verify that with Link Flap Error Disable default config on that physical interface, port goes down (or suppressed) when port flaps occur and comes up(or  released ) after recovery-interval expire.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the physical port (d1port1) with default values for flap-threshold, sampling-interval and recovery-interval. <BR />2. In DUT2, perform port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling-interval configured on d1port1. <BR />3. Verify that d1port1 gets suppressed and port operational state moved to Down. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface. <BR />4. Wait until the recovery-interval expire, and verify that port gets released and port operational state is UP now. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface. <BR />5. In DUT2, perform port flaps again but not as per flap-threshold and sampling-interval configured on d1port1. <BR />6. Verify that now d1port1 don't get suppressed as the port flaps didn't occur as per the default config parameters. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface.|
+| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the physical port (d1port1) without any parameters and check it is enabled with default values to those parameters. <BR />2. Verify that link flap error disable status for that interface is updated as 'On' under "show errdisable link-flap". <BR />3. In DUT2, perform port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling-interval configured on d1port1. <BR />4. Verify that d1port1 gets suppressed and port operational state moved to Down. Verify that "show errdisable recovery" shows interface as link-flap error disabled and "show errdisable link-flap" shows the status as 'Errdisabled' for that interface. <BR />5. Wait until the recovery-interval expire, and verify that port gets released and port operational state is UP now. Verify that "show errdisable link-flap" commands shows the correct status as 'On' for that interface. <BR />6. In DUT2, perform port flaps again but not as per flap-threshold and sampling-interval configured on d1port1. <BR />7. Verify that now d1port1 don't get suppressed as the port flaps didn't occur as per the default config parameters. Verify that "show errdisable link-flap" commands shows the correct status as 'Not-errdisabled' for that interface.|
 
 #### 3.2.2 Verify that with Link Flap Error Disable non-default config on that physical interface, port goes down (or suppressed) when port flaps occur and comes up(or  released ) after recovery-interval expire.  
 
@@ -131,7 +150,7 @@ Topology Description -
 | **Test Name**  | **Verify that with Link Flap Error Disable non-default config on that physical interface, port goes down (or suppressed) when port flaps occur and comes up(or  released ) after recovery-interval expire.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the physical port (d1port1) and configure non-default values for flap-threshold, sampling-interval and recovery-interval. <BR />2. In DUT2, perform port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling-interval configured on d1port1. <BR />3. Verify that d1port1 gets suppressed and port operational state moved to Down. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface. <BR />4. Wait until the recovery-interval expire, and verify that port gets released and port operational state is UP now. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface. <BR />5. In DUT2, perform port flaps again but not as per flap-threshold and sampling-interval configured on d1port1. <BR />6. Verify that now d1port1 don't get suppressed as the port flaps didn't occur as per the configured values to parameters. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface.|
+| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the physical port (d1port1) and configure non-default values for flap-threshold, sampling-interval and recovery-interval. <BR />2. In DUT2, perform port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling-interval configured on d1port1. <BR />3. Verify that d1port1 gets suppressed and port operational state moved to Down. Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status for that interface. <BR />4. Before recovery-interval expire, do shut no shut on the error disabled interface, check that interface is not UP as the recovery interval is not expired. <BR />5. Check that after recovery interval expire, interface is UP and Verify that "show errdisable recovery" and "show errdisable link-flap" commands shows the correct status as 'Not-errdisabled' for that interface.|
 
 #### 3.2.3 Verify that with Link Flap Error Disable recovery-interval is set to 0, port remains in operationally down state until administrator overrides it.
 
@@ -160,14 +179,14 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the physical port (d1port1) with non-default values for recovery-interval, sampling-interval and flap-threshold <BR />2. In DUT2, perform one time port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling interval. <BR />3. Verify that d1port1 gets suppressed and port operational state moved to Down. <BR />4.  Verify that in syslog, a proper log message is generated informing the port state going down due to link flap error disable. <BR />5. Wait until the recovery-interval expire, and verify that port gets released and port operational state is UP now. <BR />6. Verify that in syslog, a proper log message is generated informing the port state going up due to link flap error disable recovery-interval expire.|
 
-#### 3.2.6 Verify that after config/un config of Link Flap Error Disable feature on the interface, port gets suppressed/released correctly as per config.
+#### 3.2.6 Verify that after disable and re enable of 'errdisable recovery cause link-flap' globally and Link Flap Error Disable and re enable on the interface, port gets suppressed/released correctly as per config.
 
 | **Test ID**    | **LinkFlapErrorDisable_Func_006**                                               |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that after config/un config of Link Flap Error Disable feature on the interface, port gets suppressed/released correctly as per config.** |
+| **Test Name**  | **Verify that after disable and re enable of 'errdisable recovery cause link-flap' globally and Link Flap Error Disable and re enable on the interface, port gets suppressed/released correctly as per config.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the physical port (d1port1) with non-default values for recovery-interval, sampling-interval and flap-threshold <BR />2. In DUT2, perform one time port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling interval. <BR />3. Verify that d1port1 gets suppressed and port operational state moved to Down. <BR />4. Verify that "show errdisable link-flap" commands shows the correct status for that interface. <BR />5. Wait until the recovery-interval expire, and verify that port gets released and port operational state is UP now. <BR />6. Remove the config on the interface and re configure with same values. <BR />7. Repeat the steps from 2 to 5, check results are same as previous.|
+| **Steps**      | 1. In DUT1, disable the errdisable recovery casue link-flap and also disable the link-error-disable on the interface. <BR />2. Reenable link-error-disable on the interface with non default values for recovery-interval, sampling-interval and flap-threshold. <BR />3. In DUT2, perform one time port flaps (shut/no shut) on the corresponding port (d2port1, that is connected to DUT1 port) as per flap-threshold and sampling interval. <BR />4. Verify that d1port1 dont get suppressed and port operational state not moved to Down. <BR />5. Verify that "show errdisable link-flap" commands shows the correct status for that interface. <BR />6. Enable errdisable recovery cause link-flap gloablly and perform the port flaps again. <BR />7. Verify that d1port1 get suppressed and port operational state moved to Down. <BR />8. Verify that "show errdisable link-flap" commands shows the correct status for that interface. <BR />9. Wait until the recovery-interval expire, and verify that port gets released and port operational state is UP now.|
 
 #### 3.2.7 Verify the Port Channel interface (with 2 member ports) status is properly updated when both member ports are suppressed/released by Link Flap Error Disable.
 
