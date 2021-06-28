@@ -53,7 +53,8 @@
             - [3.8.3.4 Set drop counter type](#3834-set-drop-counter-type)
             - [3.8.3.5 Add or delete group](#3835-add-or-delete-group)
             - [3.8.3.6 Add or delete alias](#3836-add-or-delete-alias)
-            - [3.8.3.7 Install Drop counter](#3837-install-drop-counter)
+            - [3.8.3.7 Add or delete mirror session](#3837-add-or-delete-mirror-session)
+            - [3.8.3.8 Activate Drop counter](#3838-activate-drop-counter)
     - [3.9 SONIC Yang model](#39-sonic-yang-model)
     - [3.10 Open config Yang model](#310-open-config-yang-model)
 * [4 Flows](#4-flows)
@@ -573,7 +574,7 @@ Drop reasons can be added or deleted when the drop counter is active. The counte
 ```
 sonic(config-drop-counters-NAME)# **add-reason** *DROP_REASON_LIST* 
 
-sonic(config-drop-counters-NAME)# **delete-reason**  *DROP_REASON* 
+sonic(config-drop-counters-NAME)# **delete-reason**  *DROP_REASON_LIST* 
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -626,7 +627,7 @@ sonic(config-drop-counters-NAME)# [no] **alias** *STRING*
 |--------------------------|-------------------------------------|
 | `STRING`               |Alias string for the Drop counter|
 
-### 3.8.3.6 Add or delete mirror session 
+### 3.8.3.7 Add or delete mirror session 
 
 The command syntax for adding/deleting mirror-session to a drop-counter. Mirror session has to be created before this command. If the session is active, then the drop-counter will be installed in ASIC.
 when session goes active/inactive, the drop counter config will be configured/removed from ASIC.
@@ -638,7 +639,7 @@ sonic(config-drop-counters-NAME)# [no] **mirror-session** *NAME*
 |--------------------------|-------------------------------------|
 | `NAME`               |Mirror session name to be associated with the Drop counter|
 
-### 3.8.3.7 Active Drop counter
+### 3.8.3.8 Activate Drop counter
 
 The command syntax for activating drop counter is as follows, when mandatory parameters are not present, it throws out error. Drop counter Type and group and atleast one drop reason are mandatory parameters.
 
@@ -761,6 +762,8 @@ SONiC(config)# no drop-counters DEBUG_2
 # Delete drop reasons from counter
 SONiC(config)# drop-counters DEBUG_2
 SONiC(config-drop-counters-DEBUG2)# delete EXCEEDS_L2_MTU
+```
 
 # Broadcom Internal Information : To be removed before publishing externally.
+
 Supported drop counters and mirror support per each ASIC will be documented later and updated here.
