@@ -76,7 +76,7 @@
 <span style="color:red"> </span>![Topology](Yang_Patch.png "Figure: Topology 1")
 
 #### Topology 1
-######Topology Description -
+Topology Description -
 - Make sure management port of DUT(eth0) is connected to network.
 
 ## 3 Test Case and objectives
