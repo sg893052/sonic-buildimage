@@ -66,6 +66,7 @@
 * [9 Acknowledgements](#9-acknowledgements)
 * [10 References](#10-references)
 * [11 Sample Configuration](#11-sample-configuration)
+- [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information---to-be-removed-before-publishing-externally)
 # List of Tables
 * [Table 1: Abbreviations](#definitionsabbreviation)
 
@@ -128,12 +129,18 @@ Some have suggested other deployment schemes to try to sample the specific types
 
 ### 1.1.4 Capture drop frames
 Capturing dropped frames is useful in some cases to enhance debugging. The captured frames can be mirrored to CPU or any other physical port and can be analysed further.
+
+Frames mirrored to CPU are mirrored to specific drop counter queue. proc entry will be added to display the captured frames. The frames trapped on specific drop counter queue are not sent to the Linux stack and will be dropped in the knet driver. Users can however capture the frames by reading proc entry. 
+The proc entry shows last 512 frames captured on the drop counter queue.
+
+DUT# cat /proc/bcm/knet-cb/drop_pkt_dump
+
 # 2 Requirements
 
 ## 2.1 Functional Requirements
 1. CONFIG_DB can be configured to create debug counters
 2. STATE_DB can be queried for debug counter capabilities
-3. Users can access drop counter information via a KLISH, GNMI, REST interfaces.
+3. Users can access drop counter information via a Click/ KLISH, GNMI, REST interfaces.
     1. Users can see what capabilities are available to them
         1. Types of counters (i.e. port-level and/or switch-level)
         2. Number of counters
@@ -384,56 +391,20 @@ Flex counter will be extended to support switch-level SAI counters.
 [SAI Debug Counter Proposal](https://github.com/itaibaz/SAI/blob/a612dd21257cccca02cfc6dab90745a56d0993be/doc/SAI-Proposal-Debug-Counters.md) captures all API and drop counter lists.
 Here we are capturing new changes proposed for this feature.
 
-Following counter types are added to capture drop reasons which can support mirroring.
+Mirror session attribute is added to allow quering whether the drop can be mirrored.
 ```
-typedef enum _sai_debug_counter_type_t
-{
-    /** Port in drop reasons which support mirroring. Base object : SAI_OBJECT_TYPE_PORT */
-    SAI_DEBUG_COUNTER_TYPE_PORT_IN_MIRROR_SUPPORTED_DROP_REASONS,
+List of drop reasons which can support mirroring will be returned for SAI_DEBUG_COUNTER_ATTR_TYPE 
 
-    /** Port out drop reasons which support mirroring. Base object : SAI_OBJECT_TYPE_PORT */
-    SAI_DEBUG_COUNTER_TYPE_PORT_OUT_MIRROR_SUPPORTED_DROP_REASONS,
-
-    /**
-     * @brief Switch in drop reasons which support mirroring
-     *
-     * Base object: SAI_OBJECT_TYPE_SWITCH.
-     * Values for all ports in the switch are summed up by switch counter
-     */
-    SAI_DEBUG_COUNTER_TYPE_SWITCH_IN_MIRROR_SUPPORTED_DROP_REASONS,
-
-    /**
-     * @brief Switch out drop reasons which support mirroring
-     *
-     * Base object: SAI_OBJECT_TYPE_SWITCH.
-     * Values for all ports in the switch are summed up by switch counter
-     */
-    SAI_DEBUG_COUNTER_TYPE_SWITCH_OUT_MIRROR_SUPPORTED_DROP_REASONS,
-
-} sai_debug_counter_type_t;
-```
-
-Mirror session attribute is added to allow configuring mirror session for drop counter
-```
-/**
- * @brief Attribute Id in sai_set_counter_attribute() and
- * sai_get_counter_attribute() calls
- */
 typedef enum _sai_debug_counter_attr_t
 {
     /**
-     * @brief Mirror session configuration
+     * @brief List of drop reasons that can be mirrored
      *
-     * @type SAI_OBJECT_TYPE_MIRROR_SESSION
+     * @type sai_s32_list_t sai_in_drop_reason_t
      * @flags CREATE_AND_SET
      * @default empty
-     * @validonly SAI_DEBUG_COUNTER_ATTR_TYPE == SAI_DEBUG_COUNTER_TYPE_PORT_IN_MIRROR_SUPPORTED_DROP_REASONS or
-     * SAI_DEBUG_COUNTER_ATTR_TYPE == SAI_DEBUG_COUNTER_TYPE_PORT_OUT_MIRROR_SUPPORTED_DROP_REASONS or
-     * SAI_DEBUG_COUNTER_ATTR_TYPE == SAI_DEBUG_COUNTER_TYPE_SWITCH_IN_MIRROR_SUPPORTED_DROP_REASONS or
-     * SAI_DEBUG_COUNTER_ATTR_TYPE == SAI_DEBUG_COUNTER_TYPE_SWITCH_OUT_MIRROR_SUPPORTED_DROP_REASONS
-     * @isresourcetype true
      */
-    SAI_DEBUG_COUNTER_ATTR_MIRROR_SESSION,
+    SAI_DEBUG_COUNTER_ATTR_DROP_REASON_MIRROR_LIST,
 }
 ```
 ## 3.8 KLISH CLI
@@ -456,12 +427,12 @@ The CLI tool will provide the following functionality
 #### 3.8.1.1 Show available counter capabilities
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show** **dropcounters** **capabilities**  |
+| Syntax | SONiC# **show** **drop-counters** **capabilities**  |
 
 
 ***Sample Output:***
 ```
-sonic# show dropcounters capabilities
+sonic# show drop-counters capabilities
 Counter Type                      Total
 --------------------              -------
 PORT_INGRESS_DROPS                 10
@@ -495,111 +466,185 @@ PORT_MIRROR_SUPPORTED_INGRESS_DROPS:
 #### 3.8.1.2 Show current counter configuration
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show** **dropcounters** **configuration** [ **group** ∗NAME∗] |
+| Syntax | SONiC# **show** **drop-counters** **configuration** [ **group** ∗NAME∗] |
 ```
-sonic# show dropcounters configuration
+sonic# show drop-counters configuration
 Counter   Alias     Group  Type                Mirror          Reasons              Description
 --------  --------  -----  ------------------  -------         -------------------  --------------
 DEBUG_0   RX_LEGIT  LEGIT  PORT_INGRESS_DROPS  Session1        SMAC_EQUALS_DMAC     Legitimate port-level RX pipeline drops
                                                                INGRESS_VLAN_FILTER
 DEBUG_1   TX_LEGIT  None   SWITCH_EGRESS_DROPS NA              EGRESS_VLAN_FILTER   Legitimate switch-level TX pipeline drops
 
-sonic# show dropcounters configuration group LEGIT
+sonic# show drop-counters configuration group LEGIT
 Counter   Alias     Group  Type                Mirror          Reasons              Description
 --------  --------  -----  ------------------  -------         -------------------  --------------
 DEBUG_0   RX_LEGIT  LEGIT  PORT_INGRESS_DROPS  Session1        SMAC_EQUALS_DMAC     Legitimate port-level RX pipeline drops
                                                                INGRESS_VLAN_FILTER
 ```
 #### 3.8.1.3 Show interface drop counters
-| Mode   | Exec |
-| ------ | ------------------- |
-| Syntax | SONiC# **show** **interface** **dropcounters** [**Ethernet** *ID* ] |
-| Arguments | *ID*: Number of Ethernet port |
+
+The following command lists the interface drop counters 
+
 ```
-sonic#show interface dropcounters
+# display all interface drop counters
+sonic#show interface drop-counters
+
+# display specific interface drop counters
+sonic#show interface drop-counters Ethernet 0
+
+# display specific group drop counters
+sonic#show interface drop-counters group <GRP_NAME>
+
+```
+Sample usage shown below.
+
+```
+sonic#show interface drop-counters
     IFACE    STATE    RX_ERR    RX_DROPS    TX_ERR    TX_DROPS   RX_LEGIT
 ---------  -------  --------  ----------  --------  ----------  ---------
 Ethernet0        U        10         100         0           0         20
 Ethernet4        U         0        1000         0           0        100
 Ethernet8        U       100          10         0           0          0
 
-sonic#show interface dropcounters Ethernet 0
+sonic#show interface drop-counters Ethernet 0
     IFACE    STATE    RX_ERR    RX_DROPS    TX_ERR    TX_DROPS   RX_LEGIT
 ---------  -------  --------  ----------  --------  ----------  ---------
 Ethernet0        U        10         100         0           0         20
+
+sonic#show interface drop-counters group RX_LEGIT
+    IFACE  RX_LEGIT
+---------  -------- 
+Ethernet0       20
+Ethernet4       20
+
 ```
 #### 3.8.1.4 Show switch drop counters
-| Mode   | Exec |
-| ------ | ------------------- |
-| Syntax | SONiC# **show** **switch** **dropcounters**  |
+
+The following command lists the switch level drop counters. Please refer SAI spec for supported drop counters at switch level.
+
 ```
-sonic#show switch dropcounters
+sonic#show switch drop-counters
+```
+Sample usage shown below
+
+```
+sonic#show switch drop-counters
 DEVICE  TX_LEGIT
 ------  --------
 sonic       1000
 ```
 ### 3.8.2 Clear Commands
+
+All clear commands are listed below.
+
 ### 3.8.2.1 Clear drop counters
-| Mode   | Exec |
-| ------ | ------------------- |
-| Syntax | SONiC# **clear** **dropcounters** [ **all** \| **interface** [ **all** \| **Ethernet** *ID* ]] |
-| Arguments | *ID*: Number of Ethernet port |
+The following command clears all/ specific interface drop counters.
 
 ```
-sonic#clear dropcounters all
+sonic#clear drop-counters [ all| interface [all|<interface_name>]]
+```
+
+Sample usage shown below.
+```
+sonic#clear drop-counters all
 Clear all drop counters [confirm y/N]: y
-sonic#clear dropcounters interface all
+sonic#clear drop-counters interface all
 Clear all interface drop counters [confirm y/N]: y
-sonic#clear dropcounters interface Ethernet 0
+sonic#clear drop-counters interface Ethernet 0
 Clear counters for Ethernet0 [confirm y/N]:
 ```
 ### 3.8.3 Config Commands
 ### 3.8.3.1 Create or Delete drop counter
 
-| Mode | Config |
-| ---- | ------ |
-| Syntax | sonic(config)# [no] **dropcounters** *NAME* |
-| Arguments | ***NAME***: Name of the drop counter. String max 24 characters. Must begin with alpha numeric character |
+The command syntax for creating/deleting drop counter is as follows:
+```
+sonic (config)# [no] drop-counters *NAME*
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `drop_counter_name`               | Name of the drop counter. String max 32 characters. Must begin with alpha numeric character |
 
 
 ### 3.8.3.2 Add or delete drop reasons
-| Mode | DROPCOUNTERS |
-| ---- | ------ |
-| Syntax | sonic(config-xxx-dropcounters)# **add** *DROP_REASON* <br/>sonic(config-xxx-acl)# **delete** *DROP_REASON* |
-| Arguments | ***DROP_REASON***: Any supported drop reason from **show dropreasons capabilities** |
+
+The command syntax for adding/deleting drop-reason to a drop-counter is as follows.
+Drop reasons can be added or deleted when the drop counter is active. The counters however will not be cleared during adding or deleting a drop counter.
+
+```
+sonic(config-drop-counters-NAME)# **add-reason** *DROP_REASON_LIST* 
+
+sonic(config-drop-counters-NAME)# **delete-reason**  *DROP_REASON* 
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `DROP_REASON_LIST`               |List of supported drop reason from **show dropreasons capabilities** |
+
 ### 3.8.3.3 Add or delete description 
 
-| Mode | DROPCOUNTERS |
-| ---- | ------ |
-| Syntax | sonic(config-xxx-dropcounters)# **description** *STRING*<br/>sonic(config-xxx-acl)# **no description** |
-| Arguments | ***STRING***: A string describing the Drop counter. Must be in double quotes if it contains spaces. |
+The command syntax for adding/deleteing description to a drop-counter is as follows.
+
+```
+sonic(config-drop-counters-NAME)# **description** *STRING* 
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `STRING`               |A string describing the Drop counter. Must be in double quotes if it contains spaces.|
 
 ### 3.8.3.4 Set drop counter type 
 
-| Mode | DROPCOUNTERS |
-| ---- | ------ |
-| Syntax | sonic(config-xxx-dropcounters)# [no] **type** *TYPE*<br/>sonic(config-xxx-acl)# **no description** |
-| Arguments | ***TYPE***: Drop Counter type.(Ex: PORT_INGRESS_DROPS) 
+The command syntax for setting drop-counter type to a drop-counter is as follows.
+
+```
+sonic(config-drop-counters-NAME)# [no] **type** *TYPE*
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `TYPE`               |Drop Counter type.(Ex: PORT_INGRESS_DROPS)|
 
 ### 3.8.3.5 Add or delete group
 
-| Mode | DROPCOUNTERS |
-| ---- | ------ |
-| Syntax | sonic(config-xxx-dropcounters)# **group** *STRING*<br/>sonic(config-xxx-acl)# **no description** |
-| Arguments | ***STRING***: A string describing the Drop counter group. |
+The command syntax for adding/deleting group to a drop-counter is as follows.
+All drop counters which are legitimate drops, can be  added to RX_LEGIT group. This group will be shown later in show drop counter commands.
+
+```
+sonic(config-drop-counters-NAME)# [no] **group** *STRING*
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `STRING`               |A string describing the Drop counter group.|
 
 ### 3.8.3.6 Add or delete Alias 
 
-| Mode | DROPCOUNTERS |
-| ---- | ------ |
-| Syntax | sonic(config-xxx-dropcounters)# **alias** *STRING*<br/>sonic(config-xxx-acl)# **no description** |
-| Arguments | ***STRING***: Alias string for the Drop counter |
+The command syntax for adding/deleting alias to a drop-counter is as follows. Alias can be configured to have user friendly name to a drop counter.
 
-### 3.8.3.7 Install Drop counter
+When alias is not configured, group is used as alias for the drop-counter.
 
-| Mode | DROPCOUNTERS |
-| ---- | ------ |
-| Syntax | sonic(config-xxx-dropcounters)# [no] **install**
+```
+sonic(config-drop-counters-NAME)# [no] **alias** *STRING*
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `STRING`               |Alias string for the Drop counter|
+
+### 3.8.3.6 Add or delete mirror session 
+
+The command syntax for adding/deleting mirror-session to a drop-counter. Mirror session has to be created before this command. If the session is active, then the drop-counter will be installed in ASIC.
+when session goes active/inactive, the drop counter config will be configured/removed from ASIC.
+
+```
+sonic(config-drop-counters-NAME)# [no] **mirror-session** *NAME*
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `NAME`               |Mirror session name to be associated with the Drop counter|
+
+### 3.8.3.7 Active Drop counter
+
+The command syntax for activating drop counter is as follows, when mandatory parameters are not present, it throws out error. Drop counter Type and group and atleast one drop reason are mandatory parameters.
+
+```
+sonic(config-drop-counters-NAME)# [no] **activate**
+```
 
 ## 3.9 SONIC Yang model
 
@@ -625,7 +670,9 @@ The overall workflow is shown above in figure 1.
 (6) (not shown) CLI uses State DB to display hardware capabilities (e.g. how many counters are available, supported drop reasons, etc.)
 
 # 5 Warm Reboot Support
-Supports full warm reboot functionality.
+
+No special handling is done for the warm boot case. The drop counter configuration is restored from the Config DB and drop counter functionality will continue to work as it is through a warm boot.
+Counters will be cleared during warm-reboot same as other interface counters
 
 # 6 Unit Tests
 This feature comes with a full set of virtual switch tests in SWSS.
@@ -672,7 +719,6 @@ New tests will be added using spytest framework.
 # 7 Platform Support
 In order to make this feature platform independent, we rely on SAI query APIs (described above) to check for what counter types and drop reasons are supported on a given device. As a result, drop counters are only available on platforms that support both the SAI drop counter API as well as the query APIs, in order to preserve safety.
 
-Supported drop counters and mirror support per each ASIC will be documented later and updated here.
 # 7.1 Known Limitations
 * BRCM SAI:
     - ACL_ANY, DIP_LINK_LOCAL, SIP_LINK_LOCAL, and L3_EGRESS_LINK_OWN are all based on the same underlying counter in hardware, so enabling any one of these reasons on a drop counter will (implicitly) enable all of them.
@@ -699,21 +745,22 @@ admin@sonic:~$ sudo config dropcounters delete DEBUG_2
 admin@sonic:~$ sudo config dropcounters install DEBUG_2 PORT_INGRESS_DROPS [EXCEEDS_L2_MTU,DECAP_ERROR] -d "More port ingress drops" -g BAD -a BAD_DROPS -m Mirror1
 
 # Create and install drop counter
-SONiC(config)# dropcounters DEBUG_2
-SONiC(config-dropcounters-DEBUG2)#description "More port ingress drops"
-SONiC(config-dropcounters-DEBUG2)#group "BAD"
-SONiC(config-dropcounters-DEBUG2)#alias "BAD_DROPS"
-SONiC(config-dropcounters-DEBUG2)#add EXCEEDS_L2_MTU
-SONiC(config-dropcounters-DEBUG2)#add DECAP_ERROR
-SONiC(config-dropcounters-DEBUG2)#add SIP_CLASS_E
-SONiC(config-dropcounters-DEBUG2)#type PORT_MIRROR_SUPPORTED_INGRESS_DROPS
-SONiC(config-dropcounters-DEBUG2)#mirror Session1
-SONiC(config-dropcounters-DEBUG2)#install
-SONiC(config-dropcounters-DEBUG2)#add SIP_CLASS_E
+SONiC(config)# drop-counters DEBUG_2
+SONiC(config-drop-counters-DEBUG2)#description "More port ingress drops"
+SONiC(config-drop-counters-DEBUG2)#group "BAD"
+SONiC(config-drop-counters-DEBUG2)#alias "BAD_DROPS"
+SONiC(config-drop-counters-DEBUG2)#add-reason EXCEEDS_L2_MTU,DECAP_ERROR,SIP_CLASS_E
+SONiC(config-drop-counters-DEBUG2)#type PORT_MIRROR_SUPPORTED_INGRESS_DROPS
+SONiC(config-drop-counters-DEBUG2)#mirror Session1
+SONiC(config-drop-counters-DEBUG2)#install
+SONiC(config-drop-counters-DEBUG2)#add SIP_CLASS_E
 
 # Delete drop counter
-SONiC(config)# no dropcounters DEBUG_2
+SONiC(config)# no drop-counters DEBUG_2
 
 # Delete drop reasons from counter
-SONiC(config)# dropcounters DEBUG_2
-SONiC(config-dropcounters-DEBUG2)# delete EXCEEDS_L2_MTU
+SONiC(config)# drop-counters DEBUG_2
+SONiC(config-drop-counters-DEBUG2)# delete EXCEEDS_L2_MTU
+
+# Broadcom Internal Information : To be removed before publishing externally.
+Supported drop counters and mirror support per each ASIC will be documented later and updated here.
