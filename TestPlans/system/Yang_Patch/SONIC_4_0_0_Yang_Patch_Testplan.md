@@ -7,6 +7,7 @@
 | Rev  | Date       | Author          | Change Description |
 | ---- | ---------- | --------------- | ------------------ |
 | 0.1  | 6/28/2021  | Jagadish Ch     | Initial Version    |
+| 0.2  | 6/28/2021  | Jagadish Ch     | Fixed alignment issues    |
 
 ## List of Reviewers
 
@@ -36,40 +37,40 @@
 ## 1 Test Focus Areas
 
 ### 1.1 Functional Testing
-  - Verify "patch-id" and "edit-id" accept any combination of characters.
-  - Verify that yang patch operations "insert" and "move" are not supported.
-  - Verify the yang patch operation "create" is successful for a new data resource.
-  - Verify the yang patch operation "delete" is successful for an existing data resource.
-  - Verify the yang patch operation "merge" is successful and creates the edit value if data resource doesn't exist.
-  - Verify the yang patch operation "merge" is successful and merges the edit value if the data resource exists.
-  - Verify the yang patch operation "replace" is successful and replaces the existing data resource with edit value.
-  - Verify the yang patch operation "remove" is successful and removes the existing data resource.
-  - Verify that yang patch call will not proceed if "edit-id"/"operation"/"target" is missing in edit.
-  - Verify that yang patch call will not proceed if "patch-id" is missing.
-  - Verify that edits are processed in client specified order.
-  - Verify if any of the edit operations fails then the whole configuration won't be applied.
-  - Verify that there is no relation between "patch-id" and "edit-id" of two consecutive yang patch calls.
-  - Verify that yang patch operation will be successful even if the "patch-id" and "edit-id" are the same.
-  - Verify the yang patch operation with target sub-resource as "/".
-  - Verify yang patch operation calls with different target sub-resources(including "/").
-  - Verify the yang patch fails if we use sub-resource not as list while that target sub-resource points to list.
-  - Verify yang patch call with target sub-resources as containers with different types(list, non-list), container-leaf with different types(list, non-list).
-  - Verify yang patch with all supported edit operations(single yang patch call).
+  - Verify "patch-id" and "edit-id" accept any combination of characters.
+  - Verify that yang patch operations "insert" and "move" are not supported.
+  - Verify the yang patch operation "create" is successful for a new data resource.
+  - Verify the yang patch operation "delete" is successful for an existing data resource.
+  - Verify the yang patch operation "merge" is successful and creates the edit value if data resource doesn't exist.
+  - Verify the yang patch operation "merge" is successful and merges the edit value if the data resource exists.
+  - Verify the yang patch operation "replace" is successful and replaces the existing data resource with edit value.
+  - Verify the yang patch operation "remove" is successful and removes the existing data resource.
+  - Verify that yang patch call will not proceed if "edit-id"/"operation"/"target" is missing in edit.
+  - Verify that yang patch call will not proceed if "patch-id" is missing.
+  - Verify that edits are processed in client specified order.
+  - Verify if any of the edit operations fails then the whole configuration won't be applied.
+  - Verify that there is no relation between "patch-id" and "edit-id" of two consecutive yang patch calls.
+  - Verify that yang patch operation will be successful even if the "patch-id" and "edit-id" are the same.
+  - Verify the yang patch operation with target sub-resource as "/".
+  - Verify yang patch operation calls with different target sub-resources(including "/").
+  - Verify the yang patch fails if we use sub-resource not as list while that target sub-resource points to list.
+  - Verify yang patch call with target sub-resources as containers with different types(list, non-list), container-leaf with different types(list, non-list).
+  - Verify yang patch with all supported edit operations(single yang patch call).
 
 ### 1.2 Negative Testing
-  - Verify the yang patch operation "create" returns error for an existing data resource.
-  - Verify the yang patch operation "delete" returns an error for a non-existing data resource.
-  - Verify the yang patch operation "replace" fails if the data resource doesn't exist.
-  - Verify the yang patch operation "remove" doesn't report any error for non-existing data resources.
-  - Verify that yang patch operation fails, with invalid edit "operation" e.g "operation" : "config".
-  - Verify yang patch fails with duplicate "edit-id" for different edits.
-  - Verify the error message while trying with invalid "value"(JSON).
-  - Verify that target resource will not accept "/".
-  - Verify that yang patch call will fail if we try edit operations delete/remove with value resource.
+  - Verify the yang patch operation "create" returns error for an existing data resource.
+  - Verify the yang patch operation "delete" returns an error for a non-existing data resource.
+  - Verify the yang patch operation "replace" fails if the data resource doesn't exist.
+  - Verify the yang patch operation "remove" doesn't report any error for non-existing data resources.
+  - Verify that yang patch operation fails, with invalid edit "operation" e.g "operation" : "config".
+  - Verify yang patch fails with duplicate "edit-id" for different edits.
+  - Verify the error message while trying with invalid "value"(JSON).
+  - Verify that target resource will not accept "/".
+  - Verify that yang patch call will fail if we try edit operations delete/remove with value resource.
 
 ### 1.3 Scalability Testing
-  - Verify that yang patch is successful with max number of characters for "patch-id" and "edit-id".
-  - Verify yang patch with max number of edit operations.
+  - Verify that yang patch is successful with max number of characters for "patch-id" and "edit-id".
+  - Verify yang patch with max number of edit operations.
 
 ## 2 Topologies
 <span style="color:red"> </span>![Topology](Yang_Patch.png "Figure: Topology 1")
