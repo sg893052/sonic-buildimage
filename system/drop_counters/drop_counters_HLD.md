@@ -54,7 +54,7 @@
             - [3.8.3.5 Add or delete group](#3835-add-or-delete-group)
             - [3.8.3.6 Add or delete alias](#3836-add-or-delete-alias)
             - [3.8.3.7 Add or delete mirror session](#3837-add-or-delete-mirror-session)
-            - [3.8.3.8 Activate Drop counter](#3838-activate-drop-counter)
+            - [3.8.3.8 Enable Drop counter](#3838-enable-drop-counter)
     - [3.9 SONIC Yang model](#39-sonic-yang-model)
     - [3.10 Open config Yang model](#310-open-config-yang-model)
 * [4 Flows](#4-flows)
@@ -493,7 +493,6 @@ sonic#show interface dropcounters
 # display specific interface drop counters
 sonic#show interface dropcounters Ethernet 0
 
-
 ```
 Sample usage shown below.
 
@@ -631,12 +630,12 @@ sonic(config-dropcounters-NAME)# [no] **mirror-session** *NAME*
 |--------------------------|-------------------------------------|
 | `NAME`               |Mirror session name to be associated with the Drop counter|
 
-### 3.8.3.8 Activate Drop counter
+### 3.8.3.8 Enable Drop counter
 
-The command syntax for activating drop counter is as follows, when mandatory parameters are not present, it throws out error. Drop counter Type and group and atleast one drop reason are mandatory parameters.
+The command syntax for enabling drop counter is as follows, when mandatory parameters are not present, it throws out error. Drop counter Type and group and atleast one drop reason are mandatory parameters.
 
 ```
-sonic(config-dropcounters-NAME)# [no] **activate**
+sonic(config-dropcounters-NAME)# [no] **enable**
 ```
 
 ## 3.9 SONIC Yang model
