@@ -428,12 +428,12 @@ The CLI tool will provide the following functionality
 #### 3.8.1.1 Show available counter capabilities
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show** **drop-counters** **capabilities**  |
+| Syntax | SONiC# **show** **dropcounters** **capabilities**  |
 
 
 ***Sample Output:***
 ```
-sonic# show drop-counters capabilities
+sonic# show dropcounters capabilities
 Counter Type                      Total
 --------------------              -------
 PORT_INGRESS_DROPS                 10
@@ -467,16 +467,16 @@ PORT_MIRROR_SUPPORTED_INGRESS_DROPS:
 #### 3.8.1.2 Show current counter configuration
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | SONiC# **show** **drop-counters** **configuration** [ **group** ∗NAME∗] |
+| Syntax | SONiC# **show** **dropcounters** **configuration** [ **group** ∗NAME∗] |
 ```
-sonic# show drop-counters configuration
+sonic# show dropcounters configuration
 Counter   Alias     Group  Type                Mirror          Reasons              Description
 --------  --------  -----  ------------------  -------         -------------------  --------------
 DEBUG_0   RX_LEGIT  LEGIT  PORT_INGRESS_DROPS  Session1        SMAC_EQUALS_DMAC     Legitimate port-level RX pipeline drops
                                                                INGRESS_VLAN_FILTER
 DEBUG_1   TX_LEGIT  None   SWITCH_EGRESS_DROPS NA              EGRESS_VLAN_FILTER   Legitimate switch-level TX pipeline drops
 
-sonic# show drop-counters configuration group LEGIT
+sonic# show dropcounters configuration group LEGIT
 Counter   Alias     Group  Type                Mirror          Reasons              Description
 --------  --------  -----  ------------------  -------         -------------------  --------------
 DEBUG_0   RX_LEGIT  LEGIT  PORT_INGRESS_DROPS  Session1        SMAC_EQUALS_DMAC     Legitimate port-level RX pipeline drops
@@ -488,35 +488,27 @@ The following command lists the interface drop counters
 
 ```
 # display all interface drop counters
-sonic#show interface drop-counters
+sonic#show interface dropcounters
 
 # display specific interface drop counters
-sonic#show interface drop-counters Ethernet 0
+sonic#show interface dropcounters Ethernet 0
 
-# display specific group drop counters
-sonic#show interface drop-counters group <GRP_NAME>
 
 ```
 Sample usage shown below.
 
 ```
-sonic#show interface drop-counters
+sonic#show interface dropcounters
     IFACE    STATE    RX_ERR    RX_DROPS    TX_ERR    TX_DROPS   RX_LEGIT
 ---------  -------  --------  ----------  --------  ----------  ---------
 Ethernet0        U        10         100         0           0         20
 Ethernet4        U         0        1000         0           0        100
 Ethernet8        U       100          10         0           0          0
 
-sonic#show interface drop-counters Ethernet 0
+sonic#show interface dropcounters Ethernet 0
     IFACE    STATE    RX_ERR    RX_DROPS    TX_ERR    TX_DROPS   RX_LEGIT
 ---------  -------  --------  ----------  --------  ----------  ---------
 Ethernet0        U        10         100         0           0         20
-
-sonic#show interface drop-counters group RX_LEGIT
-    IFACE  RX_LEGIT
----------  -------- 
-Ethernet0       20
-Ethernet4       20
 
 ```
 #### 3.8.1.4 Show switch drop counters
@@ -524,12 +516,12 @@ Ethernet4       20
 The following command lists the switch level drop counters. Please refer SAI spec for supported drop counters at switch level.
 
 ```
-sonic#show switch drop-counters
+sonic#show switch dropcounters
 ```
 Sample usage shown below
 
 ```
-sonic#show switch drop-counters
+sonic#show switch dropcounters
 DEVICE  TX_LEGIT
 ------  --------
 sonic       1000
@@ -542,16 +534,16 @@ All clear commands are listed below.
 The following command clears all/ specific interface drop counters.
 
 ```
-sonic#clear drop-counters [ all| interface [all|<interface_name>]]
+sonic#clear dropcounters [ all| interface [all|<interface_name>]]
 ```
 
 Sample usage shown below.
 ```
-sonic#clear drop-counters all
+sonic#clear dropcounters all
 Clear all drop counters [confirm y/N]: y
-sonic#clear drop-counters interface all
+sonic#clear dropcounters interface all
 Clear all interface drop counters [confirm y/N]: y
-sonic#clear drop-counters interface Ethernet 0
+sonic#clear dropcounters interface Ethernet 0
 Clear counters for Ethernet0 [confirm y/N]:
 ```
 ### 3.8.3 Config Commands
@@ -559,7 +551,7 @@ Clear counters for Ethernet0 [confirm y/N]:
 
 The command syntax for creating/deleting drop counter is as follows:
 ```
-sonic (config)# [no] drop-counters *NAME*
+sonic (config)# [no] dropcounters *NAME*
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -572,9 +564,9 @@ The command syntax for adding/deleting drop-reason to a drop-counter is as follo
 Drop reasons can be added or deleted when the drop counter is active. The counters however will not be cleared during adding or deleting a drop counter.
 
 ```
-sonic(config-drop-counters-NAME)# **add-reason** *DROP_REASON_LIST* 
+sonic(config-dropcounters-NAME)# **add-reason** *DROP_REASON_LIST* 
 
-sonic(config-drop-counters-NAME)# **delete-reason**  *DROP_REASON_LIST* 
+sonic(config-dropcounters-NAME)# **delete-reason**  *DROP_REASON_LIST* 
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -585,7 +577,7 @@ sonic(config-drop-counters-NAME)# **delete-reason**  *DROP_REASON_LIST*
 The command syntax for adding/deleteing description to a drop-counter is as follows.
 
 ```
-sonic(config-drop-counters-NAME)# **description** *STRING* 
+sonic(config-dropcounters-NAME)# **description** *STRING* 
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -596,7 +588,7 @@ sonic(config-drop-counters-NAME)# **description** *STRING*
 The command syntax for setting drop-counter type to a drop-counter is as follows.
 
 ```
-sonic(config-drop-counters-NAME)# [no] **type** *TYPE*
+sonic(config-dropcounters-NAME)# [no] **type** *TYPE*
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -605,10 +597,10 @@ sonic(config-drop-counters-NAME)# [no] **type** *TYPE*
 ### 3.8.3.5 Add or delete group
 
 The command syntax for adding/deleting group to a drop-counter is as follows.
-All drop counters which are legitimate drops, can be  added to RX_LEGIT group. This group will be shown later in show drop counter commands.
+All drop counters which are legitimate drops, can be  added to RX_LEGIT group. This group will be shown later in show drop counter commands. If the group is not configured then it will default to Counter name.
 
 ```
-sonic(config-drop-counters-NAME)# [no] **group** *STRING*
+sonic(config-dropcounters-NAME)# [no] **group** *STRING*
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -618,10 +610,10 @@ sonic(config-drop-counters-NAME)# [no] **group** *STRING*
 
 The command syntax for adding/deleting alias to a drop-counter is as follows. Alias can be configured to have user friendly name to a drop counter.
 
-When alias is not configured, group is used as alias for the drop-counter.
+When alias is not configured, counter name is used as alias for the drop-counter.
 
 ```
-sonic(config-drop-counters-NAME)# [no] **alias** *STRING*
+sonic(config-dropcounters-NAME)# [no] **alias** *STRING*
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -633,7 +625,7 @@ The command syntax for adding/deleting mirror-session to a drop-counter. Mirror 
 when session goes active/inactive, the drop counter config will be configured/removed from ASIC.
 
 ```
-sonic(config-drop-counters-NAME)# [no] **mirror-session** *NAME*
+sonic(config-dropcounters-NAME)# [no] **mirror-session** *NAME*
 ```
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
@@ -644,7 +636,7 @@ sonic(config-drop-counters-NAME)# [no] **mirror-session** *NAME*
 The command syntax for activating drop counter is as follows, when mandatory parameters are not present, it throws out error. Drop counter Type and group and atleast one drop reason are mandatory parameters.
 
 ```
-sonic(config-drop-counters-NAME)# [no] **activate**
+sonic(config-dropcounters-NAME)# [no] **activate**
 ```
 
 ## 3.9 SONIC Yang model
@@ -746,22 +738,22 @@ admin@sonic:~$ sudo config dropcounters delete DEBUG_2
 admin@sonic:~$ sudo config dropcounters install DEBUG_2 PORT_INGRESS_DROPS [EXCEEDS_L2_MTU,DECAP_ERROR] -d "More port ingress drops" -g BAD -a BAD_DROPS -m Mirror1
 
 # Create and install drop counter
-SONiC(config)# drop-counters DEBUG_2
-SONiC(config-drop-counters-DEBUG2)#description "More port ingress drops"
-SONiC(config-drop-counters-DEBUG2)#group "BAD"
-SONiC(config-drop-counters-DEBUG2)#alias "BAD_DROPS"
-SONiC(config-drop-counters-DEBUG2)#add-reason EXCEEDS_L2_MTU,DECAP_ERROR,SIP_CLASS_E
-SONiC(config-drop-counters-DEBUG2)#type PORT_MIRROR_SUPPORTED_INGRESS_DROPS
-SONiC(config-drop-counters-DEBUG2)#mirror Session1
-SONiC(config-drop-counters-DEBUG2)#install
-SONiC(config-drop-counters-DEBUG2)#add SIP_CLASS_E
+SONiC(config)# dropcounters DEBUG_2
+SONiC(config-dropcounters-DEBUG2)#description "More port ingress drops"
+SONiC(config-dropcounters-DEBUG2)#group "BAD"
+SONiC(config-dropcounters-DEBUG2)#alias "BAD_DROPS"
+SONiC(config-dropcounters-DEBUG2)#add-reason EXCEEDS_L2_MTU,DECAP_ERROR,SIP_CLASS_E
+SONiC(config-dropcounters-DEBUG2)#type PORT_MIRROR_SUPPORTED_INGRESS_DROPS
+SONiC(config-dropcounters-DEBUG2)#mirror Session1
+SONiC(config-dropcounters-DEBUG2)#install
+SONiC(config-dropcounters-DEBUG2)#add SIP_CLASS_E
 
 # Delete drop counter
-SONiC(config)# no drop-counters DEBUG_2
+SONiC(config)# no dropcounters DEBUG_2
 
 # Delete drop reasons from counter
-SONiC(config)# drop-counters DEBUG_2
-SONiC(config-drop-counters-DEBUG2)# delete EXCEEDS_L2_MTU
+SONiC(config)# dropcounters DEBUG_2
+SONiC(config-dropcounters-DEBUG2)# delete EXCEEDS_L2_MTU
 ```
 
 # Broadcom Internal Information : To be removed before publishing externally.
