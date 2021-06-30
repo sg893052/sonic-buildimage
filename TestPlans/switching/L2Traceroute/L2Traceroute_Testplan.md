@@ -14,7 +14,7 @@ Rev 1.0
 | Rev  | Date       | Author                        | Change Description                                    |
 | ---- | ---------- | ----------------------------- | ----------------------------------------------------- |
 | 1    | 06/09/2021 | Naveen Nag     | Initial Version                                       |
-|     |            |            |                    |
+| 2 | 06/30/2021 | Naveen Nag | Changed the test case Id. |
 |      |            |            |                    |
 |      |            |            |                    |
 |      |            |            |                    |
@@ -83,7 +83,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.1 To trace the L2 network in a 4 node topology  ** ####
 
-| **Test ID**    | FtOpSoRoL2Trace311                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_311                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To trace the L2 network in a 4 node topology                 |
 | **Test Setup** | **Topology1**                                                |
@@ -94,7 +94,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.2 To trace the L2 network over a port-channel interface ** ####
 
-| **Test ID**    | FtOpSoRoL2Trace312                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_312                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To trace the L2 network over a port-channel interface        |
 | **Test Setup** | **Topology1**                                                |
@@ -105,7 +105,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.3 To verify L2 trace route with tagged, access and mixed combinations  ** ####
 
-| **Test ID**    | FtOpSoRoL2Trace313                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_313                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify L2 trace route with tagged, access and both combinations |
 | **Test Setup** | **Topology1**                                                |
@@ -118,7 +118,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.4 To verify if the L2 traceroute can identify a loop in network** ####
 
-| **Test ID**    | FtOpSoRoL2Trace314                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_314                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify if the L2 traceroute can identify a loop in network |
 | **Test Setup** | **Topology1**                                                |
@@ -129,7 +129,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.5 To verify the L2 trace route in a xSTP enabled network** ####
 
-| **Test ID**    | FtOpSoRoL2Trace315                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_315                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the L2 trace route in a xSTP enabled network       |
 | **Test Setup** | **Topology1**                                                |
@@ -140,7 +140,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.6 To verify the L2 trace route in a Mclag scenario** ####
 
-| **Test ID**    | FtOpSoRoL2Trace316                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_316                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the L2 trace route in a Mclag scenario             |
 | **Test Setup** | **Topology1**                                                |
@@ -151,7 +151,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 #### **3.1.7 To verify the L2 trace route in a ECMP case with L3 protocol enabled** ####
 
-| **Test ID**    | FtOpSoRoL2Trace317                                           |
+| **Test ID**    | L2TRACE_ROUTE_FUNC_317                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the L2 trace route in a ECMP case with L3 protocol enabled |
 | **Test Setup** | **Topology1**                                                |
@@ -164,7 +164,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 ### 3.2.1 To verify the L2 trace route behavior while quering Invalid Mac-address  ###
 
-| **Test ID**    | FtOpSoRoL2Trace321                                           |
+| **Test ID**    | L2TRACE_ROUTE_NEGA_321                                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the L2 trace route behavior while quering Invalid Mac-address |
 | **Test Setup** | **Topology1**                                                |
@@ -177,7 +177,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 ### 3.3.1 To verify the L2 trace route is successful for multiple vlans  ###
 
-| **Test ID**    | FtOpSoRoL2Trace331                                           |
+| **Test ID**    | L2TRACE_ROUTE_SCALE_331                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the L2 trace route is successful for multiple vlans |
 | **Test Setup** | **Topology1**                                                |
@@ -190,7 +190,7 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 
 ### 3.4.1 To verify mem leak and CPU usuage by stressing L2 trace route with the triggers  ###
 
-| **Test ID**    | FtOpSoRoL2Trace341                                           |
+| **Test ID**    | L2TRACE_ROUTE_STRESS_341                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify mem leak and CPU usuage by stressing L2 trace route with the triggers |
 | **Test Setup** | **Topology1**                                                |
