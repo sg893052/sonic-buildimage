@@ -60,6 +60,7 @@
 | 0.1 | 04/05/2021  | Prasanth K V       | Initial version                   |
 | 0.2 | 05/17/2021  | Madhukar K         | Modified portchannel content      |
 | 0.3 | 06/22/2021  | Prasanth K V       | Added REST details and DB schema  |
+| 0.4 | 06/28/2021  | Madhukar K         | Added portchannel details         |
 
 # About this Manual
 This document provides comprehensive functional and design information about the *Interface Down Reason* feature implementation in SONiC.
@@ -182,6 +183,18 @@ A new field, reason, is been added to PORT_TABLE:
     }
 }
 ```
+
+For portchannels, a new field, reason, is been added to LAG_TABLE:  
+```
+"LAG_TABLE": {
+    ":PortChannel20": {
+        ...
+        "reason": "OPER_UP",
+        ...
+    }
+}
+```
+
 A new table is added for keeping track of the events IF_REASON_EVENT:  
 ```
 "IF_REASON_EVENT": {
@@ -189,6 +202,11 @@ A new table is added for keeping track of the events IF_REASON_EVENT:
         "reason": "OPER_UP",
         "event": "PHY_link_up",
         "timestamp": "2021-06-06 09:29:55.639018"
+    }
+    "PortChannel20": {
+        "reason": "OPER_UP",
+        "event": "Portchannel_up",
+        "timestamp": "2021-06-20 15:39:45.439412"
     }
 }
 ```  
@@ -404,6 +422,54 @@ Example response data for link down scenario:
 
 The values for reason can be OPER_UP, PHY_LINK_DOWN, ERR_DISABLED or ADMIN_DOWN.  
 The list of values for event is mentioned in the CLI section.  
+
+For portchannels:
+
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:down-reason
+
+Example response data:
+{
+  "openconfig-interfaces-ext:down-reason": "OPER_UP"
+}
+
+
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:reason-events
+
+Example response data:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "OPER_UP",
+          "event": "Portchannel-up",
+          "timestamp": "2021-06-01 19:23:25.838918"
+        }
+      }
+    ]
+  }
+}
+```
+
+Example response data for link down scenario:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "ERR_DISABLED",
+          "event": "Delay-restore-Down",
+          "timestamp": "2021-06-09 04:47:33.410626"
+        }
+      }
+    ]
+  }
+}
+```
+
+The values for reason can be OPER_UP, ALL_LINKS_DOWN, ERR_DISABLED, LACP_FAIL, MIN_LINKS_NOT_MET or ADMIN_DOWN.  
 
 ### 3.6.4 gNMI Support
 *Generally this is covered by the YANG specification. This section should also cover objects where on-change and interval based telemetry subscriptions can be configured.*
