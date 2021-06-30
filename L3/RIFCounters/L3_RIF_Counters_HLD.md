@@ -181,7 +181,7 @@ Not applicable
 # 6 Warm Boot Support
 
 # 7 Scalability
-
+Not applicable
 # 8 Unit Test
 
 81.  
