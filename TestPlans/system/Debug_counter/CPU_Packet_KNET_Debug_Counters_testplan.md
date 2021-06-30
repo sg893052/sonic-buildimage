@@ -14,7 +14,7 @@ Rev 1.9
 | Rev  | Date       | Author                        | Change Description                                    |
 | ---- | ---------- | ----------------------------- | ----------------------------------------------------- |
 | 1    | 05/19/2021 | Naveen Nag     | Initial Version                                       |
-|     |            |            |                    |
+| 2 | 06/30/2021 | Naveen Nag | Changed the test case ID |
 |      |            |            |                    |
 |      |            |            |                    |
 |      |            |            |                    |
@@ -84,7 +84,7 @@ The supported protocols are
 
 2.1 Topology
 
-![Topology:1](CPU_Pkt_Path_Debug_4.0.png "Figure: CPU Pkt Path ")
+![system](CPU_Pkt_Path_Debug_4.0.png "Topology")
 
 ## 3 Test Case and objectives
 
@@ -94,7 +94,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.1 To verify the UDLD protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu311                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_311                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the UDLD protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
@@ -105,7 +105,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.2 To verify the STP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu312                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_312                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the STP protocol CPU pkt counter                   |
 | **Test Setup** | **Topology1**                                                |
@@ -116,7 +116,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.3 To verify the PTP and LLDP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu313                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_313                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the PTP and LLDP  protocol CPU pkt counter         |
 | **Test Setup** | **Topology1**                                                |
@@ -127,7 +127,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.4 To verify the VRRP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu314                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_314                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the VRRP protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
@@ -138,7 +138,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.5 To verify the OSPF protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu315                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_315                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the OSPF  protocol CPU pkt counter                 |
 | **Test Setup** | **Topology1**                                                |
@@ -151,7 +151,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.6 To verify the BGP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu316                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_316                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the BGP  protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
@@ -162,7 +162,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.7 To verify the ICCP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu317                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_317                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the ICCP protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
@@ -173,7 +173,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.8 To verify the PIM and IGMP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu318                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_318                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the PIM and IGMP protocol CPU pkt counter          |
 | **Test Setup** | **Topology1**                                                |
@@ -182,7 +182,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.9 To verify the ARP, DHCP and ICMP protocol CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu319                                               |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_319                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the ARP, DHCP and ICMP protocol CPU pkt counter    |
 | **Test Setup** | **Topology1**                                                |
@@ -193,7 +193,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.10 To verify the IP2ME and IP2ME_SUBNET CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu3110                                              |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_310                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the IP2ME and IP2ME_SUBNET CPU pkt counter         |
 | **Test Setup** | **Topology1**                                                |
@@ -204,7 +204,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.11 To verify the IPMTU CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu3111                                              |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_311                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the IPMTU CPU pkt counter                          |
 | **Test Setup** | **Topology1**                                                |
@@ -215,7 +215,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 
 #### **3.1.12 To verify the SFLOW CPU pkt counter** ####
 
-| **Test ID**    | FtOpSoRoCpu3112                                              |
+| **Test ID**    | CPU_KNET_DEBUG_FUNC_312                                      |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the SFLOW CPU pkt counter                          |
 | **Test Setup** | **Topology1**                                                |

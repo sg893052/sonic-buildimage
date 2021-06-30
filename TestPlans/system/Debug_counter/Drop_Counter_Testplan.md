@@ -14,7 +14,7 @@ Rev 1.0
 | Rev  | Date       | Author                        | Change Description                                    |
 | ---- | ---------- | ----------------------------- | ----------------------------------------------------- |
 | 1    | 05/27/2021 | Naveen Nag     | Initial Version                                       |
-|     |            |            |                    |
+| 2 | 06/30/2021 | Naveen Nag | Changed the test case ID |
 |      |            |            |                    |
 |      |            |            |                    |
 |      |            |            |                    |
@@ -113,7 +113,7 @@ PORT_MIRROR_SUPPORTED_INGRESS_DROPS:
 
 2.1 Topology
 
-![Topology:1](CPU_Pkt_Path_Debug_4.0.png "Figure: CPU Pkt Path ")
+![system](CPU_Pkt_Path_Debug_4.0.png "Topology")
 
 ## 3 Test Case and objectives
 
@@ -123,7 +123,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 #### **3.1.1 To verify the various Port drop counters with Source Mac ** ####
 
-| **Test ID**    | FtOpSoRoDrop311                                              |
+| **Test ID**    | DROP_CNT_FUNC_311                                            |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the Various port drop counters with source Mac     |
 | **Test Setup** | **Topology1**                                                |
@@ -134,7 +134,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 #### **3.1.2 To verify the various Port drop counters with IP ** ####
 
-| **Test ID**    | FtOpSoRoDrop312                                              |
+| **Test ID**    | DROP_CNT_FUNC_312                                            |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the various port drop counters with source IP      |
 | **Test Setup** | **Topology1**                                                |
@@ -145,7 +145,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 #### **3.1.3 To verify the various Port drop counters for Invalid IP packet** ####
 
-| **Test ID**    | FtOpSoRoDrop313                                              |
+| **Test ID**    | DROP_CNT_FUNC_313                                            |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the various port drop counters for Invalid IP packet |
 | **Test Setup** | **Topology1**                                                |
@@ -156,7 +156,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 #### **3.1.4 To verify the various Port drop counters with ACL and Vlan filter** ####
 
-| **Test ID**    | FtOpSoRoDrop314                                              |
+| **Test ID**    | DROP_CNT_FUNC_314                                            |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the various port drop counters with ACL and Vlan filter |
 | **Test Setup** | **Topology1**                                                |
@@ -167,7 +167,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 #### **3.1.5 To verify the various Port drop counters for Tx side** ####
 
-| **Test ID**    | FtOpSoRoDrop315                                              |
+| **Test ID**    | DROP_CNT_FUNC_315                                            |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the various port drop counters for Tx side         |
 | **Test Setup** | **Topology1**                                                |
@@ -180,7 +180,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 ### 3.2.1 To verify the maximum number of port drop counter groups that can be added in a system  ###
 
-| **Test ID**    | FtOpSoRoDrop321                                              |
+| **Test ID**    | DROP_CNT_SCALE_321                                           |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify the maximum number of port drop counter groups that can be added in a system |
 | **Test Setup** | **Topology1**                                                |
@@ -193,7 +193,7 @@ In order to verify the Drop counters we need to create a custom packet from TGEN
 
 ### 3.3.1 To verify mem leak and CPU usuage by stressing while adding and removing the various filter to the drop counter group  ###
 
-| **Test ID**    | FtOpSoRoDpb331                                               |
+| **Test ID**    | DROP_CNT_STRESS_331                                          |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | To verify mem leak and CPU usuage by stressing while adding and removing the various filter to the drop counter group |
 | **Test Setup** | **Topology1**                                                |
