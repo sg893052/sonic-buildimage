@@ -351,14 +351,14 @@ server <br/> |
 
 
 
-### 3.2.17 Verify DHCP packets should be dropped till authentication is in progress and forwarded after AUTH timeout 
+### 3.2.17 Verify DHCP packets should be dropped till authentication is in progress and forwarded after authentication 
 
 | **Test ID**    | **FtSysPacFunc017**                                          |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify DHCP packets should be dropped till authentication is in progress. After AUTH timeout, DHCP packets should be forwarded and DHCP client should get IP address** |
+| **Test Name**  | **Verify DHCP packets should be dropped till authentication is in progress. After Authentication, DHCP packets should be forwarded and DHCP client should get IP address** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Enable authentication globally and at interface level<br/>2.Verify by default DHCP packets are dropped during authentication  <br/>3. Verify dhcp packets are forwarded once the authentication times out and client gets IP address from server<br/>4. Verify with non-default do1tx timeout values and verify dhcp packets are dropped until the configured timeout value on the interface<br/> |
+| **Steps**      | 1. Enable authentication globally and at interface level<br/>2.Verify by default DHCP packets are dropped during authentication  <br/>3. Verify dhcp packets are forwarded once the authentication gets succeeded and client gets IP address from server<br/> |
 
 
 
