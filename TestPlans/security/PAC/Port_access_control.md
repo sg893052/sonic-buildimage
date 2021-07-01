@@ -266,9 +266,7 @@ Simple devices like camera or printers which do not support 802.1x authenticatio
 | **Test Name**  | **Verify dot1x authenticate port mode force-authorized**     |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1.Enable Dot1x globally and at interface level <br/>2.Configure Radius Server <br/>3. Change the port state of the interface to force-authorized.Verify the same using “show authentication interface <number>” <br/>4.Verify the client is not required to authenticate and is set to "force-authorized"<br/>5. Try accessing the server from Dot1x client. Client should be able to access the
-server <br/> |
-
+| **Steps**      | 1.Enable Dot1x globally and at interface level <br/>2.Configure Radius Server <br/>3. Change the port state of the interface to force-authorized.Verify the same using “show authentication interface <number>” <br/>4.Verify the client is not required to authenticate and is set to "force-authorized"<br/>5. Try accessing the server from Dot1x client. Client should be able to access the server <br/> |
 
 
 
@@ -875,7 +873,6 @@ server <br/> |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Configure multiple RADIUS servers on DUT<br/>2.Initiate client authentication<br/>3.Verify Authenticator DUT sends Access-request to first RADIUS server configured as per server-db<br/>4.Bring down the RADIUS server and verify DUT uses second RADIUS server for authentication<br/> |
-
 
 
 
