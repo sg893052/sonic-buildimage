@@ -67,6 +67,8 @@
   - Verify the port state after warm boot, with warm boot is performed when the port is in suppressed state with non zero recovery-interval less than warm boot time.
   - Verify the Link Flap Error Disable functionality after Reboot/FastReboot.
   - Verify that there is no memory leak with Link Flap Error Disable feature enabled and continuous port flaps are performed on the interface. 
+  - Verify that interface is successfully suppressed and relased when 2K MAC entries are learned on that interface.
+  - Verify that interface is successfully suppressed and relased when 2K ARP/NDP entries are learned on that interface.
   - Verify that user should not be allowed to configure the Link Flap Error Disable on port channel interface and vlan interfaces.
   - Verify the Link Flap Error Disable feature via REST.  
 
@@ -341,11 +343,29 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on all the interfaces with non-default values for flap-threshold, sampling-interval and recovery-interval. <BR />2. Note down the memory usage in the DUT1. <BR /> 3. In DUT2, perform continuous port flaps (shut/no shut) for longer duration on the corresponding ports (that are connected to DUT1 port) as per flap-threshold and sampling-interval. <BR />4. Verify that in DUT1, these ports gets suppressed and released as per the recovery-interval. <BR />5. After long duration of port flaps stopped, and after recovery-interval expire, ports should be released state and operational state should be UP. <BR />5. Note down the memory usage in DUT1. <BR />6. Check the difference between the two readings and based on that report if there is any memory leak.|
 
+#### 3.2.24 Verify that interface is successfully suppressed and relased when 2K MAC entries are learned on that interface. 
+
+| **Test ID**    | **LinkFlapErrorDisable_Func_024**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that interface is successfully suppressed and relased when 2K MAC entries are learned on that interface.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the interfaces with non-default values for flap-threshold, sampling-interval and recovery-interval. <BR />2. Send the L2 tagged traffic from TG2 such that 2K MAC entries are learned on that interface. <BR />3. In DUT2, perform continuous port flaps (shut/no shut) for longer duration on the corresponding ports (that are connected to DUT1 port) as per flap-threshold and sampling-interval. <BR />4. Verify that in DUT1, port gets suppressed and MAC entries on that port are cleared successfully. <BR />5. After recovery-interval check that interface is released and interface is operationally UP. <BR />6. Send the traffic again and check the MAC learning on that port.|
+
+#### 3.2.25 Verify that interface is successfully suppressed and relased when 2K ARP/NDP entries are learned on that interface. 
+
+| **Test ID**    | **LinkFlapErrorDisable_Func_025**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that interface is successfully suppressed and relased when 2K ARP/NDP entries are learned on that interface.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. In DUT1, enable/configure the Link Flap Error Disable feature on the interfaces with non-default values for flap-threshold, sampling-interval and recovery-interval. <BR />2. Send the L2 tagged traffic from TG2 such that 2K (ARP/NDP) entries are learned on that interface. <BR />3. In DUT2, perform continuous port flaps (shut/no shut) for longer duration on the corresponding ports (that are connected to DUT1 port) as per flap-threshold and sampling-interval. <BR />4. Verify that in DUT1, port gets suppressed and ARP/NDP entries on that port are cleared successfully. <BR />5. After recovery-interval check that interface is released and interface is operationally UP. <BR />6. Send the traffic again and check the ARP/NDP learning on that port.|
+
 ### 3.3 Negative Test Cases
 
 #### 3.3.1 Verify that user should not be allowed to configure the Link Flap Error Disable on port channel interface and Vlan interfaces.  
 
-| **Test ID**    | **LinkFlapErrorDisable_Func_024**                                               |
+| **Test ID**    | **LinkFlapErrorDisable_Func_026**                                               |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that user should not be allowed to configure the Link Flap Error Disable on port channel interface and Vlan interfaces.** |
 | **Test Setup** | **Topology 1**                                               |
@@ -358,7 +378,7 @@ Topology Description -
 
 ##### 3.4.1.1 Verify the Link Flap Error Disable feature via REST.
 
-| **Test ID**    | **LinkFlapErrorDisable_Func_025**                                              |
+| **Test ID**    | **LinkFlapErrorDisable_Func_027**                                              |
 | -------------- | ------------------------------------------------------------ |
 | **Test Name**  | **Verify the Link Flap Error Disable feature via REST.** |
 | **Test Setup** | **Topology 1**                                               |
