@@ -26,6 +26,7 @@ System Ready
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/26/2021 |  Senthil Kumar Guruswamy    | Initial version          |
 | 0.2 | 05/24/2021 |  Senthil Kumar Guruswamy    | Full HLD update          | 
+| 0.3 | 07/02/2021 |  Senthil Kumar Guruswamy    | Update		            | 
 
 # About this Manual
 
@@ -64,8 +65,6 @@ New click command "show system status all" will be introduced for knowing the ov
 ### 1.1.1 Functional Requirements
 System Readiness:
 - Identify the host systemd services 
-- Introduce a new json file and HOST_SERVICE table in CONFIG_DB to include the host services.
-- FEATURE table already exists for all docker app services.
 - Sysmonitor to check system status of all the service units from the above tables[FEATURE,HOST_SERVICE] & the Port ready status and then show and post 'FULL SYSTEM READY' status in the STATE_DB.
   In parallel, need to explore if monit can offload these activities from sysmonitor.
   Service status Details:
@@ -188,12 +187,10 @@ System Readiness:
 - Further, the UP_STATUS in STATE_DB will only be checked for those dockers which are in running state and also only when "check_up_status" value is set to True in CONFIG_DB.
 
 - Also, as it is essential for all the ciritical processes in a docker to be running, supervisord's proc-exit-listener must be mandated.
-  - It is noticed that all docker apps except pmon,tam, mgmt-framework has the listener implemented.
-  - These three docker apps to be enforced to implement it.
 
 #### 2.3.1.3 Example:
   - Apps Marking UP_STATUS in STATE_DB'S FEATURE table:
-    - sonic-db-cli STATE_DB HSET FEATURE|udld "UP_STATUS" True
+    - sonic-db-cli STATE_DB HSET "FEATURE|udld" "UP_STATUS" "True"
       1
 
     - sonic-db-cli STATE_DB HGET "FEATURE|udld" "UP_STATUS"
@@ -236,15 +233,12 @@ System Readiness:
 
   
 ### 2.3.2 SONiC Host services:
-- Identified host services will be monitored for its running status.
-- Will have HOST_SERVICE table in CONFIG_DB fed from a new json file with host service details, for a purpose similar to FEATURE table of CONFIG_DB.
-- Each Host service need to set the UP_STATUS flag in STATE_DB's HOST_SERVICE table as similar to Docker service.
+- Host services that are in loaded and active state will be monitored for its running status.
 
 
 ### 2.3.3 PortInitDone Status:
-- Instead of reading PortInitdone status from APPL_DB's PORT_TABLE, read it from STATE_DB's PORT_INI_TABLE.
-- Enhance to get the actual Port closest ready status.
-- If respective services mark its UP_STATUS considering Port ready status, then there is no separate logic check needed by system monitoring tool.
+- Respective services should mark its UP_STATUS considering Port ready status
+- Hence there is no separate logic check needed by system monitoring tool.
 
 
 ### 2.3.4 Core system status:
@@ -252,16 +246,19 @@ System Readiness:
 
 
 ### 2.3.5 Sysmonitor:
-- Sysmonitor thread to montior all the Sonic Service(Docker+Host) states(present in /etc/systemd/system) and process their running status and Up status along with Port Init status.
-
+- Sysmonitor thread to montior all the Sonic Service(Docker+Host) states(present in /etc/systemd/system) and process their running status and Up status.
+- Loaded, enabled/enable-runtime/static , active & running, active & exited state services are considered UP.
+- Inactive and failed state services are considered DOWN.
+- For all docker services, app ready status is read from state db feature table UP_STATUS post checking the check_up_status flag in config db.
+- show system status all command will use socket communication with sysmonitor to get the current status of all the services.
 
 ## 2.4 KLISH/CLICK Commands
 - Only Click commands are supported and not KLISH commands as KLISH will not work if Mgmt-framework service is down.
     - show system status core
     - show system status all
-       Options: summary/detail
-        - show system status all summary
-        - show system status all detail (hidden command)
+       Options: --brief/--detail
+        - show system status all --brief
+        - show system status all --detail
 
 ### 2.4.1 show system status core
 - The output of this command will be same as the "show system status" command output.
@@ -269,58 +266,63 @@ System Readiness:
 
 ### 2.4.2 show system status all
 - All Sonic Services will be monitored for its running and Up status.
-- Port Init will be considered as a service here and its status will be displayed.
+- There is no separate logic to get Port status as it is covered as part of relevant services marking up status.
 - Output format of the CLI :
     
-    <"All services are Ok" / "One or more services have Failed">
-    Service-Name        Service-Status       Up-Status   Fail-Reason
-     <service1>          Status OK            OK          -
-     <service2>          Status Failed        Fail        start-limit-hit
-     <service3>          Status OK            Fail        -
-     PortInit            Status OK            -           -
+    <"System is ready with all the services"/"System is not ready - one or more service have Failed">
+    Service-Name        Service-Status       App-Ready-Status   Fail-Reason
+     <service1>         OK                   OK                 -
+     <service2>         Failed               Failed             start-limit-hit
+     <service3>         OK                   Failed             -
 
 
-     Example 1:
-     All services are Ok
-     Service-Name        Service-Status      Up-Status   Fail-Reason
-      swss                Status OK           OK          -
-      bgp                 Status OK           OK          -
-      hostcfgd            Status OK           OK          -
-      udld                Status OK           OK          -
-      ...
-      PortInit            Status OK           -           -
+    Example 1:
+    root@sonic:/# show system status all
+    System is ready with all the services
+
+    Service-Name                   Service-Status       App-Ready-Status     Fail-Reason
+    as7712-pddf-platform-monitor   OK                   OK                   -
+    bgp                            OK                   OK                   -
+    caclmgrd                       OK                   OK                   -
+    config-setup                   OK                   OK                   -
+    containerd                     OK                   OK                   -
 
     Example 2:
-    One or more services have Failed
-    Service-Name        Service-Status      Up-Status    Fail-Reason
-      swss                Status OK           OK          -
-      bgp                 Status Failed       Fail        start-limit-hit
-      hostcfgd            Status Failed       Fail        start-limit-hit
-      udld                Status OK           OK          -
-      ...
-      PortInit            Status Failed       -           -
+    root@sonic:/# show system status all
+    System is not ready - one or more service have Failed
+
+    Service-Name                   Service-Status       App-Ready-Status     Fail-Reason
+    aaastatsd                      Failed               Failed               start-limit-hit
+    as7712-pddf-platform-monitor   OK                   OK                   -
+    bgp                            OK                   OK                   -
+    caclmgrd                       OK                   OK                   -
+    config-setup                   OK                   OK                   -
 
 
-### 2.4.3 show system status all summary
-- The output of this command will just display the summary of the entire sonic service status.
+### 2.4.3 show system status all --brief
+- The output of this command will just display the brief status of the entire sonic services.
 - Output format of the CLI :
     
-    <"All services are Ok" / "One or more services have Failed"
+    <"System is ready with all the services"/"System is not ready - one or more service have Failed">
+
+    Example 1:
+    root@sonic:/# show system status all --brief
+    System is not ready - one or more service have Failed
+
+    root@sonic:/#
 
 
 
-### 2.4.4 show system status all detail
-- This will be a hidden command
+### 2.4.4 show system status all --detail
 - This command would display systemctl status output of failed services along with "all" option output.
 
 - Output format of the CLI :
 
-    <"All services are Ok" / "One or more services have Failed">
-    Service-Name        Service-Status       Up-Status   Fail-Reason
-     <service1>          Status OK            OK          -
-     <service2>          Status Failed        Fail        start-limit-hit
-     <service3>          Status OK            Fail        -
-     PortInit            Status OK            -           -
+    <"System is ready with all the services"/"System is not ready - one or more service have Failed">
+    Service-Name        Service-Status       App-Ready-Status   Fail-Reason
+     <service1>         OK                   OK                 -
+     <service2>         Failed               Failed             start-limit-hit
+     <service3>         OK                   Failed             -
 
     ● system-health1.service - SONiC system health monitor
       Loaded: loaded (/lib/systemd/system/system-health.service; enabled-runtime;
@@ -332,6 +334,28 @@ System Readiness:
       Active: failed (Result: start-limit-hit) since Thu 2019-02-14 11:21:09 UTC;
       Main PID: 4765 (code=exited, status=0/SUCCESS)
 
+    Example:
+    root@sonic:/# show system status all --detail
+    System is not ready - one or more service have Failed
+
+    Service-Name                   Service-Status       App-Ready-Status     Fail-Reason
+    as7712-pddf-platform-monitor   OK                   OK                   -
+    bgp                            OK                   OK                   -
+    caclmgrd                       OK                   OK                   -
+    ...
+    telemetry                      OK                   OK                   -
+    tpcm                           OK                   OK                   -
+    udld                           Failed               Failed               exit-code
+    updategraph                    OK                   OK                   -
+    vrrp                           OK                   OK                   -
+
+    ● udld.service - UDLD container
+       Loaded: loaded (/usr/lib/systemd/system/udld.service; enabled; vendor preset: enabled)
+       Active: failed (Result: exit-code) since Fri 2021-07-02 11:53:09 UTC; 2h 8min ago
+      Process: 1827 ExecStartPre=/usr/bin/udld.sh start (code=exited, status=255)
+          CPU: 161ms
+
+
 
 ## 2.5 Syslogs
 - Syslog to be generated for any Sonic systemd services that changes event (went down/up).
@@ -339,7 +363,7 @@ System Readiness:
 - At present, a dedicated thread in sysmonitor runs to listen for any service state change events. 
   Upon receiving any state change events, the entire core system services are checked for its status.
 - This needs to be enhanced to identify the particular event service that caused the change and raise a syslog for that service.
-- Also syslog to be generated for "All services are OK" and  "One or more services have Failed" scenario.
+- syslog is generated for "System is ready with all the services" and  "System is not ready - One or more services have Failed" scenario.
 
 
 ## 2.6 Developer Guidelines
@@ -348,12 +372,13 @@ Add entry to init_cfg json file for to indicate if a docker is setting up its UP
 
 
 # 3 Unit Test
-1. Check show system status all output
-2. Check show system status core output
-3. Make any of the docker apps down and check failed apps details are shown
-4. Make any of the host apps down and check failed apps details are shown
-5. Check all critical processes in each docker app are in running state.
-6. Kill one of the critical processes of a docker and see if the docker is exiting.
-7. Check show system status all output
+1. Check show system status all 
+2. Check show system status all --brief
+3. Check show system status all --detail
+4. Check show system status core
+5. Make any of the docker apps down and check failed apps details are shown
+6. Make any of the host apps down and check failed apps details are shown
+7. Check all critical processes in each docker app are in running state.
+8. Kill one of the critical processes of a docker and see if the docker is exiting.
 
 
