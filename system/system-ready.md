@@ -233,7 +233,7 @@ System Readiness:
 
   
 ### 2.3.2 SONiC Host services:
-- Host services that are in loaded and active state will be monitored for its running status.
+- Host services that are in loaded and active state as explained in Section (2.3.5) will be monitored for its running status.
 
 
 ### 2.3.3 PortInitDone Status:
@@ -363,8 +363,23 @@ System Readiness:
 - At present, a dedicated thread in sysmonitor runs to listen for any service state change events. 
   Upon receiving any state change events, the entire core system services are checked for its status.
 - This needs to be enhanced to identify the particular event service that caused the change and raise a syslog for that service.
-- syslog is generated for "System is ready with all the services" and  "System is not ready - One or more services have Failed" scenario.
+- Also, syslog is generated for "System is ready with all the services" and  "System is not ready - One or more services have Failed" scenario, only when there is a change between the two states.
 
+Example 1:
+root@sonic:/# show in-memory-logging | grep "System is not ready - one or more service have Failed"
+Jul 02 11:53:51.020133 [MEM] 2021 sonic INFO system#monitor: System is not ready - one or more service have Failed
+
+Example 2:
+Jul 02 17:04:26.830540 2021 sonic INFO system#monitor: in-memory.service service state changed to [inactive-dead]
+Jul 02 17:05:21.261365 2021 sonic INFO system#monitor: in-memory.service service state changed to [active-exited]
+
+Example 3:
+Jul 02 17:01:00.454978 2021 sonic INFO system#monitor: hostcfgd.service service state changed to [inactive-dead]
+Jul 02 17:01:28.725101 [MEM] 2021 sonic INFO system#monitor: hostcfgd.service service state changed to [active-running]
+
+Example 4:
+Jul 02 16:45:47.557377 2021 sonic INFO system#monitor: sflow.service service state changed to [inactive-dead]
+Jul 02 16:59:49.720197 2021 sonic INFO system#monitor: sflow.service service state changed to [active-running]
 
 ## 2.6 Developer Guidelines
 Docker applications to notify its closest UP status.
