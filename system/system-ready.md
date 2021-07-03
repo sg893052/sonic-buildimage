@@ -186,7 +186,9 @@ System Readiness:
 
 - Further, the UP_STATUS in STATE_DB will only be checked for those dockers which are in running state and also only when "check_up_status" value is set to True in CONFIG_DB.
 
-- Also, as it is essential for all the ciritical processes in a docker to be running, supervisord's proc-exit-listener must be mandated.
+- Also, as it is essential for all the ciritical processes in a docker to be running, supervisord's proc-exit-listener must be mandated except for the below exception.
+  Exception: Dockers which has process restart implemented through supervisord's autorestart property is sufficient and need not exit docker on killing its process.
+  Example, mgmt-framework docker has process restart implemented for its rest-server process.
 
 #### 2.3.1.3 Example:
   - Apps Marking UP_STATUS in STATE_DB'S FEATURE table:
