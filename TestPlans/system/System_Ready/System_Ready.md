@@ -9,7 +9,7 @@ SQA Test Plan
 | Rev  | Date       | Author      | Change Description |
 | ---- | ---------- | ----------- | ------------------ |
 | 1    | 06/14/2021 | Pavan Kumar | Initial Version    |
-|      |            |             |                    |
+| 2    | 07/05/2021 | Pavan Kumar | Revised Version    |
 
 ## List of Reviewers
 
@@ -79,7 +79,7 @@ D1
 | **Test Name**  | **test_system_check_base**                                   |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Bring up the device <br/>2)Verify all the system base line commands to check the system status and validate accordingly <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)Bring up the device <br/>2)Verify all the system base line commands to check the system status and validate accordingly <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all --brief output<br/>- Check show system status all --detail output<br/>- Check show interface status output<br/> |
 
 ### 3.1.2 Make any of the docker apps down and check failed apps details are shown
 
@@ -117,7 +117,7 @@ D1
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Enable one of the host or docker service <br/>2)Verify if the service is shown up in show system status all output |
 
-### 3.1.6 Check show system status all summary output and verify syslog to be generated for "All services are OK" .
+### 3.1.6 Check show system status all output and verify syslog to be generated for "All services are OK" .
 
 | **Test ID**    | **SystemReady_Fun_006**                                      |
 | -------------- | :----------------------------------------------------------- |
@@ -126,7 +126,7 @@ D1
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Bring up the dut <br/>2) Execute show system status all, if all the services were up <br/>3) verify syslog to be generated for "All services are OK" <br/> |
 
-### 3.1.7 Check show system status all summary output and verify syslog to be generated for "One or more services have Failed" .
+### 3.1.7 Check show system status all output and verify syslog to be generated for "One or more services have Failed" .
 
 | **Test ID**    | *SystemReady_Fun_007**                                       |
 | -------------- | :----------------------------------------------------------- |
@@ -155,14 +155,6 @@ D1
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1)Bring up the dut <br/>2) Kill one of the docker service (pmon) and verify if the docker service is exiting. 
 3) verify syslog to be generated for for the service events. |
-### 3.1.10 Verify the system status is up only after all the port initialization is done.
-
-| **Test ID**    | **SystemReady_Fun_010**                                      |
-| -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **test_portinitialization**                                  |
-| **Test Setup** | **D1**                                                       |
-| **Type**       | **Functional**                                               |
-| **Steps**      | 1)Bring up the dut <br/>2) verify system status ready is declared only after the portinit is done from syslog message |
 
 
 ### 3.2 Reboot Test Cases**
@@ -174,7 +166,7 @@ D1
 | **Test Name**  | **test_system_status_warm_reboot**                           |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Warm reboot the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)Warm reboot the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all brief output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
 
 ### 3.2.2 Fast reboot and verify if the services were as expected using the system status CLIs
 
@@ -183,7 +175,7 @@ D1
 | **Test Name**  | **test_system_status_fast_reboot**                           |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Fast reboot the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)Fast reboot the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all brief output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
 
 ### 3.2.3 Config reload and verify if the services were as expected using the system status CLIs
 
@@ -192,7 +184,7 @@ D1
 | **Test Name**  | **test_system_status_config_reload**                         |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)COnfig reload the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)COnfig reload the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all brief output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
 
 ### 3.2.4 Power cycle and verify if the services were as expected using the system status CLIs
 
@@ -201,7 +193,7 @@ D1
 | **Test Name**  | **test_system_status_power_cycle**                           |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Power cycle the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)Power cycle the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all brief output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
 
 ### 3.2.5 Docker restart and verify if the services were as expected using the system status CLIs
 
@@ -210,7 +202,7 @@ D1
 | **Test Name**  | **test_system_status_docker_restart**                        |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Restart the docker on the device  <br/>2) once the docker is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)Restart the docker on the device  <br/>2) once the docker is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all brief output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
 
 ### 3.2.6 Save reboot and verify if the services were as expected using the system status CLIs
 
@@ -219,7 +211,7 @@ D1
 | **Test Name**  | **test_system_status_Save_reboot**                           |
 | **Test Setup** | **D1**                                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1)Save reboot the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all summary output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
+| **Steps**      | 1)Save reboot the device <br/>2) once the dut is up and running, verify the below system status clis using base line test function. <br/>- Check show system status all output<br/>- Check show system status core output<br/>- Check show system status all brief output<br/>- Check show system status all detail output<br/>- Check show interface status output<br/> |
 
 
 
@@ -239,3 +231,6 @@ D1
 **Reference Links**
 
 HLD: https://github.com/BRCM-SONIC/sonic_doc_private/pull/171/files
+
+
+
