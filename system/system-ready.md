@@ -122,8 +122,12 @@ System Readiness:
 #### 2.3.1.1 Categorization of docker apps in marking UP_STATUS: 
 ##### 2.3.1.1.1 Apps to notify its closest UP status:
        - Docker apps which rely on config, can mark UP_STATUS to True in STATE_DB  when they are ready to receive configs from CONFIG_DB and/or some extra dependencies are met.
+       - Along with UP_STATUS, docker apps to update the FAIL_REASON with appropriate reason in case of failure or empty string in case of success.
+       - Also, TIME to be fed in as well.
          
        - sonic-db-cli STATE_DB HSET "FEATURE|<dockername>" UP_STATUS True
+       - sonic-db-cli STATE_DB HSET "FEATURE|<dockername>" FAIL_REASON "<some reason>" / ""
+       - sonic-db-cli STATE_DB HSET "FEATURE|<dockername>" TIME "<timestamp>"
 
        - Schema in STATE_DB
           sonic-db-dump -n STATE_DB output
@@ -131,7 +135,10 @@ System Readiness:
           "FEATURE|<dockername>": {
             "type": "hash",
             "value": {
-              "UP_STATUS": "True"
+              "UP_STATUS": "True",
+              "FAIL_REASON": "",
+              "TIME": "<timestamp>"
+
             }
            },
         - Check example section for clarity.
@@ -251,6 +258,7 @@ System Readiness:
 - Sysmonitor thread to montior all the Sonic Service(Docker+Host) states(present in /etc/systemd/system) and process their running status and Up status.
 - Loaded, enabled/enable-runtime/static , active & running, active & exited state services are considered UP.
 - Inactive and failed state services are considered DOWN.
+- Activating state serices are considered as Starting.
 - For all docker services, app ready status is read from state db feature table UP_STATUS post checking the check_up_status flag in config db.
 - show system status all command will use socket communication with sysmonitor to get the current status of all the services.
 
@@ -269,13 +277,14 @@ System Readiness:
 ### 2.4.2 show system status all
 - All Sonic Services will be monitored for its running and Up status.
 - There is no separate logic to get Port status as it is covered as part of relevant services marking up status.
+- Fail-Reason will be extracted from "Result" property of systemctl command and then displayed appropriately.
 - Output format of the CLI :
     
-    <"System is ready with all the services"/"System is not ready - one or more service have Failed">
+    <"System is ready with all the services"/"System is not ready - one or more services have Failed">
     Service-Name        Service-Status       App-Ready-Status   Fail-Reason
      <service1>         OK                   OK                 -
      <service2>         Failed               Failed             start-limit-hit
-     <service3>         OK                   Failed             -
+     <service3>         OK                   Failed             Inactive
 
 
     Example 1:
@@ -291,25 +300,27 @@ System Readiness:
 
     Example 2:
     root@sonic:/# show system status all
-    System is not ready - one or more service have Failed
+    System is not ready - one or more services have Failed
 
     Service-Name                   Service-Status       App-Ready-Status     Fail-Reason
     aaastatsd                      Failed               Failed               start-limit-hit
     as7712-pddf-platform-monitor   OK                   OK                   -
-    bgp                            OK                   OK                   -
+    bgp                            OK                   Failed               App Initializing
     caclmgrd                       OK                   OK                   -
     config-setup                   OK                   OK                   -
+    ntp-config                     Starting             Starting             -
+    pmon                           OK                   Failed               Transceiver daemon is not up
 
 
 ### 2.4.3 show system status all --brief
 - The output of this command will just display the brief status of the entire sonic services.
 - Output format of the CLI :
     
-    <"System is ready with all the services"/"System is not ready - one or more service have Failed">
+    <"System is ready with all the services"/"System is not ready - one or more services have Failed">
 
     Example 1:
     root@sonic:/# show system status all --brief
-    System is not ready - one or more service have Failed
+    System is not ready - one or more services have Failed
 
     root@sonic:/#
 
@@ -320,7 +331,7 @@ System Readiness:
 
 - Output format of the CLI :
 
-    <"System is ready with all the services"/"System is not ready - one or more service have Failed">
+    <"System is ready with all the services"/"System is not ready - one or more services have Failed">
     Service-Name        Service-Status       App-Ready-Status   Fail-Reason
      <service1>         OK                   OK                 -
      <service2>         Failed               Failed             start-limit-hit
@@ -338,7 +349,7 @@ System Readiness:
 
     Example:
     root@sonic:/# show system status all --detail
-    System is not ready - one or more service have Failed
+    System is not ready - one or more services have Failed
 
     Service-Name                   Service-Status       App-Ready-Status     Fail-Reason
     as7712-pddf-platform-monitor   OK                   OK                   -
@@ -368,8 +379,8 @@ System Readiness:
 - Also, syslog is generated for "System is ready with all the services" and  "System is not ready - One or more services have Failed" scenario, only when there is a change between the two states.
 
 Example 1:
-root@sonic:/# show in-memory-logging | grep "System is not ready - one or more service have Failed"
-Jul 02 11:53:51.020133 2021 sonic INFO system#monitor: System is not ready - one or more service have Failed
+root@sonic:/# show in-memory-logging | grep "System is not ready - one or more services have Failed"
+Jul 02 11:53:51.020133 2021 sonic INFO system#monitor: System is not ready - one or more services have Failed
 
 Example 2:
 Jul 02 17:04:26.830540 2021 sonic INFO system#monitor: in-memory.service service state changed to [inactive/dead]
