@@ -52,7 +52,7 @@ At present, system ready is based on only core docker services(swss ,bgp,teamd,p
 In this HLD, the system ready will be enhanced to consider the overall active systemd services consisting of
 1. All docker services instead of just a few core docker services.
 2. All host services.
-3. The portready status along with portinit.
+3. The portready status along with portinit(should be covered internally by respective services).
 
 With the asynchronous architecture of SONiC, we will not be able to verify if the config has been applied all the way down to the HW. We will add provisions for applications to notify its closest UP status.
 Hence the system ready will NOT indicate the complete system ready but indicates the closest up status.
@@ -65,10 +65,9 @@ New click command "show system status all" will be introduced for knowing the ov
 ### 1.1.1 Functional Requirements
 System Readiness:
 - Identify the host systemd services 
-- Sysmonitor to check system status of all the service units from the above tables[FEATURE,HOST_SERVICE] & the Port ready status and then show and post 'FULL SYSTEM READY' status in the STATE_DB.
-  In parallel, need to explore if monit can offload these activities from sysmonitor.
+- Sysmonitor to check system status of all the service units of sonic targets(multi-user.target) and then shows the status.
   Service status Details:
-    - Check only the status of "enabled" services(host+docker).
+    - Check only the status of "loaded/enabled/enabled-runtime/static" services(host+docker).
     - Docker Services:
         - Read the closest UP status from each docker apps.
         - In addition to checking the dockers, check for all the processes(critical) inside the docker containers.
@@ -77,7 +76,8 @@ System Readiness:
     - List down the failed services and its status.
 
   Port Ready status Details:
-    - As part of show system status, today we consider portInitDone message from SWSS. But this is only the initial port creation in DB, and no way reflects the actual port status. This is the portInitDone from PORTTABLE. However there is one more portInitDone updated by portsyncd in the state DB by portsyncd. This is updated when host interfaces are created in the kernel. We plan to use this one.
+    - Port status should be considered by respective dockers in marking their UP status in STATE DB.
+	- No special handling by sys monitor tool required.
 - New Click CLI
     - "show system status core" will replace the existing "show system status" CLI.
     - "show system status all" to be introduced to cover the overall system status.
