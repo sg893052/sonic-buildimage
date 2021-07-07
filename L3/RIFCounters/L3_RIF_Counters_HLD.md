@@ -88,7 +88,7 @@ Provide Layer 3 Routing Interface counter support in SONIC and SAI. Routing inte
 ## 1.5 Limitiations
 
   - RIF Counters are not supported on Loopback Interfaces
-  - RIF Counters are not supported on TD4, TH4 platforms due to HW limitations / unavailablity of counter resources
+  - RIF Counters are not supported on TD4, TH4 platforms due to HW limitations / unavailability of counter resources
   - RIF Counters does not show error counts, it could be either packets that are valid but not forwarded or invalid packets 
 
 
@@ -143,9 +143,30 @@ Not applicable
 ## 3.6 CLI
 
 ### 3.6.1 Data Models
-Will be updated
+
+Below is high level hierarchy of RIF counters sonic yang model
+
+                      +--ro in-octets?               uint64
+                      +--ro in-pkts?                 uint64
+                      +--ro in-octets-per-second?    decimal64
+                      +--ro in-pkts-per-second?      decimal64
+                      +--ro in-bits-per-second?      decimal64
+                      +--ro in-utilization?          scommon:percentage
+                      +--ro out-octets?              uint64
+                      +--ro out-pkts?                uint64
+                      +--ro out-octets-per-second?   decimal64
+                      +--ro out-pkts-per-second?     decimal64
+                      +--ro out-bits-per-second?     decimal64
+                      +--ro out-utilization?         scommon:percentage
+
 
 ### 3.6.2 Configuration Commands
+
+Below is the command for clearing Layer 3 routing interface counters
+
+        counters rif interval <value>
+	
+Default value for interval is 5 seconds
 
 ### 3.6.3 Show Commands
 
@@ -167,16 +188,23 @@ Here is a sample output of the above command
  ----------------------------------------------------------------------------------------------
 
 
-### 3.6.4 Debug Commands
+### 3.6.4 Clear Commands
 
+Below is the command for configuring interval between 2 consecutive read/fetch for Layer 3 routing interface counters
 
-### 3.6.5 REST API Support
+        clear counters interface rif
+	
+### 3.6.5 Debug Commands
+Not applicable
+
+### 3.6.6 REST API Support
 Will be updated
 
 # 4 Flow Diagrams
 Not applicable
 
 # 5 Serviceability and Debug
+Not applicable
 
 # 6 Warm Boot Support
 
@@ -184,7 +212,20 @@ Not applicable
 Not applicable
 # 8 Unit Test
 
-81.  
+1>    Test L3 forwarding for set of selected routes (IPV4 default vrf) and verify rif counters
+
+2>    Clear rif counters with traffic paused (selected IPV4 routes in default vrf) and verify. Resume traffic and verify rif counters again.
+
+3>    Configure interval to 60 seconds and verify rif counters for traffic (selected IPV4 routes in default vrf) before and after interval expires.
+
+4>    Test L3 forwarding for set of selected routes (IPV4 non default vrf) and verify rif counters
+
+5>    Test L3 forwarding for set of selected routes (IPV6 default vrf) and verify rif counters
+
+6>    Test L3 forwarding for set of selected routes (IPV6 non default vrf) and verify rif counters
+
+7>    Bidirectional traffic from orphan port of Peer1 to local MC-LAG port of Peer1 and verify rif counters.
+ 
 
 # 9 Internal Design Information
 
