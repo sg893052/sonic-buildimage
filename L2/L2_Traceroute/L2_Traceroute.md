@@ -37,7 +37,7 @@ This document provides general overview of L2 Traceroute feature(Trace-L2).
 
 # 1 Introduction and Scope
 
-Trace-L2 can trace all the L2 traffic paths for a given VLAN or to a particular destination device in the given VLAN. The destination device is identified based on its IP, DNS name or unicast-MAC. The main use of the Trace-L2 feature is to provide flexibility to administrators to determine the L2 paths in a L2 topology.
+Trace-L2 can trace all the L2 traffic paths for a given VLAN or to a particular destination device in the given VLAN. The destination device is identified based on its unicast-IP, DNS name or unicast-MAC. The main use of the Trace-L2 feature is to provide flexibility to administrators to determine the L2 paths in a L2 topology.
 Trace-L2 is a proprietary feature and it cannot interop with any other vendors. FYI, cisco has its own proprietary L2-traceroute.
 
 # 2 Requirements Overview
@@ -197,10 +197,17 @@ There is no config CLI.
 
 ##### 3.5.2.2 Show Commands
 
-- trace-l2 show  vlan <vlan_id> mac <destination_address>
-- trace-l2 show  vlan <vlan_id> ip <destination_address>
+- show trace-l2  vlan <vlan_id> mac <destination_address>
+- show trace-l2 vlan <vlan_id> ip <destination_address>
+- show trace-l2 vlan <vlan_id> 
 ```
  The probed topology is displayed using this command.
+ The <destination address> can be a MAC address, an IP address, or a host name. You can enter the
+destination-address in one of the following formats:
+
+- HHHH.HHHH.HHHH – Destination MAC address
+- A.B.C.D – Destination IP address
+- ASCII string – Destination host name
 
 ```
 
@@ -227,12 +234,6 @@ If a destination address is not specified as shown below or the destination does
 This command is used to probe L2 traffic path of a packets in a L2 topology for a specific vlan.
 ```
 
-
-
-* show trace-l2 vlan <vlan_id> mac <destination_address>
-* show trace-l2 vlan <vlan_id> ip <ip_address>
-* show trace-l2 vlan <vlan_id>
-
 # 4 Flow Diagrams
 
 # 5 Serviceability and Debug
@@ -254,8 +255,8 @@ Following are not supported in the first release,
 | ----- | ---------------- | ------------------------------------------------------------ |
 | 1     | Basic            | Verify if all the Trace-L2 CLIs are available and gives necessary options. |
 | 2     | Basic            | Trace-l2 operation on valid vlan                             |
-| 3     | Basic            | Trace-l2 operation on valid host name which is reachable     |
-| 4     | Basic            | Trace-l2 operation on valid host name which is not reachable |
+| 3     |                  |                                                              |
+| 4     |                  |                                                              |
 | 5     | Integration      | Verify Mcast Suppression port works                          |
 | 6     | Negative         | Trace-l2 operation on invalid vlan                           |
 | 7     | Negative         | Trace-l2 operation on invalid host name                      |
@@ -267,7 +268,7 @@ Following are not supported in the first release,
 | 13    | Basic            | Verify that Trace-L2 works on tagged ports                   |
 | 14    | Advanced         | Verify that Trace-L2 works on a mix of tagged and untagged ports |
 | 15    | Basic            | Verify trace-l2 in three node topology                       |
-| 16    | Advanced         | Verify trace-l2 in four node topology                        |
+| 16    |                  |                                                              |
 | 17    | Basic            | Verify that time, input and output ports are displayed accurately |
 | 18    | Basic            | Verify that the topology is held for 10 minutes              |
 | 19    | Basic            | Verify trace-l2 to a destination IP                          |
