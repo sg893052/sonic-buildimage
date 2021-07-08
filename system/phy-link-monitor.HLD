@@ -28,6 +28,7 @@ PHY PCS/PMD status monitoring
 | ----- | ---------- | ------------- | -------------------- |
 |  0.1  | 04/14/2021   | Steven Lu     | Initial proposal
 |  0.2  | 05/21/2021   | Vishnu Shetty | Phase 1 and 2 design |
+|  0.3  | 07/08/2021   | Vishnu Shetty | Review comments |
 
 # About this Manual
 
@@ -256,7 +257,7 @@ Its suggested to use between 1 to 5 sec.
  PMD cdr lock      : ok  since May-04-2021 10:40:00
 ```
 
-The time stamp show last "nok" recorded status.
+The time stamp show last "nok" recorded status. The output will depend on diag mode. Few status entries can be polled in non-diag mode as well.
 
 **show interface pcs counters**
 ```
@@ -270,13 +271,15 @@ The time stamp show last "nok" recorded status.
  FEC symbol errors   : 1234 at May-05-2021 16:49:12
 ```
 
-Show last non-zero value and time stamp. Future enahncement needed to count number of non-zero updates and cumulative counter.
+Show last non-zero value and time stamp. Future enahncement needed to count number of non-zero updates, histogram and cumulative counter.
 
 #### 3.6.2.3 Debug Commands
 
 #### 3.6.2.4 IS-CLI Compliance
   
 ### 3.6.3 REST API Support
+
+Port extenstion yang will be defined to support the REST interface.
 
 ### 3.6.4 Service and Docker Management
   
@@ -286,10 +289,14 @@ Show last non-zero value and time stamp. Future enahncement needed to count numb
 
 # 6 Serviceability and Debug
 
+The PCS commands will be part of tech support dump.
+
 # 7 Warm Boot Support
 
 # 8 Scalability
 
 # 9 Unit Test
+
+Use external devices (ie.g IXIA) to test the counters/status. Not all counters/status supported.
 
 # 10 Internal Design Information
