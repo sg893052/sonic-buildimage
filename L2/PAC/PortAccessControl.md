@@ -1044,6 +1044,7 @@ This command configures the number of supplicants that are re-authenticated per 
 | Mode | Global Config |
 | ---- | ------ |
 | Syntax | [no] authentication critical recovery max-reauth |
+| range | 1-50 |
 | Default | 10 |
 | Change history | SONiC 4.0 - Introduced |
 
@@ -1117,6 +1118,7 @@ This command configures the  number of times authentication may be reattempted b
 | Mode | Interface Config |
 | ---- | ------ |
 | Syntax | authentication event fail retry \<max-attempts\> |
+| range | 1-5 |
 | Default | 3 |
 | Syntax | no authentication event fail retry |
 | Change history | SONiC 4.0 - Introduced |
@@ -1127,6 +1129,7 @@ This command sets the maximum number of clients supported on an interface when m
 | Mode | Interface Config |
 | ---- | ------ |
 | Syntax | authentication max-users \<count\> |
+| range | 1-48 |
 | Default | 48 |
 | Syntax | no authentication max-users |
 | Change history | SONiC 4.0 - Introduced |
@@ -1170,6 +1173,7 @@ For reauthentication to happen after the configured or server provided timeout, 
 | Syntax | authentication timer reauthenticate \{ \<seconds\> \| server \} |
 | Default | server  |
 | Syntax | no authentication timer reauthenticate |
+| range | 1-65535 |
 | Change history | SONiC 4.0 - Introduced |
 
 
@@ -1306,7 +1310,7 @@ show  authentication interface 1/1
 
 Authentication Manager Status.................. Enabled
 
-Interface...................................... 1/1
+Interface...................................... Eth1/1
 Authentication Restart timer................... 300
 Configured method order........................ mab undefined undefined
 Enabled method order........................... mab undefined undefined
@@ -1406,7 +1410,7 @@ Example:
 
 Interface  MAC-Address         Method   Host Mode    Control Mode  VLAN Assigned Reason
 ---------  -----------------   -------  ------------ ------------  --------------------------
-1/16       10:8D:B6:C6:00:00   802.1X   multi-host   auto     RADIUS Assigned VLAN (10)
+Eth1/16    10:8D:B6:C6:00:00   802.1X   multi-host   auto     RADIUS Assigned VLAN (10)
 
 	
 	
@@ -1449,8 +1453,8 @@ show authentication authentication-history interface 1/2
 
 Timestamp             Interface  MAC-Address        Auth Status   Method
 --------------------  ---------  -----------------  ------------  ------
-May 07 2020 13:02:41  1/2      58:05:94:1C:00:00  Unauthorized  802.1X
-May 07 2020 13:01:33  1/2      58:05:94:1C:00:00  Unauthorized  802.1X
+May 07 2020 13:02:41  Eth1/2     58:05:94:1C:00:00  Unauthorized  802.1X
+May 07 2020 13:01:33  Eth1/2     58:05:94:1C:00:00  Unauthorized  802.1X
 
 ```
 
@@ -1472,15 +1476,15 @@ MAB Request Fmt Attr1 Case........ uppercase
 
 Interface    Admin Mode     Auth-type    
 ---------    -----------    ---------
-1/1          Disabled       N/A          
-1/2          Disabled       N/A          
-1/3          Disabled       N/A          
+Eth1/1       Disabled       N/A          
+Eth1/2       Disabled       N/A          
+Eth1/3       Disabled       N/A          
 
 
 (dhcp-10-130-86-142) #show  mab interface 1/10
 Interface    Admin Mode     Auth-type    
 ---------    -----------    ---------
-1/10         Enabled        eap-md5    
+Eth1/10      Enabled        eap-md5    
 
 ```
 
