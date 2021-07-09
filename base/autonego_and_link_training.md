@@ -234,7 +234,6 @@ medium            = BACKPLANE/COPPER/OPTIC
 
 ### 3.3.2 Auto-negotiation status in STATE_DB
 ```
-db                = STATE_DB
 key               = PORT:EthernetXY
 
 ;field            = value
@@ -297,7 +296,7 @@ The AN/LT support is built on top the following SAI port attributes, hence these
 ## 3.5 User Interface
 *Please follow the SONiC Management Framework Developer Guide - https://drive.google.com/drive/folders/1J5_VVuwoJBa69UZ2BoXLYW8PZCFIi76K*
 
-### 3.5.1 Data Models
+### 3.5.1 OC YANG
 
 ```
 module: openconfig-interfaces
