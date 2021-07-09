@@ -190,10 +190,9 @@ The AN port capabilities should be defined in the platform specific platform-def
 ## 3.2 Media Type
 
 The link-training requires the media type to be correctly configured as per the transceiver attached, otherwise, it may not be functional properlly.
-The supported media types are as below, and it's the **pmon#xcvrd** which is responsible fo
+The supported media types are as below, and it's the **pmon#xcvrd** which is responsible for updating the media type as per the attached transceiver.
 
 - Backplane
-The media type of the interface should be configured as Backplane if the attached transceiver is one of the following
 	- Backplane
 	- CAUI-x C2C
 	- CAUI-x C2M (Optics without a CDR/retimer)
