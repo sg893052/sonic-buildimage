@@ -111,9 +111,9 @@ interface config mode.
 
 ### 1.3.1 Basic Approach
 
-The AN/LT functionality on a switch platform is enabled by a dedicated MAC/PHY controller. The MAC/PHY controller provides various configuration options to enable, disable and fine tune the AN/LT functionality required for the connected devices.\
+The AN/LT functionality on a switch platform is enabled by a dedicated MAC/PHY controller. The MAC/PHY controller provides various configuration options to enable, disable and fine tune the AN/LT functionality required for the connected devices.
 
-The communication details to MAC/PHY controller is hidden in the SAI library, while the orchagent of swss communicates with user interface via RedisDB.\
+The communication details to MAC/PHY controller is hidden in the SAI library, while the orchagent of swss communicates with user interface via RedisDB.
 
 For each switch platform that supports AN/LT, the port capabilities should be defined in the file *platform-def.json*, which is located in the *hwsku* directory.
 
@@ -189,20 +189,20 @@ The AN port capabilities should be defined in the platform specific platform-def
 
 ## 3.2 Media Type
 
-The link-training requires the media type to be correctly configured as per the transceiver attached, otherwise, it may not be functional properlly.\
+The link-training requires the media type to be correctly configured as per the transceiver attached, otherwise, it may not be functional properlly.
 The supported media types are as below, and it's the **pmon#xcvrd** which is responsible fo
 
-- Backplane\
+- Backplane
 The media type of the interface should be configured as Backplane if the attached transceiver is one of the following
 	- Backplane
 	- CAUI-x C2C
 	- CAUI-x C2M (Optics without a CDR/retimer)
 	- 25G/50G Active Optic Cable(AOC) using CAUI-x C2M
-- Copper\
+- Copper
 	- Direct Attached Cable
 	- Passive Copper Cable
 	- Active Copper Cable
-- Optic\
+- Optic
 	- 10G/40G optics without a CDR/retimer
 	- 10G/40G Active Optic Cable(AOC) using SFI or nPPI
 
