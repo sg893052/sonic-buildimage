@@ -2,7 +2,7 @@
 
 #  MSTP
 
-    #  SONIC Cyrus  Release
+    #  SONIC Cyrus Release
 
 [TOC]
 # Test Plan Revision History
@@ -169,8 +169,6 @@ McLAG configured between 2_A,2_S devices and 1_A,1_S devices.
 <br/>All the below tests will be run with interface alias mode<br/>
 
 # 2 Test  Case and Objectives
-## 2.1 Functionality
-
 
 ### 2.1.1 Verify that the bridge with lower bridge-id is the ROOT Bridge with MSTP configured. 
 
@@ -870,7 +868,7 @@ McLAG configured between 2_A,2_S devices and 1_A,1_S devices.
 ### Upgrade from previous old release to latest release
 ### 2.1.73 Verify MSTP convergence works fine after upgrade from previous old release(PVST/RPVST) to latest release(change mode to mst and verify IST convergence)
 
-| **Test ID**    | **MSTP_MLAG_012**                                              |
+| **Test ID**    | **MSTP_upgrade_001**                                              |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify MSTP convergence works fine after upgrade from previous old release(PVST/RPVST) to latest release(change mode to mst and verify IST convergence)** |
 | **Test Setup** | **Topology1**                                                 |
