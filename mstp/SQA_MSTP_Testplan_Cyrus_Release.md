@@ -2,9 +2,9 @@
 
 #  MSTP
 
-    #  SONIC Cyrus Release
+#  SONIC 4.0.0 Release
 
-[TOC]
+
 # Test Plan Revision History
 | Rev  |    Date    |        Author        | Change Description |
 | :--: | :--------: | :------------------: | ------------------ |
