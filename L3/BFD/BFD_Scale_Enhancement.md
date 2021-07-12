@@ -119,6 +119,7 @@ NA
 NA
 
 7 Scaling  
+
 Support up to 128 BFD sessions at an interval of 100 milliseconds. 1500 Rx and 1500 Tx pps(considering jitter).
 
 8 Warm Boot/ISSU  
@@ -169,6 +170,7 @@ Once BFD session state is UP, the session along with the pre-formed BFD Tx packe
 
 **Timer wheel operation:**
 A timer wheel is created with 10 banks. Each bank is serviced by a 10 msec timer and all the banks in the timer wheel is serviced in 100 msec.
+
 
 ![Tx List](images/TX_List.png)
 
@@ -242,6 +244,7 @@ To ensure bfdd threads are scheduled frequently and deterministically regardless
 The priority value of 40 is arrived after experimenting with different priority values and observing the stability of 128 BFD session in a scaled setup.
 
 This method should be handled with caution to ensure that the max processing associated with the SCHED_RR threads must be clearly understood to ensure that the rest of the system is not impacted. So, for instance, if the feature is ever scaled up (more sessions, shorter intervals) then this needs to be revisited.
+
 ### 3.1.3 Service and Docker Management
 
 NA
