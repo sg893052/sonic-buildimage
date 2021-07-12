@@ -162,7 +162,7 @@ Below is high level hierarchy of RIF counters sonic yang model
 
 ### 3.6.2 Configuration Commands
 
-Below is the command for clearing Layer 3 routing interface counters
+Below is the command for configuring interval between 2 consecutive read/fetch for Layer 3 routing interface counters
 
         counters rif interval <value>
 	
@@ -190,7 +190,7 @@ Here is a sample output of the above command
 
 ### 3.6.4 Clear Commands
 
-Below is the command for configuring interval between 2 consecutive read/fetch for Layer 3 routing interface counters
+Below is the command for clearing Layer 3 routing interface counters
 
         clear counters interface rif
 	
