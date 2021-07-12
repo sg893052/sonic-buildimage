@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.8
+High level design document version 0.9
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -79,7 +79,6 @@ High level design document version 0.8
 			- [3.6.2.18 authentication order](#36218-authentication-order)
 			- [3.6.2.19 authentication priority](#36219-authentication-priority)
 			- [3.6.2.20 mab](#36220-mab)
-			- [3.6.2.21 dot1x timeout](#36221-dot1x-timeout)
 		- [3.6.3 Show Commands](#363-show-commands)
 			- [3.6.3.1 show authentication interface](#3631-show-authentication-interface)
 			- [3.6.3.2 show authentication](#3632-show-authentication)
@@ -89,7 +88,6 @@ High level design document version 0.8
 			- [3.6.3.6 show dot1x](#3636-show-dot1x)
 		- [3.6.4 Clear Commands](#364-clear-commands)
 			- [3.6.4.1 clear authentication sessions](#3641-clear-authentication-sessions)
-			- [3.6.4.2 clear dot1x statistics](#3642-clear-dot1x-statistics)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 - **[5 Error Handling](#5-error-handling)**
 - **[6 Serviceability and Debug](#6-serviceability-and-debug)**
@@ -117,6 +115,7 @@ High level design document version 0.8
 | 0.6  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated docker to macsec, added configuration, scalability and warmboot requirements |
 | 0.7  | 05/26/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
 | 0.8  | 06/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
+| 0.9  | 07/12/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments, removed dot1x timeout and clear dot1x statistics commands, removed scale limit for max ports supporting mab, dot1x. modified show dot1x output. |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -1246,30 +1245,6 @@ This command is used to enable MAC Authentication Bypass (MAB) on an interface. 
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.21 dot1x timeout
-This command sets the value, in seconds, of the timers used by the authenticator or supplicant state machines on an interface. Depending on the token used and the value (in seconds) passed, various timeout configurable parameters are set. 
-
-- quiet-period: The value, in seconds, of the timer used by the authenticator state machine on this port to define periods of time in which it will not attempt to acquire a supplicant. This is the period for which the authenticator state machine stays in the HELD state.
-- tx-period: The value, in seconds, of the timer used by the authenticator state machine on this port to determine when to send an EAPOL EAP Request/Identity frame to the supplicant. 
-- server-timeout: The value, in seconds, of the timer used by the authenticator state machine on this port to timeout the authentication server. 
-- supp-timeout: The value, in seconds, of the timer used by the authenticator state machine on this port to timeout the supplicant. 
-- auth-period: The value, in seconds, of the timer used by the supplicant state machine on this port to timeout an authenticator when waiting for a response to packets other than EAPOL-Start.
-- start-period: The value, in seconds, of the timer used by the supplicant state machine on this port to determine the interval between two successive EAPOL-Start frames when they are being retransmitted.
-- held-period: The value, in seconds, of the timer used by the supplicant state machine on this port to determine the length of time it will wait before trying to send the authentication credentials again after a failed attempt. This is the period for which the supplicant state machine stays in the HELD state.
-
-| Mode | Interface Config |
-| ---- | ------ |
-| Syntax | [no] dot1x timeout \{ quiet-period \| tx-period \| server-timeout \| supp-timeout \| auth-period \| start-period \| held-period \} |
-| Default | quiet-period: 60 seconds  |
-| Default | tx-period: 30 seconds  |
-| Default | supp-timeout: 30 seconds  |
-| Default | server-timeout: 30 seconds  |
-| Default | auth-period: 30 seconds  |
-| Default | start-period: 30 seconds |
-| Default | held-period: 60 seconds |
-| Change history | SONiC 4.0 - Introduced |
-
-
 	
 ### 3.6.3 Show Commands
 
@@ -1489,7 +1464,7 @@ Eth1/10      Enabled        eap-md5
 ```
 
 #### 3.6.3.6 show dot1x
-This command is used to show a summary of the global dot1x configuration, summary information of the dot1x configuration for a specified port or all ports, the detailed dot1x configuration for a specified port and the dot1x statistics for a specified port - depending on the tokens used.
+This command is used to show a summary of the global dot1x configuration.
 
 | Mode   | Exec |
 | ------ | ------------------- |
@@ -1499,16 +1474,13 @@ This command is used to show a summary of the global dot1x configuration, summar
 | Field   | Description |
 | ------ | ------------------- |
 | Administrative Mode | Indicates whether 802.1x is enabled or disabled. |
-| EAPOL Flood Mode  | Indicates whether the EAPOL flood support is enabled on the switch. |
-| Dot1x Software Version | The version of Dot1x implementation running on the switch. |
+
 	
 Example:
 ```
 #show dot1x
 
 Administrative Mode............... Enabled
-EAPOL Flood Mode.................. Disabled
-Software Version.................. 1
 
 ```
 
@@ -1522,13 +1494,6 @@ This command  clears information for all Auth Manager sessions. All the authenti
 | Syntax | clear authentication session |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.4.2 clear dot1x statistics
-This command resets the 802.1X statistics for the specified port or for all ports.
-
-| Mode   | Exec |
-| ------ | ------------------- |
-| Syntax | clear dot1x statistics |
-| Change history | SONiC 4.0 - Introduced |
 
 # 4 Flow Diagrams
 The flow diagrams Figure 2: PAC service daemon and configuration flow, Figure 3: EAPOL receive flow, Figure 4: MAB PDU receive flow; indicates the sequence of events involved in processing of PAC configuration and EAPOL/MAB packets.
@@ -1557,8 +1522,6 @@ The following is the support scale for Port Access Control. The following number
 
 | Configuration / Resource   | Scale |
 | ------ | ------------------- |
-| ports supported by dot1x | 300 |
-| ports supported by MAB | 300 |
 | authentication history entries | 1024 |
 | authentication history entries per interface | 20 |
 | clients that can be authorized on a port configured in Multi-Auth host mode | 48 |
