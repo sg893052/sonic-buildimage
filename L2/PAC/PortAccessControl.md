@@ -1562,6 +1562,7 @@ The following is the support scale for Port Access Control. The following number
 | authentication history entries | 1024 |
 | authentication history entries per interface | 20 |
 | clients that can be authorized on a port configured in Multi-Auth host mode | 48 |
+| Number of clients supported by the switch | 512 |
 
 
 # 9 Limitation
@@ -1574,6 +1575,8 @@ The following is the support scale for Port Access Control. The following number
 
 
 # 10 Upgrade / Downgrade considerations
+
+Compatibility across software versions are not guaranteed. Upgrade/downgrade across non-compatible versions needs to be treated as a service affecting upgrade. Upgrade downgrade to a compatible software version can be done in conjunction with a warm boot to avoid disruption to already authenticated client sessions. Software compatibility related information can be found in the release notes.   
 
 # 11 Unit Test
 
