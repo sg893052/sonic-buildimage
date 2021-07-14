@@ -116,8 +116,8 @@ High level design document version 0.10
 | 0.6  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated docker to macsec, added configuration, scalability and warmboot requirements |
 | 0.7  | 05/26/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
 | 0.8  | 06/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
-| 0.9  | 07/12/2021 | Prabhu Sreenivasan, Amitabha Sen | removed dot1x timeout and clear dot1x statistics commands, removed scale limit for max ports supporting mab, dot1x. modified show dot1x output. |
-| 0.10 | 07/14/2021 | Prabhu Sreenivasan, Amitabha Sen | Added "dot1x pae" command and updated "show authentication interface" for the same. Updated section 6 Serviceability and Debug with syslog messages |
+| 0.9  | 07/12/2021 | Prabhu Sreenivasan, Amitabha Sen | Removed "dot1x timeout" and "clear dot1x statistics" commands, Removed scale limit for max ports supporting mab, dot1x. modified show dot1x output. |
+| 0.10 | 07/14/2021 | Prabhu Sreenivasan, Amitabha Sen | Added "dot1x pae" command and updated "show authentication interface" for the same. Updated section 6 Serviceability and Debug with syslog messages. Updated secion 3.5 SAI with details. |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -1035,10 +1035,10 @@ Added support for **SAI_HOSTIF_TRAP_TYPE_EAPOL** to trap EAP packets (Ethertype 
 Added support for **SAI_HOSTIF_TRAP_TYPE_STATIC_FDB_MOVE** to identify station movement on static FDB entries.   
 
 ### 3.5.2 Bridge port learning modes
-PAC uses the following bridge port learning modes to drop/trap all unknown source MAC packets.
-	- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_DROP
-	- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_HW
-	- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_CPU_TRAP
+PAC uses the following bridge port learning modes to drop/trap all unknown source MAC packets.   
+- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_DROP
+- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_HW
+- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_CPU_TRAP
 
 SAI config sequence:   
 ```
@@ -1075,23 +1075,6 @@ sai_fdb_apis->set_fdb_entry_attribute(&fdb_entry1, &attr);
 **SAI_ACL_ENTRY_ATTR_FIELD_SRC_MAC** is used as the qualifier to qualify the packet based upon the source MAC of the client.   
 **SAI_ACL_ENTRY_ATTR_FIELD_PACKET_VLAN** and **SAI_ACL_ENTRY_ATTR_FIELD_HAS_VLAN_TAG** qualifiers are used to identify if the packet is tagged or not.   
 **SAI_ACL_ENTRY_ATTR_ACTION_ADD_VLAN_ID**, **SAI_ACL_ENTRY_ATTR_ACTION_SET_OUTER_VLAN_ID** and **SAI_ACL_ENTRY_ATTR_ACTION_SET_INNER_VLAN_ID** actions to achieve PAC functionality.   
-	
-### 3.5.3 VFP
-VFP rules match on the packet fields like source MAC (bcmFieldQualifySrcMac) and VLAN format (bcmFieldQualifyVlanFormat) to qualify packets for VLAN translation and add VLAN tags accordingly (bcmFieldActionOuterVlanAdd, bcmFieldActionOuterVlanNew).   
-
-Config sequence:   
-```
-bcm_field_entry_create(unit, group, &entry);
-bcm_field_qualify_SrcMac(unit, entry, mac, mac_mask);
-
-Qualify on untagged packets and add VLAN tag:
-bcm_field_qualify_VlanFormat(unit, entry, 0x40, 0xff );
-bcm_field_action_add(unit, entry, bcmFieldActionOuterVlanAdd, vlan, 0, 0);
-
-Qualify on tagged packets and change VLAN tag:         
-bcm_field_qualify_VlanFormat(unit, entry, 0x01, 0xff );
-bcm_field_action_add(unit, entry, bcmFieldActionOuterVlanNew, vlan, 0, 0);
-```
 
 
 ## 3.6 Manageability
