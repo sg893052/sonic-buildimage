@@ -46,12 +46,11 @@
     - [3.6.1 Data Models](#361-data-models)
     - [3.6.2 Configuration Commands](#362-configuration-commands)
       - [3.6.2.1 Activating and Deactivating Queue Latency Monitor](#3621-activating-and-deactivating-queue-latency-monitor)
-      - [3.6.2.2 Setting up Latency boundaries for QLM](#3622-setting-up-latency-boundaries-for-qlm)
-      - [3.6.2.3 Setting up port-groups for Queue Latency Monitoring](#3623-setting-up-port-groups-for-queue-latency-monitoring)
-      - [3.6.2.4 Setting up sessions for Queue Latency Monitoring](#3624-setting-up-sessions-for-queue-latency-monitoring)
+      - [3.6.2.2 Setting up port-groups for Queue Latency Monitoring](#3622-setting-up-port-groups-for-queue-latency-monitoring)
+      - [3.6.2.3 Setting up sessions for Queue Latency Monitoring](#3623-setting-up-sessions-for-queue-latency-monitoring)
     - [3.6.3 Show Commands](#363-show-commands)
       - [3.6.3.1 Listing the Queue Latency Monitor attributes](#3631-listing-the-queue-latency-monitor-attributes)
-      - [3.6.3.2 Listing the Queue Latency Monitor latency boundaries](#3632-listing-the-queue-latency-monitor-latency-boundaries)
+      - [3.6.3.2 Listing the Queue Latency Monitor latency ranges](#3632-listing-the-queue-latency-monitor-latency-ranges)
       - [3.6.3.3 Listing the Queue Latency Monitor port-group information](#3633-listing-the-queue-latency-monitor-port-group-information)
       - [3.6.3.4 Listing the Queue Latency Monitor sessions](#3634-listing-the-queue-latency-monitor-sessions)
     - [3.6.4 Sample Workflow](#364-sample-workflow)
@@ -123,7 +122,7 @@ Latency is the residence time of a packet in the switch. The feature allows user
 
 2.0 Queue Latency Monitor provisioning as listed below.
 
-- Latency boundaries to identify the latency bucket ranges. QLM reports contain the number of packets whose latency falls in the given ranges on per queue basis.
+- Latency ranges are predefined. QLM reports contain the number of packets whose latency falls in the given ranges on per queue basis.
 
 - ACL configuration to identify a flow-group to monitor.
 
@@ -190,7 +189,7 @@ The SAI TAM spec specifies the TAM APIs to be used to configure the TAM function
 
 Queue Latency Monitor is used to  monitor the switch for congestion and queue latency. Some of the key usecases are -
 
-- Idenitfying the paths, ports, flows and queues that are undergoing unusual latency 
+- Idenitfying the paths, ports, flows and queues that are undergoing unusual latency. Essentially Microburst monitoring. 
 - SLA tracking
 
 ## 2.2 Functional Description
@@ -235,30 +234,13 @@ The architecture of the Queue Latency Monitor feature in SONiC is illustrated in
    
 ## 3.1.1 qlmMgr
 
-The qlmMgr runs in the TAM docker and is used to pass queue latency monitor configuration arriving from UI to qlmOrch. qlmMgr validates and collates information from CONFIG_DB  tables TAM_QLM_RANGE_TABLE, TAM_QLM_PORT_GROUP_TABLE and TAM_QLM_SESSION_TABLE. APPL_DB TAM_QLM_TABLE and TAM_QLM_SESSION_TABLE  are populated with a valid session and latency ranges configuration once all the required data is available.  
+The qlmMgr runs in the TAM docker and is used to pass queue latency monitor configuration arriving from UI to qlmOrch. qlmMgr validates and collates information from CONFIG_DB  tables  TAM_QLM_PORT_GROUP_TABLE and TAM_QLM_SESSION_TABLE. APPL_DB TAM_QLM_TABLE and TAM_QLM_SESSION_TABLE  are populated with a valid session configuration once all the required data is available.  
 
 The qlmMgr configures the source and destination udp ports to be used between SAI and qlmCollectorApplication.
 
 ## 3.2 DB Changes
 
 ### 3.2.1 CONFIG DB
-
-TAM\_QLM\_LATENCY\_TABLE
-
-    ;Defines TAM QLM latency configuration in CONFIG_DB
-
-    key                = name           ; name is latency name and should be unique
-    max                = 1*5DIGIT       ; max value, interms of 64ns
-
-    Example: 
-    > keys *TAM_QLM_LATENCY_TABLE* 
-    1) "TAM_QLM_LATENCY_TABLE|r1" 
-
-    > hgetall "TAM_QLM_LATENCY_TABLE|r1"
-
-    1) "max"
-    2)  256
-
 
 TAM\_QLM\_PORT\_GROUP\_TABLE
 
@@ -317,7 +299,7 @@ TAM\_QLM\_TABLE
     key                = global                 ; Only one instance and 
                                                 ; has a fixed key ”global"
     status             = "enable"/"disable"     ; QLM status
-    latency-boundaries = 8 * 64VCHAR            ; Array of latency boundaries in string format, unit is ns
+    latency-ranges     = 16 * 64VCHAR           ; Array of latency ranges in string format, unit is ns
 
     Example:
     > keys *TAM_QLM_TABLE*
@@ -326,8 +308,8 @@ TAM\_QLM\_TABLE
     > HGETALL "TAM_QLM_TABLE:global"
     1) "status"
     2) "enable"
-    3) "latency-boundaries"
-    4) "1280, 2360, 4720, 9440, 12800, 12864, 23600"
+    3) "latency-ranges"
+    4) "0-1280, 1281-2360, 2361-4720, 4721-9440, 9441-12800, 12801-12864, 23600"
 
 TAM\_QLM\_SESSIONS\_TABLE
 
@@ -381,7 +363,7 @@ N/A
 		                                              ; session_name is name of the session
 		                       											  ; index is the index of the record
 		time-stamp         = %y-%m-%d - %H:%M:%S      ; time-stamp when the threshold breach occurred
-		range              = 8 * 64VCHAR              ; Array of latency boundaries in string format, unit is ns
+		range              = 16 * 64VCHAR             ; Array of latency ranges in string format, unit is ns
 	  stats              = 8 * 64VCHAR              ; Array of stats in string format
     
     Example:
@@ -392,7 +374,7 @@ N/A
     1) "time-stamp"
     2) "2021-07-06 - 02:50:44"
     3) "range"
-    4) "1280, 2360, 4720, 9440, 12800, 12864, 23600"
+    4) "0-1280, 1281-2360, 2361-4720, 4721-9440, 9441-12800, 12801-12864, 12865-23600"
     5) "stats"
     6) "5000, 9876, 434323, 4343235, 232356, 687, 0, 0"
 
@@ -455,28 +437,7 @@ sonic (config-tam-qlm)# [no] enable
 
 Deactivating Queue Latency Monitor will purge all Queue Latency Monitor configuration from the switch.
 
-#### 3.6.2.2 Setting up Latency boundaries for QLM
-- To setup the latency boundaries for QLM feature. User can specify the max value of a latency boundary.
-- Unit is interms of 64ns.
-- Each latency boundary is converted internally to a latency range with min and max values.
-  User can configure max 7 latency boundaries representing 8 latency ranges.
-- Ex: if user configures 2, 4, 6, 16, 32, 128, 256 as latency boundaries. Then it will converted internally to (0 to **2**\*64), ((2\*64)+1 to **4**\*64), ((4\*64)+1 to **6**\*64), ((6\*64)+1 to **16**\*64), ((16\*64)+1 to **32**\*64), ((32\*64)+1 to **128**\*64), ((128\*64)+1 to **256**\*64) and ((256\*64)+1 to all > (256\*64)+1) latency ranges
-  
-The command syntax for setting up the Latency boundaries for QLM is as follows:
-
-
-```
-sonic (config-tam-qlm)# latency-boundary a1 max 16
-sonic (config-tam-qlm)# [no] latency-boundary a1
-```
-| **Attribute**                 | **Description**                         |
-|-------------------------------|-------------------------------------|
-| `latency-boundary`            | Name of the Latency boundary
-| `max`                         |Max value of a latency boundary. Unit is interms of 64nano secs
-
-
-
-#### 3.6.2.3 Setting up port-groups for Queue Latency Monitoring 
+#### 3.6.2.2 Setting up port-groups for Queue Latency Monitoring 
 - To monitor traffic between a particualr ingress and egress set of ports, the port-group must be previously created with the `portgroup` command (under `config-tam-qlm`) hierarchy). It must be associated with set of egress-ports and/or ingress-ports. A port can be part of only one port-group's egress-port list.
 - The command syntax to create a port-group is as follows
 ```
@@ -502,7 +463,7 @@ sonic (conf-if-Ethernet6)# qlm portgroup P1 direction egress
 | `direction`               | To add port to ingress/egress port-list 
 
 
-#### 3.6.2.4 Setting up sessions for Queue Latency Monitoring 
+#### 3.6.2.3 Setting up sessions for Queue Latency Monitoring 
 
 A Queue Latency Monitoring session is associated a previously defined flow-group and port-group as described below.
 
@@ -554,25 +515,21 @@ Status             : Active
 ```
 
 
-#### 3.6.3.2 Listing the Queue Latency Monitor latency boundaries
+#### 3.6.3.2 Listing the Queue Latency Monitor latency ranges
 
-The following command lists the details for all queue latency monitor latency boundaries or for a specific latency-boundary.
+The following command lists the details for all queue latency monitor latency ranges.
 
 ```
-sonic # show tam qlm latency-boundaries [<name>]
+sonic # show tam qlm latency-ranges
 ```
 Sample usage shown below.
 
 ```
-sonic # show tam qlm latency-boundaries
-Name               Max-latency(unit 64ns)        latency-range(ns)
----------        ------------------------        -----------------------
-L1                   4                            (0 to 4*64)
-L2                   6                            ((4*64)+1 to 6*64) 
-
-sonic # show tam qlm latency-boundaries L1
-Name                         : L1
-Max-latency(unit 64ns)       : 4
+sonic # show tam qlm latency-ranges
+Num            latency-range(ns)
+---------      -----------------------
+1               (0 to 4*64)
+2               ((4*64)+1 to 6*64) 
 
 ```
 
@@ -646,7 +603,7 @@ Time-Stamp          Queue  range1 range2  range3  range4  range5 range6 range7 r
 
 ```
 
-- range1, range2 .. represent min and max values in nano seconds
+- range1, range2 .. are latency ranges representing min and max values in nano seconds. ex:- range1 as 0-1024, range2 as 1025-4096 e.t.c 
 
 ### 3.6.4 Sample Workflow
 
@@ -665,15 +622,6 @@ sonic (config-tam)# flowgroup websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protoc
 ; Enable Queue Latency Monitor on the switch
 
 sonic (config-tam-qlm)# enable
-
-; create latency boundaries
-sonic (config-tam-qlm)# latency-boundary L1 max 2
-sonic (config-tam-qlm)# latency-boundary L2 max 6
-sonic (config-tam-qlm)# latency-boundary L3 max 8
-sonic (config-tam-qlm)# latency-boundary L4 max 11
-sonic (config-tam-qlm)# latency-boundary L5 max 15
-sonic (config-tam-qlm)# latency-boundary L6 max 27
-sonic (config-tam-qlm)# latency-boundary L7 max 32
 
 ; Create port-group
 
