@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.9
+High level design document version 0.10
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -64,21 +64,22 @@ High level design document version 0.9
 			- [3.6.2.3 aaa authentication pac](#3623-aaa-authentication-pac)
 			- [3.6.2.4 mab request format attribute 1](#3624-mab-request-format-attribute-1)
 			- [3.6.2.5 dot1x system-auth-control](#3625-dot1x-system-auth-control)
-			- [3.6.2.6 authentication event no-response action authorize vlan](#3626-authentication-event-no-response-action-authorize-vlan)
-			- [3.6.2.7 authentication event fail action authorize vlan](#3627-authentication-event-fail-action-authorize-vlan)
-			- [3.6.2.8 authentication event fail retry](#3628-authentication-event-fail-retry)
-			- [3.6.2.9 authentication max-users](#3629-authentication-max-users)
-			- [3.6.2.10 authentication periodic](#36210-authentication-periodic)
-			- [3.6.2.11 authentication port-control](#36211-authentication-port-control)
-			- [3.6.2.12 authentication host-mode](#36212-authentication-host-mode)
-			- [3.6.2.13 authentication timer reauthentiate](#36213-authentication-timer-reauthentiate)
-			- [3.6.2.14 authentication event server dead action](#36214-authentication-event-server-dead-action)
-			- [3.6.2.15 authentication event server dead action authorize voice](#36215-authentication-event-server-dead-action-authorize-voice)
-			- [3.6.2.16 authentication event server alive action reinitialize](#36216-authentication-event-server-alive-action-reinitialize)
-			- [3.6.2.17 authentication open](#36217-authentication-open)
-			- [3.6.2.18 authentication order](#36218-authentication-order)
-			- [3.6.2.19 authentication priority](#36219-authentication-priority)
-			- [3.6.2.20 mab](#36220-mab)
+			- [3.6.2.6 dot1x pae](#3626-dot1x-pae)
+			- [3.6.2.7 authentication event no-response action authorize vlan](#3627-authentication-event-no-response-action-authorize-vlan)
+			- [3.6.2.8 authentication event fail action authorize vlan](#3628-authentication-event-fail-action-authorize-vlan)
+			- [3.6.2.9 authentication event fail retry](#3629-authentication-event-fail-retry)
+			- [3.6.2.10 authentication max-users](#36210-authentication-max-users)
+			- [3.6.2.11 authentication periodic](#36211-authentication-periodic)
+			- [3.6.2.12 authentication port-control](#36212-authentication-port-control)
+			- [3.6.2.13 authentication host-mode](#36213-authentication-host-mode)
+			- [3.6.2.14 authentication timer reauthentiate](#36214-authentication-timer-reauthentiate)
+			- [3.6.2.15 authentication event server dead action](#36215-authentication-event-server-dead-action)
+			- [3.6.2.16 authentication event server dead action authorize voice](#36216-authentication-event-server-dead-action-authorize-voice)
+			- [3.6.2.17 authentication event server alive action reinitialize](#36217-authentication-event-server-alive-action-reinitialize)
+			- [3.6.2.18 authentication open](#36218-authentication-open)
+			- [3.6.2.19 authentication order](#36219-authentication-order)
+			- [3.6.2.20 authentication priority](#36220-authentication-priority)
+			- [3.6.2.21 mab](#36221-mab)
 		- [3.6.3 Show Commands](#363-show-commands)
 			- [3.6.3.1 show authentication interface](#3631-show-authentication-interface)
 			- [3.6.3.2 show authentication](#3632-show-authentication)
@@ -115,7 +116,8 @@ High level design document version 0.9
 | 0.6  | 05/07/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated docker to macsec, added configuration, scalability and warmboot requirements |
 | 0.7  | 05/26/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
 | 0.8  | 06/03/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments |
-| 0.9  | 07/12/2021 | Prabhu Sreenivasan, Amitabha Sen | Review comments, removed dot1x timeout and clear dot1x statistics commands, removed scale limit for max ports supporting mab, dot1x. modified show dot1x output. |
+| 0.9  | 07/12/2021 | Prabhu Sreenivasan, Amitabha Sen | removed dot1x timeout and clear dot1x statistics commands, removed scale limit for max ports supporting mab, dot1x. modified show dot1x output. |
+| 0.10 | 07/14/2021 | Prabhu Sreenivasan, Amitabha Sen | Added "dot1x pae" command and updated "show authentication interface" for the same. Updated section 6 Serviceability and Debug with syslog messages |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -767,6 +769,7 @@ user_name = 1*255VCHARS ; Client user name
 ## 3.3 Switch State Service Design
 
 ### 3.3.1 Orchestration Agent
+There no new orchestration agent for PAC.   
 
 ### 3.3.2 pacd
 pacd process links with libfpinfra.so and libauthmgr.so for the infrastructure and authentication manager functionality respectvely. Below picture depicts the interal details of the pacd process.
@@ -1026,7 +1029,70 @@ mabd informs pacd about the result of the authentication. mabd also passes all t
 No changes to SyncD.
 
 ## 3.5 SAI
-No change to SAI.
+
+### 3.5.1 Host interface traps
+Added support for **SAI_HOSTIF_TRAP_TYPE_EAPOL** to trap EAP packets (Ethertype - 0x888E) to the CPU.   
+Added support for **SAI_HOSTIF_TRAP_TYPE_STATIC_FDB_MOVE** to identify station movement on static FDB entries.   
+
+### 3.5.2 Bridge port learning modes
+PAC uses the following bridge port learning modes to drop/trap all unknown source MAC packets.
+	- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_DROP
+	- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_HW
+	- SAI_BRIDGE_PORT_FDB_LEARNING_MODE_CPU_TRAP
+
+SAI config sequence:   
+```
+attr.id = SAI_BRIDGE_PORT_ATTR_FDB_LEARNING_MODE;  
+attr.value.u32 = SAI_BRIDGE_PORT_FDB_LEARNING_MODE_DROP;
+sai_bridge_apis->set_bridge_port_attribute(port1_bid ,&attr));
+ attr.value.u32 = SAI_BRIDGE_PORT_FDB_LEARNING_MODE_HW;
+sai_bridge_apis->set_bridge_port_attribute(port1_bid ,&attr));
+attr.value.u32 = SAI_BRIDGE_PORT_FDB_LEARNING_MODE_CPU_TRAP;
+rv = sai_bridge_apis->set_bridge_port_attribute(port1_bid ,&attr));
+```
+
+### 3.5.3 FDB
+PAC will use **SAI_FDB_ENTRY_ATTR_PACKET_ACTION** with **SAI_PACKET_ACTION_DROP** to put the static FDB entry in discard state.   
+**SAI_PACKET_ACTION_FORWARD** is used to put the static FDB entry into forwarding state post successful client authentication.   
+
+SAI config sequence:   
+```
+sai_attribute_t attr_list1[] =
+   {
+       { SAI_FDB_ENTRY_ATTR_TYPE, .value.s32 = SAI_FDB_ENTRY_TYPE_STATIC },
+       { SAI_FDB_ENTRY_ATTR_BRIDGE_PORT_ID, .value.oid = bid },
+       { SAI_FDB_ENTRY_ATTR_PACKET_ACTION, .value.u32 = SAI_PACKET_ACTION_DROP}
+   };
+sai_fdb_apis->create_fdb_entry(&fdb_entry1, COUNTOF(attr_list1), attr_list1));
+
+Move FDB entry to forwarding state:
+attr.type = SAI_FDB_ENTRY_ATTR_PACKET_ACTION;
+attr.value.s32 = SAI_PACKET_ACTION_FORWARD; 
+sai_fdb_apis->set_fdb_entry_attribute(&fdb_entry1, &attr);
+```
+### 3.5.3 VLAN
+**SAI_ACL_STAGE_LOOKUP** will be used to configure a LOOKUP stage ACL that achieves the MAC-VLAN translation.   
+**SAI_ACL_ENTRY_ATTR_FIELD_SRC_MAC** is used as the qualifier to qualify the packet based upon the source MAC of the client.   
+**SAI_ACL_ENTRY_ATTR_FIELD_PACKET_VLAN** and **SAI_ACL_ENTRY_ATTR_FIELD_HAS_VLAN_TAG** qualifiers are used to identify if the packet is tagged or not.   
+**SAI_ACL_ENTRY_ATTR_ACTION_ADD_VLAN_ID**, **SAI_ACL_ENTRY_ATTR_ACTION_SET_OUTER_VLAN_ID** and **SAI_ACL_ENTRY_ATTR_ACTION_SET_INNER_VLAN_ID** actions to achieve PAC functionality.   
+	
+### 3.5.3 VFP
+VFP rules match on the packet fields like source MAC (bcmFieldQualifySrcMac) and VLAN format (bcmFieldQualifyVlanFormat) to qualify packets for VLAN translation and add VLAN tags accordingly (bcmFieldActionOuterVlanAdd, bcmFieldActionOuterVlanNew).   
+
+Config sequence:   
+```
+bcm_field_entry_create(unit, group, &entry);
+bcm_field_qualify_SrcMac(unit, entry, mac, mac_mask);
+
+Qualify on untagged packets and add VLAN tag:
+bcm_field_qualify_VlanFormat(unit, entry, 0x40, 0xff );
+bcm_field_action_add(unit, entry, bcmFieldActionOuterVlanAdd, vlan, 0, 0);
+
+Qualify on tagged packets and change VLAN tag:         
+bcm_field_qualify_VlanFormat(unit, entry, 0x01, 0xff );
+bcm_field_action_add(unit, entry, bcmFieldActionOuterVlanNew, vlan, 0, 0);
+```
+
 
 ## 3.6 Manageability
 
@@ -1090,8 +1156,15 @@ This command enables the dot1x authentication support on the switch. While disab
 | Default | disable |
 | Change history | SONiC 4.0 - Introduced |
 
+#### 3.6.2.6 dot1x pae
+This command sets the PAC role on the port.
+| Mode | Interface Config |
+| ---- | ------ |
+| Syntax | [no] dot1x pae \{ authenticator \| none \} |
+| Default | none |
+| Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.6 authentication event no-response action authorize vlan
+#### 3.6.2.7 authentication event no-response action authorize vlan
 This command configures VLAN as guest vlan on an interface. The range is 1 to the maximum VLAN ID supported by the platformor alive server actions. By default, the guest VLAN is 0, i.e. invalid and is not operational.
 
 | Mode | Interface Config |
@@ -1101,7 +1174,7 @@ This command configures VLAN as guest vlan on an interface. The range is 1 to th
 | Syntax | no authentication event no-response |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.7 authentication event fail action authorize vlan
+#### 3.6.2.8 authentication event fail action authorize vlan
 This command configures the unauthenticated VLAN associated with the specified interface. This VLAN is used when the AAA server fails to recognize the client credentials and rejects the authentication attempt. The unauthenticated VLAN ID can be a valid VLAN ID from 1-Maximum supported VLAN ID (4093). By default, the unauthenticated VLAN is 0, i.e. invalid and not operational.
 
 | Mode | Interface Config |
@@ -1111,7 +1184,7 @@ This command configures the unauthenticated VLAN associated with the specified i
 | Syntax | no authentication event fail action authorize vlan |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.8 authentication event fail retry
+#### 3.6.2.9 authentication event fail retry
 This command configures the  number of times authentication may be reattempted by the client before a port moves to the authentication fail VLAN.  The reattemps range is 1 to 5.
 	
 | Mode | Interface Config |
@@ -1122,7 +1195,7 @@ This command configures the  number of times authentication may be reattempted b
 | Syntax | no authentication event fail retry |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.9 authentication max-users
+#### 3.6.2.10 authentication max-users
 This command sets the maximum number of clients supported on an interface when multi-authentication host mode is enabled on the port. The maximum users supported per port is dependent on the product. The count value is in the range 1 - 48.
 
 | Mode | Interface Config |
@@ -1133,7 +1206,7 @@ This command sets the maximum number of clients supported on an interface when m
 | Syntax | no authentication max-users |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.10 authentication periodic 
+#### 3.6.2.11 authentication periodic 
 This command enables periodic reauthentication of the supplicant for the specified interface.
 
 | Mode | Interface Config |
@@ -1142,7 +1215,7 @@ This command enables periodic reauthentication of the supplicant for the specifi
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.11 authentication port-control
+#### 3.6.2.12 authentication port-control
 This command sets the authentication mode to use on the specified interface.
 
 | Mode | Interface Config |
@@ -1152,7 +1225,7 @@ This command sets the authentication mode to use on the specified interface.
 | Syntax | no authentication port-control |
 | Change history | SONiC 4.0 - Introduced 
 
-#### 3.6.2.12 authentication host-mode 
+#### 3.6.2.13 authentication host-mode 
 This command configures the host mode of a port. The configuration on the interface mode takes precedence over the global configuration of this parameter. 
 
 | Mode | Interface Config |
@@ -1162,7 +1235,7 @@ This command configures the host mode of a port. The configuration on the interf
 | Syntax | no authentication host-mode |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.13 authentication timer reauthentiate 
+#### 3.6.2.14 authentication timer reauthentiate 
 This command is used to configure the period of time after which the Authenticator attempts to reauthenticate a supplicant on the port. This command also provides an option to specify re-authentication time out value from the server (ex. Radius). When ‘server’ option is selected, the server supplied Session time out and Session Termination-action are used by Authenticator to reauthenticate a supplicant on the port .  By default server option is enabled. The reauthenticate seconds value range is 1 to 65535.
 
 For reauthentication to happen after the configured or server provided timeout, the command “authentication periodic” should have enabled periodic reauthentication.
@@ -1176,7 +1249,7 @@ For reauthentication to happen after the configured or server provided timeout, 
 | Change history | SONiC 4.0 - Introduced |
 
 
-#### 3.6.2.14 authentication event server dead action 
+#### 3.6.2.15 authentication event server dead action 
 This command configures the actions to take when all the authentication servers are dead. The command also configures the critical VLAN ID. If the VLAN ID is not specified, the port PVID is used as the critical VLAN ID.
 
 | Mode | Interface Config |
@@ -1187,7 +1260,7 @@ This command configures the actions to take when all the authentication servers 
 | Syntax | no authentication event server dead action |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.15 authentication event server dead action authorize voice
+#### 3.6.2.16 authentication event server dead action authorize voice
 This command enables authorization of voice devices on the critical voice VLAN when all the authentication servers are dead. The configured voice VLAN of the port, on which the voice device is connected, is used as the critical voice VLAN ID.
 
 | Mode | Interface Config |
@@ -1197,7 +1270,7 @@ This command enables authorization of voice devices on the critical voice VLAN w
 | Syntax | no authentication event server dead action authorize |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.16 authentication event server alive action reinitialize
+#### 3.6.2.17 authentication event server alive action reinitialize
 This command configures the actions to take when one authentication server comes back alive after all were dead. The reinitialize action triggers the re-authentication of supplicants authenticated on the critical VLAN. 
 
 | Mode | Interface Config |
@@ -1207,7 +1280,7 @@ This command configures the actions to take when one authentication server comes
 | Syntax | no authentication event server alive action |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.17 authentication open
+#### 3.6.2.18 authentication open
 This command configures Open Authentication mode on the port.
 
 | Mode | Interface Config |
@@ -1216,7 +1289,7 @@ This command configures Open Authentication mode on the port.
 | Default | Disabled  |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.18 authentication order
+#### 3.6.2.19 authentication order
 This command is used to set the order of authentication methods used on a port. The allowed methods to configure for SONiC are Dot1x and MAB. Ordering sets the order of methods that the switch attempts when trying to authenticate a new device connected to a port. If one method in the list is unsuccessful or timed out, the next method is atempted. Each method can only be entered once.
 
 | Mode | Interface Config |
@@ -1226,7 +1299,7 @@ This command is used to set the order of authentication methods used on a port. 
 | Syntax | no authentication order |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.19 authentication priority
+#### 3.6.2.20 authentication priority
 This command is used to set the priority for the authentication methods used on a port. The allowed methods to configure for SONiC are Dot1x and MAB. Authentication priority decides if the client, who is already authenticated, to re-authenticate with the  higher-priority method when the same is received.
 
 | Mode | Interface Config |
@@ -1236,7 +1309,7 @@ This command is used to set the priority for the authentication methods used on 
 | Syntax | no authentication priority |
 | Change history | SONiC 4.0 - Introduced |
 
-#### 3.6.2.20 mab
+#### 3.6.2.21 mab
 This command is used to enable MAC Authentication Bypass (MAB) on an interface. MAB is a supplemental authentication mechanism that allows 802.1X unaware clients – such as printers, fax machines, and some IP phones — to authenticate to the network using the client MAC address as an identifier. However MAB can also be used to authenticate 802.1x aware clients. This command also provides options to specify the type of authentication to be used, which can be either EAP-MD5 ,PAP,CHAP. If enabled, EAP-MD5 is used by default.
 
 | Mode | Interface Config |
@@ -1278,6 +1351,7 @@ This command displays the authentication manager information for the interface
 | Authentication Server Alive action | The action to be undertaken for data clients when a RADIUS server comes back alive after all were found dead. |
 | Allowed protocols on unauthorized port | The action to drop or forward the particular protocol packet from and to unauthorized clients on the port |
 | Open Authentication | Indicates if Open Authentication is enabled on the interface. |
+| PAE role | Indicates the configured PAE role as authenticator or none. |
 
 Example:
 ```
@@ -1302,6 +1376,7 @@ Authentication Server Dead action for Voice.... None
 Authentication Server Alive action............. None
 Allowed protocols on unauthorized port......... dhcp
 Open Authentication............................ Disabled
+PAE role....................................... authenticator
 
 ```
 #### 3.6.3.2 show authentication 
@@ -1502,9 +1577,13 @@ The flow diagrams Figure 2: PAC service daemon and configuration flow, Figure 3:
 N/A
 
 # 6 Serviceability and Debug
-show commands will help to see if the PAC is active on a port.   
-All processing errors will be captured in syslog.    
+show commands will help to see if the PAC is active on a port.     
 Debug command output will be captured as part of tech support for offline analysis.   
+All processing errors will be captured in syslog.  
+Below syslog messages indicates the authorization state of a client:   
+``` Client Authorized. MAC: aa:bb:cc:dd:ee:ff, Port: Ethernet0, VLAN: 10 ```  
+	
+``` Client Unauthorized. MAC: aa:bb:cc:dd:ee:ff, Port: Ethernet0, VLAN: 10 ```   
 
 # 7 Warm Boot Support
 - Configured actions and counters continue to work across warm reboot.
@@ -1563,6 +1642,7 @@ configure
 aaa authentication dot1x default radius
 
 interface 1/1
+dot1x pae authenticator
 authentication order dot1x mab
 authentication priority dot1x mab
 authentication host-mode multi-auth
