@@ -8,6 +8,7 @@
 | ---- | ---------- | --------------- | ------------------ |
 | 0.1  | 6/28/2021  | Jagadish Ch     | Initial Version    |
 | 0.2  | 6/28/2021  | Jagadish Ch     | Fixed alignment issues    |
+| 0.3  | 7/14/2021  | Jagadish Ch     | Addressing review comments provided by Faraaz    |
 
 ## List of Reviewers
 
@@ -53,9 +54,11 @@
   - Verify that yang patch operation will be successful even if the "patch-id" and "edit-id" are the same.
   - Verify the yang patch operation with target sub-resource as "/".
   - Verify yang patch operation calls with different target sub-resources(including "/").
-  - Verify the yang patch fails if we use sub-resource not as list while that target sub-resource points to list.
-  - Verify yang patch call with target sub-resources as containers with different types(list, non-list), container-leaf with different types(list, non-list).
+  - Verify the yang patch fails if we the sub-resource not points to list instance(keys).
+  - Verify yang patch call with target sub-resources as containers with different types of data nodes, make sure we have at least one URI (target sub-resource) per operation for each YANG data node (container, list, leaf, and leaf-list).
   - Verify yang patch with all supported edit operations(single yang patch call).
+  - Verify "patch-id" in the audit-log for a successful and unsuccessful yang patch call.
+  - Verify that RESTCONF server MUST return the "Accept-Patch" header field in an OPTIONS response, as specified in RFC5789, which includes the media type for YANG Patch.
 
 ### 1.2 Negative Testing
   - Verify the yang patch operation "create" returns error for an existing data resource.
@@ -211,18 +214,18 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Configure mtu and description for an interface within the same yang patch call with two edits. In one of the edits use sub-resources as "/".<BR/>2. Verify the yang patch call is successful and mtu, description values are reflected as configured.|
 
-#### 3.1.17 Verify the yang patch fails if we use sub-resource not as list while that target sub-resource points to list. 
+#### 3.1.17 Verify the yang patch fails if we the sub-resource not points to list instance(keys). 
 | **Test ID**    |**YANG_PATCH_FUNC_017**                                               |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify the yang patch fails if we use sub-resource not as list while that target sub-resource points to list.** |
+| **Test Name**  | **Verify the yang patch fails if we the sub-resource not points to list instance(keys).** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Execute yang patch with sub-resource not as list but actually target sub-resource points to list.<BR/>2. Verify that yang patch will fail due to invalid sub-resource value.|
 
-#### 3.1.18 Verify yang patch call with target sub-resources as containers with different types(list, non-list), container-leaf with different types(list, non-list). 
+#### 3.1.18 Verify yang patch call with target sub-resources as containers with different types of data nodes, make sure we have at least one URI (target sub-resource) per operation for each YANG data node (container, list, leaf, and leaf-list). 
 | **Test ID**    |**YANG_PATCH_FUNC_018**                                               |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify yang patch call with target sub-resources as containers with different types(list, non-list), container-leaf with different types(list, non-list).** |
+| **Test Name**  | **Verify yang patch call with target sub-resources as containers with different types of data nodes, make sure we have at least one URI (target sub-resource) per operation for each YANG data node (container, list, leaf, and leaf-list).** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Execute yang patch call with target sub-resources as containers with different types(list, non-list), container-leaf with different types(list, non-list).<BR/>2. Verify that yang patch call is successful.|
@@ -235,6 +238,21 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Execute yang patch call with all supported edit operations.<BR/>2. Verify that yang patch call is successfully executed.|
 
+#### 3.1.20 Verify "patch-id" in the audit-log for a successful and unsuccessful yang patch call. 
+| **Test ID**    |**YANG_PATCH_FUNC_020**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify "patch-id" in the audit-log for a successful and unsuccessful yang patch call.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Execute a successful yang patch call and observe that "patch-id" is shown properly for debugging purpose.<BR/>2. Execute a unsuccessful yang patch call and observe that "patch-id" is shown properly for debugging purpose.|
+
+#### 3.1.21 Verify that RESTCONF server MUST return the "Accept-Patch" header field in an OPTIONS response, as specified in RFC5789, which includes the media type for YANG Patch. 
+| **Test ID**    |**YANG_PATCH_FUNC_021**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that RESTCONF server MUST return the "Accept-Patch" header field in an OPTIONS response, as specified in RFC5789, which includes the media type for YANG Patch.** |
+| **Test Setup** | **Topology 1**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Execute a CURL OPTIONS call with any configuration URI.<BR/>2. Observe the Accept-Patch will be shown as "application/yang-data+json, application/yang-patch+json" in response.|
 
 ### 3.2 Negative Test Cases
 
@@ -328,7 +346,7 @@ Topology Description -
 | **Test Name**  | **Verify yang patch with max number of edit operations.** |
 | **Test Setup** | **Topology 1**                                               |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Configure maximum number of VLANs using yang patch operation "create". For each VLAN configuration use a different edit within the same yang patch call.<BR/>2. Verify yang-patch operation is successful and VLANs are created without any issues.<BR/>**Note:** The maximum number of edits allowed within a patch call is not specified in HLD.|
+| **Steps**      | 1. Configure maximum number of VLANs using yang patch operation "create". For each VLAN configuration use a different edit within the same yang patch call.<BR/>2. Verify yang-patch operation is successful and VLANs are created without any issues.<BR/>**Note:** The maximum number of edits allowed within a patch call is not specified in HLD and we don't have resource limiting in REST CONF server. So avoiding it for now.|
 
 <BR/>
 <BR/>
@@ -344,4 +362,4 @@ Topology Description -
 
 ## Reference Links
 
-https://github.com/BRC/M-SONIC/sonic_doc_private/blob/fe5895f60dcae312db6ed9d7909c846d418f2d6c/manageability/mgmt-framework/Yang_Patch_HLD.md
+https://github.com/BRCM-SONIC/sonic_doc_private/blob/fe5895f60dcae312db6ed9d7909c846d418f2d6c/manageability/mgmt-framework/Yang_Patch_HLD.md
