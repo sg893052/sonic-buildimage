@@ -37,8 +37,9 @@
 - [5 Serviceability and Debug](#5-serviceability-and-debug)
 - [6 Warm Boot Support](#6-warm-boot-support)
 - [7 Scalability](#7-scalability)
-- [8 Unit Test](#8-unit-test)
-- [9 Internal Design Information](#9internal-design-information)
+- [8 Future enhancement](#7-future-enhancement)
+- [9 Unit Test](#9-unit-test)
+- [10 Internal Design Information](#10internal-design-information)
   
 
 # List of Tables
@@ -46,11 +47,12 @@
 
 # Revision
 	
-| Rev |     Date    |       Author       | Change Description                |
-|-----|-------------|--------------------|-----------------------------------|
-| 0.1 | 02/22/2021  |   Phanindra TV     | Initial version                   |
-| 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                |
-| 0.3 | 06/07/2021  |   Ravi Vemuri      | Address review comments.          |
+| Rev |     Date    |       Author       | Change Description                                   |
+|-----|-------------|--------------------|------------------------------------------------------|
+| 0.1 | 02/22/2021  |   Phanindra TV     | Initial version                                      |
+| 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                                   |
+| 0.3 | 06/07/2021  |   Ravi Vemuri      | Address review comments.                             |
+| 0.4 | 07/15/2021  |   Ravi Vemuri      | Add Limitations/Future enhancements section          |
 	
 # About this Manual
 This document provides general information about the support for DHCPv4 snooping and DHCPv6 snooping in SONiC.
@@ -299,11 +301,11 @@ For example,
 
 	;Stores user configured static DHCP bindings 
 	;Status: work in progress
-	key             = DHCP_SNOOPING_STATIC_BINDING|GLOBAL	; Global DHCP snooping static binding table key
-	mac				= mac-address							; client hardware address
-	vlan			= vlan-id								; DHCP snooping enabled vlan
-	intf			= interface								; front panel physical port or port channel
-	ipaddress		= ipv4 address / ipv6 address			; ipv4/ipv6 address
+	key             = DHCP_SNOOPING_STATIC_BINDING|mac|ipType       ; DHCP snooping static binding table key - mac + "ipv4" or "ipv6"
+	mac				= mac-address			; client hardware address
+	vlan			= vlan-id				; DHCP snooping enabled vlan
+	intf			= interface				; front panel physical port or port channel
+	ipaddress		= ipv4 address / ipv6 address		; ipv4/ipv6 address
 
 #### 3.2.1.4 Trust Configuration
 
@@ -338,13 +340,13 @@ DHCP_SNOOPING_BINDING_GLOBAL_TABLE
 
 	;Stores dynamic DHCP bindings 
 	;Status: work in progress
-	key             = DHCP_SNOOPING_BINDING|GLOBAL			; Global DHCP snooping binding table key
-	mac				= mac-address							; client hardware address
-	vlan			= vlan-id								; DHCP snooping enabled vlan
-	intf			= interface								; front panel physical port or port channel
-	ipaddress		= ipv4 address / ipv6 address			; ipv4/ipv6 address
-	lease_time		= time in seconds						; time allotted by DHCP server, NA for static entry
-	type 			= "static"/"dynamic"					; static or dynamic
+	key             = DHCP_SNOOPING_BINDING|mac|ipType              ; DHCP snooping binding table key - mac + "ipv4" or "ipv6"
+	mac		= mac-address					; client hardware address
+	vlan		= vlan-id					; DHCP snooping enabled vlan
+	intf		= interface					; front panel physical port or port channel
+	ipaddress	= ipv4 address / ipv6 address			; ipv4/ipv6 address
+	lease_time	= time in seconds				; time allotted by DHCP server, NA for static entry
+	type 		= "static"/"dynamic/tentative"			; static, dynamic or tentative
 
 
 ### 3.2.3 Counters DB
@@ -353,21 +355,22 @@ DHCP_SNOOPING_BINDING_GLOBAL_TABLE
 
 The following counters will be added to capture statistics. This section is TBD. 
 
-Error receiving from DHCP snooping socket
-DHCP message too big                    
-Error sending from DHCP snooping socket 
-Illegal source IP address in snooped packet  
-Number of DHCP messages intercepted         
-Number of DHCP messages processed          
-Number of DHCP messages filtered          
-Number of DHCP messages forwarded        
-Number of DHCP message tx failures              
-Rx REL or DECL from client not in bindings db     
-Number of bindings added to bindings table       
-Number of bindings removed from bindings table 
-Number of DHCP messages dropped as static binding exists  
-Packets discarded on unsupported outgoing interface
-Packets dropped due to no outgoing interface
+  Error receiving from DHCP snooping socket
+  DHCP message too big                    
+  Error sending from DHCP snooping socket 
+  Illegal source IP address in snooped packet  
+  Illegal source MAC in snooped packet  
+  Number of DHCP messages intercepted         
+  Number of DHCP messages processed          
+  Number of DHCP messages filtered          
+  Number of DHCP messages forwarded        
+  Number of DHCP message tx failures              
+  Rx REL or DECL from client not in bindings db     
+  Number of bindings added to bindings table       
+  Number of bindings removed from bindings table 
+  Number of DHCP messages dropped as static binding exists  
+  Packets discarded on unsupported outgoing interface 
+  Packets dropped due to no outgoing interface 
 
 ## 3.3 COPP
 
@@ -456,19 +459,19 @@ This command is executed in config mode.
 	To bind a static IPv4 address to a Layer 2 interface
 	sonic(config)#[no] ip source binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
         
-        To clear all IP DHCP Snooping binding entries 
+        To clear all dynamic IP DHCP Snooping binding entries 
 	sonic(config)# clear ip dhcp snooping binding
         
-        To clear a specific IP DHCP Snooping binding entry
+        To clear a specific dynamic IP DHCP Snooping binding entry
         sonic(config)# clear ip dhcp snooping binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
 
 	To bind a static IPv6 address to a Layer 2 interface
 	sonic(config)#[no] ipv6 source binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
         
-        To clear all IPv6 DHCP Snooping binding entries 
+        To clear all dynamic IPv6 DHCP Snooping binding entries 
 	sonic(config)# clear ipv6 dhcp snooping binding
         
-        To clear a specific IPv6 DHCP Snooping binding entry
+        To clear a specific dynamic IPv6 DHCP Snooping binding entry
         sonic(config)# clear ipv6 dhcp snooping binding *IP-address* *MAC-address* vlan *vlan-id* {interface <interface name>}
 
 ##### 3.7.1.1.5 Configure an interface as trusted
@@ -500,6 +503,10 @@ This command is executed in interface mode. This command can be applied on a ran
         
         To display DHCPv6 Snooping statistics
         sonic# show ipv6 dhcp snooping statistics
+
+        DHCP Snooping statistics can be cleared with the following commands
+        sonic# clear ip dhcp snooping statistics
+        sonic# clear ipv6 dhcp snooping statistics
 
 For example,
 
@@ -576,9 +583,16 @@ Go back to [Beginning of the document](#dhcp-snooping).
 DHCP Snoopoing feature allows 1024 Static entries to be configured. A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
 
 Go back to [Beginning of the document](#dhcp-snooping).
-# 8 Unit Test
 
-##8.1 CLI Test cases
+# 8 Future Enhancements, Limitations
+
+1. DHCP Snooping is not supported for clients/servers connected to MCLAG. DHCP Snooping binding entries are not currently synced between the MCLAG peers and hence DHCP messages may not be filtered if ingress is on a peer on which the binding was not created.
+
+Go back to [Beginning of the document](#dhcp-snooping).
+
+# 9 Unit Test
+
+##9.1 CLI Test cases
 
 1. Verify CLI to enable DHCPv4 Snooping globally
 2. Verify CLI to enable DHCPv4 Snooping per VLAN
@@ -612,9 +626,11 @@ Go back to [Beginning of the document](#dhcp-snooping).
 30. Verify CLI to enable debug logs for DHCP Snooping
 31. Verify CLI to enable DHCP Snooping debug logs per VLAN
 32. Verify CLI to enable DHCP Snooping debug logs per interface
+33. Verify CLI to configure trust mode for a range of interfaces, for DHCP4
+34. Verify CLI to configure trust mode for a range of interfaces, for DHCP6
 
 
-##8.2 Functionality test cases
+##9.2 Functionality test cases
 
 1. Verify that DHCP functionality is not impacted if DHCP Snooping is not enabled globally.
 2. Verify that once DHCP Snooping functionality is enabled globally, the DHCP messages received in VLANs that are not enabled for snooping are discarded.
@@ -647,9 +663,12 @@ Go back to [Beginning of the document](#dhcp-snooping).
 29. Verify that the VLAN on which DHCP snooping is enabled, cannot be deleted.
 30. Verify that trust/untrust configuration on a port is retained after a port shut/no-shut operation.
 31. Verify that a port can be set to 'trust' only if the VLAN to which it belongs has DHCP snooping enabled.
+32. Verify that DHCP Snooping dynamic binding entries are retained across warm boot
+33. Verify that DHCP Snooping dynamic binding entries lease time is updated with the time taken for warm boot operation. 
+34. Verify that DHCP Snooping dynamic binding entires whose lease expired during the warm boot operation do not appear after warm boot is complete.
 
 Go back to [Beginning of the document](#dhcp-snooping).
-# 9 Internal Design Information
+# 10 Internal Design Information
 ![DHCP snooping high level architecture](ds_packet_flow.png)
 
 Go back to [Beginning of the document](#dhcp-snooping).
