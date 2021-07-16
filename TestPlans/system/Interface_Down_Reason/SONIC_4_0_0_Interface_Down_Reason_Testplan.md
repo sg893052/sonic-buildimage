@@ -10,6 +10,7 @@
 | 0.2  | 6/14/2021  | Jagadish Ch     | Addressed review comments provided by Prasanth Kunjum Vettil |
 | 0.3  | 6/15/2021  | Jagadish Ch     | Addressed review comments provided by Naveen Nagaraju |
 | 0.4  | 6/21/2021  | Jagadish Ch     | Addressed review comments provided by Madhukar Kamarapu |
+| 0.5  | 7/17/2021  | Jagadish Ch     | Adding MC-LAG test case |
 
 ## List of Reviewers
 
@@ -58,6 +59,7 @@
   - Validate interface down reason "Admin-down" for PortChannel interface.
   - Validate interface down reason "LACP-convergence-failed" for PortChannel interface.
   - Validate interface down reason "All-links-down" for PortChannel interface.
+  - Validate interface down reason for the uplink tracking enabled port of MC-LAG peer when it's MC-LAG is down.
   - Below interface down reasons will be added later.<BR/>
   Link training failed<BR/>
   Link training not completed<BR/>
@@ -82,7 +84,7 @@ Topology Description -
 - Configure PortChannel7 in DUT1 and DUT2 and add inter connected ports as members of that PortChannel.<BR/>
 **Note:**  This configuration is applicable only for the PortChannel test cases except test cases INTERFACE_DOWN_REASON_FUNC_015 and INTERFACE_DOWN_REASON_FUNC_016.
 
-<span style="color:red"> </span>![Topology](Interface_Down_Reason2.png "Figure: Topology 1")
+<span style="color:red"> </span>![Topology](Interface_Down_Reason2.png "Figure: Topology 2")
 
 
 #### 								Topology 2
@@ -93,6 +95,12 @@ Topology Description -
 - Configure Ethernet3 and Ethernet4 as members of PortChannel7 in DUT2.<BR/>
 - Configure Ethernet5 and Ethernet6 as members of PortChannel7 in DUT3.<BR/>
 **Note:**  This configuration is applicable only for the PortChannel test case INTERFACE_DOWN_REASON_FUNC_015.
+
+<span style="color:red"> </span>![Topology](Interface_Down_Reason_Mclag.png "Figure: Topology 3")
+
+#### Topology 3
+**Note:**  This topology/configuration is applicable only for the MC-LAG test case INTERFACE_DOWN_REASON_FUNC_019.
+
 
 
 
@@ -264,6 +272,13 @@ Topology Description -
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Shutdown the PortChannel in DUT2.<BR/> 2. Observe the interface down reason for that PortChannel is updated as "Admin down" in the "show interface PortChannel" and "show interface status" outputs of DUT2.<BR/>3. Observe the interface down reason for PortChannel is updated as "All-links-down" in the "show interface PortChannel" and "show interface status" outputs of DUT1.<BR/>4. Do no-shutdown the PortChannel in DUT2.<BR/>5. Observe the PortChannel is Up in both DUT1 and DUT2.<BR/>6. Shutdown Ethernet1, Ethernet2, Ethernet3 and Ethernet4 in DUT2 which are members of PortChannel.<BR/>7. Observe the interface down reason for PortChannel is updated as "All-links-down" in the "show interface PortChannel" and "show interface status" outputs of DUT1.|
 
+#### 3.1.19 Validate interface down reason for the uplink tracking enabled port of MC-LAG peer when it's MC-LAG is down.
+| **Test ID**    | **INTERFACE_DOWN_REASON_FUNC_019**                                               |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Validate interface down reason for the uplink tracking enabled port of MC-LAG peer when it's MC-LAG is down.** |
+| **Test Setup** | **Topology 3**                                               |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Bring up MCLAG as shown in Topology3.<BR/>2. Configure any link up port(Except LAG members)in Peer-1 as up-link port and enable up-link tracking feature on it.<BR/>3. Now make the MC-LAG as down in Peer-1.<BR/>4. Observe the up-link port is down due to the up-link tracking feature with proper reason code.<BR/>
 
 <BR/>
 <BR/>
