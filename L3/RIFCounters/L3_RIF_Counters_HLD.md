@@ -168,6 +168,10 @@ Below is the command for configuring interval between 2 consecutive read/fetch f
 	
 Default value for interval is 5 seconds
 
+The click configuration command for the same is
+
+       config counters rif interval <value>
+
 ### 3.6.3 Show Commands
 
 Below is the show command for displaying Layer 3 routing interface counters
@@ -187,12 +191,19 @@ Here is a sample output of the above command
     PortChannel001     0        0         0       N/A      4852        68       12       N/A
  ----------------------------------------------------------------------------------------------
 
+The click show command for the same is
+
+         show interfaces counters rif       
 
 ### 3.6.4 Clear Commands
 
 Below is the command for clearing Layer 3 routing interface counters
 
         clear counters interface rif
+	
+The click command for the same is
+
+        sonic-clear rifcounters
 	
 ### 3.6.5 Debug Commands
 Not applicable
