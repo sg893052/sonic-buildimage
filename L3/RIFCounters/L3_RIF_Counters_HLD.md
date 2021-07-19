@@ -193,7 +193,7 @@ Here is a sample output of the above command
 
 The click show command for the same is
 
-         show interfaces counters rif       
+         show interfaces counters add rif       
 
 ### 3.6.4 Clear Commands
 
@@ -209,7 +209,17 @@ The click command for the same is
 Not applicable
 
 ### 3.6.6 REST API Support
-Will be updated
+Show Command
+
+    	curl -X POST "https://x.x.x.x/restconf/operations/openconfig-counters-ext:rif-counters" -H "accept: application/yang-data+json" -H "Authorization: Basic c2s0MDgxMTU6RXBsZXJub3YxOA==" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:input\":{\"riface\":\"all\"}}" -k
+
+Clear Command
+
+    curl -X POST "https://x.x.x.x/restconf/operations/openconfig-interfaces-ext:clear-rif-counters" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-interfaces-ext:input\":{\"rif\":\"all\"}}" -k
+	
+Config Command
+
+    curl -X PATCH "https://x.x.x.x/restconf/data/openconfig-counters-ext:rif-counters/rif-counter=12/config" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"rif-counter-interval\":time_value}}" -k
 
 # 4 Flow Diagrams
 Not applicable
