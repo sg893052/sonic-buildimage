@@ -219,7 +219,7 @@ Clear Command
 	
 Config Command
 
-    curl -X PATCH "https://x.x.x.x/restconf/data/openconfig-counters-ext:rif-counters/rif-counter=12/config" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"rif-counter-interval\":time_value}}" -k
+    curl -X PATCH "https://x.x.x.x/restconf/data/openconfig-counters-ext:rif-counters/rif-counter=time_value/config" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"rif-counter-interval\":time_value}}" -k
 
 # 4 Flow Diagrams
 Not applicable
