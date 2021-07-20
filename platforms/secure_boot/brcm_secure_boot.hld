@@ -82,7 +82,52 @@ Functional requirements includes
 
 ## ONIE and Secure Boot
 
+ONIE is linux based install environment which is widely used for installing other NOS, Diagnostic OS and firmware upgradation images. Opensource project 'shim' is commonly accepted method for booting linux in a UEFI secure boot environment. Same shim based model is also applied to ONIE. shim utilizes two EFI applications mentioned below,
+ - shimx64.efi
+ - MokManager.efi
+
+UEFI maintains two databases 'db' (Valid keys and certificates) and 'dbx' (revoked keys and certificates). UEFI firmware loads the first stage loader (here, its shim) only iff,
+ - db contains a matching cryptographic hash of the image, or a public certificate which can validate the signed image
+ and
+ - Hash or the certificate should not be part of the 'revoked key database' dbx
+
+shim is a very light weight EFI application who's job is to measure, verify and then load the next bootloader component. It is signed by a private key who\'s public key is available in UEFI database db. It also contains public key certificate of key which is used to sign the next stage loader. If shim is unableto verofy the next stage loader, grub, it defaults to launching the MokManager.efi allowing machine owner to enroll its public keys for verification.
+
+Machine Owner Key (MoK) is the key from machine's owner and used to sign the EFI binaries, linux kernel and bootloaders. MokManager.efi is EFI application to manage the MoK in a secure manner. It is signed by the same key who's public certificate is embedded in shim. It maintains two databases 'mok' and 'mokx' for valid and revoked keys respectively. MokManager.efi provides an interface to add and delete a key into mok or mokx and reset the MOK databases. A typical boot sequence is mentioned in the diagram below,
+![Figure1: Boot Sequence](images/boot_sequence.png)
+
+As the HW vendor and ONIE provider are same, additional components would also be provided by the platform vendor. The table below explains it.
+![Figure2: Component Details](images/component_details.png)
+
 ## Signed ONIE Installable NOS Image Format
+It is desirable to use signed NOS installable image. Since the NOS image is intalled via ONIE, it needs to be in an specified format. The new format consist of 3 sections.
+ - Executible Installer Data (EID)
+ - Digital signature of EID
+ - Image Information Block (IIB)
+
+Executible Installer Data is the actual NOS executible image which ONIE discovery mechanism finds and executes. To understand better, this is the NOS binary image had the secure boot not been enabled. As secure boot is enabled now, we need a Digital Signature to cover this EID.
+
+### Image Information Block (IIB)
+Image information block is a packed c-style structure consisting of
+![Figure3: Image Information Block](images/image_information_block.png)
+
+The ONIE image discovery mechanism would easily identify the 'signed ONIE installable image' by attempting to read the ONIE-image-id from the end of the image. The ONIE image id is fixed for this structure and it is defined as
+```
+ONIE-Image-Id := 216e9675-be17-46c7-aa71-e525eac83bd2
+```
+
+Signature Id too, is a fixed GUID. As currently supported signature type is PKCS#7, which is also identified as UEFI GUID EFI_CERT_TYPE_PKCS7_GUID, below is the signature id,
+```
+EFI_CERT_TYPE_PKCS7_GUID := 4aafd29d-68df-49ee-8aa9-347d375665a7
+```
+
+Signature offset and siganture length are self explanatory. Here is a typical example of the IIB,
+|  Field Name       |   Value
+| :---------------: | :---------------
+|  ONIE-Image-Id    | 216e9675-be17-46c7-aa71-e525eac83bd2
+|  Signature-Id     | 4aafd29d-68df-49ee-8aa9-347d375665a7
+|  Signature-Offset | 157286400
+|  Signature-Length | 1675
 
 
 # CLI:
