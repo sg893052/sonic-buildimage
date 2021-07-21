@@ -42,6 +42,10 @@ This document provides functional requirements and high-level design of transcei
 |       **Document**           | **Location**   |
 | ---------------------------- | -------------- |
 | Wiki                         | https://en.wikipedia.org/wiki/Small_form-factor_pluggable_transceiver |
+| SFF-8436                     | https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwj89oqR__PxAhXj73MBHetUDh8QFjABegQIBBAD&url=https%3A%2F%2Fmembers.snia.org%2Fdocument%2Fdl%2F25896&usg=AOvVaw3vtBDXq9qHp8qK0lnVcNnI |
+| SFF-8472                     | https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjg-7jC_vPxAhVUbSsKHcXfAhUQFjAAegQIBRAD&url=https%3A%2F%2Fmembers.snia.org%2Fdocument%2Fdl%2F25916&usg=AOvVaw1_H0SPUbcdr31PrbjqvBsM |
+| SFF-8636                     | https://members.snia.org/document/dl/26418 |
+| Management Interface - QSFP-DD | https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwio5oGc__PxAhXE4XMBHe33Bj0QFjABegQIBhAD&url=http%3A%2F%2Fwww.qsfp-dd.com%2Fwp-content%2Fuploads%2F2019%2F05%2FQSFP-DD-CMIS-rev4p0.pdf&usg=AOvVaw3lYx52UIlwNx85gyyWS_GE |
 
 # Scope
 
@@ -314,7 +318,7 @@ Ethernet128: SFP EEPROM detected
 
 This command displays the DOM information of one particular port or the ports in a specific range, or all ports when **Ethernet XY** is not specified
 
-- Displaying the DOM information of all ports
+- Displaying the DOM information summary of all ports
 ```
 sonic# show interface transceiver dom summary | no-more
 
@@ -334,7 +338,7 @@ Ethernet10  SFP      FINISAR CORP.    30.9141 3.3026  -36.9897   -2.0149
 Ethernet11  SFP      FINISAR CORP.    30.6602 3.2969  -inf       -1.9091
 Ethernet12  SFP      FINISAR CORP.    28.9844 3.3443  -33.9794   -2.1375
 ```
-- Displaying the DOM information of Ethernet5
+- Displaying the DOM information summary of Ethernet5
 ```
 sonic# show interface transceiver dom summary Ethernet 5
 
@@ -342,7 +346,7 @@ Interface   Type     Vendor           Temp(C) Volt(V) RxPwr(dBm) TxPwr(dBm)
 ----------- -------- ---------------- ------- ------- ---------- ----------
 Ethernet5   SFP      FINISAR CORP.    28.4766 3.3018  -30.9691   -2.1488
 ```
-- Displaying the DOM information of Ethernet5-12
+- Displaying the DOM information summary of Ethernet5-12
 ```
 sonic# show interface transceiver dom summary Ethernet 5-12
 
@@ -358,9 +362,50 @@ Ethernet11  SFP      FINISAR CORP.    30.6602 3.2969  -inf       -1.9091
 Ethernet12  SFP      FINISAR CORP.    28.9844 3.3443  -33.9794   -2.1375
 ```
 
-#### show interface transceiver dom summary [Ethernet XY[-XY]]
+#### show interface transceiver dom [Ethernet XY[-XY]]
 
 This command displays the DOM and Threshold information of one particular port or the ports in a specific range, or all ports when **Ethernet XY** is not specified
+
+- Displaying the DOM and Threshold information of a QSFP-DD transceiver without DOM support
+```
+sonic# show interface transceiver dom Ethernet 0
+
+-----------------------------------------------------------------------
+Ethernet0
+-----------------------------------------------------------------------
+Identifier: QSFP-DD
+Vendor Name: Molex
+Vendor Part: 2015911005
+DOM is not supported
+```
+Note: In the case of QSFP-DD, both DOM and Threshold are located at upper page 11h, that could be unavailable on certain QSFP-DD transceivers.
+
+- Displaying the DOM and Threshold information of a QSFP transceiver without Threshold support
+```
+sonic# show interface transceiver dom Ethernet 12
+
+-----------------------------------------------------------------------
+Ethernet12
+-----------------------------------------------------------------------
+Identifier: QSFP28
+Vendor Name: Molex
+Vendor Part: 1002971051
+ChannelMonitorValues:
+Rx1Power: -inf dBm
+Rx2Power: -inf dBm
+Rx3Power: -inf dBm
+Rx4Power: -inf dBm
+Tx1Bias: 0.0000 mA
+Tx2Bias: 0.0000 mA
+Tx3Bias: 0.0000 mA
+Tx4Bias: 0.0000 mA
+Tx1Power: N/A dBm
+Tx2Power: N/A dBm
+Tx3Power: N/A dBm
+Tx4Power: N/A dBm
+DOM Threshold is not supported
+```
+Note: In the case of QSFP, while the threshold is located at upper page 03h, the tx/rx power is located at lower page, that's always readable.
 
 - Displaying the DOM and Threshold information of Ethernet80
 ```
@@ -691,6 +736,8 @@ Ethernet80:
 
 #### 5.1 Debugging SFP DOM information
 
+##### Tx/Rx power looks suspicious
+
 If the Tx/Rx power does not look good, please try the instructions below
 
 1. Dump the address A2h
@@ -721,7 +768,7 @@ txpower = ((REG(0x166) << 8 | REG(0x167)) * 0.0001) mW
 rxpower = ((REG(0x168) << 8 | REG(0x169)) * 0.0001) mW
 ```
 
-3. Conver mW to dBm
+3. Convert mW to dBm
 ```
 if mW == 0:
     dBm = '-inf'
@@ -734,6 +781,8 @@ else:
 4. Double check with the output of 'sfputil show eeprom --dom'
 
 #### 5.2 Debugging QSFP DOM information
+
+##### Tx/Rx power looks suspicious
 
 If the Tx/Rx power does not look good, please try the instructions below
 
@@ -770,7 +819,7 @@ rx2power = ((REG(0x24) << 8 | REG(0x25)) * 0.0001) mW
 rx3power = ((REG(0x26) << 8 | REG(0x27)) * 0.0001) mW
 rx4power = ((REG(0x28) << 8 | REG(0x29)) * 0.0001) mW
 ```
-3. Conver mW to dBm
+3. Convert mW to dBm
 ```
 if mW == 0:
     dBm = '-inf'
@@ -781,7 +830,37 @@ else:
 ```
 4. Double check with the output of 'sfputil show eeprom --dom'
 
+##### "DOM Threshold is not supported" is displayed
+
+If the "DOM Threshold is not supported" is displayed, please try the instructions below
+
+1. Dump the lower page
+```
+admin@sonic:~$ sudo sfputil dump -p Ethernet124
+Ethernet124:
+00000000 11 08 06 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000010 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000020 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000030 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000040 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000050 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000060 00 00 00 00 00 00 00 00 00 00 00 00 00 02 30 00 |..............0.|
+00000070 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 |................|
+00000080 11 00 23 88 00 00 00 00 00 00 00 00 ff 00 00 00 |..#.............|
+00000090 00 16 01 a0 54 45 20 43 6f 6e 6e 65 63 74 69 76 |....TE Connectiv|
+000000a0 69 74 79 20 00 00 22 a7 32 38 32 31 39 38 37 2d |ity ..".2821987-|
+000000b0 32 20 20 20 20 20 20 20 31 20 04 05 07 0b 00 33 |2 1 .....3|
+000000c0 0b 00 00 00 31 38 32 35 39 30 32 32 20 20 20 20 |....18259022 |
+000000d0 20 20 20 20 31 38 30 36 32 38 30 30 00 00 d4 15 | 18062800....|
+000000e0 66 61 20 20 20 20 20 20 20 20 20 20 20 20 20 20 |fa |
+000000f0 20 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 | ..............|
+```
+
+2. Check the BIT2 of REG(0x02), the upper page 03h will be unavailable if BIT2=1, hence the "DOM Threshold is not supported" will be displayed.
+
 #### 5.3 Debugging QSFP-DD DOM information
+
+##### Tx/Rx power looks suspicious
 
 If the Tx/Rx power does not look good, please try the instructions below
 
@@ -818,7 +897,7 @@ rx6power = ((REG(0x944) << 8 | REG(0x945)) * 0.0001) mW
 rx7power = ((REG(0x946) << 8 | REG(0x947)) * 0.0001) mW
 rx8power = ((REG(0x948) << 8 | REG(0x949)) * 0.0001) mW
 ```
-3. Conver mW to dBm
+3. Convert mW to dBm
 ```
 if mW == 0:
     dBm = '-inf'
@@ -828,6 +907,34 @@ else:
     dBm = 10.0 * log10(mW)
 ```
 4. Double check with the output of 'sfputil show eeprom --dom'
+
+##### "DOM is not supported" is displayed
+
+If the "DOM is not supported" is displayed, please try the instructions below
+
+1. Dump the lower page
+```
+admin@sonic:~$ sudo sfputil dump -p Ethernet144
+Ethernet144:
+00000000  18 30 80 00 00 00 00 00  00 00 00 00 00 00 00 00 |.0..............|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+00000020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+00000030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+00000040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+00000050  00 00 00 00 00 03 18 01  88 01 00 00 00 01 00 00 |................|
+00000060  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+00000070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+00000080  18 46 49 54 20 48 4f 4e  20 54 45 4e 47 20 20 20 |.FIT HON TENG   |
+00000090  20 ec 01 e2 43 55 34 45  50 35 34 2d 30 31 30 30 | ...CU4EP54-0100|
+000000a0  30 2d 45 46 41 30 4e 30  31 30 5a 38 33 35 30 31 |0-EFA0N010Z83501|
+000000b0  30 30 30 33 30 20 31 38  30 38 32 37 20 20 00 00 |00030 180827  ..|
+000000c0  00 00 00 00 00 00 00 00  00 01 41 23 06 08 0c 00 |..........A#....|
+000000d0  00 00 00 02 0a 00 00 00  00 00 00 00 00 00 00 00 |................|
+000000e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+000000f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 |................|
+```
+
+2. Check the BIT7 of REG(0x02), the upper page 11h will be unavailable if BIT7=1, hence the "DOM is not supported" will be displayed.
 
 # 6 Warm Boot Support
 
