@@ -273,43 +273,76 @@ The DOM command is only available in EXEC-mode, none of command is available in 
 
 Example
 ```
-admin@sonic:~$ show interfaces transceiver eeprom --dom Ethernet128
-Ethernet128: SFP EEPROM detected
+admin@sonic:~$ show interfaces transceiver eeprom --dom Ethernet0
+Ethernet0: SFP EEPROM detected
         Application Advertisement:
                 1: 400GAUI-8 C2M (Annex 120E) | 400GBASE-DR4 (Cl 124)
-                2: 100GAUI-2 C2M (Annex 135G) | 100GBASE-DR (Cl 140)
-        Connector: MPOx12
+                2: 100GAUI-2 C2M (Annex 135G) | 100G-FR/100GBASE-FR1 (Cl 140)
+        Connector: SN (Mini CS)
         Identifier: QSFP56-DD
         Implemented Memory Pages:
                 Bank 0 Implemented
                 Diagnostic Pages Implemented
                 Page 03h Implemented
+        Length SMF(km): 0.0
         Module State: Ready State
         Revision Compliance: 4.0
-        Vendor Date Code(YYYY-MM-DD Lot): 2020-02-10
-        Vendor Name: DELL EMC
-        Vendor OUI: 70-EE-A3
-        Vendor PN: 6MGDY
-        Vendor Rev: A0
-        Vendor SN: CN0482949CQ0024
+        Vendor Date Code(YYYY-MM-DD Lot): 2020-10-07
+        Vendor Name: AVAGO
+        Vendor OUI: 00-17-6A
+        Vendor PN: AFCT-93DRPHZ-AZ2
+        Vendor Rev: 01
+        Vendor SN: FD2038FG0FY
         ChannelMonitorValues:
-                RX1Power: -40.0000dBm
-                RX2Power: -40.0000dBm
-                RX3Power: -36.9897dBm
+                RX1Power: 3.2611dBm
+                RX2Power: 2.0782dBm
+                RX3Power: -40.0000dBm
                 RX4Power: -40.0000dBm
-                TX1Bias: 0.0000mA
-                TX1Power: -40.0000dBm
-                TX2Bias: 0.0000mA
-                TX2Power: -40.0000dBm
-                TX3Bias: 0.0000mA
-                TX3Power: -40.0000dBm
-                TX4Bias: 0.0000mA
-                TX4Power: -40.0000dBm
+                RX5Power: -infdBm
+                RX6Power: -infdBm
+                RX7Power: -infdBm
+                RX8Power: -infdBm
+                TX1Bias: 44.9420mA
+                TX1Power: 2.8829dBm
+                TX2Bias: 47.4440mA
+                TX2Power: 3.0432dBm
+                TX3Bias: 47.4440mA
+                TX3Power: 2.8959dBm
+                TX4Bias: 49.9460mA
+                TX4Power: 2.7147dBm
+                TX5Bias: 0.0000mA
+                TX5Power: -infdBm
+                TX6Bias: 0.0000mA
+                TX6Power: -infdBm
+                TX7Bias: 0.0000mA
+                TX7Power: -infdBm
+                TX8Bias: 0.0000mA
+                TX8Power: -infdBm
         ChannelThresholdValues:
+                RxPowerHighAlarm  : 7.5000dBm
+                RxPowerHighWarning: 4.4999dBm
+                RxPowerLowAlarm   : -10.4001dBm
+                RxPowerLowWarning : -6.4016dBm
+                TxBiasHighAlarm   : 75.0000mA
+                TxBiasHighWarning : 70.0000mA
+                TxBiasLowAlarm    : 10.0000mA
+                TxBiasLowWarning  : 15.0000mA
+                TxPowerHighAlarm  : 6.9999dBm
+                TxPowerHighWarning: 3.9999dBm
+                TxPowerLowAlarm   : -6.4016dBm
+                TxPowerLowWarning : -2.4003dBm
         ModuleMonitorValues:
-                Temperature: 35.8203C
-                Vcc: 3.2929Volts
+                Temperature: 27.8203C
+                Vcc: 3.2852Volts
         ModuleThresholdValues:
+                TempHighAlarm  : 75.0000C
+                TempHighWarning: 70.0000C
+                TempLowAlarm   : -5.0000C
+                TempLowWarning : 0.0000C
+                VccHighAlarm   : 3.6300Volts
+                VccHighWarning : 3.4650Volts
+                VccLowAlarm    : 2.9700Volts
+                VccLowWarning  : 3.1350Volts
 ```
 
 ### 3.3.3 KLISH CLI Show Commands
