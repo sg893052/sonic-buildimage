@@ -553,7 +553,7 @@ Ethernet80
 ```
 - Displaying the DOM and Threshold information of Ethernet16-80
 ```
-sonic# show interface transceiver dom
+sonic# show interface transceiver dom Ethernet 16-80
 
 -----------------------------------------------------------------------
 Ethernet16
@@ -635,6 +635,8 @@ Ethernet80
 ```
 
 # 4 Flow Diagrams
+
+None
 
 # 5 Serviceability and Debug
 
