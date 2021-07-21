@@ -406,8 +406,6 @@ N/A
 The following attributes will be part of SAI extension.
 
     SAI_TAM_TEL_TYPE_ATTR_QUEUE_LATENCY_STATS,
-    SAI_TAM_TEL_TYPE_ATTR_FLOW_QUEUE_LATENCY_STATS,
-    SAI_TAM_REPORT_ATTR_NUMBER_OF_BINS,
     SAI_TAM_REPORT_ATTR_BIN_BOUNDARY,
     SAI_TAM_REPORTING_UNIT_MILLI_SEC
     SAI_TAM_TELEMETRY_ATTR_ID,
@@ -435,8 +433,9 @@ The command syntax for activating/de-activating the feature on the switch is as 
 sonic (config-tam-qlm)# [no] enable
 ```
 
-Deactivating Queue Latency Monitor will purge all Queue Latency Monitor configuration from the switch.
-
+- Deactivating Queue Latency Monitor will purge all Queue Latency Monitor configuration from the switch.
+- QLM feature entry will be added to the TAM_FEATURE_TABLE in CONFIG_DB. Please refer to TAM_FEATURE_TABLE in tam HLD for more information.
+  
 #### 3.6.2.2 Setting up port-groups for Queue Latency Monitoring 
 - To monitor traffic between a particualr ingress and egress set of ports, the port-group must be previously created with the `portgroup` command (under `config-tam-qlm`) hierarchy). It must be associated with set of egress-ports and/or ingress-ports. A port can be part of only one port-group's egress-port list.
 - The command syntax to create a port-group is as follows
@@ -462,6 +461,8 @@ sonic (conf-if-Ethernet6)# qlm portgroup P1 direction egress
 | `port-group`               | Name of the port-group 
 | `direction`               | To add port to ingress/egress port-list 
 
+
+- This command updates the TAM_QLM_PORT_GROUP_TABLE in CONFIG_DB.
 
 #### 3.6.2.3 Setting up sessions for Queue Latency Monitoring 
 
@@ -490,10 +491,11 @@ The following attribtes are supported for  Queue Latency Monitor sessions.
 The command syntax for creating /removing the sessions are as follows:
 
 ```
-sonic(config-tam-qlm)# session <name> [flowgroup <fg-name>] [port-group ] [sample-rate <sampler-name>]
+sonic(config-tam-qlm)# session <name> [flowgroup <fg-name>] [port-group ] [interval <value>]
 
 sonic (config-tam-dm)# no session <name>
 ```
+- This command updates the TAM_QLM_SESSIONS_TABLE in CONFIG DB.
 
 ### 3.6.3 Show Commands
 
@@ -514,6 +516,7 @@ Status             : Active
 
 ```
 
+- This command refers to the TAM_FEATURE_TABLE for information. Refer to TAM HLD for more details. 
 
 #### 3.6.3.2 Listing the Queue Latency Monitor latency ranges
 
@@ -528,10 +531,13 @@ Sample usage shown below.
 sonic # show tam qlm latency-ranges
 Num            latency-range(ns)
 ---------      -----------------------
-1               (0 to 4*64)
-2               ((4*64)+1 to 6*64) 
+1               (0 to 256)
+2               (257 to 1024) 
+....
+....
 
 ```
+- This command refers to the TAM_QLM_TABLE in APPL DB for information.
 
 #### 3.6.3.3 Listing the Queue Latency Monitor port-group information
 
@@ -555,6 +561,8 @@ ingress ports       : Ethernet1,Ethernet2
 egress ports        : Ethernet3, Ethernet4
 
 ```
+
+- This command refers to the TAM_QLM_PORT_GROUP_TABLE in CONFIG_DB.
 
 #### 3.6.3.4 Listing the Queue Latency Monitor sessions
 
@@ -605,6 +613,8 @@ Time-Stamp          Queue  range1 range2  range3  range4  range5 range6 range7 r
 
 - range1, range2 .. are latency ranges representing min and max values in nano seconds. ex:- range1 as 0-1024, range2 as 1025-4096 e.t.c 
 
+- This command refers to TAM_QLM_SESSIONS_TABLE, TAM_QLM_PORT_GROUP_TABLE, TAM_FLOWGROUP_TABLE in CONFIG DB and TAM_QLM_COUNTER_TABLE in COUNTER DB.
+   
 ### 3.6.4 Sample Workflow
 
 This section provides a sample Queue Latency Monitor workflow using CLI, for monitoring the queue latency as described below.
