@@ -366,6 +366,16 @@ Ethernet12  SFP      FINISAR CORP.    28.9844 3.3443  -33.9794   -2.1375
 
 This command displays the DOM and Threshold information of one particular port or the ports in a specific range, or all ports when **Ethernet XY** is not specified
 
+- Displaying the DOM and Threshold information of a port without transceiver attached
+```
+sonic# show interface transceiver dom Ethernet 0
+
+-----------------------------------------------------------------------
+Ethernet0
+-----------------------------------------------------------------------
+    None detected
+```
+
 - Displaying the DOM and Threshold information of a QSFP-DD transceiver without DOM support
 ```
 sonic# show interface transceiver dom Ethernet 0
