@@ -38,7 +38,7 @@ This document covers the process of extending the chain of trust to Broadcom SON
 and the platform comes with secure boot enabled ONIE already loaded on it.
 
 # Definition/Abbreviation
-There is a lot of security related terminologies and jargon. Below is a small list to help better understand the document.
+There are a lot of security related terminologies and jargon. Below is a small list to help better understand the document.
 
 ### Table 1: Abbreviations
 
@@ -47,6 +47,7 @@ There is a lot of security related terminologies and jargon. Below is a small li
 | NOS          | Network Operating System                                        |
 | UEFI         | Unified Extensible Firmware Interface                           |
 | BIOS         | Basic Input Output System                                       |
+| ROT          | Root of trust                                                   |
 | TPM          | Trusted Platform Module                                         |
 | PCR          | Platform Configuration Register, within TPM                     |
 | MOK          | Machine Owner Key                                               |
@@ -60,11 +61,11 @@ There is a lot of security related terminologies and jargon. Below is a small li
 In ONIE enabled computing environment, end user put their trust in 
  - Various HW components such as FPGA, CLPDs, Boot firmware etc.
  - Software e.g. ONIE, NOS installers and NOS
-Root of trust (RoT) is generally is such a core component which can be trusted explicitly. Usually this RoT is UEFI or BIOS. Trust is then propogated throughout the components
+Root of trust (RoT) generally is such a core component which can be trusted explicitly. Usually this RoT is UEFI or BIOS. Trust is then propogated throughout the components
 of the boot process. Chain of trust is formed where one component of the boot process meausures, verfies and execute the next component. If verification fails, the boot
 process is aborted.
 ONIE provides support for secure boot by including various applications, keys and certificates management. To apply the secure boot concept to SONiC installer image, we must
-provide the NOS image in way suitable for secure boot applications. The NOS image should be signed and Image Information Block (IIB) should be appended to it. Since the NOS image can be
+provide the NOS image in way suitable for secure boot applications. Components of the NOS image such as grub and linux kernel should be signed. These components should also support verificaiton of the next component in the chain. Finally, the full NOS image should be signed and formatted in a way so that it supports verfication and execution from ONIE environment. Since the NOS image can be
 loaded via sonic_installer command as well, an infra similar to ONIE nos intaller must be present to validate the new NOS image.
 
 ## Functional Requirements
@@ -73,8 +74,8 @@ Functional requirements includes
 
  - Only a trusted NOS image should be able to load on the machine from ONIE environment
  - Signing the Broadcom SONiC NOS executible image with a given key and create an image in 'Signed ONIE Installable Image Format'
- - Signing the Broadcom SONiC NOS grub and linux kernel with a given key
- - In case of failure in verification, load process shoudl be aborted and ONIE mode should be enabled
+ - Signing the Broadcom SONiC NOS grub and linux kernel with a given key so as to support secure boot
+ - In case of failure in verification, load process should be aborted and ONIE mode should be enabled
  - Only a trusted SONiC-NOS image should be loaded on the machine from SONiC environment
  - User should be able to turn the secure boot feature on/off
 
@@ -121,7 +122,7 @@ Signature Id too, is a fixed GUID. As currently supported signature type is PKCS
 EFI_CERT_TYPE_PKCS7_GUID := 4aafd29d-68df-49ee-8aa9-347d375665a7
 ```
 
-Signature offset and siganture length are self explanatory. Here is a typical example of the IIB,
+Signature offset and signature length are self explanatory. Here is a typical example of the IIB,
 |  Field Name       |   Value
 | :---------------: | :---------------
 |  ONIE-Image-Id    | 216e9675-be17-46c7-aa71-e525eac83bd2
@@ -129,14 +130,37 @@ Signature offset and siganture length are self explanatory. Here is a typical ex
 |  Signature-Offset | 157286400
 |  Signature-Length | 1675
 
+Current ONIE opensource code does not have the support to read, verify and execute the signed NOS installer. It needs the script enhancements to verify the signed NOS installer and execute it. Since ONIE vendor and HW vendors are same, we would enhance the scripts for testing purpose only.
 
 # CLI:
-
+This feature does not have any CLIs.
  
 # Unit Test 
-
+Following units tests should pass to mark secure boot success.
+ - NOS installer loads successfully if the verification is successful
+ - NOS installer load should fail if the verification fails
+ - If the NOS grub is not signed or signed with wrong key, then bootup should fail
+ - If the NOS kernel image is not signed or signed with wrong key, then bootup should fail
+ - In case teh bootup fails, the system should go back to ONIE rescue or ONIE install mode
+ - System should boot up successfully in case the verification succeeds at every stage
 
 # Internal Design Information:
+
+## Build Time Changes
+Most of the changes are required during buildtime to support secure boot process in SONIC. Hence the flag SONIC_SECURE_BOOT_ENABLE is defined in rules/config file.
+```
+SONIC_SECURE_BOOT_ENABLE = y
+```
+Using this flag, SONiC internal build is controlled. This flag would be used to enable the support for verification modules and code.
+
+## Tools and Scripts
+Main purpose of tools and various scripts are,
+ - Extract the Broadcom SONiC binary image
+ - Sign the grub and linux kernel image using the given private key
+ - Combine the signed components to generate the full binary
+ - Sign the full binary and createa detached signature
+ - Generate the Image Information Block mentioned in the section above
+ - Format the executible binary, signature and IIB to form a ONIE readable image
 
 ## Supported Platforms
 
