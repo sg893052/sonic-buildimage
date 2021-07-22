@@ -13,10 +13,14 @@
 * [Feature Overview](#feature-overview)
   * [Functional Requirements](#functional-requirements)
 * [Design](#design)
-  * [](#)
+  * [Onie and Secure Boot](#onie-and-secure-boot)
+  * [Signed ONIE Installable NOS Image Format](#signed-onie-installable-nos-image-format)
+    * [Image Information Block](#image-information-block)
 * [CLI](#cli)
 * [Unit Test](#unit-test)
 * [Internal Design Information](#internal-design)
+  * [Build Time Changes](#build-time-changes)
+  * [Tools and Scripts](#tools-and-scripts)
 
 
 # Revision
@@ -95,7 +99,7 @@ UEFI maintains two databases 'db' (Valid keys and certificates) and 'dbx' (revok
 shim is a very light weight EFI application who's job is to measure, verify and then load the next bootloader component. It is signed by a private key who\'s public key is available in UEFI database db. It also contains public key certificate of key which is used to sign the next stage loader. If shim is unableto verofy the next stage loader, grub, it defaults to launching the MokManager.efi allowing machine owner to enroll its public keys for verification.
 
 Machine Owner Key (MoK) is the key from machine's owner and used to sign the EFI binaries, linux kernel and bootloaders. MokManager.efi is EFI application to manage the MoK in a secure manner. It is signed by the same key who's public certificate is embedded in shim. It maintains two databases 'mok' and 'mokx' for valid and revoked keys respectively. MokManager.efi provides an interface to add and delete a key into mok or mokx and reset the MOK databases. A typical boot sequence is mentioned in the diagram below,
-![Figure1: Boot Sequence](images/boot_sequence.png)
+![Figure1: Boot Sequence](images/boot_sequence_1.png)
 
 As the HW vendor and ONIE provider are same, additional components would also be provided by the platform vendor. The table below explains it.
 ![Figure2: Component Details](images/component_details.png)
