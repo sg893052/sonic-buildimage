@@ -112,7 +112,7 @@ It is desirable to use signed NOS installable image. Since the NOS image is inta
 
 Executible Installer Data is the actual NOS executible image which ONIE discovery mechanism finds and executes. To understand better, this is the NOS binary image had the secure boot not been enabled. As secure boot is enabled now, we need a Digital Signature to cover this EID.
 
-### Image Information Block (IIB)
+### Image Information Block
 Image information block is a packed c-style structure consisting of
 ![Figure3: Image Information Block](images/image_information_block.png)
 
@@ -167,6 +167,6 @@ Main purpose of tools and various scripts are,
  - Format the executible binary, signature and IIB to form a ONIE readable image
 
 ## Supported Platforms
-
+This feature is not platform specific. It needs to be enabled from config and the customer needs to use the Broadcom provided tools to create a secureboot enabled image.
 
 
