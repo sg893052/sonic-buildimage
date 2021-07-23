@@ -198,6 +198,14 @@ As mentioned in the topology, the solid line is no shut(Up) and dotted lines are
 | **Steps**      | 1) Create 100 vlans say 2-102 and assign the ports as in topology 1<br/> 2) Make sure the ports are part of vlans and there is no loop  <br/> 3) Query L2 trace route for some random vlans say 14, 60,90,102, it should be successful and should display 3 hops with the MAC address<br /> 4) Verify the mem leak and CPU usage before starting the trigger <br/> 5) Trigger L2 trace route continously and try removing and adding the port from the vlans on the intermidiate nodes  <br/> 6) Tabulate the mem and CPU usage.  <br/> 7) Make sure there are no mem leaks observed <br /> 8) Similarly try different triggers like removing the port from the vlans, adding and removing the IP address from the vlan interface, shut/no shut of the links etc<br /> 9) After each trigger, tabulate the mem and CPU usage.  <br /> |
 
 
+### 3.4.2 To initiate L2 traceroute from multiple ssh sessions and verify the queries   ###
+
+| **Test ID**    | L2TRACE_ROUTE_STRESS_342                                     |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | To initiate L2 traceroute from multiple ssh sessions and verify the queries |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Stress Test Case**                                         |
+| **Steps**      | 1) Create 100 vlans say 2-102 and assign the ports as in topology 1<br/> 2) Make sure the ports are part of vlans and there is no loop  <br/> 3) Query L2 trace route for some random vlans say 14, 60,90,102, it should be successful and should display 3 hops with the MAC address<br /> 4) Open the multiple ssh sessions supported and initiate L2 traceroute on all of them <br/> 5) Make sure the query is successful on all the sessions  <br/> 6) Similarly initiate l2 traceroute again on all the sessions for a different vlan  <br/> 7) While the L2trace route is going on, issue Ctcl+C on all the session and make sure there are no crashes seen <br /> 8) Intiate L2 traceroute again on all the sessions and make sure it is successful. <br /> |
 
 
 
