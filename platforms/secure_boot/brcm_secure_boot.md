@@ -37,7 +37,7 @@ the Broadcom SONiC NOS image and how different components are combined to fetch 
 
 # Scope
 
-Secure boot is enabled at the very basic level of BIOS/UEFI. This component serves as the root of trust (RoT). The trust is extended the to various stages of booting.
+Secure boot is enabled at the very basic level of BIOS/UEFI. This component serves as the root of trust (RoT). This trust is extended to various stages of booting i.e. from BIOS/UEFI to ONIE to NOS.
 This document covers the process of extending the chain of trust to Broadcom SONiC installer image. Here HW supplier and ONIE software suppoliers are assumed to be the same
 and the platform comes with secure boot enabled ONIE already loaded on it.
 
@@ -66,10 +66,10 @@ In ONIE enabled computing environment, end user put their trust in
  - Various HW components such as FPGA, CLPDs, Boot firmware etc.
  - Software e.g. ONIE, NOS installers and NOS
 Root of trust (RoT) generally is such a core component which can be trusted explicitly. Usually this RoT is UEFI or BIOS. Trust is then propogated throughout the components
-of the boot process. Chain of trust is formed where one component of the boot process meausures, verfies and execute the next component. If verification fails, the boot
+of the boot process. Chain of trust is formed where one component of the boot process meausures, verfies and execute the next component. If verification fails at any one stage, the boot
 process is aborted.
 ONIE provides support for secure boot by including various applications, keys and certificates management. To apply the secure boot concept to SONiC installer image, we must
-provide the NOS image in way suitable for secure boot applications. Components of the NOS image such as grub and linux kernel should be signed. These components should also support verificaiton of the next component in the chain. Finally, the full NOS image should be signed and formatted in a way so that it supports verfication and execution from ONIE environment. Since the NOS image can be
+provide the NOS image in way suitable for secure boot applications. Components of the NOS image such as grub and linux kernel should be signed. These components should also support verification of the next component in the chain. Finally, the full NOS image should be signed and formatted in a way so that it supports verfication and execution from ONIE environment. Since the NOS image can be
 loaded via sonic_installer command as well, an infra similar to ONIE nos intaller must be present to validate the new NOS image.
 
 ## Functional Requirements
@@ -77,11 +77,11 @@ loaded via sonic_installer command as well, an infra similar to ONIE nos intalle
 Functional requirements includes
 
  - Only a trusted NOS image should be able to load on the machine from ONIE environment
- - Signing the Broadcom SONiC NOS executible image with a given key and create an image in 'Signed ONIE Installable Image Format'
+ - Signing the Broadcom SONiC NOS executable image with a given key and create an image in 'Signed ONIE Installable Image Format'
  - Signing the Broadcom SONiC NOS grub and linux kernel with a given key so as to support secure boot
  - In case of failure in verification, load process should be aborted and ONIE mode should be enabled
  - Only a trusted SONiC-NOS image should be loaded on the machine from SONiC environment
- - User should be able to turn the secure boot feature on/off
+ - Secure boot support should be enabled/disabled via ONIE
 
 # Design
 
@@ -105,6 +105,7 @@ As the HW vendor and ONIE provider are same, additional components would also be
 ![Figure2: Component Details](images/component_details.png)
 
 ## Signed ONIE Installable NOS Image Format
+
 It is desirable to use signed NOS installable image. Since the NOS image is intalled via ONIE, it needs to be in an specified format. The new format consist of 3 sections.
  - Executible Installer Data (EID)
  - Digital signature of EID
@@ -113,6 +114,7 @@ It is desirable to use signed NOS installable image. Since the NOS image is inta
 Executible Installer Data is the actual NOS executible image which ONIE discovery mechanism finds and executes. To understand better, this is the NOS binary image had the secure boot not been enabled. As secure boot is enabled now, we need a Digital Signature to cover this EID.
 
 ### Image Information Block
+
 Image information block is a packed c-style structure consisting of
 ![Figure3: Image Information Block](images/image_information_block.png)
 
@@ -137,9 +139,11 @@ Signature offset and signature length are self explanatory. Here is a typical ex
 Current ONIE opensource code does not have the support to read, verify and execute the signed NOS installer. It needs the script enhancements to verify the signed NOS installer and execute it. Since ONIE vendor and HW vendors are same, we would enhance the scripts for testing purpose only.
 
 # CLI:
+
 This feature does not have any CLIs.
  
 # Unit Test 
+
 Following units tests should pass to mark secure boot success.
  - NOS installer loads successfully if the verification is successful
  - NOS installer load should fail if the verification fails
@@ -150,14 +154,27 @@ Following units tests should pass to mark secure boot success.
 
 # Internal Design Information:
 
-## Build Time Changes
-Most of the changes are required during buildtime to support secure boot process in SONIC. Hence the flag SONIC_SECURE_BOOT_ENABLE is defined in rules/config file.
+## Signed Images
+
+Secure boot process involve signed images and modules to verify the other signed images. First of all a secure boot enabled ONIE needs to be generated for the required platform. Steps are outlined [here](https://opencomputeproject.github.io/onie/design-spec/x86_uefi.html#uefi-x86-secure-boot).
+
+Some of the important points which are useful for SONiC secure boot as well are listed here,
+ - Trusted software supplier's public certificate db_cert.pem/db_cert.pem (or Microsoft's CA ceritficate) is assumed to be embedded inside the BIOS/UEFI DB
+ - ONIE software vendor's public key certificate (ONIE_VENDOR_CERT_DER/ONIE_VENDOR_CERT_PEM) is embedded inside the shim
+ - Such shim is then signed with a trusted software supplier's **db** private key (or Microsoft key). Lets call it db.key
+ - Grub and Linux kernel are signed with either ONIE_VENDOR_SECRET_KEY or db.key so that shim can verify them before executing
+ - Standard linux signing tool e.g. 'sbsign' can be used to sign the images
+
+NOTE: DER and PEM are X509 public key certificate format. DER is 'binary' where as PEM is 'ascii' format. The content of the certificate is the same in either case, just the data format differs.
+
+In SONiC there is a need to minimize the build time changes for Secure Boot. Hence the plan is to use the ONIE config SECURE_BOOT_ENABLE in the SONiC. This flag is available in SONiC in ONIE config file.
 ```
-SONIC_SECURE_BOOT_ENABLE = y
+SECURE_BOOT_ENABLE = yes
 ```
-Using this flag, SONiC internal build is controlled. This flag would be used to enable the support for verification modules and code.
+This flag would be used in SONiC to enable the support for verification modules and code.
 
 ## Tools and Scripts
+
 Main purpose of tools and various scripts are,
  - Extract the Broadcom SONiC binary image
  - Sign the grub and linux kernel image using the given private key
@@ -167,6 +184,7 @@ Main purpose of tools and various scripts are,
  - Format the executible binary, signature and IIB to form a ONIE readable image
 
 ## Supported Platforms
-This feature is not platform specific. It needs to be enabled from config and the customer needs to use the Broadcom provided tools to create a secureboot enabled image.
+
+This feature is not platform specific. It needs to be enabled from ONIE and the customer needs to use the Broadcom provided tools to create a secureboot enabled image.
 
 
