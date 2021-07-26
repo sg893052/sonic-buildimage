@@ -145,7 +145,7 @@ Current ONIE opensource code does not have the support to read, verify and execu
 
 This feature does not introduce any new CLIs. However, some of the existing CLIs behaviour would be changing.
 
-## onie-nos-intall
+## onie-nos-install
 
 onie-nos-install is not exactly a SONiC CLI. Its ONIE script to download and install the NOS intaller. It can be run from ONIE-RESCUE mode. In ONIE-INSTALL mode, similar steps are run as that of onie-nos-install after the image search is complete. Here are the proposed changes to the behaviour,
 
