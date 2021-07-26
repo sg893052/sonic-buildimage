@@ -17,6 +17,8 @@
   * [Signed ONIE Installable NOS Image Format](#signed-onie-installable-nos-image-format)
     * [Image Information Block](#image-information-block)
 * [CLI](#cli)
+  * [onie-nos-installer](#onie-nos-installer)
+  * [sonic-installer](#sonic-installer)
 * [Unit Test](#unit-test)
 * [Internal Design Information](#internal-design)
   * [Signed Images](#signed-images)
@@ -138,10 +140,132 @@ Signature offset and signature length are self explanatory. Here is a typical ex
 
 Current ONIE opensource code does not have the support to read, verify and execute the signed NOS installer. It needs the script enhancements to verify the signed NOS installer and execute it. Since ONIE vendor and HW vendors are same, we would enhance the scripts for testing purpose only.
 
-# CLI:
+# CLI
 
-This feature does not have any CLIs.
- 
+This feature does not introduce any new CLIs. However, some of the existing CLIs behaviour would be changing.
+
+## onie-nos-intall
+
+onie-nos-install is not exactly a SONiC CLI. Its ONIE script to download and install the NOS intaller. It can be run from ONIE-RESCUE mode. In ONIE-INSTALL mode, similar steps are run as that of onie-nos-install after the image search is complete. Here are the proposed changes to the behaviour,
+
+```
+ONIE:/ # onie-nos-install http://10.59.132.240:9009/projects/csg_sonic/sonic_bui
+lds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0230_102/sonic-broadcom-enterp
+rise-advanced.bin
+discover: Rescue mode detected. No discover stopped.
+Info: Fetching http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0230_102/sonic-broadcom-enterprise-advanced.bin ...
+Connecting to 10.59.132.240:9009 (10.59.132.240:9009)
+installer              3% |                               | 75630k  0:00:30 ETA
+installer             53% |****************               |  1255M  0:00:10 ETA
+installer            100% |*******************************|  2328M  0:00:00 ETA
+ONIE: Executing installer: http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0230_102/sonic-broadcom-enterprise-advanced.bin
+**Secure boot is enabled ...**
+**Verifying the signature on the installer ... OK**
+Verifying image checksum ...
+```
+
+```
+ONIE: OS Install Mode ...
+Platform  : x86_64-accton_as7816_64x-r0
+Version   : 2018.05.00.08
+Build Date: 2018-08-27T09:21+0800
+Info: Mounting kernel filesystems... done.
+Info: Mounting ONIE-BOOT on /mnt/onie-boot ...
+Info: Mounting EFI System on /boot/efi ...
+Info: BIOS mode: UEFI
+Info: Making NOS install boot mode persistent.
+Info: Using eth0 MAC address: b8:6a:97:fd:66:56
+Info: Using eth1 MAC address: b8:6a:97:fd:66:57
+Info: eth0:  Checking link... up.
+Info: Trying DHCPv4 on interface: eth0
+ONIE: Using DHCPv4 addr: eth0: 10.193.93.234 / 255.255.240.0
+Info: eth1:  Checking link... down.
+ONIE: eth1: link down.  Skipping configuration.
+ONIE: Failed to configure eth1 interface
+Starting: klogd... done.
+Starting: dropbear ssh daemon... done.
+Starting: telnetd... done.
+discover: installer mode detected.  Running installer.
+Starting: discover... done.
+
+Please press Enter to activate this console. Info: eth0:  Checking link... up.
+Info: Trying DHCPv4 on interface: eth0
+ONIE: Using DHCPv4 addr: eth0: 10.193.93.234 / 255.255.240.0
+Info: eth1:  Checking link... down.
+ONIE: eth1: link down.  Skipping configuration.
+ONIE: Failed to configure eth1 interface
+ONIE: Starting ONIE Service Discovery
+EXT4-fs (sda3): couldn't mount as ext3 due to feature incompatibilities
+Info: Attempting file://dev/sda3/onie-installer-x86_64-accton_as7816_64x-r0 ...
+Info: Attempting file://dev/sda3/onie-installer-x86_64-accton_as7816_64x-r0.bin ...
+Info: Attempting file://dev/sda3/onie-installer-x86_64-accton_as7816_64x ...
+Info: Attempting file://dev/sda3/onie-installer-x86_64-accton_as7816_64x.bin ...
+Info: Attempting file://dev/sda3/onie-installer-accton_as7816_64x ...
+Info: Attempting file://dev/sda3/onie-installer-accton_as7816_64x.bin ...
+Info: Attempting file://dev/sda3/onie-installer-x86_64-bcm ...
+Info: Attempting file://dev/sda3/onie-installer-x86_64-bcm.bin ...
+Info: Attempting file://dev/sda3/onie-installer-x86_64 ...
+EXT4-fs (sda3): couldn't mount as ext3 due to feature incompatibilities
+ONIE: Executing installer: file://dev/sda3/onie-installer-x86_64
+**Secure boot is enabled ...**
+**Verifying the signature on the installer ... OK**
+Verifying image checksum ... OK.
+Preparing image archive ... OK.
+Installing SONiC in ONIE
+ONIE Installer: platform: x86_64-broadcom-r0
+onie_platform: x86_64-accton_as7816_64x-r0
+```
+
+In case of failure, ONIE-RESCUE prompt is back.
+
+```
+ONIE:/ # onie-nos-install http://10.59.132.240:9009/projects/csg_sonic/sonic_bui
+lds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0230_102/sonic-broadcom-enterp
+rise-advanced.bin
+discover: Rescue mode detected. No discover stopped.
+Info: Fetching http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0230_102/sonic-broadcom-enterprise-advanced.bin ...
+Connecting to 10.59.132.240:9009 (10.59.132.240:9009)
+installer              3% |                               | 75630k  0:00:30 ETA
+installer             53% |****************               |  1255M  0:00:10 ETA
+installer            100% |*******************************|  2328M  0:00:00 ETA
+ONIE: Executing installer: http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0230_102/sonic-broadcom-enterprise-advanced.bin
+**Secure boot is enabled ...**
+**Verifying the signature on the installer ... FAILED**
+**Aborting ...**
+ONIE:/ #
+```
+
+## sonic-installer
+
+Sonic installer CLI downloads and installs the NOS image on another partition. Procedure is pretty much the same. In case of secure boot enabled systems, sonic-installer first validates the signature on the NOS installer image and loads it. In case of failure the process is aborted.
+```
+root@sonic:/home/admin# sonic-installer install http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0800_103/sonic-broadcom-enterprise-advanced.bin
+New image will be installed, continue? [y/N]: y
+Downloading image...
+...14%, 341 MB, 26906 KB/s, 75 seconds left...
+...99%, 2321 MB, 27322 KB/s, 0 seconds left...
+Image Install initiation
+Command: /tmp/sonic_image
+**Secure boot is enabled ...**
+**Verifying the signature on the installer ... OK**
+Verifying image checksum ... OK.
+Preparing image archive ... OK.
+Installing SONiC in SONiC
+ONIE Installer: platform: x86_64-broadcom-r0
+```
+```
+root@sonic:/home/admin# sonic-installer install http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_210726_0800_103/sonic-broadcom-enterprise-advanced.bin
+New image will be installed, continue? [y/N]: y
+Downloading image...
+...14%, 341 MB, 26906 KB/s, 75 seconds left...
+...99%, 2321 MB, 27322 KB/s, 0 seconds left...
+Image Install initiation
+Command: /tmp/sonic_image
+**Secure boot is enabled ...**
+**Verifying the signature on the installer ... FAILED**
+Aborting ...
+```
+
 # Unit Test 
 
 Following units tests should pass to mark secure boot success.
