@@ -121,7 +121,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the PTP and LLDP  protocol CPU pkt counter         |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Create a customized PTP pkt header in the TGEN <br/> 2) Configure PTP protocol on the switch<br/> 3) Start sending the stream and verify the PTP counter is incrementing<br/> 4) With the traffic running, create a customized LLDP pkt header<br/> 5) Start the stream and verify the LLDP rx counter is incrementing  <br/> 6) With both the stream running, make sure both LLDP and PTP counters are incrementing <br/> |
+| **Steps**      | 1) Create a customized PTP pkt header in the TGEN <br/> 2) Configure PTP protocol on the switch<br/> 3) Start sending the stream and verify the PTP counter is incrementing<br/> 4) With the traffic running, create a customized LLDP pkt header<br/> 5) Start the stream and verify both the LLDP tx and rx counter is incrementing  <br/> 6) With both the stream running, make sure both LLDP and PTP counters are incrementing <br/> |
 
 
 
@@ -187,7 +187,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the ARP, DHCP and ICMP protocol CPU pkt counter    |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Create a customized ARP pkt header in the TGEN <br/> 2) Configure an IP address in the same subnet on the switch<br/> 3) Start sending the stream and verify the ARP counter is incrementing<br/> 4) With the traffic running, create a customized DHCP pkt header<br/> 5) Start the stream and verify the DHCP counter is incrementing  <br/> 6) With both the stream running, make sure both LLDP and PTP counters are incrementing <br/> 7) Create a ICMP request packet and start the stream , verify the ICMP Rx counter in being incremented<br /> 8) With all the 3 streams running, verify ARP, DHCP and ICMP Rx counter getting incremented<br /> 9) Now create Ipv6 ICMP request packet and start the stream<br /> 10) Verify the Ip6 ICMP counter is incrementing as well along with the other 3 counters<br /> |
+| **Steps**      | 1) Create a customized ARP pkt header in the TGEN <br/> 2) Configure an IP address in the same subnet on the switch<br/> 3) Start sending the stream and verify the ARP counter is incrementing<br/> 4) With the traffic running, create a customized DHCP pkt header<br/> 5) Start the stream and verify the DHCP counter is incrementing  <br/> 6) With both the stream running, make sure both ARP and DHCP counters are incrementing <br/> 7) Create a ICMP request packet and start the stream , verify the ICMP Tx & Rx counter are being incremented<br /> 8) With all the 3 streams running, verify ARP, DHCP and ICMP Rx counter getting incremented<br /> 9) Now create Ipv6 ICMP request packet and start the stream<br /> 10) Verify the Ip6 ICMP counter is incrementing as well along with the other 3 counters<br /> |
 
 
 
