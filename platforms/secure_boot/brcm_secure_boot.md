@@ -304,14 +304,14 @@ Main purpose of tools and various scripts are,
  - Extract the Broadcom SONiC binary image
  - Sign the grub and linux kernel image using the given private key
  - Combine the signed components to generate the full binary
- - Sign the full binary and createa detached signature
+ - Sign the full binary and create a detached signature
  - Generate the Image Information Block mentioned in the section above
  - Format the executible binary, signature and IIB to form a ONIE readable image
 
 These tools are separate and not included in the SONiC repo. Below is an example of the tool used to prepare the signed NOS installer
 
 ```
-# prepare-signed-nos IMAGE=<unsigned-nos-installer-path> KEY=<db.key path to sign grub and Linux kernel> <OPTIONS>
+# prepare-signed-nos IMAGE=<unsigned-nos-installer-path> KEY=<db-key-path-to-sign-grub-and-Linux-kernel> <OPTIONS>
 Extracting image ...
 Signing the grub and linux kernel ...
 Packaging the signed image ...
