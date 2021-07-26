@@ -19,7 +19,7 @@
 * [CLI](#cli)
 * [Unit Test](#unit-test)
 * [Internal Design Information](#internal-design)
-  * [Build Time Changes](#build-time-changes)
+  * [Signed Images](#signed-images)
   * [Tools and Scripts](#tools-and-scripts)
 
 
@@ -159,7 +159,7 @@ Following units tests should pass to mark secure boot success.
 Secure boot process involve signed images and modules to verify the other signed images. First of all a secure boot enabled ONIE needs to be generated for the required platform. Steps are outlined [here](https://opencomputeproject.github.io/onie/design-spec/x86_uefi.html#uefi-x86-secure-boot).
 
 Some of the important points which are useful for SONiC secure boot as well are listed here,
- - Trusted software supplier's public certificate db_cert.pem/db_cert.pem (or Microsoft's CA ceritficate) is assumed to be embedded inside the BIOS/UEFI DB
+ - Trusted software supplier's public certificate db_cert.der/db_cert.pem (or Microsoft's CA ceritficate) is assumed to be embedded inside the BIOS/UEFI DB
  - ONIE software vendor's public key certificate (ONIE_VENDOR_CERT_DER/ONIE_VENDOR_CERT_PEM) is embedded inside the shim
  - Such shim is then signed with a trusted software supplier's **db** private key (or Microsoft key). Lets call it db.key
  - Grub and Linux kernel are signed with either ONIE_VENDOR_SECRET_KEY or db.key so that shim can verify them before executing
