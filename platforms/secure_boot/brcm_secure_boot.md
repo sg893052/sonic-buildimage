@@ -290,7 +290,7 @@ Some of the important points which are useful for SONiC secure boot as well are 
  - Grub and Linux kernel are signed with either ONIE_VENDOR_SECRET_KEY or db.key so that shim can verify them before executing
  - Standard linux signing tool e.g. 'sbsign' can be used to sign the images
 
-NOTE: DER and PEM are X509 public key certificate format. DER is 'binary' where as PEM is 'ascii' format. The content of the certificate is the same in either case, just the data format differs.
+> NOTE: DER and PEM are X509 public key certificate format. DER is 'binary' where as PEM is 'ascii' format. The content of the certificate is the same in either case, just the data format differs.
 
 In SONiC there is a need to minimize the build time changes for Secure Boot. Hence the plan is to use the ONIE config SECURE_BOOT_ENABLE in the SONiC. This flag is available in SONiC in ONIE config file.
 ```
@@ -307,6 +307,18 @@ Main purpose of tools and various scripts are,
  - Sign the full binary and createa detached signature
  - Generate the Image Information Block mentioned in the section above
  - Format the executible binary, signature and IIB to form a ONIE readable image
+
+These tools are separate and not included in the SONiC repo. Below is an example of the tool used to prepare the signed NOS installer
+
+```
+# prepare-signed-nos IMAGE=<unsigned-nos-installer-path> KEY=<db.key path to sign grub and Linux kernel> <OPTIONS>
+Extracting image ...
+Signing the grub and linux kernel ...
+Packaging the signed image ...
+Completed !
+#
+```
+
 
 ## Supported Platforms
 
