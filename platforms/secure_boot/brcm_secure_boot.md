@@ -17,7 +17,7 @@
   * [Signed ONIE Installable NOS Image Format](#signed-onie-installable-nos-image-format)
     * [Image Information Block](#image-information-block)
 * [CLI](#cli)
-  * [onie-nos-installer](#onie-nos-installer)
+  * [onie-nos-install](#onie-nos-install)
   * [sonic-installer](#sonic-installer)
 * [Unit Test](#unit-test)
 * [Internal Design Information](#internal-design)
@@ -67,6 +67,7 @@ There are a lot of security related terminologies and jargon. Below is a small l
 In ONIE enabled computing environment, end user put their trust in 
  - Various HW components such as FPGA, CLPDs, Boot firmware etc.
  - Software e.g. ONIE, NOS installers and NOS
+
 Root of trust (RoT) generally is such a core component which can be trusted explicitly. Usually this RoT is UEFI or BIOS. Trust is then propogated throughout the components
 of the boot process. Chain of trust is formed where one component of the boot process meausures, verfies and execute the next component. If verification fails at any one stage, the boot
 process is aborted.
