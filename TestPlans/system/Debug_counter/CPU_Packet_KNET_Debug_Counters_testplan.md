@@ -99,7 +99,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the UDLD protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) As per the topology, enable UDLD on both the edge ports<br/> 2) From TGEN send UDLD custom packet with a large burst of traffic<br/> 3) Upon receiving the traffic, verify the UDLD Rx CPU counters are being incremented  <br/> 4) Stop the traffic and clear the CPU counters <br/> 5) Verify the counters are cleared and now pump in the traffic again  <br/> 6) Verify only the UDLD counters are incremented again.  <br/> |
+| **Steps**      | 1) As per the topology, enable UDLD on both the edge ports<br/> 2) From TGEN send UDLD custom packet with a large burst of traffic<br/> 3) Upon receiving the traffic, verify the UDLD Rx & TX CPU counters are being incremented  <br/> 4) Stop the traffic and clear the CPU counters <br/> 5) Verify the counters are cleared and now pump in the traffic again  <br/> 6) Verify only the UDLD counters are incremented again.  <br/> |
 
 
 
@@ -110,7 +110,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the STP protocol CPU pkt counter                   |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) As per the topology, enable STP on both the edge ports and make sure the STP states are established<br/> 2) Set the bridge priority such that TGEN is the root bridge and STP BPDU's are sent out to the dut<br/> 3) Verify the CPU counters and make sure STP Rx counter is getting incrementing  <br/> 4) We need to simulate the Rx error, using the internal command shutdown the net device by keeping the physical interface up and running<br/> 5) Now verify Rx error is incrementing  <br/> 6) Disable the simulation and make sure CPU Rx counter is incrementing instead of Rx err  <br/> 7) Change the root bridge to Dut and verify now the CPU Tx counter is incremented  <br/> 8) We need to simulate the Tx error by decreasing the KNET buffer to pile up the CPU queue and pump in traffic  <br /> 9) Now verify the Tx error is incrementing, clear the counters and make sure the counters are cleared and Tx error counter is incremented again once the traffic starts to flow<br /> |
+| **Steps**      | 1) As per the topology, enable STP on both the edge ports and make sure the STP states are established<br/> 2) Set the bridge priority such that TGEN is the root bridge and STP BPDU's are sent out to the dut<br/> 3) Verify the CPU counters and make sure STP Rx & TX counter is getting incrementing  <br/> 4) We need to simulate the Rx error, using the internal command shutdown the net device by keeping the physical interface up and running<br/> 5) Now verify Rx error is incrementing  <br/> 6) Disable the simulation and make sure CPU Rx counter is incrementing instead of Rx err  <br/> 7) Change the root bridge to Dut and verify now the CPU Tx counter is incremented  <br/> 8) We need to simulate the Tx error by decreasing the KNET buffer to pile up the CPU queue and pump in traffic  <br /> 9) Now verify the Tx error is incrementing, clear the counters and make sure the counters are cleared and Tx error counter is incremented again once the traffic starts to flow<br /> |
 
 
 
@@ -132,7 +132,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the VRRP protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Enable VRRP on the dut and make sure the edge port is part of the vlan on which VRRP is enabled<br/> 2) On the spirent port create the a VRRP stream and start sending traffic <br/> 3) Verify the CPU counters and make sure VRRP Rx counter is getting incrementing  <br/> 4) Clear and make sure the counter is incremented again <br/> |
+| **Steps**      | 1) Enable VRRP on the dut and make sure the edge port is part of the vlan on which VRRP is enabled<br/> 2) On the spirent port create the a VRRP stream and start sending traffic <br/> 3) Verify the CPU counters and make sure VRRP Rx & TX counter is getting incrementing  <br/> 4) Clear and make sure the counter is incremented again <br/> |
 
 
 
