@@ -82,9 +82,15 @@ Functional requirements includes
  - Only a trusted NOS image should be able to load on the machine from ONIE environment
  - Signing the Broadcom SONiC NOS executable image with a given key and create an image in 'Signed ONIE Installable Image Format'
  - Signing the Broadcom SONiC NOS grub and linux kernel with a given key so as to support secure boot
- - In case of failure in verification, image load/install process should be aborted and ONIE mode should be enabled
+ - Upon failure in verification
+   - If the image is being installed from ONIE or SONiC environment, image install process should be aborted and ONIE or SONiC prompt is returned
+   - If the platform is booting up, user is notified about the verification failure and ONIE rescue mode is enabled
  - Only a trusted SONiC-NOS image should be loaded on the machine from SONiC environment
- - Secure boot support should be enabled/disabled via ONIE
+ - Secure boot support should **not** be controlled from ONIE. It should only be enabled/disabled from BIOS/EFI environment
+
+There are some other requirements which we plan to support in the future e.g.
+ - Signing the Linux kernel modules with a sw-vendor key and verify them before loading
+ - Signing the initramfs and squashfs and support trusted loading of the same
 
 # Design
 
@@ -107,6 +113,8 @@ Machine Owner Key (MoK) is the key from machine's owner and used to sign the EFI
 As the HW vendor and ONIE provider are same, additional components would also be provided by the platform vendor. The table below explains it.
 ![Figure2: Component Details](images/component_details.png)
 
+The image is taken from [here](http://mirror.opencompute.org/onie/docs/ONIESecureBootv2.pdf)
+
 ## Signed ONIE Installable NOS Image Format
 
 It is desirable to use signed NOS installable image. Since the NOS image is intalled via ONIE, it needs to be in an specified format. The new format consist of 3 sections.
@@ -120,6 +128,8 @@ Executible Installer Data is the actual NOS executible image which ONIE discover
 
 Image information block is a packed c-style structure consisting of
 ![Figure3: Image Information Block](images/image_information_block.png)
+
+The image is taken from [here](http://mirror.opencompute.org/onie/docs/ONIESecureBootv2.pdf)
 
 The ONIE image discovery mechanism would easily identify the 'signed ONIE installable image' by attempting to read the ONIE-image-id from the end of the image. The ONIE image id is fixed for this structure and it is defined as
 ```
@@ -139,7 +149,7 @@ Signature offset and signature length are self explanatory. Here is a typical ex
 |  Signature-Offset | 157286400
 |  Signature-Length | 1675
 
-Current ONIE opensource code does not have the support to read, verify and execute the signed NOS installer. It needs the script enhancements to verify the signed NOS installer and execute it. Since ONIE vendor and HW vendors are same, we would enhance the scripts for testing purpose only.
+Current ONIE opensource code does not have the support to read, verify and execute the signed NOS installer. It needs the script enhancements to verify the signed NOS installer and execute it. We plan to enhance the opensource ONIE code to support signed NOS installer support  and contribute the same to the community.
 
 # CLI
 
@@ -274,10 +284,10 @@ Aborting ...
 
 Following units tests should pass to mark secure boot success.
  - NOS installer loads successfully if the verification is successful
- - NOS installer load should fail if the verification fails
+ - If the NOS installer verification fails, image installation fails and ONIE/SONiC prompt is retuned
  - If the NOS grub is not signed or signed with wrong key, then bootup should fail
  - If the NOS kernel image is not signed or signed with wrong key, then bootup should fail
- - In case the bootup fails, the system should go back to ONIE rescue or ONIE install mode
+ - In case the bootup fails, the system should go back to ONIE rescue
  - System should boot up successfully in case the verification succeeds at every stage
  - In case an unsigned NOS installer is loaded when secure boot is enabled, the load should fail
 
@@ -295,6 +305,10 @@ Some of the important points which are useful for SONiC secure boot as well are 
  - Standard linux signing tool e.g. 'sbsign' can be used to sign the images
  - NOS installer image should be signed with a nos.key and the public key certificarte of this nos.key should be present in ONIE for verification purpose
 > NOTE: DER and PEM are X509 public key certificate format. DER is 'binary' where as PEM is 'ascii' format. The content of the certificate is the same in either case, just the data format differs.
+
+ - In case we are using different keys for SHIM, ONIE and NOS, the BIOS/UEFI DB should hold multiple public key certificates
+ - One key can be used to sign the SHIM, ONIE-grub, ONIE-kernel, NOS-installer, NOS-grub and NOS-kernel images. In this case the key management becomes simpler
+ - Although the details of the multiple keys will be defined, we plan to follow single-key approach for this feature development activities
 
 In SONiC there is a need to minimize the build time changes for Secure Boot. Hence the plan is to use the ONIE config SECURE_BOOT_ENABLE in the SONiC. This flag is available in SONiC in ONIE config file.
 ```
