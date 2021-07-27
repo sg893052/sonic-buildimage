@@ -87,15 +87,21 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
-| 0.1 | 07/10/2020  | Sharad Agrawal  | New draft for SONiC  Infrastructure            |
+| 0.1 | 07/10/2020  | Sharad Agrawal  | New draft for Broadcom SONiC            |
+| 0.2 | 07/27/2020  | Sharad Agrawal  | Address review comments            |
+
 
 ## About This Manual
 
-This document provides general information about the Broadcom Debug infrastructure implementation in SONiC.
+This document provides general information about the Broadcom Debug App implementation in SONiC.
 
 ## Scope
 
-This document describes the high level design of Broadcom Debug infrastructure in Broadcom SONiC. The design is intended to help implement specific debug tools that use and share the common Telemetry debug infrastructure.
+This document describes the high level design of Broadcom SONIC Debug App in Broadcom SONiC. The design is intended for the following.
+
+- Help reviwers understand the design and infrastructure
+- Help QA understand the proposed user interface and plan tests
+- Help developers implement additional tools that use and share the common infrastructure.
 
 ## Definition/Abbreviation
 
@@ -103,18 +109,28 @@ This document describes the high level design of Broadcom Debug infrastructure i
 
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
-| BDBG                      | Broadcom SONIC Debug Infrastructure        |
+| BDBG                      | Broadcom SONIC Debug App        |
 | Data Source              | A specific source for the BDBG to collect the data from. It could be one of the Database Tables, Syslog, Kernel (fs) etc.            |
 | Observation Point |  Locations on the switch where metrics are being observed e.g. on-chip Buffers at  Ports, Queues etc |
 
 # 1 Feature Overview
 
-The BDBG infrastructure aims to improve upon the debugability aspects of Broadcom SONIC. Specifically, it is an infrastructure that caters to the following items.
+The BDBG App aims to improve upon the debugability aspects of Broadcom SONIC. 
 
 - SONIC has lots of useful counters. But they are dispersed and fragmented; the user must go to multiple different places to find them, and when they do, they see different counter formats and presentations. For debugging, it is required to correlate various counters to be able to draw conclusions. 
 - SONIC also doesn’t provide any historical perspective for the counters.
 SONIC counters are real-time, and doesn’t support a local "what happened when" perspective.
-- Allow integrating dataplane monitoring into the same tools.  Backend data will come from Telemetry Applications, but we can provide a unified interface to debug.
+- Allow integrating dataplane monitoring into the same tools.  
+
+BDBG attempts a use case oriented approach to debugging issues on a Broadcom SONIC Switch
+
+- It aims to solve select (speific use case) problems
+- Presents a unified, normalized and focused interface for the data to the user
+- Correlates data from different sources on the Switch – software and hardware
+- Presents a historical perspective along with current view
+- Allows exporting of aggregated data to ease burden on external collectors
+
+There are existing individual features in Broadcom SONIC that aim to solve specific problems. BDBG does not compete / replace existing features, rather uses the data gathered by them.
 
 The BDBG infrastructure implements common aspects so that individual debug tools can share the infrastructure without having to re-implement from scratch. More details on provisioning are avaiable in subsequent sections.
 
@@ -145,9 +161,9 @@ Along with the basic infrastucture, two specific tools for monitoring congestion
 4. The app accounts for the likely rounding of data at the data sources.
 5. Users can configure thresholds specific to data sources 
     1. Collection will record data only when the collected data exceeds the thresholds.
-6. When enabled, by default the data is collected for all data sources every 5 seconds
+6. When enabled, by default the data is collected for all data sources every 15 seconds
     1. The interval must be configurable, in the order of seconds
-    2. The app will hold the data only for a configurable time period. Default 1d, to be arrived at after implementation
+    2. The app will hold the data only for a configurable time period. Default 1hr, to be arrived at after implementation
 7. User can turn off periodic collection for selected tools / data sources
 8. User can clear the historical data collected on per tool basis
 
@@ -201,11 +217,38 @@ The BDBG tools are not meant for any specific usecase, but for general debugging
 
 The BDBG tools and infrastrucutre aims to improve upon the debugability aspects of Broadcom SONIC.
 
+## 2.3 Data sources for the **congestion** tool
+
+The following diagram depicts a simpllified on-chip buffering scheme, and lists various tables that act as sources for understanding congestion events. 
+
+![Congestion](congestion-sources.png)
+
+Note that some of the features that contribute the data sources are in development at the time of this writing. This list and the specific names are meant to be indicative and are not to be considered final. 
+
+## 2.3 Data sources for the **drops** tool
+
+The following diagram depicts a simplified packet pipeline, both on-chip and in the software, and lists various places that act as sources for understanding drop events. 
+
+![Drops](drops-sources.png)
+
+Note that some of the features that contribute the data sources are in development at the time of this writing. This list and the specific names are meant to be indicative and are not to be considered final. 
+
 # 3 Design
 
 ## 3.1 Overview
 
-The BDBG infrastructure and tools are built as an independent application that runs on the top of existing (and unmodified) SONIC infrastructure. 
+The BDBG app is built as an independent application that runs on the top of existing (and unmodified) SONIC infrastructure.
+
+The following diagram depicts a high level functional block diagram for the BDBG app.
+
+![BDBG](bdbg-block-diagram.png)
+
+- Collector periodically gathers and normalizes the data.
+- Correlator processes and correlates data from different sources.
+- Tools provide use case specific additions and mods to other components.
+- Exporter allows export of aggregated and correlated information to an external entity
+- bdbg command provides a local user access to correlated info.
+
 
 ## 3.2 DB Changes
 
@@ -318,11 +361,14 @@ An example invocation is as below
 shell # bdbg show congestion
 
 Number of Congestion Events             :   360
+Switch Latency  - Minimum               :   less than 1.2us (70%) 
+Switch Latency - Median                 :   10us - 20us (10%) 
+Switch Latency - Maximum                :   above 120us (1%) 
 Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
 
 Tuning Parameters
 ----------------------
-congestion      : 25%
+congestion-threshold      : 25%
 ```
 
 #### 3.7.3.3 Listing the drops tool parameters
@@ -343,9 +389,6 @@ Number of Active Drop Locations       :   3
 Number of Active Dropping CPU Queues  :   3
 Drop Events last cleared at           :   30th Jun 2021, 10:11AM
 
-Tuning Parameters
-----------------------
-No tuning parameters are supported
 ```
 
 #### 3.7.3.4 Show active congestion
@@ -401,12 +444,12 @@ queue 24 [BFD]     CPU              Egress       10%            4096       10
 This command shows the congestion events recorded for a specified observation point/source since the congestion history was cleared. Note that if the historical records exceed the `max-retention-interval`, then they will be purged and will not be counted as part of the historical data.
 
 ```
-shell # bdbg show congestion history { buffer <buffer-name> | interface <if-name> queue <queue-number> } [limit <num-events>] [around <num-seconds>]
+shell # bdbg show congestion history { buffer <buffer-name> | interface <if-name> queue <queue-number> } [limit <num-events>] [around <time>]
 ```
 
 The optional parameter `num-events` can be used to limit the output to a preferred number of congestion events.
 
-The optional parameter `num-seconds` can be used to look at the history around a time which is `num-seconds` earlier than current time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
+The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
 
 An example invocation is as below.
 
@@ -527,7 +570,7 @@ This command shows the drop events recorded since the drop history was cleared. 
 The command syntax is very similar to the `show drops active` command discussed earlier, with the addtion of `limit` and `around` options. The command output is also in the same format.
 
 ```
-shell # bdbg show drops history {flows | reasons | locations | interface <interface-name>} [limit <num-events>] [around <num-seconds>]
+shell # bdbg show drops history {flows | reasons | locations | interface <interface-name>} [limit <num-events>] [around <time>]
 ```
 
 - The `flows` option shows the dropped flows in the data-plane (silicon), cpu-queue or kernel along with the reason the flow is dropped. The dropped flow is identified by 5-tuple i.e. source and destination IP address, source and destination L4 port number and protocol (e.g. 17 for udp, 6 for tcp etc).
@@ -540,7 +583,7 @@ shell # bdbg show drops history {flows | reasons | locations | interface <interf
 
 - The optional parameter `num-events` can be used to limit the output to a preferred number of drop events.
 
-- The optional parameter `num-seconds` can be used to look at the history around a time which is `num-seconds` earlier than current time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
+- The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
 
 Example invocations are as below:
 
@@ -586,7 +629,7 @@ kernel          450
 ```
 
 ```
-shell # bdbg show drops history interface cpu
+shell # bdbg show drops history interface CPU
 
 Number of Active Dropping Queues   :   3
 Drop Events last cleared at        :   30th Jun 2021, 10:11AM
@@ -671,7 +714,6 @@ N/A
 
 ## 4.1 Config call flow
 
-All the configuration is stored in the CONFIG_DB by the management framework.
 
 # 5 Error Handling
 
@@ -723,5 +765,14 @@ The CLI testcases are included as part of individual feature testcases.
 
 ## Key notes
 
+The following items are open as of this writing and need to be closed after experimentation.
+
+- Default values for collection interval and retention interval
+- Max value for retention interval, and whether history can be measured in memory size instead of time.
+- Use of Redis for data holding
+- Use of REST API for DB access (as opposed to direct DB access) especially for data gathering
+- Use of KLISH for running the bdbg command
+
 ## Specific Limitations
 
+Not all data sources are available on all Broadcom SONiC supported platforms. 
