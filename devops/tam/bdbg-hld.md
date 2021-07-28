@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.1
+### Rev 0.2
 
 ## Table of Contents
 
@@ -266,7 +266,11 @@ The app has very little configuration and it is stored as a file in the file-sys
 
 ## 3.3 Daemons
 
-A new daemon called `bdbgd` is introduced, which is responsible for periodic data collection as well as for purging historical data.
+A new daemon called `bdbgd` is introduced, which is responsible for the proposed functionality. There will be internal threads for 
+
+- Periodic data collection as well as for purging historical data. 
+- Exporting 
+- Aggregation/correlation.
 
 ## 3.4 Switch State Service Design
 
@@ -706,24 +710,41 @@ The following command exports the specified history to a text file at TBD locati
 shell # bdbg export { all | congestion | drops }
 ```
 
+#### 3.7.5.2 Dumping internal logs
+
+The following command dumps the bdbg internal logs on to the console, useful for debugging.
+
+```
+shell # bdbg logs 
+```
+
+#### 3.7.5.3 Displaying support on actual platform
+
+The following command prints information on specific support available on the underlying platform.
+
+```
+shell # bdbg support 
+```
+
+
 ### 3.7.6 REST API Support
 
 N/A
 
- # 4 Flow Diagrams
-
-## 4.1 Config call flow
+# 4 Flow Diagrams
 
 
 # 5 Error Handling
 
-## CLI
+- Any errors during data collection/correlation are logged and are available via the CLI.
 
-N/A
+- At the startup, bdbg attempts to detect the availability of data sources (and corresponding feature support) on the underlying platform. This information is logged (available via CLI), lack of availability of any specific data source is not considered as an error.
 
 # 6 Serviceability and Debug
 
-N/A
+- A command [ `bdbg logs`]  is supported which dumps internal state information as well as any errors that are internally logged.
+
+- A command [`bdbg support`] is supported which prints information on specific support available on the underlying platform.
 
 # 7 Warm Boot Support
 
@@ -731,7 +752,7 @@ The BDBG tool doesn't offer any functionality that can persist across a warmboot
 
 # 8 Scalability
 
-N/A
+Initial measurements will be made to ascertain the ammount of memory needed at a per data source, observation-period level and will be documented here. This helps determines the extent of memory needed for a given retention interval.
 
 # 9 Unit Test
 
