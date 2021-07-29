@@ -151,108 +151,108 @@ As part of module configuration, bringing up the BGP, OSPF, PIM neighborship wit
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish BGP, OSPF and PIM sessions between dut1 and dut2.<br/> 2) Create different BFD profiles and apply on each protocol interface. Verify BFD session status.<br/> 3) Shutdown the one of the passive-mode enable interface.<br/> 4) Enable passive-mode on the profile applied on both devices. verify the BFD session status and should not come up.<br/> 5) Perform the clear BFD counters on all interfaces. Verify input and output peer counters on passive-mode enable device,  counters should be zero.<br/> 6) Perform no shutdown on the passive-mode enable interface. verify the BFD session status and should not come up.<br/> 7) Disable passive-mode on one of the peer and verify the BFD peer should come up.<br/> 8) Verify the BFD session shutdown/no shutdown on BFD peer mode. verify the BFD session status.<br/> 9) Remove configured static peers and enable BFD on protocol neighbor interfaces. Verify BFD session should come up properly. ** |
 
-### 3.2.9 Verify BFD passive-mode functionality with BFD profile on BGP peer-group
+### 3.2.10 Verify BFD passive-mode functionality with BFD profile on BGP peer-group
 
-| **Test ID**    | **bfd_profile_func_009**                                     |
+| **Test ID**    | **bfd_profile_func_010**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD passive-mode functionality with BFD profile on BGP peer-group** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish BGP sessions between dut1 and dut2.<br/> 2) Create different BFD profiles and apply on peer-group. Verify BFD session status.<br/> 3) Shutdown the one of the passive-mode enable interface.<br/> 4) Enable passive-mode on the profile applied on both devices. verify the BFD session status and should not come up.<br/> 5) Perform the clear BFD counters on all interfaces. Verify input and output peer counters on passive-mode enable device,  counters should be zero.<br/> 6) Perform no shutdown on the passive-mode enable interface. verify the BFD session status and should not come up.<br/> 7) Disable passive-mode on one of the peer and verify the BFD peer should come up.<br/> 8) Verify the BFD session shutdown/no shutdown on BFD peer mode. verify the BFD session status.** |
 
-### 3.2.10 Verify BFD profile functionality with unnumbered interfaces
+### 3.2.11 Verify BFD profile functionality with unnumbered interfaces
 
-| **Test ID**    | **bfd_profile_func_010**                                     |
+| **Test ID**    | **bfd_profile_func_011**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile functionality with unnumbered interfaces** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish BGP sessions between dut1 and dut2 with unnumbered interfaces.<br/> 2) Create different BFD profiles and apply on unnumbered protocol interface. Verify BFD session status.<br/> 3) perform shutdown/ no shutdown the interfaces. Verify BFD session status.<br/> 4) Modify the params in applied profile. verify the BFD session status.<br/> 5) Delete and apply same profile on unnumbered protocol interface. Verify BFD session status.<br/> 6) Perform shutdown/ no shutdown the applied profile. Verify BFD session status.<br/> 7) Delete the profile and enable BFD on peer interface. Verify the BFD peer should come up.** |
 
-### 3.2.11 Verify BFD profile with clear BGP, OSPF and PIM protocols
+### 3.2.12 Verify BFD profile with clear BGP, OSPF and PIM protocols
 
-| **Test ID**    | **bfd_profile_func_011**                                     |
+| **Test ID**    | **bfd_profile_func_012**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile with clear BGP, OSPF and PIM protocols** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Bring up devices as per the base config described in the section 2.1.1.<br/> 2) Create a profile with name as maximum length support(63 characters).<br/> 3) Apply profile on each protocol interface. Verify BFD session status.<br/> 4) Issue clear BGP, OSPF and PIM.<br/> 5) Verify BFD sessions established after clear protocols** |
 
-### 3.2.12 Verify BFD profile functionality with multi-hop protocol configuration
+### 3.2.13 Verify BFD profile functionality with multi-hop protocol configuration
 
-| **Test ID**    | **bfd_profile_func_012**                                     |
+| **Test ID**    | **bfd_profile_func_013**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile functionality with multi-hop protocol configuration** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish eBGP, OSPF and PIM sessions between dut1 and dut2.<br/>2) Create different BFD profiles and apply on each protocol interface. Verify BFD session status.<br/>3) Modify the params in applied BFD profiles and verify the BFD session should come up with modified values.,<br/>4) Delete all applied profiles. Verify profile configuration has been removed from profile applied interfaces.<br/>5) Apply same profile in all protocol interfaces. Verify all BFD session come up properly.<br/>6) Modify the params in profile. Verify same configuration reflects in all profile applied peers.<br/>7) Apply new profile on protocol interface without deleting the previous profile. Verify BFD session should come with new profile configuration.<br/>8) Apply profile in eBGP peer-group command. Configure peer group in BGP neighbor interfaces. Verify the BFD sessions came up with configure profile in peer-group mode.<br/>9) Delete the profile from peer-group. Verify the BFD configuration has been removed from all peer-group applied neighbors.** |
 
-### 3.2.13 Verify BFD profile functionality with multi-hop static BFD peers configuration
+### 3.2.14 Verify BFD profile functionality with multi-hop static BFD peers configuration
 
-| **Test ID**    | **bfd_profile_func_013**                                     |
+| **Test ID**    | **bfd_profile_func_014**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile functionality with multi-hop static BFD peers with local address & interface** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish eBGP, OSPF and PIM sessions between dut1 and dut2.<br/>2) Configure static BFD sessions with non default params through local-address and interface on configured neighbors between dut1 and dut2.<br/>3) Apply non exist profile into configured static peers. Verify the BFD sessions came up with static peer values.<br/>4) Create BFD profile with above applied profile name. Verify the BFD sessions, params configured in static peer takes precedence over BFD profile.<br/>5) Delete the applied profile and removed from all static BFD peers.<br/>6) Delete static BFD peers and configure without changing any parameters within the static peer.<br/>7) Apply profile into above created static peers. Verify static BFD sessions came up with params configured on the profile.** |
 
-### 3.2.14 Verify BFD profile with session timeout functionality on multi-hop peers
+### 3.2.15 Verify BFD profile with session timeout functionality on multi-hop peers
 
-| **Test ID**    | **bfd_profile_func_014**                                     |
+| **Test ID**    | **bfd_profile_func_015**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile with session timeout functionality on multi-hop peers** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish eBGP, OSPF and PIM sessions between dut1 and dut2.<br/>2) Create different BFD profiles and apply on each protocol interface. Verify BFD session status.<br/>3) Modify the params in applied BFD profiles and verify the BFD session should come up with modified values.,<br/>4) Verify the BFD sessions status with flapping the protocol configured physical interfaces.<br/>5) Verify the BFD sessions status with remove and add IP addresses from the protocol configured interfaces.<br />6) Verify the BFD sessions status with flapping the port channel interface.<br/>7) Verify the BFD sessions status with remove and add port channel from the protocol configured physical interface.<br/>8) Verify the BFD sessions status with remove and add VLAN from the protocol configured interfaces.<br/>9) Verify the BFD sessions status with remove and add peer-group the protocol configured interfaces.** |
 
-### 3.2.15 Verify BFD minimum-ttl functionality on static multi-hop peers
+### 3.2.16 Verify BFD minimum-ttl functionality on static multi-hop peers
 
-| **Test ID**    | **bfd_profile_func_015**                                     |
+| **Test ID**    | **bfd_profile_func_016**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD minimum-ttl functionality on static multi-hop peers** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish eBGP sessions between dut1 and dut2.<br/> 2) Create few static mhop peers between dut1 and dut2.<br/> 3) Configure non default minimum-ttl value on the peer device and verify the BFD session status.<br/> 4) Configure minimum-ttl value to as packet not reach to destination hop. Verify the BFD sessions should not come up on peer device.<br/> 5) Delete the minimum-ttl value and change it to more than the reachable hop count. Verify the BFD session should come up with configure value.<br/> 6) Create a profile with minimum-ttl value configured. Apply on protocol interface and verify the BFD session status.<br/> 7) Change the minimum-ttl value to not reachable to next hop. Verify the BFD session should goes down.<br/> 8) Delete the applied template and verify the BFD sessions.** |
 
-### 3.2.16 Verify BFD minimum-ttl functionality with BFD profile on multi-hop peer
+### 3.2.17 Verify BFD minimum-ttl functionality with BFD profile on multi-hop peer
 
-| **Test ID**    | **bfd_profile_func_016**                                     |
+| **Test ID**    | **bfd_profile_func_017**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD minimum-ttl functionality with BFD profile on multi-hop peer** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish eBGP sessions between dut1 and dut2.<br/> 2) Create a profiles and apply on protocol interfaces and BGP peer-group.<br/> 3) Configure non default minimum-ttl value on the applied profiles and verify the BFD session status.<br/> 4) Configure minimum-ttl value to as packet not reach to destination hop. Verify the BFD sessions should not come up on peer device.<br/> 5) Change the minimum-ttl value and change it to more than the reachable hop count. Verify the BFD session should come up with configure value.<br/> 6) Delete the applied template and verify the BFD sessions goes down.** |
 
-### 3.2.17 Verify BFD profile behavior configured on maximum BFD sessions supported 
+### 3.2.18 Verify BFD profile behavior configured on maximum BFD sessions supported 
 
-| **Test ID**    | **bfd_profile_func_017**                                     |
+| **Test ID**    | **bfd_profile_func_018**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile behavior configured on maximum BFD sessions supported** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Establish BGP, OSPF and PIM sessions between dut1 and dut2 based on maximum BFD sessions.<br/> 2) Create BFD profiles based on maximum supported BFD sessions on the device.<br/> 3) Configure BFD profiles between dut1 and dut2 on this BGP, OSPF and PIM neighbors.<br/> 4) Verify BFD session establishment in default and user VRF. <br/> 5) Configure maximum static BFD sessions with non-default aggressive timers (100ms*5).<br/> 6) Verify BFD session establishment in default and user VRF. <br /> 7) Delete the created BFD profiles from configured peers. Verify the BFD session status.** |
 
-### 3.2.18 Verify BFD profile functionality with non existing profile applied on protocol interfaces
+### 3.2.19 Verify BFD profile functionality with non existing profile applied on protocol interfaces
 
-| **Test ID**    | **bfd_profile_func_018**                                     |
+| **Test ID**    | **bfd_profile_func_019**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile functionality with non existing profile applied on protocol interfaces** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Bring up devices as per the base config described in the section 2.1.1.<br/> 2) Apply a non existing profile on protocol interfaces. Verify BFD session status should not come up.<br/> 3) Create the profile which is applied on step 2. Verify BFD session status should come up.<br/> 4) shutdown/ no shutdown the interfaces. Verify BFD session status.<br/> 5) Modify the params in applied profile. verify the BFD session status.<br/> 6) Delete and apply same profile on protocol interface. Verify BFD session status.** |
 
-### 3.2.19 Verify BFD profile functionality with non existing profile applied on static peers
+### 3.2.20 Verify BFD profile functionality with non existing profile applied on static peers
 
-| **Test ID**    | **bfd_profile_func_019**                                     |
+| **Test ID**    | **bfd_profile_func_020**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile functionality with non existing profile applied on static peers** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Bring up devices as per the base config described in the section 2.1.1.<br/> 2) Apply a non existing profile on static BFD peers. Verify BFD session status should come up as per static peer config.<br/> 3) Create the profile with non default values which is applied on step 2. Verify BFD session status should come up as per profile.<br/> 4) shutdown/ no shutdown the interfaces. Verify BFD session status.<br/> 5) Modify the params in applied profile. verify the BFD session status.<br/> 6) Delete and apply same profile on static BFD peers. Verify BFD session status.** |
 
-### 3.2.20 Verify BFD profile functionality with non existing profile applied on peer-group
+### 3.2.21 Verify BFD profile functionality with non existing profile applied on peer-group
 
-| **Test ID**    | **bfd_profile_func_020**                                     |
+| **Test ID**    | **bfd_profile_func_021**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BFD profile functionality with non existing profile applied on peer-group** |
 | **Test Setup** | **Topology1**                                                |
@@ -263,7 +263,7 @@ As part of module configuration, bringing up the BGP, OSPF, PIM neighborship wit
 
 ### 3.3.1 Verify warm reboot with BFD profile applied on peers
 
-| **Test ID**    | **bfd_profile_func_021**                                     |
+| **Test ID**    | **bfd_profile_func_022**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify warm reboot with BFD profile applied on peers.**    |
 | **Test Setup** | **Topology1**                                                |
@@ -272,7 +272,7 @@ As part of module configuration, bringing up the BGP, OSPF, PIM neighborship wit
 
 ### 3.3.2  Verify save and reload with BFD profile applied on peers
 
-| **Test ID**    | **bfd_profile_func_022**                                     |
+| **Test ID**    | **bfd_profile_func_023**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify save and reload with BFD profile applied on peers** |
 | **Test Setup** | **Topology1**                                                |
@@ -280,7 +280,7 @@ As part of module configuration, bringing up the BGP, OSPF, PIM neighborship wit
 | **Steps**      | **1) Bring up devices as per the base config described in the section 2.1.1.<br/> 2) Create different BFD profiles and apply on protocol interface, BGP peer-group and static peers.<br/> 3) Verify BFD session status as per configured on step 2.<br/> 4) Issue reboot and verify BFD sessions establishment.** |
 
 ### 3.3.3 Verify Config reload with BFD profile applied on peers
-| **Test ID**    | **bfd_profile_func_023**                                     |
+| **Test ID**    | **bfd_profile_func_024**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify Config reload with BFD profile applied on peers**   |
 | **Test Setup** | **Topology1**                                                |
@@ -288,7 +288,7 @@ As part of module configuration, bringing up the BGP, OSPF, PIM neighborship wit
 | **Steps**      | **1) Bring up devices as per the base config described in the section 2.1.1.<br/> 2) Create different BFD profiles and apply on protocol interface, BGP peer-group and static peers.<br/> 3) Verify BFD session status as per configured on step 2.<br/> 4) Issue config reload and verify BFD sessions establishment.** |
 
 ### 3.3.4  Verify BGP docker restart with BFD profile applied on peers
-| **Test ID**    | **bfd_profile_func_024**                                     |
+| **Test ID**    | **bfd_profile_func_025**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify BGP docker restart with BFD profile applied on peers** |
 | **Test Setup** | **Topology1**                                                |
@@ -296,7 +296,7 @@ As part of module configuration, bringing up the BGP, OSPF, PIM neighborship wit
 | **Steps**      | **1) Bring up devices as per the base config described in the section 2.1.1.<br/> 2) Create different BFD profiles and apply on protocol interface, BGP peer-group and static peers.<br/> 3) Verify BFD session status as per configured on step 2.<br/> 4) Issue BGP docker restart and verify BFD sessions establishment.** |
 
 ### 3.3.5  Verify Fast reboot restart with BFD profile applied on peers
-| **Test ID**    | **bfd_profile_func_025**                                     |
+| **Test ID**    | **bfd_profile_func_026**                                     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify Fast reboot restart with BFD profile applied on peers** |
 | **Test Setup** | **Topology1**                                                |
