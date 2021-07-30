@@ -39,9 +39,9 @@ the Broadcom SONiC NOS image and how different components are combined to fetch 
 
 # Scope
 
-Secure boot is enabled at the very basic level of BIOS/UEFI. This component serves as the root of trust (RoT). This trust is extended to various stages of booting i.e. from BIOS/UEFI to ONIE to NOS.
+Secure boot is enabled at the very basic level of UEFI. This component serves as the root of trust (RoT). This trust is extended to various stages of booting i.e. from UEFI to ONIE to NOS.
 This document covers the process of extending the chain of trust to Broadcom SONiC installer image. Here HW supplier and ONIE software suppliers are assumed to be the same
-and the platform comes with secure boot enabled ONIE already loaded on it.
+and the platform comes with secure boot enabled ONIE already loaded on it. Firmware updates such as ONIE firmware updation or CPLD/BMC/UEFI firmware updation in the SecureBoot enviornment are beyond the scope of this document.
 
 # Definition/Abbreviation
 There are a lot of security related terminologies and jargon. Below is a small list to help better understand the document.
@@ -61,6 +61,7 @@ There are a lot of security related terminologies and jargon. Below is a small l
 | GUID         | Globally Unique Identifier                                      |
 | IIB          | Image Information Block, part of ONIE installation image format |
 | PEM          | A base64 ASCII representation of DER                            |
+| CMS          | Cryptographic Message Syntax [RFC-5652](https://datatracker.ietf.org/doc/html/rfc5652)  |
 
 # Feature Overview 
 
@@ -68,7 +69,7 @@ In ONIE enabled computing environment, end user put their trust in
  - Various HW components such as FPGA, CLPDs, Boot firmware etc.
  - Software e.g. ONIE, NOS installers and NOS
 
-Root of trust (RoT) generally is such a core component which can be trusted explicitly. Usually this RoT is UEFI or BIOS. Trust is then propagated throughout the components
+Root of trust (RoT) generally is such a core component which can be trusted explicitly. Usually this RoT is UEFI. Trust is then propagated throughout the components
 of the boot process. Chain of trust is formed where one component of the boot process meausures, verfies and execute the next component. If verification fails at any one stage, the boot
 process is aborted.
 ONIE provides support for secure boot by including various applications, keys and certificates management. To apply the secure boot concept to SONiC installer image, we must
@@ -86,7 +87,7 @@ Functional requirements includes
    - If the image is being installed from ONIE or SONiC environment, image install process should be aborted and ONIE or SONiC prompt is returned
    - If the platform is booting up, user is notified about the verification failure and ONIE rescue mode is enabled
  - Only a trusted SONiC-NOS image should be loaded on the machine from SONiC environment
- - Secure boot support should **not** be controlled from ONIE. It should only be enabled/disabled from BIOS/EFI environment
+ - Secure boot support should **not** be controlled from ONIE. It should only be enabled/disabled from UEFI-BIOS environment
 
 There are some other requirements which we plan to support in the future e.g.
  - Signing the Linux kernel modules with a sw-vendor key and verify them before loading
@@ -104,6 +105,8 @@ UEFI maintains two databases 'db' (Valid keys and certificates) and 'dbx' (revok
  - db contains a matching cryptographic hash of the image, or a public certificate which can validate the signed image
  and
  - Hash or the certificate should not be part of the 'revoked key database' dbx
+
+ > NOTE: SecureBoot is not supported on legacy BIOS. System must support UEFI-BIOS to enable SecureBoot
 
 shim is a very light weight EFI application who's job is to measure, verify and then load the next bootloader component. It is signed by a private key who\'s public key is available in UEFI database db. It also contains public key certificate of key which is used to sign the next stage loader. If shim is unableto verify the next stage loader, grub, it defaults to launching the MokManager.efi allowing machine owner to enroll its public keys for verification.
 
@@ -298,17 +301,28 @@ Following units tests should pass to mark secure boot success.
 Secure boot process involve signed images and modules to verify the other signed images. First of all a secure boot enabled ONIE needs to be generated for the required platform. Steps are outlined [here](https://opencomputeproject.github.io/onie/design-spec/x86_uefi.html#uefi-x86-secure-boot).
 
 Some of the important points which are useful for SONiC secure boot as well are listed here,
- - Trusted software supplier's public certificate db_cert.der/db_cert.pem (or Microsoft's CA ceritficate) is assumed to be embedded inside the BIOS/UEFI DB
- - ONIE software vendor's public key certificate (ONIE_VENDOR_CERT_DER/ONIE_VENDOR_CERT_PEM) is embedded inside the shim
+ - Trusted software supplier's public certificate db_cert.der/db_cert.pem (or Microsoft's CA ceritficate) is assumed to be embedded inside the UEFI DB
+ - ONIE software vendor's public key certificate (ONIE_VENDOR_CERT_DER) is embedded inside the shim
  - Such shim is then signed with a trusted software supplier's **db** private key (or Microsoft key). Lets call it db.key
  - Grub and Linux kernel are signed with either ONIE_VENDOR_SECRET_KEY or db.key so that shim can verify them before executing
  - Standard linux signing tool e.g. 'sbsign' can be used to sign the images
  - NOS installer image should be signed with a nos.key and the public key certificarte of this nos.key should be present in ONIE for verification purpose
-> NOTE: DER and PEM are X509 public key certificate format. DER is 'binary' where as PEM is 'ascii' format. The content of the certificate is the same in either case, just the data format differs.
 
- - In case we are using different keys for SHIM, ONIE and NOS, the BIOS/UEFI DB should hold multiple public key certificates
+> NOTE: X509 public key certificate can be in DER or PEM formats. DER is 'binary' format for the datastructures where as PEM is the base64 'ascii' representation of DER. The content of the certificate is the same in either case, just the data format differs.
+
+ - In case we are using different keys for SHIM, ONIE and NOS, the UEFI DB should hold multiple public key certificates
  - One key can be used to sign the SHIM, ONIE-grub, ONIE-kernel, NOS-installer, NOS-grub and NOS-kernel images. In this case the key management becomes simpler
  - Although the details of the multiple keys will be defined, we plan to follow single-key approach for this feature development activities
+ - If the key gets compromised or revoked, it can be added to the UEFI's revoked key database (dbx)
+
+```
+For all the practical purposes, following standards are followed for key and certificate management.
+Key: 2048bit RSA
+Hashing Algorithm: SHA-256
+Signature Algorithm: SHA-256 with RSA encryption
+Stored Signature Format: DER (binary)
+Public Certificate: X509 v3
+```
 
 In SONiC there is a need to minimize the build time changes for Secure Boot. Hence the plan is to use the ONIE config SECURE_BOOT_ENABLE in the SONiC. This flag is available in SONiC in ONIE config file.
 ```
