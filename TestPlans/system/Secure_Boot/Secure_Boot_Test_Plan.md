@@ -7,9 +7,9 @@
 | 0.1 | 30/07/2021  | Santosh Votarikari      | Initial version             |
 
 # List of Reviewers
-|  Function 		  | Name  				 |
+|  Function 	      | Name  		     |
 |:-------------------:|:---------------------|
-|   Dev				  |  Babu Rajaram 	     |
+|   Dev		      |  Babu Rajaram 	     |
 |   Dev               |  Fuzail Khan         |
 |   QA                |  Kalyan Vadlamani    |
 |   QA                |  Chandra Bhushan     |
