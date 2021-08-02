@@ -56,6 +56,9 @@
     * [3.29 MTU](#329-mtu)
     * [3.30 NAT](#330-nat)
     * [3.31 SPAN/ERSPAN](#331-span/erspan)
+    * [3.32 NTP](#332-NTP)
+    * [3.33 DNS](#332-DNS)
+    * [3.34 TACACS](#332-TACACS)
   * [4 Event flow diagrams](#4-event-flow-diagrams)
     * [4.1 Sub port interface creation](#41-sub-port-interface-creation)
     * [4.2 Sub port interface runtime admin status change](#42-sub-port-interface-runtime-admin-status-change)
@@ -66,6 +69,7 @@
         * [5.1.2 Config IP address on a sub port interface](#512-config-ip-address-on-a-sub-port-interface)
         * [5.1.3 Change admin status on a sub port interface](#513-change-admin-status-on-a-sub-port-interface)
     * [5.2 Show commands](#52-show-commands)
+    * [5.3 List of application commands that needs sub port interface support](#53-list-of-application-commands-that-needs-sub-port-interface-support)
   * [6 Warm reboot support](#6-warm-reboot-support)
   * [7 Unit test](#7-unit-test)
     * [7.1 Sub port interface creation](#71-sub-port-interface-creation)
@@ -77,19 +81,23 @@
         * [7.3.2 Remove all IP addresses from a sub port interface](#732-remove-all-ip-addresses-from-a-sub-port-interface)
         * [7.3.3 Remove a sub port interface](#733-remove-a-sub-port-interface)
   * [8 Scalability](#8-scalability)
-  * [9 Port channel renaming](#9-port-channel-renaming)
-  * [10 Appendix](#10-appendix)
-    * [10.1 Difference between a sub port interface and a vlan interface](#101-difference-between-a-sub-port-interface-and-a-vlan-interface)
-  * [12 Acknowledgment](#11-acknowledgment)
-  * [13 References](#12-references)
+  * [9 Broadcom Internal Design](#9-broadcom-internal-design)
+    * [9.1 Platforms Supported](#91-platforms-supported)
+    * [9.2 Scalability](#92-scalability)
+  * [10 Upgrade/Downgrade considerations](#10-Upgrade_Downgrade-considerations)
+  * [11 Appendix](#10-appendix)
+    * [11.1 Difference between a sub port interface and a vlan interface](#101-difference-between-a-sub-port-interface-and-a-vlan-interface)
+  * [12 Open questions](#12-open-questions)
+  * [13 Acknowledgment](#11-acknowledgment)
+  * [14 References](#12-references)
 
 <!-- /TOC -->
 
 # Revision history
-| Rev |    Date     |       Author       | Change Description                |
-|:---:|:-----------:|:------------------:|-----------------------------------|
-| 0.1 | 07/01/2019  | Wenda Ni           | Initial version                   |
-| 0.2 | 12/17/2020  | Preetham Singh     | Update with Feature support|
+| Rev  |    Date    |            Author              | Change Description          |
+| :--: | :--------: | :----------------------------: | --------------------------- |
+| 0.1  | 07/01/2019 |           Wenda Ni             | Initial version             |
+| 0.2  | 12/17/2020 | Broadcom Subinterface Dev Team | Update with Feature support |
 
 # Scope
 A sub port interface is a logical interface that can be created on a physical port or a port channel.
@@ -110,10 +118,10 @@ This design does NOT cover the case of creating and using sub port as a bridge p
 __Fig. 2: Sub port bridge port__
 
 # Acronyms
-| Acronym                  | Description                                |
-|--------------------------|--------------------------------------------|
-| VRF                      | Virtual routing and forwarding             |
-| RIF                      | Router interface                           |
+| Acronym | Description                    |
+| ------- | ------------------------------ |
+| VRF     | Virtual routing and forwarding |
+| RIF     | Router interface               |
 
 # 1 Requirements
 
@@ -125,7 +133,7 @@ Manage the life cycle of a sub port interface created on a physical port or a po
 A sub port interface shall support the following features:
 * L3 forwarding (both unicast and multicast)
 * BGP
-	* BGP L2VPN EVPN
+  * BGP L2VPN EVPN
 * ARP and NDP
 * VRF
 * RIF counters & Status
@@ -346,16 +354,16 @@ INTERFACE_TABLE|Eth64.10|fc00::/7
 ## 2.4 SAI
 SAI attributes related to a sub port interface are listed in the Table below.
 
-| SAI attributes                                   | attribute value/type                         |
-|--------------------------------------------------|----------------------------------------------|
-| SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID      | VRF oid                                      |
-| SAI_ROUTER_INTERFACE_ATTR_TYPE                   | SAI_ROUTER_INTERFACE_TYPE_SUB_PORT           |
-| SAI_ROUTER_INTERFACE_ATTR_PORT_ID                | parent physical port or port channel oid     |
-| SAI_ROUTER_INTERFACE_ATTR_OUTER_VLAN_ID          | VLAN id (sai_uint16_t)                       |
-| SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS        | MAC address                                  |
-| SAI_ROUTER_INTERFACE_ATTR_MTU                    | mtu size                                     |
-| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE         | IPv4 Admin State|
-| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE         | IPv6 Admin State|
+| SAI attributes                           | attribute value/type                     |
+| ---------------------------------------- | ---------------------------------------- |
+| SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID | VRF oid                                  |
+| SAI_ROUTER_INTERFACE_ATTR_TYPE           | SAI_ROUTER_INTERFACE_TYPE_SUB_PORT       |
+| SAI_ROUTER_INTERFACE_ATTR_PORT_ID        | parent physical port or port channel oid |
+| SAI_ROUTER_INTERFACE_ATTR_OUTER_VLAN_ID  | VLAN id (sai_uint16_t)                   |
+| SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS | MAC address                              |
+| SAI_ROUTER_INTERFACE_ATTR_MTU            | mtu size                                 |
+| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE | IPv4 Admin State                         |
+| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE | IPv6 Admin State                         |
 
 
 
@@ -391,18 +399,18 @@ sai_status_t status = create_router_interface(&rif_id, switch_oid, sub_intf_attr
 #### 2.4.2.1 SAI-supported attributes
 The following attributes are supported in SAI spec to be changed at run time.
 
-| SAI attributes                                        | attribute value/type                         |
-|-------------------------------------------------------|----------------------------------------------|
-| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE              | true / false                                 |
-| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE              | true / false                                 |
-| SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS             | MAC address                                  |
-| SAI_ROUTER_INTERFACE_ATTR_MTU                         | mtu size                                     |
-| SAI_ROUTER_INTERFACE_ATTR_INGRESS_ACL                 | ACL table or ACL table group oid             |
-| SAI_ROUTER_INTERFACE_ATTR_EGRESS_ACL                  | ACL table or ACL table group oid             |
-| SAI_ROUTER_INTERFACE_ATTR_V4_MCAST_ENABLE             | true / false                                 |
-| SAI_ROUTER_INTERFACE_ATTR_V6_MCAST_ENABLE             | true / false                                 |
-| SAI_ROUTER_INTERFACE_ATTR_NEIGHBOR_MISS_PACKET_ACTION | sai_packet_action_t                          |
-| SAI_ROUTER_INTERFACE_ATTR_LOOPBACK_PACKET_ACTION      | sai_packet_action_t                          |
+| SAI attributes                           | attribute value/type             |
+| ---------------------------------------- | -------------------------------- |
+| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE | true / false                     |
+| SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE | true / false                     |
+| SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS | MAC address                      |
+| SAI_ROUTER_INTERFACE_ATTR_MTU            | mtu size                         |
+| SAI_ROUTER_INTERFACE_ATTR_INGRESS_ACL    | ACL table or ACL table group oid |
+| SAI_ROUTER_INTERFACE_ATTR_EGRESS_ACL     | ACL table or ACL table group oid |
+| SAI_ROUTER_INTERFACE_ATTR_V4_MCAST_ENABLE | true / false                     |
+| SAI_ROUTER_INTERFACE_ATTR_V6_MCAST_ENABLE | true / false                     |
+| SAI_ROUTER_INTERFACE_ATTR_NEIGHBOR_MISS_PACKET_ACTION | sai_packet_action_t              |
+| SAI_ROUTER_INTERFACE_ATTR_LOOPBACK_PACKET_ACTION | sai_packet_action_t              |
 
 
 #### 2.4.2.2 Set sub port interface admin status
@@ -486,29 +494,29 @@ Example:
 
 VLAN_SUB_INTERFACE|Eth64.10
 "vrf_name" : "Vrf-Red"
-```  
+```
 
 Upon vrf binding, intfmgrd binds sub-interface netdev to vrf and also updates APPL_DB INTERFACE_TABLE and STATE_DB INTERFACE_TABLE with vrf information.
 
 Note:
 
 -   Different Sub-interfaces under same parent interface can bind to different VRFs
-    
+
 -   Same sub-interface under a different parent interface can bind to different VRFs.
-    
+
 
 Note:
 
 Whenever a sub-interface is bound/unbound from a vrf, the sub-interface will be deleted and recreated to remove all L3 configurations.
-  
+
 Management VRF:
 Sub-interfaces can be bound/unbound to management VRF mgmt.
 
 ## 3.3 RIF Counters & Oper Status:
 -   Admin Status: Admin status per sub-interface can be controlled by administrator as mentioned in section 2.1.2. This status is updated in the kernel and same can be verified in the “show subinterfaces status” click command.
-    
+
 -   Oper Status: Oper Status of sub-interface is inherited from parent interface.
-    
+
 -   HW Counters: HW counters per subinterface can be supported upon RIF counter support(click command “show interface counters rif”).    
 
 NOTE: RIF counters support will be part of future release. 
@@ -519,11 +527,13 @@ All operation applicable to Physical sub-interfaces are applicable to portchanne
 
 ## 3.5 Parent Interface Admin/oper UP/DOWN:
 -   Upon Parent interface admin UP/DOWN, Kernel automatically brings UP/DOWN all associated sub-interfaces.
-    
+
 -   Upon Parent interface oper DOWN: All sub-interfaces under the parent interface will be Oper Down.
 
 ## 3.6 Port Aliasing:
-
+Port Aliasing will not be have any impact due to this feature. The parent interface component of subinterface naming will be inline with existing aliasing convention.
+Example:
+- Ethernet4.10 will be represented as Eth1/2.10 in standard interface naming mode
 ## 3.7 Speed/Bandwidth:
 Speed & Bandwidth is not applicable per sub-interface, rather applicable on parent physical or port channel sub-interface.
 
@@ -531,12 +541,12 @@ Speed & Bandwidth is not applicable per sub-interface, rather applicable on pare
 Subinterfaces cannot become member of a PortChannel interface. Such configurations will be blocked at CLI level.
 
 ## 3.9 Dynamic Port Breakout:
-Upon port-breakout, subinterfaces on the parent interface needs to be removed automatically.
+Upon port-breakout, subinterfaces on the parent interface needs to be removed automatically. Also, all configuration entries referring to a subinterface will also be removed automatically.
 
 ## 3.10 L2 Protocols:
 None of L2 Protocols are supported on Subinterfaces.
 
-Subinterfaces belong to a separate Bridge Domain. L2 Flooded frames in the vlan should not be sent on the corresponding subinterface and vice versa.
+ Sub interfaces are treated as router-ports, they belong to a seperate bridge domain. There is no L2 bridging between sub interfaces. Meaning L2 flooded frames in sub interface will not be sent to the corresponding sub interfaces (with same vlan). Similarly l2 flooded frames sent from regular l2 interface will not be flooded to sub interfaces (with same vlan), it will be dropped.
 
 ## 3.11 ARP/NDP:
 ARP and IPv6 Neighbor Discovery should work seamlessly on sub-interfaces as  mentioned in section 2.5.2. These neighbors should be learnt on corresponding sub-interfaces in the kernel and propagated to neighsyncd via netlink messages. Neighsyncd should program these neighbors in the corresponding Host table.
@@ -556,9 +566,9 @@ IPv6 use-link-local-only should be supported on sub-interfaces.
 ## 3.14 IPv4/IPv6 Routes with ECMP:
 ### 3.14.1 Static/Dynamic Routes:
 -   User can configure static routes with next hop resolved on subinterfaces or pointing to subinterfaces.
-    
+
 -   User can configure static leak routes with next hop resolved on subinterfaces or pointing to subinterfaces.
-    
+
 Dynamic Routes with nexthop resolved on subinterfaces are also supported.
 
  FRR & Zebra populates interface Table from kernel netlink events. Hence this interface table is updated with subinterfaces as well.
@@ -570,7 +580,7 @@ Routeorch shall program these routes to appropriate LPM table pointing to sub-in
 ### 3.14.2 ECMP:
 ECMP of nexthops resolved over subinterfaces should be supported:  
     An ECMP group can comprise of:
-    
+
 -   All subinterfaces    
 -   Mix of subinterface and physical interface/PortChannels    
 -   Mix of subinterface and vlan
@@ -586,7 +596,7 @@ OSPF will be supported on sub-interfaces.
 All Config commands, show commands and show command displays shall adapt to port name conversion from SONiC backend short names to user interface visible sub-interface name.
 
 ## 3.17 OSPFv3:
-OSPFv3 will be supported on sub-interfaces.
+OSPFv3 will NOT be supported on sub-interfaces.
 
 ## 3.18 BFD:
 BFD sessions can run on subinterfaces.
@@ -608,11 +618,11 @@ IPSLA sessions can also be configured with source as sub-interface.
 VRRP sessions can be configured on sub-interfaces. 
 
 SAG will be supported on subinterfaces. SAG support on subinterfaces will be solely to provide gateway functionality across leaf nodes. Since subinterfaces are router ports, there is no L2 domain extension across vxlan network hence there will be no Type-2 MACIP sync across vxlan network.
- 
+
 Subinterface and SAG configuration should be symmetric across leaf nodes where the host could move. If not symmetric, traffic drop will be observed upon host move.
 
 SAG will be directly configured on the sub-interface netdevice in the kernel.
- 
+
 
 - APP_DB Schema:
 ```
@@ -631,43 +641,53 @@ type ; IP(v6) address type string.
 vmac = virtual_mac_address ; Virtual MAC address associated with VRRP instance
 
 isSag = true/false;
-```  
+```
 
 - vrrporch:
-VMAC programming: VMAC should be programmed pointing to Virtual RIF associated with the subinterface?
-VIP Programming: VIP should be programmed pointing to Virtual RIF associated with subinterface?
+  VMAC programming: VMAC should be programmed pointing to Virtual RIF associated with the subinterface?
+  VIP Programming: VIP should be programmed pointing to Virtual RIF associated with subinterface?
 
 - Admin/Oper Down of parent interface:
-SAG Manager will monitor parent interface state and update SAG state in APP_DB SAG table.
-  
+  SAG Manager will monitor parent interface state and update SAG state in APP_DB SAG table.
 
 - SAG on Subinterface on MCLAG:
-SAG can be configured on MCLAG client port subinterfaces. ARP/ND sync across mclag nodes will happen for those learnt on subinterfaces.
+  SAG can be configured on MCLAG client port subinterfaces. ARP/ND sync across mclag nodes will happen for those learnt on subinterfaces.
 
 ## 3.23 VxLAN:
-Underlay: If VxLAN tunnel IPs are reachable via subinterfaces, tunnels will NOT be provisioned in hardware
+Underlay: If VxLAN tunnel IPs are reachable via subinterfaces, VxLAN tunnels should be provisioned and tunnels should come UP. 
 
 ## 3.24 MCLAG:
 - Subinterfaces as MCLAG Clients:
-Support is needed for L3 Port Channel only. MCLAG Client interface as Router Port PortChannel.
-Physical interface router port cannot be MCLAG client interface, so not applicable.
-Vlan Interface (SVI) will have a physical port and LAG as switch port, so not applicable.
+  Support is needed for L3 Port Channel only. MCLAG Client interface as Router Port PortChannel.
+  Physical interface router port cannot be MCLAG client interface, so not applicable.
+  Vlan Interface (SVI) will have a physical port and LAG as switch port, so not applicable.
 
 - Subinterfaces as peer-interface:
-Peer interface is always switch port to carry tagged traffic in case of failover scenario.
-And subinterface is applicable only to router ports. So the peer interface cannot be a subinterface. 
+  Peer interface is always switch port to carry tagged traffic in case of failover scenario.
+  And subinterface is applicable only to router ports. So the peer interface cannot be a subinterface. 
 
 - Neighbors learnt on subinterfaces:
-ARP and ND learnt on subintfs of a multihomed interface is required to be synced. And this is independent of whether the parent (Po) interface has an IP config or not. Users will be required to configure the same IP on MCLAG multihomed subintfs on the MCLAG peers.
+  ARP and ND learnt on subintfs of a multihomed interface is required to be synced. And this is independent of whether the parent (Po) interface has an IP config or not. Users will be required to configure the same IP on MCLAG multihomed subintfs on the MCLAG peers.
 
 ## 3.25 QinQ:
-Duble .1Q vlan tagged packets will be routed on subinterfaces based on outer vlan tag retaining the inner tag.
+Double tagged packet behaviour on sub interface behaviour is the same behaviour as the non-sub interface scenario.
+
+If the (outer vlan in the packet  != incoming port’s VLAN), the packet gets dropped.  
+
+If (outer vlan == incoming port’s VLAN) and inner TPID is 0x8100,  following table defines behaviour of frame based on the outer TPID 
+
+| Outer TPID(inner TPID being 0x8100) | (DA == MyMAC) & (DST IP != myIP          | (DA == MyMAC) & (DST IP == myIP) |
+| ----------------------------------- | ---------------------------------------- | -------------------------------- |
+| 0x8100                              | Gets routed based on outer vlan tag with inner TAG retained | Dropped                          |
+| 0x88a8                              | Dropped                                  | Dropped                          |
+
+
 
 ## 3.26 PIM:
-PIM is not supported on sub-interfaces in this release.
+PIM is supported on sub-interfaces.
 
 ## 3.27 IGMP:
-IGMP is not supported on sub-interfaces in this release.
+IGMP is supported on sub-interfaces.
 
 ## 3.28 QoS:
 QoS settings are inherited from parent interface.
@@ -684,6 +704,14 @@ NAT feature will not be supported on sub-interfaces.
 - ERSPAN destination can be reachable via sub-interfaces.
 - Sub-interface as mirror destination port will not be supported.
 
+## 3.32 NTP:
+NTP over subinterfaces is supported.
+
+## 3.33 DNS:
+DNS over subinterfaces is supported.
+
+## 3.34 TACACS:
+TACACS over subinterfaces is supported.
 
 # 4 Event flow diagrams
 ## 4.1 Sub port interface creation
@@ -696,7 +724,7 @@ NAT feature will not be supported on sub-interfaces.
 ![](images/sub_intf_removal_flow.png)
 
 # 5 CLIs
-## 5.1 Config commands
+## 5.1 Config commands (Click)
 ### 5.1.1 Config a sub port interface
 `subinterface` command category is introduced to the `config` command.
 
@@ -778,6 +806,50 @@ Usage: config interface startup <sub_port_interface_name>
 ```
 Usage: config interface shutdown <sub_port_interface_name>
 ```
+## 5.1 Config commands (KLiSH)
+### 5.1.1 Config a sub port interface
+```
+Command: [no] interface <subinterface-name>
+
+Example 1:
+sonic-cli(config)# interface Ethernet4.10
+sonic-cli(conf-subif-Ethernet4.10)# 
+
+Example 2:
+sonic-cli(config)# interface PortChannel 100.100
+sonic-cli(conf-subif-PortChannel100.100)# 
+```
+### 5.1.2 Config vlan-id on a sub port interface
+
+```
+Command: encapsulation dot1q vlan <vlan-id>
+Command: no encapsulation
+
+Example 1:
+sonic-cli(conf-subif-Ethernet4.10)# encapsulation dot1q vlan-id 1000
+ 
+```
+### 5.1.3 Config IP address on a sub port interface
+
+```
+Command: [no] ip address <ipv4-address>
+Command: [no] ipv6 address <ipv6-address>
+
+Example 1:
+sonic-cli(config)# interface Ethernet 4.10
+sonic-cli(conf-subif-Ethernet4.10)# ip address 4.10.1.1/24
+sonic-cli(conf-subif-Ethernet4.10)# ipv6 address 410::1/64
+ 
+```
+
+### 5.1.4 Change admin status on a sub port interface
+```
+Command: [no] shutdown
+
+Example 1:
+sonic-cli(conf-subif-Ethernet4.10)# shutdown
+ 
+```
 
 ## 5.2 Show commands
 ```
@@ -797,7 +869,68 @@ Sub port interface    Speed    MTU    Vlan    Admin                 Type
 ------------------  -------  -----  ------  -------  -------------------
      Eth64.10          100G   9100    100       up  dot1q-encapsulation
 ```
-No operational status is defined on RIF (sub port interface being a type of RIF) in SAI spec.
+
+## 5.3 List of application commands that needs sub port interface support
+These are the list of application CLI commands that has been committed to support sub port interface.
+
+|                                              **BGP**                                               |
+|----------------------------------------------------------------------------------------------------|
+| neighbor interface \<*sub-interface-name*\>                                                        |
+| update-source interface \<*sub-interface-name*\>                                                   |
+| show bgp ipv4/ipv6/all neighbors interface \<*sub-interface-name*\>                                |
+| clear bgp ipv4/ipv6/all interface \<*sub-interface-name*\>                                         |
+| show running-configuration bgp neighbor vrf \<*vrf-name*\> interface \<*sub-interface-name*\>      |
+
+|                                           **Route-MAP**                                            |
+|----------------------------------------------------------------------------------------------------|
+| match interface \<*sub-interface-name*\>                                                           |
+| match peer \<*sub-interface-name*\>                                                                |
+| show route-map                                                                                     |
+| show running-configuration route-map                                                               |
+
+|                                              **Ping**                                              |
+|----------------------------------------------------------------------------------------------------|
+| ping -I \<*sub-interface-name*\>                                                                   |
+| ping6 -I \<*sub-interface-name*\>                                                                  |
+
+|                                           **Traceroute**                                           |
+|----------------------------------------------------------------------------------------------------|
+| traceroute -I \<*sub-interface-name*\>                                                             |
+| traceroute6 -I \<*sub-interface-name*\>                                                            |
+
+|                                          **Static-route**                                          |
+|----------------------------------------------------------------------------------------------------|
+| ip route \<*ip/prefix*\> interface \<*sub-interface-name*\>                                        |
+| no ip route \<*ip/prefix*\> interface \<*sub-interface-name*\>                                     |
+| show ip route [*static*]                                                                           |
+
+|                                       **In-band Management**                                       |
+|----------------------------------------------------------------------------------------------------|
+| ip vrf forwarding mgmt                                                                             |
+| show ip vrf                                                                                        |
+
+|                                              **NTP**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ntp source-interface \<*sub-interface-name*\>                                                      |
+| show ntp global                                                                                    |
+
+|                                              **DNS**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ip name-server source-interface \<*sub-interface-name*\>                                           |
+| show hosts                                                                                         |
+
+|                                             **TACACS**                                             |
+|----------------------------------------------------------------------------------------------------|
+| tacacs-server source-interface \<*sub-interface-name*\>                                            |
+| show tacacs-server [*global*]                                                                      |
+
+|                                              **PIM**                                               |
+|----------------------------------------------------------------------------------------------------|
+| ip pim bfd                                                                                         |
+| ip pim drpriority                                                                                  |
+| ip pim hello                                                                                       |
+| ip pim sparse-mode                                                                                 |
+| show ip pim interface \<*sub-interface-name*\>                                                     |
 
 # 6 Warm reboot support
 There is no special runtime state that needs to be kept for sub port interfaces.
@@ -809,87 +942,99 @@ This is confirmed by preliminary trials on a Mellanox device.
 Test shall cover the parent interface being a physical port or a port channel.
 
 ### 7.1.1 Create a sub port interface
-| Test case description                                                                                  |
-|--------------------------------------------------------------------------------------------------------|
-| Verify that sub port interface configuration is pushed to CONIFG_DB VLAN_SUB_INTERFACE table           |
-| Verify that sub port interface configuration is synced to APPL_DB INTF_TABLE by Intfmgrd               |
-| Verify that sub port interface state ok is pushed to STATE_DB by Intfmgrd                              |
-| Verify that a sub port router interface entry is created in ASIC_DB                                    |
+| Test case description                    |
+| ---------------------------------------- |
+| Verify that sub port interface configuration is pushed to CONIFG_DB VLAN_SUB_INTERFACE table |
+| Verify that sub port interface configuration is synced to APPL_DB INTF_TABLE by Intfmgrd |
+| Verify that sub port interface state ok is pushed to STATE_DB by Intfmgrd |
+| Verify that a sub port router interface entry is created in ASIC_DB |
 
 ### 7.1.2 Add an IP address to a sub port interface
 Test shall cover the IP address being an IPv4 address or an IPv6 address.
 
-| Test case description                                                                                  |
-|--------------------------------------------------------------------------------------------------------|
-| Verify that ip address configuration is pushed to CONIFG_DB VLAN_SUB_INTERFACE table                   |
-| Verify that ip address configuration is synced to APPL_DB INTF_TABLE by Intfmgrd                       |
-| Verify that ip address state ok is pushed to STATE_DB INTERFACE_TABLE by Intfmgrd                      |
-| Verify that a subnet route entry is created in ASIC_DB                                                 |
-| Verify that an ip2me route entry is created in ASIC_DB                                                 |
+| Test case description                    |
+| ---------------------------------------- |
+| Verify that ip address configuration is pushed to CONIFG_DB VLAN_SUB_INTERFACE table |
+| Verify that ip address configuration is synced to APPL_DB INTF_TABLE by Intfmgrd |
+| Verify that ip address state ok is pushed to STATE_DB INTERFACE_TABLE by Intfmgrd |
+| Verify that a subnet route entry is created in ASIC_DB |
+| Verify that an ip2me route entry is created in ASIC_DB |
 
 ## 7.2 Sub port interface admin status change
-| Test case description                                                                                  |
-|--------------------------------------------------------------------------------------------------------|
-| Verify that sub port interface admin status change is pushed to CONIFG_DB VLAN_SUB_INTERFACE table     |
-| Verify that sub port interface admin status change is synced to APPL_DB INTF_TABLE by Intfmgrd         |
-| Verify that sub port router interface entry in ASIC_DB has the updated admin status                    |
+| Test case description                    |
+| ---------------------------------------- |
+| Verify that sub port interface admin status change is pushed to CONIFG_DB VLAN_SUB_INTERFACE table |
+| Verify that sub port interface admin status change is synced to APPL_DB INTF_TABLE by Intfmgrd |
+| Verify that sub port router interface entry in ASIC_DB has the updated admin status |
 
 ## 7.3 Sub port interface removal
 ### 7.3.1 Remove an IP address from a sub port interface
 Test shall cover the IP address being an IPv4 address or an IPv6 address.
 
-| Test case description                                                                                  |
-|--------------------------------------------------------------------------------------------------------|
-| Verify that ip address configuration is removed from CONIFG_DB VLAN_SUB_INTERFACE table                |
-| Verify that ip address configuration is removed from APPL_DB INTF_TABLE by Intfmgrd                    |
-| Verify that ip address state ok is removed from STATE_DB INTERFACE_TABLE by Intfmgrd                   |
-| Verify that subnet route entry is removed from ASIC_DB                                                 |
-| Verify that ip2me route entry is removed from ASIC_DB                                                  |
+| Test case description                    |
+| ---------------------------------------- |
+| Verify that ip address configuration is removed from CONIFG_DB VLAN_SUB_INTERFACE table |
+| Verify that ip address configuration is removed from APPL_DB INTF_TABLE by Intfmgrd |
+| Verify that ip address state ok is removed from STATE_DB INTERFACE_TABLE by Intfmgrd |
+| Verify that subnet route entry is removed from ASIC_DB |
+| Verify that ip2me route entry is removed from ASIC_DB |
 
 ### 7.3.2 Remove all IP addresses from a sub port interface
-| Test case description                                                                                  |
-|--------------------------------------------------------------------------------------------------------|
-| Verify that sub port router interface entry is removed from ASIC_DB                                    |
+| Test case description                    |
+| ---------------------------------------- |
+| Verify that sub port router interface entry is removed from ASIC_DB |
 
 ### 7.3.3 Remove a sub port interface
 Test shall cover the parent interface being a physical port or a port channel.
 
-| Test case description                                                                                  |
-|--------------------------------------------------------------------------------------------------------|
-| Verify that sub port interface configuration is removed from CONIFG_DB VLAN_SUB_INTERFACE table        |
-| Verify that sub port interface configuration is removed from APPL_DB INTF_TABLE by Intfmgrd            |
-| Verify that sub port interface state ok is removed from STATE_DB by Intfmgrd                           |
+| Test case description                    |
+| ---------------------------------------- |
+| Verify that sub port interface configuration is removed from CONIFG_DB VLAN_SUB_INTERFACE table |
+| Verify that sub port interface configuration is removed from APPL_DB INTF_TABLE by Intfmgrd |
+| Verify that sub port interface state ok is removed from STATE_DB by Intfmgrd |
 
 # 8 Scalability
 Scalability is ASIC-dependent.
 We enforce a minimum scalability requirement on the number of sub port interfaces that shall be supported on a SONiC switch.
 
-| Name                                                              | Scaling value             |
-|-------------------------------------------------------------------|---------------------------|
-| Number of sub port interfaces per physical port or port channel   | 250                       |
-| Number of sub port interfaces per switch                          | 750                       |
+|                        Name                                     | Scaling value |
+| --------------------------------------------------------------- | ------------- |
+| Number of sub port interfaces per physical port or port channel | 250           |
+| Number of sub port interfaces per switch                        | 750           |
 
-# 9 Appendix
-## 9.1 Difference between a sub port interface and a vlan interface
+# 9 Broadcom Internal Design
+
+## 9.1 Platforms supported:
+Subinterfaces feature will be supported on all Trident3 based platforms.
+
+## 9.2 Scalability
+Below is the scale numbers for subinterfaces feature on Trident3 based platforms.
+|                        Name                                     | Scaling value |
+| --------------------------------------------------------------- | ------------- |
+| Number of sub port interfaces per physical port or port channel | TBD           |
+| Number of sub port interfaces per switch                        | TBD           |
+
+# 10 Appendix
+## 10.1 Difference between a sub port interface and a vlan interface
 Sub port interface is a router interface (RIF type sub port Vlan#) between a VRF and a physical port or a port channel.
 Vlan interface is a router interface (RIF type vlan Vlan#) facing a .1Q bridge. It is an interface between a bridge port type router (connecting to a .1Q bridge) and a VRF, as shown in Fig. 3.
 
 ![](images/vlan_intf_rif.png "Fig. 3: Vlan interface")
 __Fig. 3: Vlan interface__
 
-# 10 Open questions:
+# 11 Upgrade/Downgrade considerations
+Upgrade/downgrade from/to the SONiC community release will be handled by migrating config DB schema.
+
+# 12 Open questions:
 1. Miss policy to be defined in SAI specification
 
     When a 802.1q tagged packet is received on a physical port or a port channel, it will go to the sub port interface that matches the VLAN id inside the packet.
     If no sub port interfaces match the VLAN id in the packet tag, what is the default policy on handling the packet?
 
-    As shown in Fig. 1, there is possiblity that a physical port or a port channel may not have a RIF type port created.
-    In this case, if an untagged packet is received on the physical port or port channel, what is the policy on handling the untagged packet?
-
-# 11 Acknowledgment
+# 13 Acknowledgment
 Wenda would like to thank his colleagues with Microsoft SONiC team, Shuotian, Prince, Pavel, and Qi in particular, Itai with Mellanox for all discussions that shape the design proposal, and community members for comments and feedbacks that improve the design.
 
-# 12 References
+# 14 References
 [1] SAI_Proposal_Bridge_port_v0.9.docx https://github.com/opencomputeproject/SAI/blob/master/doc/bridge/SAI_Proposal_Bridge_port_v0.9.docx
 
 [2] Remove the need to create an object id for vlan in creating a sub port router interface https://github.com/opencomputeproject/SAI/pull/998
