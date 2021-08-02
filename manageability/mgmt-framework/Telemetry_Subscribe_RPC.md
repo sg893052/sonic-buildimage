@@ -54,7 +54,7 @@
 - [9 Limitations](#9-Limitations)
 - [10 Unit Test](#10-Unit-Test)
   - [10.1 Test Cases](#101-test-cases)
-  - [10.2 gNMI UT Framework for spytest](#102-gnmi-ut-framework-for-spytest)
+  - [10.2 UT with Spytest](#102-ut-with-spytest)
   - [10.3 UT with gnmi_cli tool](#103-ut-with-gnmi_cli-tool)
   - [10.4 Supported YANG Paths](#104-supported-yang-paths)
 - [11 Internal Design Information](#11-Internal-Design-Information)
@@ -79,6 +79,7 @@
 | 0.3 | 05/19/2021  | Sachin Holla       | Move yang path listing to a separate document          |
 | 0.4 | 05/24/2021  | Sachin Holla       | Include detailed design and fixes for few comments     |
 | 0.5 | 06/07/2021  | Sachin Holla       | Mention app's role in wildcard path support            |
+| 0.6 | 08/02/2021  | Sachin Holla       | Intro to spytest's gnmi subscribe test tools           |
 
 # About This Manual
 
@@ -794,9 +795,61 @@ ONCE subscription test cases:
 - ONCE subscription for a non-DB path, without wildcard keys
 - ONCE subscription with unknown path
 
-## 10.2 gNMI UT Framework for spytest
+## 10.2 UT with Spytest
 
-TBD
+Spytest module `apis.yang.utils.gnmi` provides APIs to connect, subscribe and verify notifications.
+These APIs use python gRPC client code for gNMI communication.
+
+The `get_gnmi_conn(dut)` function opens a gNMI connection to a DUT.
+One connection can be reused for any number subscribe calls, and even get/set calls.
+Typically, a connection can be opened in the module fixture.
+All tests of the module can re-use the same connection.
+
+```python
+from apis.yang.utils.gnmi import get_gnmi_conn
+
+data = SpyTestDict()
+
+@pytest.fixture(scope="module", autouse=True)
+def module_hooks():
+    vars = st.get_testbed_vars()
+    data.D1 = vars.D1
+    data.conn = get_gnmi_conn(data.D1)
+    yield
+    data.conn.disconnect() # closes the connection
+```
+
+Connection object provides `gnmi_subscribe_onchange`, `gnmi_subscribe_sample`, `gnmi_subscribe_target_defined`,
+`gnmi_subscribe_poll` and `gnmi_subscribe_once` methods to start a subscription.
+Each of these APIs take one or more paths and other parameters based on the type of the subscription.
+These subscribe methods return a RPC object which can be used to verify notifications.
+Following code snippet tests ON_CHANGE of ACL description.
+
+```python
+@pytest.mark.acl_ut
+@pytest.mark.gnmi_ut
+def test_onchange_acl_description(acl_cleanup):
+    # Subscribe ON_CHANGE of ACL description
+    path = "/openconfig-acl:acl/acl-sets/acl-set[name=*][type=*]/config/description"
+    rpc = data.conn.gnmi_subscribe_onchange(path_list=[path], timeout=30)
+    # There should not be any sync updates -- description is not configured yet
+    if not rpc.verify(updates={}, sync=True):
+        st.report_fail("msg", "Not expecting any sync update")
+    # Configure a description for ACL "ONE"
+    st.config(data.D1, type="klish", cmd=["ip access-list ONE", "remark 1111111"])
+    # Look for the notification...
+    expected_updates = {
+        "/openconfig-acl:acl/acl-sets/acl-set[name=ONE][type=ACL_IPV4]": {
+            "config": {"description": "1111111"}}}
+    if not rpc.verify(updates=expected_updates):
+        st.report_fail("msg", "Invalid notification after ACL description change")
+```
+
+Few recommendations:
+
+- Place test modules under `tests/ut/gnmi` directory.
+- Name the test functions as "**test_<subscribe_type>_\*\*\***".
+- Add pytest mark "**gnmi_ut**" along with feature specific marks.
 
 ## 10.3 UT with gnmi_cli tool
 
