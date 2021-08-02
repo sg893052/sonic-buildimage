@@ -342,6 +342,7 @@ module: openconfig-interfaces
 **Mode**    Interface Config Mode
 
 Using this command to enable or disable link-training and set the mode for the port.
+This command is only applicable to physical ports, as it's to tune the hardware signal.
 
 | Parameter | Description                                                       |
 | :-------: | :---------------------------------------------------------------- |
@@ -353,17 +354,23 @@ Example:
 
 Having link-training auto mode activated on the port
 ```
-(config)# link-training auto
+sonic(config)# interface range Ethernet 0-16
+%Info: Configuring only existing interfaces in range
+sonic(conf-if-range-eth**)# link-training auto
 ```
 
 Having link-training enabled on the port, regardless of the configurations in the media_settings.json
 ```
-(config)# link-training on
+sonic(config)# interface range Ethernet 0-16
+%Info: Configuring only existing interfaces in range
+sonic(conf-if-range-eth**)# link-training on
 ```
 
 Having link-training disabled on the port, regardless of the configurations in the media_settings.json
 ```
-(config)# link-training off
+sonic(config)# interface range Ethernet 0-16
+%Info: Configuring only existing interfaces in range
+sonic(conf-if-range-eth**)# link-training off
 ```
 
 **speed**
@@ -403,22 +410,22 @@ Example:
 
 Having auto-negotiation enabled with 25G,10G and 1G in the advertisement
 ```
-(config)# speed auto 25000,10000,1000
+sonic(conf-if-Ethernet0)# speed auto 25000,10000,1000
 ```
 
 Having auto-negotiation disabled with 25G full-duplex
 ```
-(config)# speed 25000
+sonic(conf-if-Ethernet0)# speed 25000
 ```
 
 Having auto-negotiation disabled with 100M full-duplex
 ```
-(config)# speed 100
+sonic(conf-if-Ethernet0)# speed 100
 ```
 
 Having auto-negotiation disabled with 100M half-duplex
 ```
-(config)# speed 100h
+sonic(conf-if-Ethernet0)# speed 100h
 ```
 
 #### 3.5.2.2 Show Commands
