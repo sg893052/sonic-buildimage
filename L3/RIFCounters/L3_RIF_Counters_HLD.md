@@ -166,11 +166,11 @@ Below is the command for configuring interval between 2 consecutive read/fetch f
 
         counters rif interval <value>
 	
-Default value for interval is 5 seconds
+Default value for interval is 1 second. The range for interval is 1-30 seconds.
 
 The click configuration command for the same is
 
-       config counters rif interval <value>
+       counterpoll rif_rates interval <seconds>
 
 ### 3.6.3 Show Commands
 
@@ -193,7 +193,7 @@ Here is a sample output of the above command
 
 The click show command for the same is
 
-         show interfaces counters add rif       
+         show interfaces counters rif       
 
 ### 3.6.4 Clear Commands
 
