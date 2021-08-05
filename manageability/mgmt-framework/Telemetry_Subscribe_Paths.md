@@ -1,10 +1,13 @@
 # Telemetry Subscribe YANG Paths
 
-This document lists Telemetry ON_CHANGE enabled or disabled YANG paths.
+This document lists Telemetry ON_CHANGE and wildcard path subscription enabled YANG paths.
 
 ## Table of Contents
 
 - [1 Overview](#1-overview)
+  - [1.1 Background](#11-background)
+  - [1.2 Scope](#12-scope)
+  - [1.3 ON_CHANGE supported vs not supported](#13-on_change-supported-vs-not-supported)
 - [2 OpenConfig YANG Modules](#2-openconfig-yang-modules)
   - [2.1 openconfig-network-instance](#21-openconfig-network-instance)
     - [2.1.1 IGMP Snooping](#211-igmp-snooping)
@@ -15,6 +18,7 @@ This document lists Telemetry ON_CHANGE enabled or disabled YANG paths.
 | Rev |     Date    |       Author       | Change Description                           |
 |-----|-------------|--------------------|----------------------------------------------|
 | 0.1 | 05/18/2021  | Sachin Holla       | Initial version                              |
+| 0.2 | 07/30/2021  | Sachin Holla       | Overview section update                      |
 
 ## References
 
@@ -26,13 +30,35 @@ https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.
 
 ## 1 Overview
 
-This document intends to list Telemetry ON_CHANGE disabled or enabled YANG paths.
+### 1.1 Background
+
+SONiC telemetry server supports SAMPLE, POLL and ONCE subscriptions for any YANG path as long as
+the subscribed path does not include any wildcard keys.
+ON_CHANGE subscription and wildcard path support (for any subscription type) requires changes in
+both infrastructure and the individual app code.
+Infrastructure changes are implemented in SONiC 3.2.0 and 4.0.0 releases.
+But not all apps are ready for it yet.
+This document intends to list YANG modules that have been qualified by app teams
+for wildcard paths and ON_CHANGE subscription.
+
+### 1.2 Scope
+
+This document lists YANG modules or paths that support ON_CHANGE subscription and
+wildcard path subscription for all subscription types.
+Paths that do not support ON_CHANGE subscription on purpose are also called out here.
+
 However listing every YANG path and its preference is not practical.
 Hence this document lists YANG modules and captures the special cases for each.
 Eg. if ON_CHANGE is not supported for only few paths, then it can just list the ON_CHANGE unsupported pats.
 
+### 1.3 ON_CHANGE supported vs not supported
+
+Not all YANG paths will support ON_CHANGE subscription.
+YANG nodes representing non-DB data or frequently changing data will not support ON_CHANGE.
+App teams will capture this infomation in this document.
 Note that if ON_CHANGE is not supported for a node, ON_CHANGE subscription cannot be supported
 for its child paths or paths poiting to its parent containers.
+This is implicit and apps may omit child node/leaf paths for brevity.
 But SAMPLE or TARGET_DEFINED subscriptions are supported.
 
 Few examples with a simplified openconfig-interfaces YANG model:
@@ -137,7 +163,8 @@ openconfig-network-instance:network-instances/network-instance[name=default]/pro
 
 ### 2.2 openconfig-tam
 
-All paths of openconfig-tam module supports ON_CHANGE except for the following paths.
+All paths of **openconfig-tam** module supports wildcard path subscriptions.
+ON_CHANGE subscription is also supported for all paths except for the following:
 
 ```text
 /openconfig-tam:tam/flowgroups
