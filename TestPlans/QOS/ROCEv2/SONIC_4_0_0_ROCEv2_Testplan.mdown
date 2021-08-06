@@ -78,12 +78,15 @@
 
 ## 2 Topologies
 
-<span style="color:red"> </span>![Topology](Topology1.png "Figure: Topology 1")
 
-<span style="color:red"> </span>![Topology](Topology2.png "Figure: Topology 2")
+[Topology:](Topology1.png)
+## Topology-1
 
-<span style="color:red"> </span>![Topology](Topology3.png "Figure: Topology 3")
+[Topology:](Topology2.png)
+## Topology-2
 
+[Topology:](Topology3.png)
+## Topology-3
 
 ## 3 Test Case and objectives
 
