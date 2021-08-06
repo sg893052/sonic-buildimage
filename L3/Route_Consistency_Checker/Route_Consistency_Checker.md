@@ -17,6 +17,7 @@
 | 0.1  | 04/27/2021 | Vijay Kumar Vasantha |  Initial version   |
 | 0.2  | 05/12/2021 | Sayed Mohd Saquib    |  Added Config sec  |
 | 0.3  | 05/12/2021 | Vijay Kumar Vasantha |  Added Design sec  |
+| 0.4  | 08/06/2021 | Vijay Kumar Vasantha |  Added DB checks   |
 
 # Definition/Abbreviation
 
@@ -35,7 +36,7 @@
 
 # About this Manual
 
-This document provides general overview of Route Consistency Checker (RCC). Route checker aims at checking the consistency of routes & nexthops between the source RIB and the destinations kernel & hardware.
+This document provides general overview of Route Consistency Checker (RCC). Route checker aims at checking the consistency of routes & nexthops between the source RIB and the all of destinations viz., kernel, APP_DB, ASIC_DB, hardware.
 
 
 
@@ -43,7 +44,7 @@ This document provides general overview of Route Consistency Checker (RCC). Rout
 
 This document describes the Functionality and High level design of the Route Consistency Checker(RCC).
 
-In SONiC the routing module, which is the source of routes, resides in BGP docker. BGP docker in turn runs FRR daemon to compute & update routes & nexthops. FRR generated routes passes through multiple modules before it is being programmed in kernel & hardware. The routes & nexthops are stored in each of these intermediate module and passed to next module in pipeline through various redis DB tables. Below flow depicts the stages in route propagation from software to hardware.
+In SONiC the routing module, which is the source of routes, resides in BGP docker. BGP docker in turn runs FRR daemon to compute & update routes & nexthops. FRR generated routes passes through multiple modules before it is being programmed in kernel & hardware. The routes & nexthops are stored in each of these intermediate module and passed to next module in pipeline through APP_DB & ASIC_DB redis tables. Below flow depicts the stages in route propagation from software to hardware.
 
 
 
@@ -69,18 +70,19 @@ sequenceDiagram
 
 
 
-The RCC is designed to detect & rectify in-consistency of the routes & nexthop between the following source and destination pairs,
+The RCC is designed to detect in-consistency of the routes & nexthop from Zebra to all of these destinations,
 
-- Zebra to Kernel
-- Zebra to H/W
+- Kernel
+- APP_DB
+- ASIC_DB
+- H/W
 
-Note that RCC does not try to detect & rectify any inconsistency between the intermediate modules/databases.
 
 # 2 Feature Requirements
 
-The Route Consistency Checker feature enables the user to check the consistency of routes & nexthop between Zebra & Hardware and Zebra & Kernel. Any discrepancy in the routes & nexthop will be detected and action to rectify the inconsistency will be taken. User will be given option to start & stop the route consistency checker. Once route consistency checker is started it will check & rectify discrepancy. 
+The Route Consistency Checker feature enables the user to check the consistency of routes & nexthop. It checks whether the route & nexthop in Zebra is consistent with route & nexthop Kernel, APP_DB, ASIC_DB & Hardware. Any discrepancy in the routes & nexthop will be detected and displayed to user. User will be given option to start & stop the route consistency checker. 
 
-For Route Consistency Checker the source of truth will be Zebra routing table. It would try to find & rectify any discrepancy between Zebra's route & nexthop and Hardware route & nexthop and between Zebra's route & nexthop and Kernel's route & nexthop.
+For Route Consistency Checker the source of truth will be Zebra routing table. 
 
 ## 2.1 Functional Requirements
 
@@ -92,9 +94,8 @@ Route Consistency Checker will,
 - Route consistency will validate ECMP NextHops. It will check the associated egress interface and ARP/neighbor entries
 - Route consistency will validate Tunnel NextHops. It will check the associated egress interface and ARP/neighbor entries for only the overlay nexthops
 - Route consistency checker can be started by user and it will run in background
-- Route consistency checker will dump inconsistent routes into a file that can be viewed by an user CLI. The dumped file will have different table to rectified routes and non-rectified routes
+- Route consistency checker will dump inconsistent routes into a file that can be viewed by an user CLI.
 - Route consistency checker will store all the previous outputs of inconsistency run in a file
-- User will be given an option to correct the inconsistent routes across HW and SW (remedy)
 - As the route consistency checker is a CPU intensive operation, only one instance of checker can be active at any moment
 
 ## 2.2 Configuration and Management Requirements
@@ -105,11 +106,7 @@ As this is debuggability/reliability feature, this will not require any configur
 - Support start/stop of RCC
 - Support configuration of RCC per VRF per address-family
 - Support configuration to notify user of inconsistent routes & nexthops
-- Support configuration to enable/disable rectifying inconsistent routes & nexthops
-- Support the threshold time period for making route as inconsistent
-- Support the periodicity of RCC
 - Support display to list the result of RCC
-- Support the logging of actions taken for rectification
    
 
 ## 2.3 Scalability Requirements
@@ -147,17 +144,14 @@ The following are the types of consistency checking run
   - **Zebra has more routes** 
   - **Action:**
     - The inconsistency is logged into a file/database.
-    - To resolve the inconsistency routes has to be deleted and re-added from FRR. This is achieved by issuing 'clear ip route <prefix>' command in FRR.
   - **Hardware has more routes**
   - **Action:**
     - The inconsistency is logged into a file/database.
-    - To resolve the inconsistency routes has to be deleted from hardware. Add and Del a static route with NULL nexthop in Zebra.
-      - Deling SDK routes 'l3 defip destory <ip>' deletes the route from H/W but could introduce inconsistency in SAI/SDK. Moreover the inconsistency start point could be anywhere after zebra. So to ensure that all the DBs and modules are consistent, add and del a static route with NULL nexthop in Zebra. The deletion of route will propagate and mostly delete the dangling route from Hardware.
 
 
 Note:
 
-- Routes missing from hardware in hardware route limit hit case will **not** be considered as discrepancy. The hardware limit is detected checking the bcmsh route limit output and checking the ERROR DB for 'missed to program in HW' routes.
+- Routes missing from hardware in hardware route limit hit case will be considered as discrepancy.
 - Newly added routes will be skipped from scanned output and it is determined from the 'uptime' of routes in zebra.
 - Newly deleted routes will be skipped from scanned output. To determine that the route is newly deleted, either the deleted routes could be temporarily stored in a DB by module like RouteSyncd or the snapshot of software routes could be taken prior to snapshot of hardware routes with delay added that could account for route propagation from software to hardware. In addition to delay in taking the snapshot of routes, a watch list with multiple checkings could be carried out in RCC. To reduce the memory consumed, the latter approach where the delayed snapshots & repeated checking will be employed.
 
@@ -178,24 +172,43 @@ Note:
   - **Zebra has more routes** 
   - **Action:**
     - The inconsistency is logged into a file/database.
-    - To resolve the inconsistency routes has to be deleted and re-added from FRR. This is achieved by issuing 'clear ip route <prefix>' command in FRR.
   - **Kernel has more routes**
   - **Action:**
     - The inconsistency is logged into a file/database.
-    - To resolve the inconsistency routes has to be deleted from kernel. Add and Del a static route with NULL nexthop in Zebra.
 
+
+- **Data: Routes**, **Nexthop**
+
+- **Source/Destination: Zebra/APP-DB & ASIC-DB**
+
+- **Detection:**
+  - Scan the routes in FRR by redirecting the output of "show ip route"
+  - Scan the routes in APP_DB by reading the content of ROUTE_TABLE & NEIGHBOR_TABLE
+  - Scan the routes in ASIC_DB by reading the content of SAI_OBJECT_TYPE_ROUTE_ENTRY & SAI_OBJECT_TYPE_NEIGHBOR_ENTRY
+  - For each route compare the nexthops
+
+- **In-consistency:**
+  - **Zebra has more routes** 
+  - **Action:**
+    - The inconsistency is logged into a file/database.
+  - **DB has more routes**
+  - **Action:**
+    - The inconsistency is logged into a file/database.
+  - **Routes nexthop does not match**
+  - **Action:**
+    - The inconsistency is logged into a file/database.
 
 
 ### **Route, Number of nexthops discrepancy because of limit **
 
-Routes or number of nexthops hitting the limit in hardware/kernel will not be treated as an issue and will be ignored. The limit is checked by issuing bcmsh command for route limit count and checking ERROR DB for 'missed to program in H/W' routes.
+Routes or number of nexthops hitting the limit in hardware/kernel will be treated as an issue. 
 
 
 ### **Route's nexthop discrepancy**
 
 - **Data: Routes and Nexthops**''
 
-- **Source/Destination: Zebra,ASIC-DB/Hardware**
+- **Source/Destination: Zebra, ASIC-DB, Hardware**
 
 - **Detection:**
   - Scan the routes and nexthops in FRR by redirecting the output of "show ip route" and "show ip arp/nd", by doing so for each Route: <RIF, Nexthop IP, Dest MAC> could be mapped. 
@@ -211,8 +224,6 @@ Routes or number of nexthops hitting the limit in hardware/kernel will not be tr
     - Neighbor Table
   - Compare each route reachability information, 
     - Log the discrepancy into a file or DB.
-    - If there is any discrepancy in RIF, nexthop IP then indicate FRR to del & add the route information, by issuing 'clear ip route' command.
-    - If there is any discrepancy in dest MAC then indicate OrchAgent to del & add the neighbor entry by issuing 'clear arp' command.
 
 Note:
 
@@ -225,8 +236,6 @@ Note:
   - Scan the routes in kernel by redirecting the output of "ip route show" and "ip neighbor show", by doing so for each Route: <RIF, Nexthop IP, Dest MAC> could be mapped in kernel.
   - Compare each route reachability information, 
     - Log the discrepancy into a file or DB.
-    - If there is any discrepancy in RIF, nexthop IP then indicate FRR to del & add the route information, by issuing 'clear ip route' command.
-    - If there is any discrepancy in dest MAC then indicate OrchAgent to del & add the neighbor entry by issuing 'clear arp' command.
 
 Note:
 
@@ -280,15 +289,15 @@ Below table describes the summary of discrepancy and its action
 
 | Src                              | Dst                               | Action                                                       |
 | -------------------------------- | --------------------------------- | ------------------------------------------------------------ |
-| Route in s/w                     | Route **not** in h/w              | Readd to APPDB, ASIC, SDK, HW                                |
-| Route **not** in s/w             | Route in h/w                      | Remove from APPDB, ASIC, SDK, H/W                            |
-| Route & nexthop in s/w           | Route & nexthop **not** in kernel | Readd to kernel                                              |
-| Route & nexthop **not** in s/w   | Route & nexthop in kernel         | Remove from kernel                                           |
-| Nexthop in s/w                   | Nexthop **not** in h/w            | Readd to ASIC, SDK, HW                                       |
-| Nexthop **not** in s/w           | Nexthop in h/w                    | No action. Other modules can be owner or can be SAI internal. Ref count can be zero. |
-| ECMP in s/w                      | ECMP **not** in h/w               | Readd to ASIC, SDK, HW                                       |
-| ECMP **not** in s/w              | ECMP in h/w                       | No action. Other modules can be owner or can be SAI internal. Ref count can be zero. |
-| Routes nexthop is not consistent | Routes nexthop is not consistent  | Readd to APPDB, ASIC, SDK, HW                                |
+| Route in s/w                     | Route **not** in h/w              | Discrepancy is logged to a file                                |
+| Route **not** in s/w             | Route in h/w                      | Discrepancy is logged to a file                           |
+| Route & nexthop in s/w           | Route & nexthop **not** in kernel | Discrepancy is logged to a file                                                |
+| Route & nexthop **not** in s/w   | Route & nexthop in kernel         | Discrepancy is logged to a file                                           |
+| Nexthop in s/w                   | Nexthop **not** in h/w            | Discrepancy is logged to a file                                      |
+| Nexthop **not** in s/w           | Nexthop in h/w                    | Discrepancy is logged to a file   |
+| ECMP in s/w                      | ECMP **not** in h/w               | Discrepancy is logged to a file                                        |
+| ECMP **not** in s/w              | ECMP in h/w                       | Discrepancy is logged to a file   |
+| Routes nexthop is not consistent | Routes nexthop is not consistent  | Discrepancy is logged to a file                                  |
 
 
 # 4 Feature Design
@@ -312,54 +321,7 @@ Any inconsistency detected will be logged, depending upon user config the incons
 
 ## 4.2 DB Changes
 
-Only CONFIG_DB will be changed to store the configuration of RCC.
-
-### 4.2.1 CONFIG_DB changes
-
-**RCC_TABLE**
-
-Producer:  config manager 
-
-Consumer: VrrpMgr
-
-Description: New table that stores Route Consistency Checker configuration for per router
-
-Schema:
-
-```
-;New table
-;holds the VRRP configuration per interface and VRID
-
-key = RCC_TABLE:
-; field = value
-vrf_name     = string       ; RCC VRF instance
-afi          = string       ; IPv4 or IPv6
-threshold    = 1*3DIGITS    ; Transient time for routes, routes with timestamp lesser than this interval will be ignored in consistency check. Default = 30sec
-auto_rectify = "True/False" ; Bool representing auto rectify is enabled/disabled. By default it is "False"
-```
-
-Example:- 
-
-**admin@sonic:~$ redis-cli -n 4 keys RCC_TABLE\***
- 1) "RCC_TABLE"
-
-
-**admin@sonic:~$ redis-cli -n 4 HGETALL "RCC_TABLE"**
- 1) "vrf_name"
- 2) "VrfRed"
- 3) "afi"
- 4) "IPv4,"
- 5) "threshold"
- 6) "60"
- 7) "auto_rectify"
- 8) "True"
-
-**admin@sonic:~$ redis-cli -n 4 HGETALL "RCC_TABLE"**
- 1) "vrf_name"
- 2) "VrfBlue"
- 3) "afi"
- 4) "IPv6,"
-
+No DB changes are needed
 
 
 ## 5 CLI
