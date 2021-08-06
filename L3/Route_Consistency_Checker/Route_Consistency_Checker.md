@@ -372,36 +372,35 @@ There are no configuration command for this feature
 
 ```
 
-Command to trigger: consistency-check route start [vrf Vrf1] [ ipv4|ipv6 ] [threshold 30] [auto-rectify]
-Command to abort: consistency-check route abort
+Command to trigger: consistency-check route start [vrf Vrf1] [ ipv4|ipv6 ] 
+Command to abort: consistency-check route stop
 
 ```
 
-#### Example1: Start consistency-checker for route with default parameters
-This will start the consistency checker routine for routes.   
-If no parameters are configured, the defaults as below will be used:    
-- threshold : 30 seconds.  
-- auto-rectify : false    
+
+#### Example1: Start consistency-checker for routes in specific vrf and address-family
+This will start the consistency checker routine for IPv4 routes in vrf default .     
 ```
-sonic# consistency-check route start
+sonic# consistency-check route start vrf default address-family ipv4
 ```
 
-#### Example2: Start consistency-checker for route with non-default parameters
-This will start the consistency checker routine for routes with provided parameters.     
+#### Example2: Start consistency-checker for routes in specific vrf and address-family
+This will start the consistency checker routine for IPv6 routes in vrf default .     
 ```
-sonic# consistency-check route start threshold 10 auto-rectify
+sonic# consistency-check route start vrf default address-family ipv6
 ```
+
 
 #### Example3: Start consistency-checker for routes in specific vrf and address-family
 This will start the consistency checker routine for IPv4 routes in vrf Vrf1 .     
 ```
-sonic# consistency-check route start vrf Vrf1 ipv4
+sonic# consistency-check route start vrf Vrf1 address-family ipv4
 ```
 
 #### Example4: Stop consistency-checker for route
 This will display the current status and terminate the consistency checker routine for routes.
 ```
-sonic# consistency-check route abort
+sonic# consistency-check route stop
 ```
 
 ### 5.3 Show Commands
@@ -411,68 +410,82 @@ The following show command will be provided
 ```
 
 show consistency-check status
-show consistency-check logs
 
 ```
 #### Example1: Display status of consistency-check
 This will display the last or ongoing result of consistency-check for routes
 ```
-sonic# show consistency-check status    
-Consistency-check for routes
-Routes considered:
-    vrf: all
-    address-family: IPv4
-Parameters:
-    Threshold: 10 seconds
-    Auto-recify: true
+sonic(config)#show consistency-check status       
+  sonic# show consistency-check status
+  RESULT: consistent
+  Report generated at : 23/07/2021 09:03:26
+  Result for address-family ipv4 and vrf default
+  Total number of route in rib: 22
+    mgmt if routes: 2
+  Total number of route in kernel: 23
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in hardware: 21
+    drop routes: 1
+		  
+  Number of routes considered in
+    rib: 20
+    kernel: 20
+    hardware: 20
 
-Summary:
-Inconsistencies found: 2
+  Number of common prefixes between rib and kernel: 20
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
 
-=============================================================================
-Routes of concern:
-Unprogrammed routes at source:
-B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03
-C>*  101.1.5.0/24 is directly connected, Vlan105, 02:24:06
-
-Unexpected routes in hardware:
-
-Unexpected routes in kernel:
-
-Routes with inconsistent next-hops:
-
-=============================================================================
-Routes of interest:(inconsistency ignored due to threshold or other reasons):
-Unprogrammed routes at source:
-B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06
-
-Unexpected routes in hardware:
-
-Unexpected routes in kernel:
-240.127.1.0/24 dev docker0 proto kernel scope link src 240.127.1.1 linkdown
-
-Routes with inconsistent next-hops:
-
-=============================================================================
+  Number of common prefixes between rib and hardware: 20
+  Prefixes in rib not available in hardware:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and hardware:
+  Report ends
 ```
 
-#### Example2: Display logs of consistency-check
-This will display the current status and stop the consistency checker routine for routes.
-The parameters remain unchanged
+#### Example2: Display status of consistency-check
+This will display the last or ongoing result of consistency-check for routes
 ```
-sonic# show consistency-check logs
-Apr 21 22:25:00 Route consistency check-started
-Apr 21 22:27:07 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" marked INCONSISTENT
-Apr 21 22:28:08 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" auto-rectify attempt 1. DEL/ADD at APP_DB
-Apr 21 22:28:35 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" auto-rectify attempt 2. DEL/ADD at APP_DB
-Apr 21 22:30:04 Zebra Route "B>*  100.1.5.0/24 [20/0] via 24.24.24.1, Ethernet64, 02:24:03" auto-rectify SUCCESS
-Apr 21 22:30:17 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" marked YELLOW (less than 10 seconds old)
-Apr 21 22:30:25 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" marked INCONSISTENT
-Apr 21 22:54:11 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" auto-rectify attempt 1. DEL/ADD at kernel
-Apr 21 22:54:11 Zebra Route "B>*  26.26.26.0/24 [20/0] via 24.24.24.1, Ethernet64, 00:00:06" auto-rectify FAILED
-Apr 21 22:54:24 Kernel Route "240.127.1.0/24 dev docker0 proto kernel scope link src 240.127.1.1 linkdown" IGNORE (host OS route)
-```
+sonic(config)#show consistency-check status       
+sonic# show consistency-check status
+  RESULT: inconsistent
+  Report generated at : 23/07/2021 09:24:12
+  Result for address-family ipv4 and vrf default
+  Total number of route in rib: 22
+    mgmt if routes: 2
+  Total number of route in kernel: 23
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in hardware: 20
+    drop routes: 1
+		  
+  Number of routes considered in
+    rib: 20
+    kernel: 20
+    hardware: 19
 
+  Number of common prefixes between rib and kernel: 20
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
+
+  Number of common prefixes between rib and hardware: 19
+  Prefixes in rib not available in hardware:
+       99.1.1.1/24
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and hardware:
+       40.0.0.0/24 
+                rib: 2
+                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
+                       (Ethernet0, 10.1.1.3, 00:00:00:01:02:03)
+                hw:  1
+                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
+
+       
+  Report ends
+```
 ## 6 Serviceability and Debug
 
 The existing logging mechanisms shall be used. Proposed debug framework shall be used for internal state dump.
