@@ -1,0 +1,397 @@
+#  SQA Test Plan
+#  SONIC ROCEv2
+#  SONiC 4.0.0 Release
+
+## Test Plan Revision History
+
+| Rev  | Date       | Author                  | Change Description |
+| ---- | ---------- | ----------------------- | ------------------ |
+| 0.1  | 8/6/2021   | Anguluri Saikrishna     | Initial Version    |
+
+## List of Reviewers
+
+| Function   |         Name        |
+| :------:   |  :---------------:  |
+|            |                     |
+|            |                	   |
+
+## List of Approvers
+
+| Function | Name | Date Approved |
+| :------: | :--: | :-----------: |
+|          |      |               |
+|          |      |               |
+
+## Definition/Abbreviation
+
+| **Term** | **Meaning**                             |
+| -------- | --------------------------------------- |
+|  RDMA    | Remote Direct Memory Access             |
+|  ROCEv2  | RDMA over Converged Ethernet version 2  |
+|  PFC     | Priority Flow Control                   |
+
+## Feature Overview
+
+  This feature provides capability of configuring QOS buffer related options like pool and profiles using Management framework. ROCEv2 provides the ability to transport Infiniband (IB) protocol traffic using RDMA over lossless converged Ethernet across storage or compute nodes across the networks. ROCEv2 uses PFC to prevent buffer overflow.
+
+## 1 Test Focus Areas
+
+  - This Test plan covers the functional validation of PFC while the QOS buffers and pools are configured using management framework.
+
+### 1.1 CLI Testing
+
+ - Validate the default buffer settings defined for a particular platform.<BR/>
+ - Validate Clear default buffer initialization.<BR/>
+ - Validate QoS buffer pool addition for ingress or egress operations.<BR/>
+ - Validate QoS buffer pool deletion using no form of command.<BR/>
+ - Validate addition of buffer profile for QoS operations.<BR/>
+ - Validate deletion of buffer profile created for priority group and Queue for QoS operations.<BR/>
+ - Validate mapping of priority group (ingress) with buffer profile.<BR/>
+ - Validate unmapping of priority group (ingress) with buffer profile.<BR/>
+ - Validate mapping of queue (egress) with buffer profile.<BR/>
+ - Validate unmapping of queue (egress) with buffer profile.<BR/>
+ - Validate Enable/disable default lossless buffer profile.<BR/>
+ - Validate show command shows all the buffer pool related fields properly.<BR/>
+ - Validate show command shows all the buffer profile related fields properly.<BR/>
+ - Validate show command shows all the interface to PG mapping related fields properly.<BR/>
+ - Validate show command shows all the interface to queue mapping related fields properly.<BR/>
+    
+### 1.1 Functional Testing
+
+ - Verify that the DUT responds to pause frames received and no traffic loss observed for lossless (no-drop priority) L3 traffic in case of congestion and PFC mode as Asymmetric.<BR/>
+ - Verify Symmetric PFC on interfaces that are configured as routing interfaces and carrying L3 traffic.<BR/>
+ - Verify Asymmetric PFC on interfaces that are configured as routing interfaces and carrying L3 traffic.<BR/>
+ - Verify the Asymmetric PFC functionality with L3 traffic after toggling (enable/disable) the feature. <BR/>
+ - Verify the Symmetric PFC functionality with L3 traffic after toggling (enable/disable) the feature. <BR/>
+ - Verify Asymmetric PFC functionality with L3 traffic after warm boot.<BR/>
+ - Verify Asymmetric PFC functionality with L3 traffic after cold boot.<BR/>
+ - Verify symmetric PFC functionality on Port channel interfaces. <BR/>
+ - Verify asymmetric PFC functionality on Port channel interfaces. <BR/>
+ - Verify that DUT don’t generate pause frames for the lossy L3 traffic in case of congestion.<BR/>
+ - Verify DUT generates pause frames and no traffic loss observed for the lossless (no-drop priority) L3 traffic in case of congestion and PFC enabled as Symmetric.<BR/>
+ - Verify the PFC functionality when both lossy and lossless traffic together creating congestion, in this case lossy traffic should be dropped and traffic loss should not be observed for lossless traffic. <BR/>
+ - Verify that PFC works fine for lossless priorities in case of varying the congestion on the device.<BR/>
+ - Verify that DUT and interfaces restore PFC after shut and no shut of the interfaces repeatedly for 100 iterations.<BR/>
+ - Verify the Symmetric PFC functionality after changing the PFC mode to Asymmetric and then back to Symmetric. Again change the mode to Asymmetric and verify PFC functionality.<BR/>
+ - Verify that DUT don’t generate pause frames for the lossy (drop priority) in case of congestion.<BR/>
+
+
+## 2 Topologies
+
+<span style="color:red"> </span>![Topology](Topology1.png "Figure: Topology 1")
+
+<span style="color:red"> </span>![Topology](Topology2.png "Figure: Topology 2")
+
+<span style="color:red"> </span>![Topology](Topology3.png "Figure: Topology 3")
+
+
+## 3 Test Case and objectives
+
+
+### 3.1 CLI Test Cases
+
+#### 3.1.1 Validate the default buffer settings defined for a particular platform.  
+
+| **Test ID**    | **ROCEv2_CLI_001**                                                                                                 |
+| -------------- | :------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate the default buffer settings defined for a particular platform.**                                        |
+| **Test Setup** | **Topology1**                                                                                                     |
+| **Type**       | **CLI**                                                                                                            |
+| **Steps**      | 1. Validate CLI options for command "qos buffer init" to verify the default buffer settings of a specific platform.|
+
+#### 3.1.2 Validate Clear default buffer initialization.  
+
+| **Test ID**    | **ROCEv2_CLI_002**                                                                                                 |
+| -------------- | :------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate Clear default buffer initialization.**                                                                  |
+| **Test Setup** | **Topology1**                                                                                                     |
+| **Type**       | **CLI**                                                                                                            |
+| **Steps**      | 1. Validate CLI options for command "no qos buffer init" to verify that the default buffer settings are cleared.   |
+
+#### 3.1.3 Validate QoS buffer pool addition for ingress or egress operations.  
+
+| **Test ID**    | **ROCEv2_CLI_003**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate QoS buffer pool addition for ingress or egress operations.**                                                 |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI options for command "qos buffer pool <name>" to create the buffer pool for ingress or egress operations.<BR/>2. Verify that running-config is reflected.|
+
+#### 3.1.4 Validate QoS buffer pool deletion using no form of command.  
+
+| **Test ID**    | **ROCEv2_CLI_004**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate QoS buffer pool deletion using no form of command.**                                                         |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI options for command "no qos buffer-pool <name>" to verify that the created buffer pool is removed.<BR/>2. Verify that running-config is reflected with removal of config.|
+
+#### 3.1.5 Validate addition of buffer profile for QoS operations.  
+
+| **Test ID**    | **ROCEv2_CLI_005**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate addition of buffer profile for QoS operations.**                                                             |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI options for command "qos buffer-profile <name> <pool-name>" to verify that the profile is created.<BR/>2. Verify that running-config is reflected.|
+
+#### 3.1.6 Validate deletion of buffer profile created for priority group and Queue for QoS operations.  
+
+| **Test ID**    | **ROCEv2_CLI_006**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate deletion of buffer profile created for priority group and Queue for QoS operations.**                        |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI options for command "no qos buffer-profile <name>" to verify that the profile is removed.<BR/>2. Verify that running-config is reflected with removal of config.|
+
+#### 3.1.7 Validate mapping of priority group (ingress) with buffer profile.  
+
+| **Test ID**    | **ROCEv2_CLI_007**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate mapping of priority group (ingress) with buffer profile.**                                                   |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI command "qos buffer priority-group <pg-value-range> <profile-name>" to map PG with buffer profile.<BR/>2. Verify that running-config is reflected.|
+
+#### 3.1.8 Validate unmapping of priority group (ingress) with buffer profile.  
+
+| **Test ID**    | **ROCEv2_CLI_008**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate unmapping of priority group (ingress) with buffer profile.**                                                 |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI options for command "no qos buffer priority-group <pg-value-range> " to unmap PG with buffer profile.<BR/>2. Verify that running-config is reflected with removal of config.|
+
+#### 3.1.9 Validate mapping of queue (egress) with buffer profile.  
+
+| **Test ID**    | **ROCEv2_CLI_009**                                                                                                        |
+| -------------- | :-------------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate mapping of queue (egress) with buffer profile.**                                                               |
+| **Test Setup** | **Topology1**                                                                                                            |
+| **Type**       | **CLI**                                                                                                                   |
+| **Steps**      | 1. Validate command "qos buffer queue <pg-value-range> <profile-name>" to verify the mapping of queue with buffer profile.<BR/>2. Verify that running-config is reflected.|
+
+#### 3.1.10 Validate unmapping of queue (egress) with buffer profile.  
+
+| **Test ID**    | **ROCEv2_CLI_010**                                                                                                      |
+| -------------- | :-----------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate unmapping of queue (egress) with buffer profile.**                                                           |
+| **Test Setup** | **Topology1**                                                                                                          |
+| **Type**       | **CLI**                                                                                                                 |
+| **Steps**      | 1. Validate CLI command "no qos buffer queue <pg-value-range>" to verify the unmapping of queue with buffer profile.<BR/>2. Verify that running-config is reflected with removal of config.|
+
+#### 3.1.11 Validate Enable/disable default lossless buffer profile.  
+
+| **Test ID**    | **ROCEv2_CLI_011**                                                                                                           |
+| -------------- | :----------------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate Enable/disable default lossless buffer profile.**                                                                 |
+| **Test Setup** | **Topology1**                                                                                                               |
+| **Type**       | **CLI**                                                                                                                      |
+| **Steps**      | 1. Validate CLI options for command "qos default-lossless-buffer-profile" to verify that the default lossless buffer profile.<BR/>2. Also validate the no form of the command.|
+
+#### 3.1.12 Validate show command shows all the buffer pool related fields properly.  
+
+| **Test ID**    | **ROCEv2_CLI_012**                                                                                                 |
+| -------------- | :------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate show command shows all the buffer pool related fields properly.**                                       |
+| **Test Setup** | **Topology1**                                                                                                     |
+| **Type**       | **CLI**                                                                                                            |
+| **Steps**      | 1. Validate CLI options for command "Show Buffer Pool" to show all the proper fields.                              |
+
+#### 3.1.13 Validate show command shows all the buffer profile related fields properly.  
+
+| **Test ID**    | **ROCEv2_CLI_013**                                                                                                 |
+| -------------- | :------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate show command shows all the buffer profile related fields properly.**                                    |
+| **Test Setup** | **Topology1**                                                                                                     |
+| **Type**       | **CLI**                                                                                                            |
+| **Steps**      | 1. Validate CLI options for command "Show Buffer Profile" to show all the proper fields.                           |
+
+#### 3.1.14 Validate show command shows all the interface to PG mapping related fields properly.  
+
+| **Test ID**    | **ROCEv2_CLI_014**                                                                                                 |
+| -------------- | :------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate show command shows all the interface to PG mapping related fields properly.**                           |
+| **Test Setup** | **Topology1**                                                                                                     |
+| **Type**       | **CLI**                                                                                                            |
+| **Steps**      | 1. Validate CLI options for command "Show interface to priority group mapping" to show all the proper fields.      |
+
+#### 3.1.15 Validate show command shows all the interface to queue mapping related fields properly.  
+
+| **Test ID**    | **ROCEv2_CLI_015**                                                                                                 |
+| -------------- | :------------------------------------------------------------------------------------------------------------------|
+| **Test Name**  | **Validate show command shows all the interface to queue mapping related fields properly.**                        |
+| **Test Setup** | **Topology1**                                                                                                     |
+| **Type**       | **CLI**                                                                                                            |
+| **Steps**      | 1. Validate CLI options for command "Show interface to queue mapping" to show all the proper fields.               |
+
+
+
+### 3.2 Functional Test Cases
+
+#### 3.2.1 Verify that the DUT responds to pause frames received and no traffic loss observed for lossless (no-drop priority) L3 traffic in case of congestion and PFC mode as Asymmetric.  
+
+| **Test ID**    | **ROCEv2_FUNC_001**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify that the DUT responds to pause frames received and no traffic loss observed for lossless (no-drop priority) L3 traffic in case of congestion and PFC mode as Asymmetric.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable Asymmetric PFC on interface Ethernet0, Ethernet1 of DUT1.<BR/>3.Enable Symmetric PFC on interfaces Ethernet0, Ethernet1 and Ethernet2 of DUT2.<BR/>4.Configure Queue-3 as drop queue (Lossy) and Queue-4 as no-drop queue (Lossless) on DUT1 and Configure Queue-3 and Queue-4 as no-drop queue (Lossless) on DUT2.<BR/>5.Configure dscp priority (PFC)to Queue mapping in both DUTs.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-4 and IXIA connected to Ethernet0 of DUT2 with priority-3 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>Verify following.<BR/>-> DUT2 transmits PFC pause frames only with priority-3 from Ethernet0.<BR/>-> DUT2 transmits PFC pause frames only with priority-4 from Ethernet1. <BR/>-> DUT1 receives PFC pause frames only with priority-4 on Ethernet1. <BR/>-> DUT1 transmits PFC pause frames only with priority-4 from Ethernet0.<BR/>7.Check the statistics.<BR/>Verify the following:<BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-4) of DUT1 is equal to priority-4 traffic transmitted from Ethernet2 of DUT2. <BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-3) of DUT2 is equal to priority-3 traffic transmitted from Ethernet2 of DUT2.<BR/>8.  Clear the statistics in IXIA,DUTs  and send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet0 of DUT2 with priority-4 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>Verify the following:<BR/>-> DUT2 transmits PFC pause frames only with priority-4 from Ethernet0.<BR/>-> DUT2 transmits PFC pause frames only with priority-3 from Ethernet1. <BR/>-> DUT1 receives PFC pause frames only with priority-3 on Ethernet1. <BR/>-> DUT1 doesn't transmits any PFC pause frames from Ethernet0.<BR/>9.  Check the statistics.<BR/>Verify the following: <BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-4) of DUT2 is equal to priority-4 traffic transmitted from Ethernet2 of DUT2.<BR/>-> Traffic received on Ethernet1 of DUT2 is equal to the priority-3 traffic transmitted from Ethernet2 of DUT2<BR/>.|
+
+#### 3.2.2 Verify Symmetric PFC on interfaces that are configured as routing interfaces and carrying L3 traffic.  
+
+| **Test ID**    | **ROCEv2_FUNC_002**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify Symmetric PFC on interfaces that are configured as routing interfaces and carrying L3 traffic.** |
+| **Test Setup** | **Topology1**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Configure the ports Ethernet0, Ethernet1 and Ethernet2 of DUT1 as L3 interfaces and assign the ip addresses and enable routing.<BR/>3.Enable asymmetric PFC on all the interfaces of DUT1 and DUT2.<BR/>4.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in DUT1, Queue-3 and Queue-4 for no-drop queue (Lossless) in DUT2.<BR/>5.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination IP address at line rate.<BR/>6.Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic. Also pause frames are not observed on Ethernet0 of DUT1 and pause frames with priority4 are observed on the Ethernet1 of DUT1.<BR/>7.Send L3 traffic from IXIA connected to Ethernet0 with priority-3 and IXIA connected to Ethernet1 with priority-4 simultaneously with destination IP address in the subnet 192.168.3.0.<BR/>8.Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>|
+
+
+#### 3.2.3 Verify Asymmetric PFC on interfaces that are configured as routing interfaces and carrying L3 traffic.  
+
+| **Test ID**    | **ROCEv2_FUNC_003**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify Asymmetric PFC on interfaces that are configured as routing interfaces and carrying L3 traffic.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Configure the ports Ethernet0, Ethernet1 and Ethernet2 of DUT1 as L3 interfaces and assign the ip addresses and enable routing.<BR/>3.Enable asymmetric PFC on all the interfaces of DUT1 and DUT2.<BR/>4.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in DUT1, Queue-3 and Queue-4 for no-drop queue (Lossless) in DUT2.<BR/>5.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination IP address at line rate.<BR/>6.Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic. Also pause frames are not observed on Ethernet0 of DUT1 and pause frames with priority4 are observed on the Ethernet1 of DUT1.<BR/>7.Send L3 traffic from IXIA connected to Ethernet0 with priority-3 and IXIA connected to Ethernet1 with priority-4 simultaneously with destination IP address in the subnet 192.168.3.0.<BR/>8.Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>|
+
+
+#### 3.2.4 Verify the Asymmetric PFC functionality with L3 traffic after toggling (enable/disable) the feature.  
+
+| **Test ID**    | **ROCEv2_FUNC_004**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify the Asymmetric PFC functionality with L3 traffic after toggling (enable/disable) the feature.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Configure the ports Ethernet0, Ethernet1 and Ethernet2 as L3 interfaces and assign the ip addresses as below and enable routing in DUT1.<BR/>3.Enable symmetric PFC on all the interfaces.<BR/>4.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless).<BR/>5.Configure dscp priority (PFC) to Queue mapping.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination IP address at line rate.<BR/>6.Verify that pause frames are not observed on Ethernet0 of DUT1 and pause frames with priority4 are observed on the Ethernet1 of DUT1.<BR/>7.Send L3 traffic from IXIA connected to Ethernet0 with priority-3 and IXIA connected to Ethernet1 with priority-4 simultaneously such that congestion is formed.<BR/>8.Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>9.Disable and enable PFC feature. Check the PFC functionality after this step. Results should be same as above.<BR/>|
+
+
+#### 3.2.5 Verify the Symmetric PFC functionality with L3 traffic after toggling (enable/disable) the feature.   
+
+| **Test ID**    | **ROCEv2_FUNC_005**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify the Symmetric PFC functionality with L3 traffic after toggling (enable/disable) the feature.** |
+| **Test Setup** | **Topology1**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Configure the ports Ethernet0, Ethernet1 and Ethernet2 of DUT1 as L3 interfaces and assign the ip addresses and enable routing.<BR/>3.Enable asymmetric PFC on all the interfaces of DUT1 and DUT2.<BR/>4.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in DUT1, Queue-3 and Queue-4 for no-drop queue (Lossless) in DUT2.<BR/>5.Configure dscp priority (PFC) to Queue mapping in both the DUTs.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination IP address in the subnet 192.168.3.0 at line rate.<BR/>7.Verify that pause frames are not observed on Ethernet0 of DUT1 and pause frames with priority4 are observed on the Ethernet1 of DUT1.<BR/>8.Change the traffic such a way that the congestion is formed on the other IXIA port. Verify that Ethernet2 of DUT1 received the PFC frames for priority-3 and priority-4 and also verify that traffic received (both priority-3 and priority-4) on Ethernet1 of DUT2 is equal to traffic(both priority-3 and priority-4)  transmitted from Ethernet0 of DUT2.<BR/>9.Disable and enable the PFC feature. Verify that PFC should work as above.|
+
+
+#### 3.2.6 Verify Asymmetric PFC functionality with L3 traffic after warm boot.  
+
+| **Test ID**    | **ROCEv2_FUNC_006**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify Asymmetric PFC functionality with L3 traffic after warm boot.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable Asymmetric PFC on interface Ethernet0, Ethernet1 of DUT1.<BR/>3.Enable Symmetric PFC on interfaces Ethernet0, Ethernet1 and Ethernet2 of DUT2.<BR/>4.Configure Queue-3 as drop queue (Lossy) and Queue-4 as no-drop queue (Lossless) on DUT1. Configure Queue-3 and Queue-4 as no-drop queue (Lossless) on DUT2.<BR/>5.Configure dscp priority (PFC) to Queue mapping in both DUTs.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-4 and IXIA connected to Ethernet0 of DUT2 with priority-3 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>Verify the following:<BR/>-> DUT2 transmits PFC pause frames only with priority-3 from Ethernet0.<BR/>-> DUT2 transmits PFC pause frames only with priority-4 from Ethernet1. <BR/>-> DUT1 receives PFC pause frames only with priority-4 on Ethernet1. <BR/>-> DUT1 transmits PFC pause frames only with priority-4 from Ethernet0.<BR/>7.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet0 of DUT2 with priority-4 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>Verify the following:<BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-4) of DUT1 is equal to priority-4 traffic transmitted from Ethernet2 of DUT2.<BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-3) of DUT2 is equal to priority-3 traffic transmitted from Ethernet2 of DUT2.<BR/>8. Perform warm boot. Check the configuration should not lost.<BR/>9. Perform above PFC functionality steps after warm boot. It should be same as above.<BR/>|
+
+
+#### 3.2.7 Verify Asymmetric PFC functionality with L3 traffic after cold boot.  
+
+| **Test ID**    | **ROCEv2_FUNC_007**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify Asymmetric PFC functionality with L3 traffic after cold boot.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable Asymmetric PFC on interface Ethernet0, Ethernet1 of DUT1.<BR/>3.Enable Symmetric PFC on interfaces Ethernet0, Ethernet1 and Ethernet2 of DUT2.<BR/>4.Configure Queue-3 as drop queue (Lossy) and Queue-4 as no-drop queue (Lossless) on DUT1. Configure Queue-3 and Queue-4 as no-drop queue (Lossless) on DUT2.<BR/>5.Configure dscp priority (PFC) to Queue mapping in both DUTs.<BR/>6.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-4 and IXIA connected to Ethernet0 of DUT2 with priority-3 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>Verify the following:<BR/>-> DUT2 transmits PFC pause frames only with priority-3 from Ethernet0.<BR/>-> DUT2 transmits PFC pause frames only with priority-4 from Ethernet1. <BR/>-> DUT1 receives PFC pause frames only with priority-4 on Ethernet1. <BR/>-> DUT1 transmits PFC pause frames only with priority-4 from Ethernet0.<BR/>7.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet0 of DUT2 with priority-4 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>Verify the following:<BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-4) of DUT1 is equal to priority-4 traffic transmitted from Ethernet2 of DUT2. <BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-3) of DUT2 is equal to priority-3 traffic transmitted from Ethernet2 of DUT2.<BR/>8.Perform cold boot. Check the configuration should not lost.<BR/>9.Perform above PFC functionality steps after cold boot. It should be same as above.<BR/>|
+
+
+#### 3.2.8 Verify symmetric PFC functionality on Port channel interfaces.  
+
+| **Test ID**    | **ROCEv2_FUNC_008**                                                                  |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify symmetric PFC functionality on Port channel interfaces.**                   |
+| **Test Setup** | **Topology3**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Configure Port channel using the two ports (Ethernet2 and Ethernet3) in both DUT1 and DUT2.<BR/>3.Enable symmetric PFC on all the interfaces of DUT1 and DUT2.<BR/>4.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in both the DUTs.<BR/>5.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4 in both the DUTs.<BR/>6.Send a stream from IXIA to Ethernet0 of DUT2 to learn the SMAC on Ethernet0 in DUT2 and on Port-channel in DUT1 <1 packet/sec>.<BR/>7.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination MAC address as the learned MAC address on PortChannel of DUT1 at line rate.<BR/>8.Check at IXIA ports connected to Ethernet0 and Ethernet1 of DUT1 for flow control frames. <BR/>->PFC frames are not received in IXIA connected to Ethernet0 of DUT1.<BR/>->PFC frames with priority-4(only) are received on IXIA connected to Ethernet1 of DUT1.<BR/>->PFC frames with priority-4(only) are transmitted from Ethernet1.<BR/>->PFC frames are not transmitted from Ethernet0.<BR/>->Traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>9.Stop the traffic and restart such a way that the congestion is formed on the other port. <BR/>10.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet0 of DUT2.<BR/>Verify the following:<BR/>->Port-Channel of DUT1 received the PFC frames for priority-4(Only).<BR/>->Port-Channel of DUT2 transmits the PFC frames for priority-4(Only).<BR/>->PFC frames are not received in IXIA connected to Ethernet0 of DUT1.<BR/>->PFC frames with priority-4(only) are received on IXIA connected to Ethernet1 of DUT1.<BR/>->PFC frames with priority-4(only) are transmitted from Ethernet1.<BR/>->PFC frames are not transmitted from Ethernet0.<BR/>->Traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>|
+
+
+#### 3.2.9 Verify asymmetric PFC functionality on Port channel interfaces.  
+
+| **Test ID**    | **ROCEv2_FUNC_009**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify asymmetric PFC functionality on Port channel interfaces.** |
+| **Test Setup** | **Topology3**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Configure Port channel using the two ports (Ethernet2 and Ethernet3) in both DUT1 and DUT2.<BR/>3.Enable asymmetric PFC on all the interfaces of DUT1 and DUT2<BR/>3.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in DUT1, Queue-3 and Queue-4 for no-drop queue (Lossless) in DUT2.<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4 in both the DUTs.<BR/>5.Send a stream from IXIA to Ethernet0 of DUT2 to learn the SMAC on Ethernet0 in DUT2 and on Port-channel in DUT1 <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination MAC address as the learned MAC address on PortChannel of DUT1 at line rate.<BR/>Verify the following:<BR/>->PFC frames are not received on IXIA connected to Ethernet0 of DUT1.<BR/>->PFC frames with priority-4(only) are received on IXIA connected to Ethernet1 of DUT1.<BR/>->PFC frames with priority-4(only) are transmitted from Ethernet1.<BR/>->PFC frames are not transmitted from Ethernet0.<BR/>->Traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>8.Stop the traffic and restart traffic such that the congestion is formed on the other port. Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>9.Clear the statistics on IXIAs and DUTs send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet1 of DUT1 with priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet0 of DUT2 at 25% of line rate.<BR/>10.Verify the following:<BR/>->Port-Channel of DUT1 received the PFC frames for priority-3,4.<BR/>->Port-Channel of DUT2 transmits the PFC frames for priority-3,4.<BR/>->PFC frames are not received in IXIA connected to Ethernet0 of DUT1.<BR/>->PFC frames with priority-4(only) are received on IXIA connected to Ethernet1 of DUT1.<BR/>->PFC frames with priority-4(only) are transmitted from Ethernet1.<BR/>->PFC frames are not transmitted from Ethernet0.<BR/>->Traffic received on Port-Channel of DUT2 is equal to traffic transmitted from transmitted from Ethernet0.<BR/>|
+
+
+#### 3.2.10 Verify that DUT don’t generate pause frames for the lossy L3 traffic in case of congestion.  
+
+| **Test ID**    | **ROCEv2_FUNC_010**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify that DUT don’t generate pause frames for the lossy L3 traffic in case of congestion.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.Enable symmetric PFC on interfaces Ethernet0, Ethernet1 and Ethernet2.<BR/>2.Configure Queue-3 and Queue-4 for drop queues (Lossy).<BR/>3.Configure dscp priority (PFC) to Queue mapping.<BR/>4.Send L3 traffic from IXIA connected to Ethernet0 of DUT1 with priority-4 and IXIA connected to Ethernet0 of DUT2 with priority-3 simultaneously with destination IP address as Ethernet2 of DUT2 at line rate.<BR/>5.Verify that traffic loss is observed for priority-3 and priority-4 traffic.<BR/>Also Verify the following:<BR/>-> PFC pause frames are not received on both the IXIAs connected to Ethernet0 and Ethernet1 ports.<BR/>-> PFC pause frames are not transmitted from the Ethernet0 and Ethernet1 ports.<BR/>|
+
+
+#### 3.2.11 Verify DUT generates pause frames and no traffic loss observed for the lossless (no-drop priority) L3 traffic in case of congestion and PFC enabled as Symmetric.  
+
+| **Test ID**    | **ROCEv2_FUNC_011**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify DUT generates pause frames and no traffic loss observed for the lossless (no-drop priority) L3 traffic in case of congestion and PFC enabled as Symmetric.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided. Enable Asymmetric PFC on interface Ethernet0, Ethernet1 of DUT1.<BR/>2.Enable Symmetric PFC on interfaces Ethernet0, Ethernet1 and Ethernet2 of DUT2.<BR/>3.Configure Queue-3 as drop queue (Lossy) and Queue-4 as no-drop queue (Lossless) on DUT1. Configure Queue-3 and Queue-4 as no-drop queue (Lossless) on DUT2.<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4 in both DUTs.<BR/>5.Send a stream from IXIA to Ethernet2 of DUT2 to learn the SMAC <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-4 and IXIA connected to Ethernet0 of DUT2 with priority-3 simultaneously with destination MAC address as the learned MAC address on Ethernet2 of DUT2 at line rate.<BR/>7.Verify the following:<BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-4) of DUT1 is equal to priority-4 traffic transmitted from Ethernet2 of DUT2. <BR/>-> Traffic send from IXIA port connected to Ethernet0(Priority-3) of DUT2 is equal to priority-3 traffic transmitted from Ethernet2 of DUT2.<BR/>8.Send traffic from IXIA connected to Ethernet0 of DUT1 with priority-3 and IXIA connected to Ethernet0 of DUT2 with priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet2 of DUT2 at line rate.<BR/>9.Verify the following:<BR/>-> DUT2 transmits PFC pause frames only with priority-4 from Ethernet0.<BR/>-> DUT2 transmits PFC pause frames only with priority-3 from Ethernet1. <BR/>-> DUT1 receives PFC pause frames only with priority-3 on Ethernet1. <BR/>-> DUT1 doesn't transmits any PFC pause frames from Ethernet0.<BR/>|
+
+
+#### 3.2.12 Verify the PFC functionality when both lossy and lossless traffic together creating congestion, in this case lossy traffic should be dropped and traffic loss should not be observed for lossless traffic.  
+
+| **Test ID**    | **ROCEv2_FUNC_012**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify the PFC functionality when both lossy and lossless traffic together creating congestion, in this case lossy traffic should be dropped and traffic loss should not be observed for lossless traffic.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable PFC on interfaces Ethernet0, Ethernet1 and Ethernet2.<BR/>3.Configure Queue-3 as drop queue (Lossy) and Queue-4 as no-drop queue (Lossless).<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4.<BR/>5.Send a stream from IXIA to Ethernet2 to learn the SMAC <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 with priority-3 and IXIA connected to Ethernet1 with priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet2 at line rate.<BR/>7.Check at IXIA ports connected to Ethernet0 and Ethernet1 for flow control frames. <BR/>Verify the following:<BR/>->IXIA connected to Ethernet1 will receive PFC pause frame for priority-4(only).<BR/>->IXIA connected to Ethernet0 will receive any PFC pause frame.<BR/>->Ethernet1 transmits PFC pause frame with priority-4(only).<BR/>->Ethernet0 doesn't transmits any PFC pause frame.<BR/>|
+
+
+#### 3.2.13 Verify that PFC works fine for lossless priorities in case of varying the congestion on the device.  
+
+| **Test ID**    | **ROCEv2_FUNC_013**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify that PFC works fine for lossless priorities in case of varying the congestion on the device.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable PFC on interfaces Ethernet0, Ethernet1 and Ethernet2.<BR/>3.Configure Queue-3 as drop queue (Lossy) and Queue-4 as no-drop queue (Lossless).<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4.<BR/>5.Send a stream from IXIA to Ethernet2 to learn the SMAC <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 with priority-3 and IXIA connected to Ethernet1 with priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet2 at 100% line rate. Validate that pause frames are generated.<BR/>7.After 5 seconds Without stopping the traffic send the traffic at 50% of rate so that congestion doesn’t gets created. Verify that pause frame have not generated.<BR/>8.Repeat the steps 5 and 6 for 100 iterations with few seconds delay between the steps and make sure that traffic is not stopped. Verify that device is stable.<BR/>|
+
+
+#### 3.2.14 Verify that DUT and interfaces restore PFC after shut and no shut of the interfaces repeatedly for 100 iterations.  
+
+| **Test ID**    | **ROCEv2_FUNC_014**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify that DUT and interfaces restore PFC after shut and no shut of the interfaces repeatedly for 100 iterations.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable PFC on all the interfaces of DUT1 and DUT2.<BR/>3.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in both the DUTs.<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4 in both the DUTs.<BR/>5.Send a stream from IXIA to Ethernet0 of DUT2 to learn the SMAC on Ethernet0 in DUT2 and on Ethernet2 in DUT1 <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 of DUT1 with VLAN-10, priority-3 and IXIA connected to Ethernet1 of DUT1 with vlan-20, priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet2 of DUT1 at line rate. Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>7.Verify that pause frames are not received on the IXIA connected to Ethernet0 of DUT1 and pause frames with priority4 are received on the IXIA connected to Ethernet1 of DUT1.<BR/>8.Stop the traffic and restart the traffic such that the congestion is formed on the other port. <BR/>9.Send traffic from IXIA connected to Ethernet0 of DUT1 with VLAN-10, priority-3 and IXIA connected to Ethernet1 of DUT1 with VLAN-20, priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet0 of DUT2 at 50% of line rate.<BR/>10.Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>-> Observe PFC pause frames with priority-4 are received on Ethernet2 of DUT1.<BR/>-> Observe PFC pause frames with priority-4 are transmitted from Ethernet1 of DUT2.<BR/>-> Observe that PFC pause frames with priority-4 are transmitted from Ethernet1 of DUT1.<BR/>-> Observe that PFC pause frames are not transmitted from Ethernet0 of DUT1.<BR/>11.Shutdown and no shutdown the all the interfaces in DUT1 and DUT2 for 100 iterations.<BR/>12.Repeat the steps between 5-10. Results should be same.<BR/>|
+
+#### 3.2.15 Verify the Symmetric PFC functionality after changing the PFC mode to Asymmetric and then back to Symmetric. Again change the mode to Asymmetric and verify PFC functionality.  
+
+| **Test ID**    | **ROCEv2_FUNC_015**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify the Symmetric PFC functionality after changing the PFC mode to Asymmetric and then back to Symmetric. Again change the mode to Asymmetric and verify PFC functionality.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable PFC on all the interfaces of DUT1 and DUT2.<BR/>3.Configure Queue-3 for drop queue (Lossy) and Queue-4 for no-drop queue (Lossless) in DUT1 and both Queue-3 and Queue-4 for no-drop queue (Lossless) in DUT2.<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4 in both the DUTs.<BR/>5.Send a stream from IXIA to Ethernet0 of DUT2 to learn the SMAC on Ethernet0 in DUT2 and on Ethernet2 in DUT1 <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 of DUT1 with VLAN-10, priority-3 and IXIA connected to Ethernet1 of DUT1 with vlan-20, priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet2 of DUT1 at line rate. Verify that traffic loss is observed for priority-3 traffic and no traffic loss observed for priority-4 traffic.<BR/>7.Verify that pause frames are not received on the IXIA connected to Ethernet0 of DUT1 and pause frames with priority4 are received on the IXIA connected to Ethernet1 of DUT1.<BR/>8.Configure asymmetric PFC on all the interfaces in both DUTs. Repeat the same steps of creating congestion.<BR/>-> Observe PFC pause frames with priority-3,4 are received on Ethernet2 of DUT1.<BR/>-> Observe PFC pause frames with priority-3,4 are transmitted from Ethernet1 of DUT2.<BR/>-> Observe that PFC pause frames with priority-4 are transmitted from Ethernet1 of DUT1.<BR/>-> Observe that PFC pause frames are not transmitted from Ethernet0 of DUT1.<BR/>|
+
+
+#### 3.2.16 Verify that DUT don’t generate pause frames for the lossy (drop priority) in case of congestion.  
+
+| **Test ID**    | **ROCEv2_FUNC_016**                                                   |
+| -------------- | :----------------------------------------------------------------------------------- |
+| **Test Name**  | **Verify that DUT don’t generate pause frames for the lossy (drop priority) in case of congestion.** |
+| **Test Setup** | **Topology2**                                                                       |
+| **Type**       | **Functional**                                                                       |
+| **Steps**      | 1.Create all the needed buffer pool and buffer profile according to the hardware supported numbers using the management framework provided.<BR/>2.Enable symmetric PFC on interfaces Ethernet0, Ethernet1 and Ethernet2.<BR/>3.Configure Queue-3 and Queue-4 for drop queues (Lossy).<BR/>4.Configure dot1p priority (PFC) to Queue mapping as 3-3 and 4-4.<BR/>5.Send a stream from IXIA to Ethernet2 to learn the SMAC <1 packet/sec>.<BR/>6.Send traffic from IXIA connected to Ethernet0 with priority-3 and IXIA connected to Ethernet1 with priority-4 simultaneously with destination MAC address as the learned MAC address on Ethernet2 at line rate. Verify that traffic loss is observed for priority-3 and priority-4 traffic.<BR/>7.Also verify the following:<BR/>-> PFC pause frames are not received on both the IXIAs connected to Ethernet0 and Ethernet1 ports.<BR/>-> PFC pause frames are not transmitted from the Ethernet0 and Ethernet1 ports.<BR/>|
+
+
+
+<BR/>
+<BR/>
+
+
+## Reference Links
+
+https://github.com/project-arlo/SONiC/pull/116
