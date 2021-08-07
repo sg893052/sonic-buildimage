@@ -381,13 +381,13 @@ show consistency-check status route
 #### Example1: Display status of consistency-check for all VRFs
 sonic# show consistency-check route status
 ```
-Route Check for vrf:default address-family:ipv4 - **CONSISTENT**
+Route Check for vrf:default address-family:ipv4 - CONSISTENT
   Number of routes compared: 1034
-Route Check for vrf:default address-family:ipv6 - **CONSISTENT**
+Route Check for vrf:default address-family:ipv6 - CONSISTENT
   Number of routes compared: 6
-Route Check for vrf:Vrf1 address-family:ipv4 - **CONSISTENT**
+Route Check for vrf:Vrf1 address-family:ipv4 - CONSISTENT
   Number of routes compared: 203
-Route Check for vrf:Vrf1 address-family:ipv6 - **CONSISTENT**
+Route Check for vrf:Vrf1 address-family:ipv6 - CONSISTENT
   Number of routes compared: 52
   
 ```
@@ -395,14 +395,14 @@ Route Check for vrf:Vrf1 address-family:ipv6 - **CONSISTENT**
 This will display the last or ongoing result of consistency-check for routes
 ```
 sonic# show consistency-check route status route
-Route Check for vrf:default address-family:ipv4 - **INCONSISTENT**
+Route Check for vrf:default address-family:ipv4 - INCONSISTENT
   Number of routes compared: 1034
   Mismatch report:
-    Extra prefixes in **ASIC-DB**:
+    Extra prefixes in ASIC-DB:
       200.0.0.1/32
         hardware:1
           (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61  
-    Extra prefixes in **hardware**:
+    Extra prefixes in hardware:
       200.0.0.1/32
         hardware:1
           (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)
@@ -411,18 +411,18 @@ Route Check for vrf:default address-family:ipv6 - CONSISTENT
 sonic# 
 
 sonic# show consistency-check route status route
-Route Check for vrf:default address-family:ipv4 - **INCONSISTENT**
+Route Check for vrf:default address-family:ipv4 - INCONSISTENT
   Number of routes compared: 1034
   Mismatch report:
     Unequal prefixes:
       88.0.0.1/32 - NHop(s) do not match
-        **RIB:1**
+        RIB:1
           (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
-        **APP_DB:1**
+        APP_DB:1
           (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)
-       ** ASIC_DB:1**
+        ASIC_DB:1
           (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)	  
-        **hardware:1**
+        hardware:1
           (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)
 Route Check for vrf:default address-family:ipv6 - CONSISTENT
   Number of routes compared: 6
@@ -442,7 +442,7 @@ sonic(config)#show consistency-check status route
     drop routes: 1
 
 sonic# show consistency-check route status
-Route Check for vrf:default address-family:ipv4 - **INCONSISTENT**
+Route Check for vrf:default address-family:ipv4 - INCONSISTENT
   Number of routes compared: 1034
   Mismatch report:
     Prefixes in rib not available in ASIC_DB, hardware:
