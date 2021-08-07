@@ -441,17 +441,6 @@ sonic(config)#show consistency-check status route
   Total number of route in hardware: 21
     drop routes: 1
 
-sonic# show consistency-check route status
-Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-  Number of routes compared: 1034
-  Mismatch report:
-    Prefixes in rib not available in ASIC_DB, hardware:
-      88.0.0.2/32
-        rib:1
-          (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
-Route Check for vrf:default address-family:ipv6 - CONSISTENT
-  Number of routes compared: 6
-
 ```
 
 
