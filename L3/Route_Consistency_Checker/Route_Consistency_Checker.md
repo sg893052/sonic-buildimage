@@ -334,11 +334,16 @@ There are no configuration command for this feature
 
 ```
 
-Command to trigger: consistency-check route start [vrf Vrf1] [ ipv4|ipv6 ] 
+Command to trigger: consistency-check route start [[vrf Vrf1] [ ipv4|ipv6 ]] 
 Command to abort: consistency-check route stop
 
 ```
 
+#### Example1: Start consistency-checker for routes in all vrfs and both IPv4 & IPv6 address family
+This will start the consistency checker routine for IPv4 & IPv6 routes in all VRFs.     
+```
+sonic# consistency-check route start
+```
 
 #### Example1: Start consistency-checker for routes in specific vrf and address-family
 This will start the consistency checker routine for IPv4 routes in vrf default .     
