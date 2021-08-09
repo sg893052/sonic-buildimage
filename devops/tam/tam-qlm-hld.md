@@ -46,13 +46,11 @@
     - [3.6.1 Data Models](#361-data-models)
     - [3.6.2 Configuration Commands](#362-configuration-commands)
       - [3.6.2.1 Activating and Deactivating Queue Latency Monitor](#3621-activating-and-deactivating-queue-latency-monitor)
-      - [3.6.2.2 Setting up port-groups for Queue Latency Monitoring](#3622-setting-up-port-groups-for-queue-latency-monitoring)
-      - [3.6.2.3 Setting up sessions for Queue Latency Monitoring](#3623-setting-up-sessions-for-queue-latency-monitoring)
+      - [3.6.2.2 Setting up sessions for Queue Latency Monitoring](#3622-setting-up-sessions-for-queue-latency-monitoring)
     - [3.6.3 Show Commands](#363-show-commands)
       - [3.6.3.1 Listing the Queue Latency Monitor attributes](#3631-listing-the-queue-latency-monitor-attributes)
       - [3.6.3.2 Listing the Queue Latency Monitor latency ranges](#3632-listing-the-queue-latency-monitor-latency-ranges)
-      - [3.6.3.3 Listing the Queue Latency Monitor tam-port-group information](#3633-listing-the-queue-latency-monitor-tam-port-group-information)
-      - [3.6.3.4 Listing the Queue Latency Monitor sessions](#3634-listing-the-queue-latency-monitor-sessions)
+      - [3.6.3.3 Listing the Queue Latency Monitor sessions](#3633-listing-the-queue-latency-monitor-sessions)
     - [3.6.4 Sample Workflow](#364-sample-workflow)
     - [3.6.5 Debug Commands](#365-debug-commands)
     - [3.6.6 REST API Support](#366-rest-api-support)
@@ -69,6 +67,7 @@
 - [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information--to-be-removed-before-publishing-externally)
   - [Key notes](#key-notes)
   - [Specific Limitations](#specific-limitations)
+  - [TBD](#tbd)
   - [Queue Latency Report format](#queue-latency-report-format)
 
 
@@ -126,9 +125,9 @@ Latency is the residence time of a packet in the switch. The feature allows user
 
 - ACL configuration to identify a flow-group to monitor.
 
-- QLM port-group configuration to identify a set of ingress and egress ports to monitor.
+- interface group configuration to identify a set of ingress and egress ports to monitor.
 
-- QLM session configuration is used to create a session with the given port-group, flow-group and report durarion. Duration indicates the time period at which this session's QLM reports are sent to application.
+- QLM session configuration is used to create a session with the given if-group, flow-group and report durarion. Duration indicates the time period at which this session's QLM reports are sent to application.
 
 - QLM report contains a session's latency statistics for a given combination of source/destination ports on per queue basis. 
 
@@ -142,9 +141,9 @@ Latency is the residence time of a packet in the switch. The feature allows user
 
 - The QLM feature will be a part of the TAM container along with other TAM features.
 
-- An egress port can only be part of on port-group.
+- An egress port can only be part of on if-group.
 
-- A port-group can only be part of a session
+- An interface group (if-group) can only be part of a session
 
 
 ### 1.1.2 Configuration and Management Requirements
@@ -152,7 +151,7 @@ Latency is the residence time of a packet in the switch. The feature allows user
 The TAM Queue Latency Monitor feature supports the new management framework and KLISH CLI for configuration. The following configuration and status information is available.
 
 - To activate / de-activate the feature
-- To create/clear appropriate Queue Latency Monitor configuration on per flow-group or per port-group basis and switch-wide.
+- To create/clear appropriate Queue Latency Monitor configuration on per flow-group or per tam if-group basis and switch-wide.
 - To display current status for the Queue Latency Monitor on a per session basis.
 
 ### 1.1.3 Scalability Requirements
@@ -234,7 +233,7 @@ The architecture of the Queue Latency Monitor feature in SONiC is illustrated in
    
 ## 3.1.1 qlmMgr
 
-The qlmMgr runs in the TAM docker and is used to pass queue latency monitor configuration arriving from UI to qlmOrch. qlmMgr validates and collates information from CONFIG_DB  tables  TAM_PORT_GROUP_TABLE and TAM_QLM_SESSION_TABLE. APPL_DB TAM_QLM_TABLE and TAM_QLM_SESSION_TABLE  are populated with a valid session configuration once all the required data is available.  
+The qlmMgr runs in the TAM docker and is used to pass queue latency monitor configuration arriving from UI to qlmOrch. qlmMgr validates and collates information from CONFIG_DB  tables  IF_GROUP_TABLE and TAM_QLM_SESSION_TABLE. APPL_DB TAM_QLM_TABLE and TAM_QLM_SESSION_TABLE  are populated with a valid session configuration once all the required data is available.  
 
 The qlmMgr configures the source and destination udp ports to be used between SAI and qlmCollectorApplication.
 
@@ -242,37 +241,14 @@ The qlmMgr configures the source and destination udp ports to be used between SA
 
 ### 3.2.1 CONFIG DB
 
-TAM\_PORT\_GROUP\_TABLE
-
-    ;Defines TAM port-groups configuration in CONFIG_DB
-
-    key                = name                      ; name is tam-port-group name and should be unique
-    ingress-ports      = [0-max_ports]*port_name   ; List of ingress ports participating in this group 
-    egress-ports       = [0-max_ports]*port_name   ; List of egress ports participating in this group 
-
-    ;value annotations
-    max_ports     = 1*5DIGIT                ; number of ports supported on the chip
-    port_name     = 1*64VCHAR               ; name of the port, must be unique
-                                            ; port name can be Ethernetxxx
-    Example: 
-    > keys *TAM_PORT_GROUP_TABLE* 
-    1) "TAM_PORT_GROUP_TABLE|pg1" 
-
-    > hgetall "TAM_PORT_GROUP_TABLE|pg1"
-
-    1) "ingress-ports"
-    2) "Ethernet1, Ethernet3"
-    3) "egress-ports"
-    4) "Ethernet4, Ethernet2"
-    
 
 TAM\_QLM\_SESSIONS\_TABLE
 
     ;Defines TAM QLM session configuration in CONFIG_DB
 
     key = name                  ; name is session name and should be unique.
-    tam-port-group = 1*255VCHAR ; tam-port-group reference
-    flowgroup = 1*255VCHAR      ; Flow group reference
+    if-group = 1*255VCHAR       ; interface group reference
+    flow-group = 1*255VCHAR     ; Flow group reference
     interval  = 1*5DIGIT        ; Interval in seconds
     
     Example: 
@@ -282,9 +258,9 @@ TAM\_QLM\_SESSIONS\_TABLE
 
     > hgetall "TAM_QLM_SESSIONS_TABLE|S1"
 
-    1) "tam-port-group"
+    1) "if-group"
     2) "pg1"
-    3) "flowgroup"
+    3) "flow-group"
     4) "websrvrflows"
     5) "interval"
     6) 2
@@ -436,63 +412,36 @@ sonic (config-tam-qlm)# [no] enable
 - Deactivating Queue Latency Monitor will purge all Queue Latency Monitor configuration from the switch.
 - QLM feature entry will be added to the TAM_FEATURE_TABLE in CONFIG_DB. Please refer to TAM_FEATURE_TABLE in tam HLD for more information.
   
-#### 3.6.2.2 Setting up port-groups for Queue Latency Monitoring 
-- To monitor traffic between a particualr ingress and egress set of ports, the port-group must be previously created with the `tam-port-group` command (under `config-tam`) hierarchy). It must be associated with set of egress-ports and/or ingress-ports. A port can be part of only one port-group's egress-port list.
-- The command syntax to create a tam-port-group is as follows
-```
-sonic (config-tam)# tam-port-group P1
-sonic (config-tam)# [no] tam-port-group P1
 
-```
-| **Attribute**            | **Description**                     |
-|--------------------------|-------------------------------------|
-| `tam-port-group`         | Name of the tam-port-group 
+#### 3.6.2.2 Setting up sessions for Queue Latency Monitoring 
 
-- The command syntax to associate ingress and egress ports to a tam-port-group is as follows
-```
-sonic (conf-if-Ethernet1)# tam-port-group P1 direction ingress
-sonic (conf-if-Ethernet2)# tam-port-group P1 direction ingress
-sonic (conf-if-Ethernet5)# tam-port-group P1 direction egress
-sonic (conf-if-Ethernet6)# tam-port-group P1 direction egress
-
-```
-| **Attribute**             | **Description**                     |
-|---------------------------|-------------------------------------|
-| `tam-port-group`          | Name of the tam-port-group 
-| `direction`               | To add port to ingress/egress port-list 
-
-
-- This command updates the TAM_PORT_GROUP_TABLE in CONFIG_DB.
-
-#### 3.6.2.3 Setting up sessions for Queue Latency Monitoring 
-
-A Queue Latency Monitoring session is associated a previously defined flow-group and port-group as described below.
+A Queue Latency Monitoring session is associated a previously defined flow-group and if-group as described below.
 
 - The Queue Monitor session must have a unique name for referencing.
-- To monitor a specific flow, the flow-group must be previously created with the `flowgroup` command (under `config-tam` hierarchy).
+- To monitor a specific flow, the flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy).
 - A session can be created with out any flow-group association. In this case all the flows are monitored
-- A port-group can be part of only one session.
-- A session can be created with out any port-group. In this case all the ports are treated as ingress and egress ports
+- An if-group can be part of only one session.
+- A session can be created with out any if-group. In this case all the ports are treated as ingress and egress ports
 - Interval parameter is the time duration between periodic reports of a session, unit is milli seconds
 -  Default value for interval is 100 milli secs
   
 
-When a sesssion that is previously created is removed (with the `no` command), the associated flows and port-groups are no longer monitored for latencies by the switch. 
+When a sesssion that is previously created is removed (with the `no` command), the associated flows and if-groups are no longer monitored for latencies by the switch. 
 
 The following attribtes are supported for  Queue Latency Monitor sessions.
 
 | **Attribute**                 | **Description**                         |
 |--------------------------|-------------------------------------|
-| `name`                   | A string that uniquely identifies the Queue Latency Monitor session        |
-| `flowgroup`              | Specifies the name of *flow-group* |
-| `tam-port-group`         | Specifies the name of the *tam-port-group* |
+| `name`                   | A string that uniquely identifies the Queue Latency Monitor session            |
+| `flow-group`             | Specifies the name of *flow-group* |
+| `if-group`               | Specifies the name of the *if-group* |
 | `interval`               | Interval used for periodic stats reporting, minimum is 100ms  |
 
 
 The command syntax for creating /removing the sessions are as follows:
 
 ```
-sonic(config-tam-qlm)# session <name> [flowgroup <fg-name>] [tam-port-group ] [interval <value>]
+sonic(config-tam-qlm)# session <name> [flow-group <fg-name>] [if-group ] [interval <value>]
 
 sonic (config-tam-dm)# no session <name>
 ```
@@ -540,32 +489,7 @@ Num            latency-range(ns)
 ```
 - This command refers to the TAM_QLM_TABLE in APPL DB for information.
 
-#### 3.6.3.3 Listing the Queue Latency Monitor tam-port-group information
-
-The following command lists the details for all queue latency monitor port-groups or for a specific tam-port-group.
-
-```
-sonic # show tam tam-port-groups [<name>]
-```
-Sample usage shown below.
-
-```
-sonic # show tam tam-port-groups
-Name              ingress ports                  egress ports
----------        ------------------------        -----------------------
-P1               Ethernet1, Ethernet2            Ethernet3, Ethernet4
-P2                   *                           Ethernet5, Ethernet6 
-
-sonic # show tam  tam-port-groups P1
-Name                : P1
-ingress ports       : Ethernet1,Ethernet2
-egress ports        : Ethernet3, Ethernet4
-
-```
-
-- This command refers to the TAM_PORT_GROUP_TABLE in CONFIG_DB.
-
-#### 3.6.3.4 Listing the Queue Latency Monitor sessions
+#### 3.6.3.3 Listing the Queue Latency Monitor sessions
 
 The following command lists the details for all queue latency monitor sessions or for a specific session. Note that only explicitly configured tuples in the associated flow-group are displayed.
 
@@ -615,7 +539,7 @@ Time-Stamp          Queue  range1 range2  range3  range4  range5 range6 range7 r
 - The above output should be in chronological order.
 - range1, range2 .. are latency ranges representing min and max values in nano seconds. ex:- range1 as 0-1024, range2 as 1025-4096 e.t.c 
 
-- This command refers to TAM_QLM_SESSIONS_TABLE, TAM_PORT_GROUP_TABLE, TAM_FLOWGROUP_TABLE in CONFIG DB and TAM_QLM_COUNTER_TABLE in COUNTER DB.
+- This command refers to TAM_QLM_SESSIONS_TABLE, TAM_IF_GROUP_TABLE, TAM_FLOWGROUP_TABLE in CONFIG DB and TAM_QLM_COUNTER_TABLE in COUNTER DB.
   
    
 ### 3.6.4 Sample Workflow
@@ -628,32 +552,32 @@ Note that there would be other system wide configuration that is not covered in 
 
 ```
 
-; create the flowgroup
+; create the flow-group
 
-sonic (config-tam)# flowgroup websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 
+sonic (config-tam)# flow-group websrvflows dst-ip 20.20.1.1 dst-l4-port 80 protocol 6 
 
 ; Enable Queue Latency Monitor on the switch
 
 sonic (config-tam-qlm)# enable
 
-; Create tam-port-group
+; Create if-group
 
-sonic (config-tam)# tam-port-group P1
+sonic (config-tam)# if-group P1
 
-# associate the ingress interface to the tam port group
+# associate the ingress interface to the interface group
 
 sonic (config) # interface Ethernet 3
-sonic (config-if-Ethernet3)# tam-port-group P1 direction ingress
+sonic (config-if-Ethernet3)# if-group P1 direction ingress
 
 
-# associate the egress interface to the tam port group
+# associate the egress interface to the interface group
 
 sonic (config) # interface Ethernet 45
-sonic (config-if-Ethernet45)# tam-port-group P1 direction egress
+sonic (config-if-Ethernet45)# if-group P1 direction egress
 
 ; Create the queue latency monitoring session
 
-sonic(config-tam-qlm)# session webflowmonitor tam-port-group P1 flowgroup websrvflows interval 900
+sonic(config-tam-qlm)# session webflowmonitor if-group P1 flow-group websrvflows interval 900
 
 ```
 
@@ -718,8 +642,12 @@ Queue Latency Monitor feature in SONiC inherits the limitations of the underlyin
 1. Only a single local collector is supported
 2. Queue Latency Monitor is supported on TH3 and TH4 platforms only.
 3. Supports only 4 sessions
-4. One egress port can be part of one port-group only.
-5. One port-group can be part of one session only.
+4. One egress port can be part of one if-group only.
+5. One if-group can be part of one session only.
+6. flow-group based monitoring is currently not supported in this release.
+
+## TBD
+Command to configure time duration that defines how long a latency report's data has to be maintained in the system.
 
 ## Queue Latency Report format
 
