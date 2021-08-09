@@ -32,7 +32,7 @@
   - [3.1 Overview](#31-overview)
   - [3.2 DB Changes](#32-db-changes)
     - [3.2.1 CONFIG DB](#321-config-db)
-    - [3.2.2 APP DB](#322-app-db)
+    - [3.2.2 APPL DB](#322-appl-db)
     - [3.2.3 STATE DB](#323-state-db)
     - [3.2.4 ASIC DB](#324-asic-db)
     - [3.2.5 COUNTER DB](#325-counter-db)
@@ -48,15 +48,37 @@
       - [3.7.2.1 Setting up switch-wide TAM attributes](#3721-setting-up-switch-wide-tam-attributes)
       - [3.7.2.2 Setting up Collectors](#3722-setting-up-collectors)
       - [3.7.2.2 Setting up Flow Groups](#3722-setting-up-flow-groups)
-      - [3.7.2.2 Setting up Samplers](#3722-setting-up-samplers)
+      - [3.7.2.3 Attaching a Flow Group to an interface](#3723-attaching-a-flow-group-to-an-interface)
+      - [3.7.2.4 Setting up Samplers](#3724-setting-up-samplers)
+      - [3.7.2.5 Setting up TAM interface groups](#3725-setting-up-tam-interface-groups)
     - [3.7.3 Show Commands](#373-show-commands)
       - [3.7.3.1 Listing the Switch-wide TAM attributes](#3731-listing-the-switch-wide-tam-attributes)
       - [3.7.3.2 Listing the Collectors](#3732-listing-the-collectors)
       - [3.7.3.3 Listing the Samplers](#3733-listing-the-samplers)
       - [3.7.3.4 Listing the Flow groups](#3734-listing-the-flow-groups)
       - [3.7.3.3 Listing the TAM features](#3733-listing-the-tam-features)
+      - [3.7.3.4 Listing the interface group information](#3734-listing-the-interface-group-information)
     - [3.7.5 Debug Commands](#375-debug-commands)
     - [3.7.6 REST API Support](#376-rest-api-support)
+      - [Yang-based REST API based on the openconfig-tam module defintions](#yang-based-rest-api-based-on-the-openconfig-tam-module-defintions)
+        - [Obtaining the status of all TAM feautures on the switch](#obtaining-the-status-of-all-tam-feautures-on-the-switch)
+        - [Obtaining a status of a specific TAM feature](#obtaining-a-status-of-a-specific-tam-feature)
+        - [Activating/De-activating a specific TAM feature](#activatingde-activating-a-specific-tam-feature)
+        - [Obtaining TAM switch-wide attributes](#obtaining-tam-switch-wide-attributes)
+        - [Setting-up TAM switch-wide attribute : switch-id](#setting-up-tam-switch-wide-attribute--switch-id)
+        - [Setting-up TAM switch-wide attribute : enterprise-id](#setting-up-tam-switch-wide-attribute--enterprise-id)
+        - [Resetting the TAM switch-wide attributes to defaults](#resetting-the-tam-switch-wide-attributes-to-defaults)
+        - [Obtaining all of the collectors](#obtaining-all-of-the-collectors)
+        - [Obtaining a specific collector](#obtaining-a-specific-collector)
+        - [Creating a collector](#creating-a-collector)
+        - [Deleting a collector](#deleting-a-collector)
+        - [Obtaining all of the Samplers](#obtaining-all-of-the-samplers)
+        - [Obtaining a specific sampler](#obtaining-a-specific-sampler)
+        - [Creating a Sampler](#creating-a-sampler)
+        - [Deleting a Sampler](#deleting-a-sampler)
+        - [Obtaining all of the flow-groups](#obtaining-all-of-the-flow-groups)
+        - [Creating a flow-group](#creating-a-flow-group)
+        - [Deleting a flow-group](#deleting-a-flow-group)
 - [4 Flow Diagrams](#4-flow-diagrams)
   - [4.1 Config call flow](#41-config-call-flow)
 - [5 Error Handling](#5-error-handling)
@@ -65,7 +87,11 @@
 - [7 Warm Boot Support](#7-warm-boot-support)
 - [8 Scalability](#8-scalability)
 - [9 Unit Test](#9-unit-test)
-  - [CLI](#cli)
+  - [CLI](#cli-1)
+- [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information--to-be-removed-before-publishing-externally)
+  - [Revision History](#revision-history)
+  - [Key notes](#key-notes)
+  - [Specific Limitations](#specific-limitations)
 
 ## List of Tables
 
@@ -115,6 +141,9 @@ There are many common aspects among the TAM features, as defined in the TAM spec
 4.0 TAM infrastucture must allow a common specification of a sampling rate definition on a given interface that can be named and refererenced by individual features.
 
 5.0 TAM infrastucture must support activating and deactivating individual features.
+
+6.0 TAM infrastucture must allow a common specification of a interface group(if-group) definition that can be named and refererenced by individual features.
+it must allow user to add ingress and egress ports to the if-group.
 
 ### 1.1.2 Configuration and Management Requirements
 
@@ -269,6 +298,30 @@ This table holds various flow-group references that are setup to be used with th
     2) 1000
     3) "table-name"
     4) "TAM"
+
+TAM\_IF\_GROUP\_TABLE
+
+    ;Defines TAM interface groups configuration in CONFIG_DB
+
+    key                = name                      ; name is if-group name and should be unique
+    ingress-ports      = [0-max_ports]*port_name   ; List of ingress ports participating in this group 
+    egress-ports       = [0-max_ports]*port_name   ; List of egress ports participating in this group 
+
+    ;value annotations
+    max_ports     = 1*5DIGIT                ; number of ports supported on the chip
+    port_name     = 1*64VCHAR               ; name of the port, must be unique
+                                            ; port name can be Ethernetxxx
+    Example: 
+    > keys *TAM_IF_GROUP_TABLE* 
+    1) "TAM_IF_GROUP_TABLE|pg1" 
+
+    > hgetall "TAM_IF_GROUP_TABLE|pg1"
+
+    1) "ingress-ports"
+    2) "Ethernet1, Ethernet3"
+    3) "egress-ports"
+    4) "Ethernet4, Ethernet2"
+    
 
 
 ### 3.2.2 APPL DB
@@ -461,6 +514,34 @@ sonic (config-tam)# no sampler <name>
 
 ```
 
+#### 3.7.2.5 Setting up TAM interface groups 
+- To monitor traffic between a particualr ingress and egress set of ports, the if-group must be previously created with the `if-group` command (under `config-tam`) hierarchy). It must be associated with set of egress-ports and/or ingress-ports. A port can be part of only one if-group's egress-port list.
+- The command syntax to create a if-group is as follows
+```
+sonic (config-tam)# if-group P1
+sonic (config-tam)# [no] if-group P1
+
+```
+| **Attribute**            | **Description**                     |
+|--------------------------|-------------------------------------|
+| `if-group`               | Name of the interface group 
+
+- The command syntax to associate ingress and egress ports to a if-group is as follows
+```
+sonic (conf-if-Ethernet1)# if-group P1 direction ingress
+sonic (conf-if-Ethernet2)# if-group P1 direction ingress
+sonic (conf-if-Ethernet5)# if-group P1 direction egress
+sonic (conf-if-Ethernet6)# if-group P1 direction egress
+
+```
+| **Attribute**             | **Description**                     |
+|---------------------------|-------------------------------------|
+| `if-group`                | Name of the interface group 
+| `direction`               | To add port to ingress/egress port-list 
+
+
+- This command updates the TAM_IF_GROUP_TABLE in CONFIG_DB.
+
 ### 3.7.3 Show Commands
 
 #### 3.7.3.1 Listing the Switch-wide TAM attributes
@@ -588,7 +669,31 @@ sonic-cli# show tam features ifa
 Name          : ifa
 Status        : Active
 ```
+#### 3.7.3.4 Listing the interface group information
 
+The following command lists the details for all queue latency monitor if-groups or for a specific if-group.
+
+```
+sonic # show tam if-groups [<name>]
+```
+Sample usage shown below.
+
+```
+sonic # show tam if-groups
+Name              ingress ports                  egress ports
+---------        ------------------------        -----------------------
+P1               Ethernet1, Ethernet2            Ethernet3, Ethernet4
+P2                   *                           Ethernet5, Ethernet6 
+
+sonic # show tam  if-groups P1
+Name                : P1
+ingress ports       : Ethernet1,Ethernet2
+egress ports        : Ethernet3, Ethernet4
+
+```
+
+- This command refers to the TAM_IF_GROUP_TABLE in CONFIG_DB.
+  
 ### 3.7.5 Debug Commands
 N/A
 
