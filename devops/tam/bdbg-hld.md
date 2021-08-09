@@ -370,9 +370,6 @@ Switch Latency - Median                 :   10us - 20us (10%)
 Switch Latency - Maximum                :   above 120us (1%) 
 Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
 
-Tuning Parameters
-----------------------
-congestion-threshold      : 25%
 ```
 
 #### 3.7.3.3 Listing the drops tool parameters
@@ -406,6 +403,8 @@ An example invocation is as below
 
 ```
 shell # bdbg show congestion active
+
+Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
 Buffer             Interface        Direction    Utilization    Drops 
 ----------------   --------------   ---------    -------------  -----
@@ -489,7 +488,7 @@ Id      Timestamp                   Utilization     Drops
 This command shows the drops events recorded in the current data collection interval.
 
 ```
-shell # bdbg show drops active {flows | reasons | locations | interface <interface-name>}
+shell # bdbg show drops active {flows | reasons | locations | interface <interface-name>} { detail <drop-id> }
 ```
 
 - The `flows` option shows the dropped flows in the data-plane (silicon), cpu-queue or kernel along with the reason the flow is dropped. The dropped flow is identified by 5-tuple i.e. source and destination IP address, source and destination L4 port number and protocol (e.g. 17 for udp, 6 for tcp etc).
@@ -500,19 +499,42 @@ shell # bdbg show drops active {flows | reasons | locations | interface <interfa
 
 - The `interface` option shows the packet-drop count at a specific interface.
 
+- The `detail` option shows additional detail, if available, for the drops. It is valid only along with the `flows` option.
+
 An example invocation is as below:
 
 ```
 shell # bdbg show drops active flows
 
 Number of Dropping Flows          :   3
-Drop Events last cleared at       :   30th Jun 2021, 10:11AM
+Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
-src-id         dst-ip            src-port     dst-port     protocol     drop-reason     location     timestamp
------------    --------------    --------     --------     --------     ------------    -----------  ----------
-10.10.1.1      10.10.2.2         5656         80           6            L3_DEST_MISS    data-plane   2021-06-11 11:22AM
-10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    cpu-queue    2021-06-11 11:20AM
-10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    kernel       2021-06-11 11:20AM
+drop-id    src-ip         dst-ip            drop-reason     Ingress Intf     timestamp
+--------   -----------    --------------    ------------    -----------      ----------
+2022       10.10.1.1      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:16AM
+2023       10.10.1.2      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:17AM
+2024       10.10.1.3      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:17AM
+
+```
+
+```
+shell # bdbg show drops active flows detail 2022
+
+Number of Dropping Flows     :   3
+Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
+
+Flow Id   :   2022
+Src-Ip    :   10.10.1.1
+Dst-Ip    :   10.10.2.2
+Src-Port  :   5656
+Dst-Port  :   80
+protocol  :   6
+
+Ingress Port  : Ethernet24
+
+Drop Reason   : L3_DEST_MISS
+Drop Location : Ingress Pipeline
+Drop Timestamp: 30th Jun 2021, 10:16AM
 
 ```
 
@@ -520,7 +542,7 @@ src-id         dst-ip            src-port     dst-port     protocol     drop-rea
 shell # bdbg show drops active reasons
 
 Number of Active Drop Reasons     :   2
-Drop Events last cleared at       :   30th Jun 2021, 10:11AM
+Active Monitoring interval        :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
 drop-reason     count       
 ------------    --------    
@@ -533,7 +555,7 @@ UNKNOWN_VLAN    32
 shell # bdbg show drops active locations
 
 Number of Active Drop Locations   :   3
-Drop Events last cleared at       :   30th Jun 2021, 10:11AM
+Active Monitoring interval        :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
 location        count       
 ------------    --------    
@@ -547,7 +569,7 @@ kernel          45
 shell # bdbg show drops active interface cpu
 
 Number of Active Dropping Queues   :   3
-Drop Events last cleared at        :   30th Jun 2021, 10:11AM
+Active Monitoring interval         :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
 location                count       
 ------------            --------    
@@ -560,7 +582,7 @@ Queue 36 [MOD]          10
 shell # bdbg show drops active interface Ethernet0
 
 Number of Active Dropping Queues   :   1
-Drop Events last cleared at        :   30th Jun 2021, 10:11AM
+Active Monitoring interval         :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
 location                count       
 ------------            --------    
