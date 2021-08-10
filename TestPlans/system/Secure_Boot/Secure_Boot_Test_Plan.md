@@ -5,11 +5,12 @@
 | Rev | Date        | Author                  | Change Description          |
 |:---:|:-----------:|:-----------------------:|:---------------------------:|
 | 0.1 | 30/07/2021  | Santosh Votarikari      | Initial version             |
+| 0.2 | 10/08/2021  | Santosh Votarikari      | Fixed Typo errors           |
 
 # List of Reviewers
-|  Function           | Name                 |
+|  Function 		  | Name  				 |
 |:-------------------:|:---------------------|
-|   Dev               |  Babu Rajaram 	     |
+|   Dev				  |  Babu Rajaram 	     |
 |   Dev               |  Fuzail Khan         |
 |   QA                |  Kalyan Vadlamani    |
 |   QA                |  Chandra Bhushan     |
@@ -78,7 +79,7 @@ loaded via sonic_installer command as well, an infra similar to ONIE nos install
 
 Topology Description -
 - Generate the signed NOS image by using the prepare-signed-nos tool.
-- Load the signed NOS image from onie-installer or soni-installer.
+- Load the signed NOS image from onie-installer or sonic-installer.
 
 # 3 Test  Case and Objectives
 ## 3.1 Functional
