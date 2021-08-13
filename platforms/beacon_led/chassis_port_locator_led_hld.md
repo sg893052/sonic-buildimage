@@ -40,10 +40,9 @@
 Rev   |   Date     |  Author   | Change Description
 :---: | :-----:    | :------:  | :---------
 1.0   | 12/16/2020 | Precy Lee | Initial version
-2.0   | 04/15/2021  | Dante (Kuo-Jung) Su | added port_led                   |
-2.0   | 05/15/2021  | Precy Lee | Added Chassis Locator LED timer support                  |
-
-
+2.0   | 04/15/2021 | Dante Su  | added port_led
+2.0   | 05/15/2021 | Precy Lee | Added Chassis Locator LED timer support
+2.1   | 08/13/2021 | Dante Su  | Updated Port Locator for SAI, database, CLI, limitations and detailed supported platform list
 
 # About this Manual
 
