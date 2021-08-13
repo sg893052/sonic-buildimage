@@ -280,14 +280,17 @@ and new SAI port attributes will be introduced for port-locator.
 
 ##### SAI Profile
 
-- SAI_LED_PORT_LOCATOR_FW_FILE
+- **SAI_LED_PORT_LOCATOR_FW_FILE**
 
-    This key provides the path to custom port-locator firmware, and it defaults to '/usr/share/sonic/platform/port-locator.bin'
-    If the firmware does not exist, the generic port-locator firmware will be activated and uses by the configurations specified in SAI_LED_PORT_LOCATOR_CONFIG_FILE
+    This key provides the path to custom port-locator firmware, and it defaults to **'/usr/share/sonic/platform/port-locator.bin'**.<br>
+    If the firmware does not exist, the generic port-locator firmware will be activated and the platform configuration must be supplied via SAI_LED_PORT_LOCATOR_CONFIG_FILE
 
-- SAI_LED_PORT_LOCATOR_CONFIG_FILE
+- **SAI_LED_PORT_LOCATOR_CONFIG_FILE**
 
-    This key provides the path to the platform-specific config file for the generic port-locator firmware, and it's unused in the case of custom port-locator.bin
+    This key provides the path to the platform-specific config file for the generic port-locator firmware, and it's unused in the case of custom port-locator firmware.<br>
+    It defaults to **'/usr/share/sonic/platform/port-locator.soc'**
+
+Note: Either one of the above file must be present on the platform to enable the port-locator support.
 
 ##### SAI Attributes
 
