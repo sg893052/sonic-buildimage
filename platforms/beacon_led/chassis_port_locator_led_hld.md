@@ -24,15 +24,22 @@
 * [System Reboot](#system-reboot)
 * [Config Reload](#config-reload)
 * [Scalability](#Scalability)
+* [Limitations](#Limitations)
 * [Unit Test](#Unit-Test)
 * [Internal Design Information](#internal-design)
 
 
+# List of Tables
+
+* [Table 1: Abbreviations](#table-1-abbreviations)
+* [Table 2: Chassis Locator LED supported list](#table-2-chassis-locator-led-supported-list)
+* [Table 3: Port Locator LED supported list](#table-3-port-locator-led-supported-list)
+
 # Revision
 
-Rev   |   Date   |  Author   | Change Description
-:---: | :-----:  | :------:  | :---------
-1.0   | 12/16/20 | Precy Lee | Initial version
+Rev   |   Date     |  Author   | Change Description
+:---: | :-----:    | :------:  | :---------
+1.0   | 12/16/2020 | Precy Lee | Initial version
 2.0   | 04/15/2021  | Dante (Kuo-Jung) Su | added port_led                   |
 2.0   | 05/15/2021  | Precy Lee | Added Chassis Locator LED timer support                  |
 
@@ -272,6 +279,27 @@ vendor-independent way of controlling forwarding elements, such as
 a switching ASIC, an NPU or a software switch in a uniform manner,
 and new SAI port attributes will be introduced for port-locator.
 
+##### SAI Profile
+
+- SAI_LED_PORT_LOCATOR_FW_FILE
+
+    This key provides the path to custom port-locator firmware, and it defaults to '/usr/share/sonic/platform/port-locator.bin'
+    If the firmware does not exist, the generic port-locator firmware will be activated and uses by the configurations specified in SAI_LED_PORT_LOCATOR_CONFIG_FILE
+
+- SAI_LED_PORT_LOCATOR_CONFIG_FILE
+
+    This key provides the path to the platform-specific config file for the generic port-locator firmware, and it's unused in the case of custom port-locator.bin
+
+##### SAI Attributes
+
+- SAI_PORT_ATTR_LED_LOCATOR_MODE
+
+    This attribute is to activate/de-activate the locator mode on the port. Setting this attribute to activate the locator mode on the port will only toggle the BLINKING behavior in the locator mode, it will not activate the port-locator firmware mode.
+
+- SAI_SWITCH_ATTR_LED_LOCATOR_MODE
+
+    This attribute is to activate/de-activate the port-locator firmware, the LED behavior of all switch ports will be affected, and the normal operation firmware should be restored upon device reset or port-locator disabled.
+
 #### SWitch State Service (SWSS)
 
 The SWitch State Service (SWSS) is a collection of software that provides a database
@@ -295,15 +323,39 @@ will only be availble in this CLI.
 
 #### APPL_DB
 
-The **port_locator** attribute will be newly introduced into the **PORT_TABLE** of **APPL_DB**.
+##### PORT_TABLE
 
+The **port_locator** attribute of the **PORT_TABLE** serves as requests to orchagent and syncd/SAI, and the port-locator firmware will be activated if either one of the port is in locator mode.
+
+e.g.
 ```
-  "PORT_TABLE:Ethernet16": {
-                "type": "hash",
-                "value": {
-                    "port_locator": "on",
-                }
-   },
+    "PORT_TABLE:Ethernet16": {
+        "type": "hash",
+        "value": {
+            ...... omitted ......
+            "port_locator": "on|off",
+            ...... omitted ......
+        }
+    },
+```
+
+##### PORT_LOCATOR
+
+This table serves as requests from CLI to the port-locator daemon in the pmon, which is responsible for the expiration timeout checks and actually send out the requests to orchagent for the port-locator mode.
+If the **expired** is not specified or an empty string, it will never be expired.
+If the **expired** is a malformed datetime string, it will be expired immediately.
+
+Note: The port-locator expiration timer is vulnerable to the time-shift operations (e.g. NTP or manually updated), please either disable all the port-locator or reset the device after any date and time updates.
+
+e.g.
+```
+    "PORT_LOCATOR:Ethernet16": {
+        "type": "hash",
+        "value": {
+            "mode": "on|off",
+            "expired": "YYYY-mm-dd HH:MM:SS"
+        }
+    },
 ```
 
 # CLI:
@@ -540,19 +592,45 @@ sonic# interface port-locator Ethernet 4-64
 sonic# no interface port-locator Ethernet 4-64
 ```
 
+To enable/disable the port-locator on Ethernet4,Ethernet9...Ethernet12, please use the following command.
+
+```
+sonic# interface port-locator Ethernet 4,9-12
+sonic# no interface port-locator Ethernet 4,9-12
+```
+
 **show interface port-locator**
 
 This command displays which interface or interfaces currently have the port-locator mode enabled.
 
 ```
-sonic-cli# show interface port-locator
+sonic# show interface port-locator
 
-Interface    Locator Mode
------------  --------
-Ethernet0    Enable
-Ethernet1    Disable
-Ethernet2    Enable
-Ethernet3    Disable
+Interface       Locator Mode  Expiration Time
+--------------  ------------  -------------------
+Eth1/1          Disabled
+Eth1/2          Disabled
+Eth1/3          Disabled
+Eth1/4          Enabled
+Eth1/5          Enabled
+Eth1/6          Enabled
+Eth1/7          Enabled       2021-08-13 02:52:46
+Eth1/8          Disabled
+......
+```
+
+To disply only the port-locator status of the ports in a particular ranges.
+
+```
+sonic# show interface port-locator Eth 1/4-1/6,1/12
+
+Interface       Locator Mode  Expiration Time
+--------------  ------------  -------------------
+Eth1/4          Enabled
+Eth1/5          Enabled
+Eth1/6          Enabled
+Eth1/12         Disabled
+sonic#
 ```
 
 ## Data Models:
@@ -693,6 +771,18 @@ Chassis Locator LED state and Port Locatr LED state remain the same after config
 
 No impact to scalability. Existing scale numbers will be supported with both features.
 
+# Limitations
+
+## Chassis Locator LED
+
+- Not every platform supports Chassis Locator LED. Please refer to the Table 2 for the supported platform list.
+
+## Port Locator LED
+
+- As of now, only the Broadcom CMCIx platform (e.g.TH3/TD3/TD4) is supported.
+- It's known issue that Accton platforms are using compact special coding for the LED bitstream, hence it's not going to be supported by the generic port-locator firmware, a platform-specific custom firmware will be necessary in this case.
+- The port-locator expiration timer is vulnerable to the time-shift operations (e.g. NTP or manually updated), please either disable all the port-locator or reset the device after any date and time updates.
+
 # Unit Test 
 
 **Chassis Locater LED**
@@ -715,8 +805,18 @@ Run each unit test on both Chassis Locator LED supported platforms and unsupport
 
 The following is the list of unit test cases:
 
-* Verify port-locator CLI configuration commands.
-* Verify port-locator CLI show commands.
+* Verify port-locator KLISH configuration commands to all ports.
+* Verify port-locator KLISH configuration commands to one port.
+* Verify port-locator KLISH configuration commands to the ports in a particular range.
+* Verify port-locator KLISH show commands to all ports.
+* Verify port-locator KLISH show commands to one port.
+* Verify port-locator KLISH show commands to the ports in a particular range.
+* Verify port-locator firmware platform configurations.
+* Verify port-locator firmware should be activated if either one of the port is in locator mode.
+* Verify port-locator firmware should be de-activated if none of the port is in locator mode.
+* Verify port-locator expiration timer support to one port.
+* Verify port-locator expiration timer support to all ports.
+* Verify port-locator expiration timer support to the ports in a particular range.
 
 # Internal Design Information:
 
@@ -763,11 +863,39 @@ For example, AS4630-54NP platform does not have the LOC LED, therefore, PRI LED 
 
 ## Port Locator LED Supported Platforms
 
-This feature will only be available on Broadcom CMICx platforms, and the accurate switch silicon family are listed below:
+Not every platform supports Port Locator LED. Please refer to the Table 3 for the supported platform list.
+As of now, only the Broadcom CMCIx platform (e.g.TH3/TD3/TD4) is supported, we'll circle back on CMICd platform(TH/TH2/TD2) support later.
 
-- Broadcom TD4-X11
-- Broadcom TD3-X7
-- Broadcom TD3-X3(i.e. HX5)
-- Broadcom TH3
-- Broadcom TD3-X5 (i.e. MV2)
-
+### Table 3: Port Locator LED supported list
+| **Vendor**  |  **Platform**  |  **Port Locator Support** | **Custom Firmware** | **Note**     |
+|:------------|:---------------|:--------------------------|:--------------------|:-------------|
+| Accton      | AS7712-32X     | No                        |                     | TH           |
+| Accton      | AS5712-54X     | No                        |                     | TD2          |
+| Accton      | AS7326-56X     | Yes                       | Yes                 |              |
+| Accton      | AS7816-64X     | No                        |                     | TH2          |
+| Accton      | AS9716-32D     | Yes                       | Yes                 |              |
+| Accton      | AS7726-32X     | Yes                       | Yes                 |              |
+| Accton      | AS5835-54X     | Yes                       | Yes                 |              |
+| Accton      | AS5835-54T     | Yes                       | Yes                 |              |
+| Accton      | AS4630-54NP    | Yes                       | Yes                 |              |
+| Dell        | Z9100          | No                        |                     | TH           |
+| Dell        | S6100          | No                        |                     | TH           |
+| Dell        | S5232          | Yes                       | No                  |              |
+| Dell        | Z9332          | Yes                       | No                  |              |
+| Dell        | Z9264          | No                        |                     | TH2          |
+| Dell        | N3248TE        | Yes (Not Ready)           |                     | Awaits DELL development support |
+| Dell        | S5212          | Yes (Not Ready)           | No                  | Awaits DELL development support |
+| Dell        | S5224          | Yes (Not Ready)           | No                  | Awaits DELL development support |
+| Dell        | S5248          | Yes (Not Ready)           | No                  | Awaits DELL development support |
+| Dell        | S5296          | Yes (Not Ready)           | No                  | Awaits DELL development support |
+| Dell        | Z9432          | Yes                       | No                  |              |
+| Dell        | S6000          | No                        |                     | TH           |
+| Quanta      | IX7t (SLX9250) | Yes                       | No                  |              |
+| Quanta      | IX8f (SLX9150) | Yes                       | No                  |              |
+| Quanta      | IX4            | No                        |                     | TH2          |
+| Quanta      | IX7            | Yes                       | No                  |              |
+| Quanta      | IX7_BWDE       | Yes                       | No                  |              |
+| Quanta      | IX8            | Yes                       | No                  |              |
+| Quanta      | IX8-B          | Yes                       | No                  |              |
+| Quanta      | IX8A_BWDE      | Yes                       | No                  |              |
+| Quanta      | IX9            | Yes                       | No                  |              |
