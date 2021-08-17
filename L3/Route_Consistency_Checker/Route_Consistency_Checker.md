@@ -334,7 +334,7 @@ There are no configuration command for this feature
 
 ```
 
-Command to trigger: consistency-check start route [[vrf Vrf1] [ ipv4|ipv6 ]] 
+Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] 
 Command to abort: consistency-check stop route
 
 ```
@@ -409,6 +409,20 @@ Route Check for vrf:default address-family:ipv6 - CONSISTENT
 sonic# 
 
 sonic# show consistency-check status route
+Route Check for vrf:default address-family:ipv4 - CONSISTENT
+  Number of routes compared: 1034
+Route Check for vrf:default address-family:ipv6 - INCONSISTENT
+  Number of routes compared: 6
+    Mismatch report:
+    Extra prefixes:
+      200::1/128
+        ASIC-DB:1
+          (Ethernet66, 66::1, 80:a2:35:26:4a:61  
+        HARDWARE:1
+          (Ethernet66, 66::1, 80:a2:35:26:4a:61)
+sonic# 
+
+sonic# show consistency-check status route
 Route Check for vrf:default address-family:ipv4 - INCONSISTENT
   Number of routes compared: 1034
   Mismatch report:
@@ -429,16 +443,65 @@ Route Check for vrf:default address-family:ipv6 - CONSISTENT
 sonic# 
 
 sonic# show consistency-check status route
+Route Check for vrf:default address-family:ipv4 - CONSISTENT
+  Number of routes compared: 1034
+Route Check for vrf:default address-family:ipv6 - INCONSISTENT
+  Number of routes compared: 6
+    Mismatch report:
+    Unequal prefixes:
+      88::1/128 - NHop(s) do not match
+        RIB:1
+          (Vlan200, 67::1, 80:a2:35:26:4a:61)
+        KERNEL:1
+          (Vlan200, 67::1, 80:a2:35:26:4a:61)	  
+        APP_DB:1
+          (Ethernet66, 66::1, 80:a2:35:26:4a:61)
+        ASIC_DB:1
+          (Ethernet66, 66::1, 80:a2:35:26:4a:61)	  
+        HARDWARE:1
+          (Ethernet66, 66::1, 80:a2:35:26:4a:61)
+sonic# 
+
+sonic# show consistency-check status route
 Route Check for vrf:default address-family:ipv4 - INCONSISTENT
   Number of routes compared: 1034
   Mismatch report:
-    Prefixes in rib not available in hardware:
-      88.0.0.2/32
-        rib:1
+    Missing prefixes:
+      RIB:1
+        88.0.0.2/32
           (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
+      KERNEL:1
+        88.0.0.2/2
+	  (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
+      APP_DB:0
+        -
+      ASIC_DB:0
+        -
+      HARDWARE:0
+        -
 Route Check for vrf:default address-family:ipv6 - CONSISTENT
   Number of routes compared: 6
 
+
+sonic# show consistency-check status route
+Route Check for vrf:default address-family:ipv4 - CONSISTENT
+  Number of routes compared: 1034
+Route Check for vrf:default address-family:ipv6 - INCONSISTENT
+  Number of routes compared: 6
+    Mismatch report:
+    Missing prefixes:
+      RIB:1
+        88::2/64
+          (Vlan200, 67::1, 80:a2:35:26:4a:61)
+      KERNEL:1
+        88::2/64
+	  (Vlan200, 67::1, 80:a2:35:26:4a:61)
+      APP_DB:0
+        -
+      ASIC_DB:0
+        -
+      HARDWARE:0
+        -
 sonic# 
 
 ```
@@ -505,6 +568,59 @@ sonic# show consistency-check status
                        (Ethernet0, 10.1.1.3, 00:00:00:01:02:03)
                 hw:  1
                        (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
+ Result for address-family ipv6 and vrf default
+  Total number of route in RIB: 12
+    mgmt if routes: 2
+  Total number of route in KERNEL: 13
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in APP_DB: 10
+    drop routes: 1
+   Total number of route in ASIC_DB: 10
+    drop routes: 1   
+  Total number of route in HARDWARE: 10
+    drop routes: 1
+		  
+  Number of routes considered in
+    RIB: 10
+    kernel: 10
+    APP_DB: 10
+    ASIC_DB: 9
+    hardware: 9
+
+  Number of common prefixes between RIB and KERNEL: 10
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
+  
+  Number of common prefixes between RIB and APP_DB: 10
+  Prefixes in RIB not available in APP_DB:
+  Extra prefixes in APP_DB:
+  Unequal prefixes between RIB and APP_DB:
+  
+  Number of common prefixes between RIB and ASIC_DB: 9
+  Prefixes in RIB not available in ASIC_DB:
+       99::0/64
+  Extra prefixes in ASIC_DB:
+  Unequal prefixes between RIB and ASIC_DB:
+       40::0/64 
+                rib: 2
+                       (Ethernet0, 10::1, 00:00:00:01:02:03)
+                       (Ethernet0, 10::3, 00:00:00:01:02:03)
+                hw:  1
+                       (Ethernet0, 10::1, 00:00:00:01:02:03) 
+
+  Number of common prefixes between RIB and HARDWARE: 9
+  Prefixes in RIB not available in HARDWARE:
+       99::0/64
+  Extra prefixes in HARDWARE:
+  Unequal prefixes between RIB and HARDWARE:
+       40::0/64 
+                rib: 2
+                       (Ethernet0, 10::1, 00:00:00:01:02:03)
+                       (Ethernet0, 10::3, 00:00:00:01:02:03)
+                hw:  1
+                       (Ethernet0, 10::1, 00:00:00:01:02:03)
 
        
   Report ends
