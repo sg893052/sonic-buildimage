@@ -170,7 +170,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 ### 3.1.9 Verify that SAMPLE WCKV subscription will send initial sync and then only send updates to client w.r.t to SAMPLE_INTERVAL. 
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_001**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that SAMPLE subscription will send initial sync and then only send updates to client w.r.t to SAMPLE_INTERVAL. ** |
+| **Test Name**  | **Verify that SAMPLE subscription will send initial sync and then only send updates to client w.r.t to SAMPLE_INTERVAL.** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Path with SAMPLE and SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Verify that server sends updates to client for every SAMPLE_INTERVAL.<br/>|
@@ -178,7 +178,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 ### 3.1.10 Verify that SAMPLE WCKV subscription with SUPPRESS_REDUNDANT will send initial sync and then only send non-redundant updates to client.
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_002**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that SAMPLE subscription with SUPPRESS_REDUNDANT will send initial sync and then only send non-redundant updates to client ** |
+| **Test Name**  | **Verify that SAMPLE subscription with SUPPRESS_REDUNDANT will send initial sync and then only send non-redundant updates to client.** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Path with SAMPLE and SUPPRESS_REDUNDANT, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Verify that server should not sends updates to client for every SAMPLE_INTERVAL.<br/> 4) Verify that server sends updates to client for every SAMPLE_INTERVAL if update is not redundant..<br/>|
@@ -186,7 +186,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 ### 3.1.11 Verify that SAMPLE WCKV subscription will send initial sync and send the modified data in update w.r.t user change.
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_003**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that SAMPLE subscription will send initial sync and send the modified data in update w.r.t user change ** |
+| **Test Name**  | **Verify that SAMPLE subscription will send initial sync and send the modified data in update w.r.t user change.** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Path with SAMPLE and SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Verify that server sends updates to client for every SAMPLE_INTERVAL.<br/> 4) Now change the value of the DB using any UI type. <br/> 5) Verify that server sends updates modified values to client for every SAMPLE_INTERVAL.<br/>|
@@ -207,10 +207,10 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Paths which has no data with SAMPLE and different SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server  sends only the sync responce but not data. <br/>|
 
-### 3.1.14 Verify that Server should send corecte notification for Create, update and delete within one sample interval .
+### 3.1.14 Verify that Server should send correct notification for Create, update and delete within one sample interval .
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_013**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that Server should send corecte notification for Create, update and delete within one sample interval** |
+| **Test Name**  | **Verify that Server should send correct notification for Create, update and delete within one sample interval** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Paths which has no data with SAMPLE and different SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Verify that server sends updates to client for every SAMPLE_INTERVAL.<br/> 4) Now Create, update and delete within one sample interval the value of the DB. <br/> 5) Verify that server sends updates modified values to client for every SAMPLE_INTERVAL.<br/>|
@@ -218,7 +218,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 ### 3.1.15 Verify that SAMPLE with non wildcard subscription will send initial sync and then only send updates to client w.r.t to SAMPLE_INTERVAL. 
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_016**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that SAMPLE with non wildcard subscription will send initial sync and then only send updates to client w.r.t to SAMPLE_INTERVAL. ** |
+| **Test Name**  | **Verify that SAMPLE with non wildcard subscription will send initial sync and then only send updates to client w.r.t to SAMPLE_INTERVAL.** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe non wildcard Path with SAMPLE and SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Verify that server sends updates to client for every SAMPLE_INTERVAL.<br/>|
@@ -268,7 +268,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 ### 3.2.6 Verify that SAMPLE WCKV subscription with Multi paths one with suppress_redundant=true and other with suppress_redundant=false.
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_015**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that SAMPLE WCKV subscription with Multi paths one with suppress_redundant=true and other with suppress_redundant=false..** |
+| **Test Name**  | **Verify that SAMPLE WCKV subscription with Multi paths one with suppress_redundant=true and other with suppress_redundant=false.** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Paths with SAMPLE and different suppress_redundant, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for both subscribed paths to client (initial sync) <br/> 3) Verify that server should only sends updates of suppress_redundant=false path to client with corresponding SAMPLE_INTERVAL.<br/>|
