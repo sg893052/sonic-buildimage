@@ -22,9 +22,9 @@
 # List of Approvers
 | Function  |           Name         | Date Approved |
 | :-------: | :--------------------: | :-----------: |
-|   DEV     |  Sachin Holla          |               |
-|   DEV     |  Balachandra Mani      |               |
-|   QA      |  Kalyan Vadlamani      |               |
+|   DEV     |  Sachin Holla          |  16/08/2021   |
+|   DEV     |  Balachandra Mani      |  16/08/2021   |
+|   QA      |  Kalyan Vadlamani      |  16/08/2021   |
 
 # Definition/Abbreviation
 | **Term** | **Meaning**                                   |
@@ -33,7 +33,7 @@
 | REST     | Representational State Transfer               |
 | HLD      | High Level Design Document                    |
 | URI      | Uniform Resource Identifier                   |
-| WCKV     | Wildcard Path key value                           |
+| WCKV     | Wildcard Path key value                       |
 
 ### Objective 
 The main objective of this document is to cover the test cases that will be executed to verify the ON_CHANGE
@@ -54,7 +54,7 @@ This test plan will cover following aspects of ON_CHANGE Subscription.
 2. Subscribe each URI to ON_CHANGE and Validating the ON_CHANGE notification.
 3. Subscribe each URI to SAMPLE with WCKV and Validating the Update and Delete notification w.r.t sample_interval.
 4. Subscribe each URI to SAMPLE with WCKV and Validating the Update notification w.r.t suppress_redundant.
-5. SAMPLE WCKV supports only for paths avaliable in [Telementry Subscription Path]
+5. SAMPLE WCKV supports only for paths available in [Telementry Subscription Path]
 
 
 # Feature Overview
@@ -199,13 +199,13 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe Paths with SAMPLE and different SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Verify that server sends updates of both paths to client with corresponding SAMPLE_INTERVAL.<br/> 4) Now un-config the value to remove from DB.<br/> 5) Verify that server sends delete notification to client along it should sending the update notification if any data present.<br/>|
 
-### 3.1.13 Verify that Server should send only sync responce when no date avaliable.
+### 3.1.13 Verify that Server should send only sync response when no date available.
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_012**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify that Server should send only sync responce when no date avaliable.** |
+| **Test Name**  | **Verify that Server should send only sync response when no date available.** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Subscribe Paths which has no data with SAMPLE and different SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server  sends only the sync responce but not data. <br/>|
+| **Steps**      | 1) Subscribe Paths which has no data with SAMPLE and different SAMPLE_INTERVAL, make sure Server accepts the subscribe request <br/> 2) Verify that server  sends only the sync response but not data. <br/>|
 
 ### 3.1.14 Verify that Server should send correct notification for Create, update and delete within one sample interval .
 | **Test ID**    | **IGMP_SNOOPING_SAMPLE_WC_013**                                |
