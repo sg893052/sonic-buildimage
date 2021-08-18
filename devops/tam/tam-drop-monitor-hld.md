@@ -82,6 +82,8 @@
 |---|-----------|------------------|-----------------------------------|
 | 0.1 | 10/15/2019  | Shirisha Dasari  | Initial Version            |
 | 0.2 | 07/01/2020  | Bandaru Viswanath  | Major update to accomodate enhancements to use new TAM infrastructure, DB schmas and UI              |
+| 0.3 | 06/11/2021  | Bandaru Viswanath  | Introduce the Local Mode              |
+
 
 ## About This Manual
 
@@ -106,13 +108,25 @@ This document describes the high level design of Drop Monitor feature in SONiC.
 
 # 1 Feature Overview
 
-The Drop Monitor feature in SONiC allows the user to setup packet-drop monitoring sessions for specific flows. A Collector, identified by an IP address and associated transport parameters, can be configured on the switch to send packet drop-reports. 
+The Drop Monitor feature in SONiC allows the user to setup packet-drop monitoring sessions for specific flows. A Collector, identified by an IP address and associated transport parameters, can be configured on the switch to send packet drop-reports. This mode where reports are sent to an external collector is termed `external` mode.
+
+Additionally, to enable quick and targetted packet-drop debugging, the Drop Monitor feature supports reporting information locally about dropped flows without requiring an external Collector. This mode is termed `local` mode.
+
+The two modes - *local* mode and *external* mode are mutually exclusive. That is, when an external collector is configured, information on dropped-flows is unavailable locally on the Switch. Likewise, when used in *local* mode, drop reports are not sent to any external collector.
+
+The *external* mode is the default mode.
+
+The *local* mode is meant for debugging purposes only and is limited interms of scale (number of flows that can be monitored). It is not expected as a replacement for true drop monitoring with an external Collector. 
 
 ## 1.1 Requirements
 
 ### 1.1.1 Functional Requirements
 
-1.0 Drop Monitor feature allows user to configure a Drop Monitor session on a given switch and send the drop-reports to a specified collector. Drop Monitor session is defined by flow classifiers that are used to identify a flow that needs to be monitored for packet drops.
+1.0 Drop Monitor feature allows user to configure a Drop Monitor session on a given switch. Drop Monitor session is defined by flow classifiers that are used to identify a flow that needs to be monitored for packet drops.
+
+1.1 Drop Monitor supports *external* mode, where it can send the drop-reports to a specified collector. 
+
+1.2 Drop Monitor supports *local* mode where can provide information on dropped-flows on the Switch.
 
 2.0 Drop Monitor provisioning as listed below.
 
@@ -124,7 +138,9 @@ The Drop Monitor feature in SONiC allows the user to setup packet-drop monitorin
 
 2.4 TAM collector configuration that can be attached to Drop Monitor session to send drop reports.
 
-2.5 An aging-interval configuration. If the Drop Monitor feature doesn't notice packet drops for this duration, it considers packet drops to have stopped.
+2.5 The *local* mode is facilitated with a built-in collector named "local". This collector provides flow information locally on the Switch. 
+
+2.6 An aging-interval configuration. If the Drop Monitor feature doesn't notice packet drops for this duration, it considers packet drops to have stopped.
 
 3.0  When the first packet of the flow is dropped by the switch, a "Drop-start" report is sent to the collector. This report contains the event type (Drop-start), first 128 bytes of the packet dropped, flow details and the drop reasons for the packet drop.
 
@@ -149,11 +165,13 @@ The TAM Drop Monitor feature supports the new management framework and KLISH CLI
 - To activate / de-activate the feature
 - To create/clear appropriate Drop Monitor configuration on a per-flow-group basis and switch-wide.
 - To display current status and statistics for the Drop Monitor on a per flow-group basis.
+- To display packet drop information on a per-flow basis, when the Drop Monotor feature is used in *local* mode.
 
 ### 1.1.3 Scalability Requirements
 
 - Number of Drop Monitor sessions that can be supported is proportional to the availability of resources in hardware such as ACLs. No specific constraints are imposed.
 - Only a single collector is supported.
+- When used in *local* mode, not more than 100 flows may be monitored for packet drops. 
 
 ## 1.2 Design Overview
 
@@ -225,6 +243,12 @@ The DropMonitorMgr runs in the TAM docker and is used to pass drop monitor confi
 
 The DropMonitorMgr configures the source IP address to be used in drop reports to the system IP address. 9073 is configured as the source port number to be used in drop reports.
 
+## 3.1.2 Local Mode
+
+A thread DropMonitorCollector is run as part of the DropMonitorMgr daemon, when set in *local* mode. SAI is setup to send the drop reports locally, to a socket listening on a UDP port number. DropMonitorCollector thread receives the drop reports, deciphers them and loads appropriate information to the TAM_DROPMONITOR_FLOW_STATUS_TABLE table in the COUNTERS_DB.
+
+A specific CPU queue is configured to receive the drop-reports from the hardware. This queue is rate-limited to 500pps to prevent flooding of the CPU. For the local debugging purposes, not more than 100 flows will be needed for monitoring. Given that drop reports are stateful (not all drops are reported by hardware), this number 500pps is more than sufficient. 
+
 ## 3.2 DB Changes
 
 ### 3.2.1 CONFIG DB
@@ -236,6 +260,7 @@ TAM\_DROPMONITOR\_TABLE
     key                = global         ; Only one instance and 
                                         ; has a fixed key ”global".
     aging-interval     = 1 * 5DIGIT     ; Aging interval in seconds
+    mode               = 1 * 255VCHAR   ; "external" or "local"
 
     Example: 
     > keys *TAM_DROPMONITOR_TABLE* 
@@ -245,6 +270,8 @@ TAM\_DROPMONITOR\_TABLE
 
     1) "aging-interval"
     2) 3600
+    3) "mode"
+    4) "external"
 
 TAM\_DROPMONITOR\_SESSIONS\_TABLE
 
@@ -354,7 +381,20 @@ N/A
 
 ### 3.2.5 COUNTER DB
 
-N/A
+TAM\_DROPMONITOR\_FLOW_STATUS\_TABLE
+
+    ;Defines TAM drop monitor flow status.
+
+    key         = flow-id       ; Flow Id, a unique integer
+    src-ip  	= ipv4_address  ; SRC IP of the flow 5-tuple
+    src-port    = 1 * 4DIGIT    ; SRC L4 port number of the flow 5-tuple
+    dst-ip  	= ipv4_address  ; DST IP of the flow 5-tuple
+    dst-port    = 1 * 4DIGIT    ; DST L4 port number of the flow 5-tuple
+    protocol  	= 1 * 4DIGIT    ; Protocol number of the flow 5-tuple 
+    state       = 1*255VCHAR    ; drop state for the flow 
+			                    ; can be one of "dropping" or "inactive"
+    timestamp   = 1*255VCHAR    ; time at which the drops were detected
+    drop-reason = 1*255VCHAR    ; Reason for packet drop 
 
 
 ## 3.3 Switch State Service Design
@@ -425,8 +465,8 @@ A Drop Monitoring session associated a previously defined flow-group as describe
 - The Drop Monitor session must have a unique name for referencing.
 - The flow-group must be previously created with the `flow-group` command (under `config-tam` hierarchy). For drop-monitoring, the flow-group must be associated with an interface.
 - The sampling-rate can be set, by referencing a previously created sampler, created with the `sampler` command (under `config-tam` hierarchy).
-- A collector must be associated with the session, where the drop-reports will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy)..
-
+- A collector must be associated with the session, where the drop-reports will be sent. The collector must be previously created with the `collector` command (under `config-tam` hierarchy). When Drop Monitor is setup in `local` mode,  the collector parameter is optional and is ignored.
+ 
 When a sesssion that is previously created is removed (with the `no` command), the associated flows are no longer monitored for drops by the switch. 
 
 The following attribtes are supported for  drop-monitor sessions.
@@ -435,7 +475,7 @@ The following attribtes are supported for  drop-monitor sessions.
 |--------------------------|-------------------------------------|
 | `name`               | A string that uniquely identifies the Drop Monitor session        |
 | `flowgroup`            | Specifies the name of *flow-group* |
-| `collector`               | Specifies the name of the *collector* |
+| `collector`               | Specifies the name of the *collector*|
 | `sample-rate`            | Specifies the name of the *sampler*  |
 
 
@@ -445,6 +485,32 @@ The command syntax for creating /removing the sessions are as follows:
 sonic(config-tam-dm)# session <name> flowgroup <fg-name> collector <col-name> [sample-rate <sampler-name>]
 
 sonic (config-tam-dm)# no session <name>
+```
+
+#### 3.6.2.4 Setting up Drop Monitoring mode
+
+The `mode` command changes the Drop Monitoring mode. By default, the `external` mode is used. This command can be used to change the mode to `local` and back. No active sessions must be present at the time of a mode switch.
+
+The command syntax for setting up the aging interval for Drop Monitoring is as follows:
+
+```
+sonic (config-tam-dm)# [no] mode { external | local }
+```
+| **Attribute**                 | **Description**                         |
+|--------------------------|-------------------------------------|
+| `mode`               | One of the two strings `external` and `local`, representing the monitoring mode, Default value is `external` |
+
+The no form of the command reverts the mode to the default i.e., `external` mode.  
+
+#### 3.6.2.5 Clearing dropped flows (Local Mode)
+
+This commands clears all flows that are currently tracked as dropped-flows by the Drop Monitor while in Local Mode. It removes the associated information from the TAM_DROPMONITOR_FLOW_STATUS_TABLE. If the flow experiences drops again, they will be reported again. 
+
+The command syntax for clearing the Drop Monitor tracked dropped-flows is as follows:
+
+```
+sonic# clear tam drop-monitor flows
+
 ```
 
 ### 3.6.3 Show Commands
@@ -464,12 +530,13 @@ sonic # show tam drop-monitor
 Status             : Active
 Switch ID          : 2020
 Aging Interval     : 60
+Mode               : external
 
 ```
 
-#### 3.6.3.1 Listing the Drop Monitor sessions
+#### 3.6.3.2 Listing the Drop Monitor sessions
 
-The following command lists the details for all drop-monitor sessions or for a specific session. Note that only explicitly configured tuples in the associated flow-group are displayed.
+The following command lists the details for all drop-monitor sessions or for a specific session. Note that only explicitly configured tuples in the associated flow-group are displayed. When configured in `local` mode, the names of the *Collector* are shown with the string *local*. 
 
 ```
 sonic # show tam drop-monitor sessions [<name>]
@@ -502,6 +569,30 @@ Packet Count       : 7656
 
 ```
 
+#### 3.6.3.2 Listing the dropped flows (Local mode)
+
+The following command lists the details for all flows that are dropped by the Switch. The details include the 5-tuple of the flow, time-stamp of the first detected drop and the drop-reason. 
+
+The flows listed in this command output are tracked until they are no longer dropped (drop-stop event) or user explicitly clears via  the `clear` command.
+
+This command provides appropriate data only when Drop Monitor is configured in `local` mode. Otherwise, it returns appropriate error.
+
+```
+sonic # show tam drop-monitor flows
+```
+
+Sample usage shown below.
+
+```
+sonic # show tam drop-monitor flows
+
+src-id         dst-ip            src-port     dst-port     protocol     drop-reason                 timestamp
+-----------    --------------    --------     --------     --------     ---------------------       ---------------------
+10.10.1.1      10.10.2.2         5656         80           6            L3_DEST_MISS                2021-06-11 11:22AM
+10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAB                2021-06-11 11:20AM
+
+```
+
 ### 3.6.4 Sample Workflow
 
 This section provides a sample Drop Monitor workflow using CLI, for monitoring the packet drops as described below.
@@ -531,7 +622,7 @@ sonic (config-if-Ethernet44)# flow-group websrvflows
 
 ; setup the collector
 
-collector dmcol1 type ipv4 ip 20.20.20.4 port 9091 protocol UDP
+collector dmcol1 ip 20.20.20.4 port 9091 protocol UDP
 
 ; Enable Drop Monitor on the switch
 
@@ -721,6 +812,8 @@ TBD
 
 * Drop Monitor feature is an *advanced* feature that is not available in all the Broadcom SONiC packages.
 
+* The Drop Monitor feature is a BroadcomSONiC-Only feature. This will not be contributed to Community.
+
 ## Specific Limitations
 
 Drop Monitor feature in SONiC inherits the limitations of the underlying firmware and the hardware. These are listed below.
@@ -728,6 +821,18 @@ Drop Monitor feature in SONiC inherits the limitations of the underlying firmwar
 1. Only a single collector is supported
 2. Drop Monitor flows must be IPv4 flows
 3. Drop Monitor is supported on TD3-X7, TH2 and TH3 platforms only.
+
+## Local Mode design notes
+
+The 'Local' mode is meant for limited number of flows (<100 flows) for drop monitoring on the Switch. Otherwise, the number of reports may overwhelm  the CPU. A specific CPU queue is assigned for this traffic and is ratelimited to 500pps for preventing CPU spikes.
+
+A side effect of this rate-limiting is that some drop reports may get dropped. 
+
+1. If the drop-start reports are dropped, then the associated flows won't be reported (as dropped) in COUNTERS_DB.
+2. If the drop-active reports are dropped, then the drop-reasons are not updated COUNTERS_DB.
+3. If the drop-stop reports are dropped,  then the flows remain in the COUNTERS_DB until they are explicitly cleared via the clear command. 
+
+However, given Local mode is used for limited debugguing - less than 100 flows - the worst-case number of drop-reports hitting CPU should always remain less than the rate-limit of 500pps.
 
 ## Supported Drop Reasons
 

@@ -54,6 +54,7 @@ Scaling improvements
 |VRRP MAC SVI                          | 4k   | 4k  | 1k  | 1k  | 1k  |
 |--------------------------------------|------|-----|-----|-----|-----|
 
+
 ## 1.2 Configuration and Management Requirements
 No new configuration or show commands introduced.
 
@@ -61,6 +62,7 @@ No new configuration or show commands introduced.
 Covered in Functional requirements
 
 ## 1.4 Warm Boot Requirements
+
 Upgrade to higher version should take care of installing one entry per MAC and delete the individual station tcam entries per SVI on TH/TH2/TH3 platforms
 Upgrade to higher version should take care of moving to l2 table from myStationTcam for all SVI interfaces on TD3 platform.
 
@@ -69,6 +71,7 @@ Upgrade to higher version should take care of moving to l2 table from myStationT
 ## 2.1 Use L2 table for inner mac termination for TD3 & TD4
 TD4 already uses L2 table for inner mac termination. No change for TD4 platform.
 In TD3, for all SVI interfaces, L2 table will be programmed instead of MyStationTcam.
+
 Entry will be added with respective mac,vfi and flags as BCM_L2_STATIC. One entry per each SVI will be programmed.
 Note :- If 4k VRRP SVI interfaces are configured ,8k L2 table entries will be consumed.Rest of the cases 4k L2 table entries are consumed.
 
@@ -81,6 +84,7 @@ No change in VRRP VMAC programming and SAG MAC programming
 For SVI interfaces the lookup keys is only (DMAC)
 For Phy interfaces / RouterPorts the lookup key is retained the same [Port Id + DMAC]
 For LAG router interfaces the lookup key is retained the same [Trunk Id + DMAC]
+
 
 ### 2.2.1 MyStationTcam programming
 A new data structure is added and is managed by the sai data manager.This data structure handles the list of Vlan interfaces associated with the given mac and the corresponding MyStationTcam hardware id. 
@@ -103,6 +107,7 @@ If a packet comes with (DA=Any of the above two macs, Vlan=L2). It will be subje
 Inorder to address these cases, added below  IFP drop rules during system bringup. Also, counters attached to each of the drop rules.
 
 
+
 ## 2.3 VSI Profile
 For each SVI interface there is a VSI profile maintained to classify the SVI interfaces.
 2 VSI profile bits are consumed. One to identify the SAG MAC vlan and another to identify the MCLAG Gateway MAC vlan.
@@ -112,6 +117,7 @@ For each SVI interface there is a VSI profile maintained to classify the SVI int
 #define _BRCM_SAI_VSI_SAG_MAC_L3_INTF         (1<<2)------->SAG MAC VSI
 #define _BRCM_SAI_VSI_ROUTER_MAC_L3_INTF      (1<<3)------->MCLAG Gateway MAC VSI
 #define _BRCM_SAI_MAX_VSI_PROFILE_BITS_LENGTH  4
+
 
 ## 2.4 IFP Drop rules
 Below drop rules will be programmed only in TH/TH2/TH3 devices. 
@@ -123,15 +129,42 @@ Below drop rules will be programmed only in TH/TH2/TH3 devices.
 ### 2.4.1 Debug commands to check the drop rule counters are below
 debugsh>show system internal sai vlan ifp drop counters
 debugsh>clear system internal vlan ifp drop counters
+root@sonic:/home/admin# debugsh
+===========================================================================================
+                                Welcome to SONiC Debug shell.
+
+WARNING: The commands available in this shell are for internal use only. Use with caution.
+===========================================================================================
+debugsh> show system internal sai  vlan ifp drop counters 
+
+|              Drop entry                    |   Counters  |
+------------------------------------------------------------
+|  DA = SystemMAC, Vlan = SAG-VSI            | 0 |
+|  DA = SystemMAC, Vlan = MclagGW-VSI        | 0 |
+|  MyStationHit, Vlan = L2-VSI               | 20 |
+|  DA = MclagGW-MAC, Vlan = Non-MclagGw-VSI  | 0 |
+debugsh> 
+debugsh> 
+debugsh> clear system internal vlan ifp drop counters 
+debugsh> 
+debugsh> 
+debugsh> show system internal sai  vlan ifp drop counters 
+
+|              Drop entry                    |   Counters  |
+------------------------------------------------------------
+|  DA = SystemMAC, Vlan = SAG-VSI            | 0 |
+|  DA = SystemMAC, Vlan = MclagGW-VSI        | 0 |
+|  MyStationHit, Vlan = L2-VSI               | 0 |
+|  DA = MclagGW-MAC, Vlan = Non-MclagGw-VSI  | 0 |
+debugsh>
 
 # 4 Warm Boot Support
-Upgrade scenario will be supported. It will be make before break. On upgrade to higher version, in TH/TH2 devices one entry per each of the MACs will be programmed first, followed by deletion of all the individual entries programmed per each SVI interface. Incase of TD3 device, l2 table entry will be added first and then corresponding myStationTcam entry will be deleted.
+Upgrade scenario will be supported. It will be make before break. On upgrade to higher version, in TH/TH2/TH3 devices one entry per each of the MACs will be programmed first, followed by deletion of all the individual entries programmed per each SVI interface. Incase of TD3 device, l2 table entry will be added first and then corresponding myStationTcam entry will be deleted.
 
 # 5 Unit Tests
 Configure setup with base MCLAG config.
 Configure SAG MAC,MCLAG Gateway MAC.
 Configure SAG SVI interface, MCLAG Gateway MAC SVI interface and plain L3 SVI interface.
-
 Testcase | Validate                                           | Remarks                        |
 ---------|----------------------------------------------------|--------------------------------|
      1.  | Send l3 pkt with DA= System MAC vlan=SAG vlan      | Packet should be dropped       |

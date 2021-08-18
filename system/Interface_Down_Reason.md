@@ -58,6 +58,9 @@
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/05/2021  | Prasanth K V       | Initial version                   |
+| 0.2 | 05/17/2021  | Madhukar K         | Modified portchannel content      |
+| 0.3 | 06/22/2021  | Prasanth K V       | Added REST details and DB schema  |
+| 0.4 | 06/28/2021  | Madhukar K         | Added portchannel details         |
 
 # About this Manual
 This document provides comprehensive functional and design information about the *Interface Down Reason* feature implementation in SONiC.
@@ -67,7 +70,8 @@ This document provides comprehensive functional and design information about the
 ### Table 1: Abbreviations
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
-|  PCS                     | Physical Coding Sub-layer           |
+|  PMD                     | Physical Medium Dependent           |
+|  LACP                    | Link Aggregation Control Protocol   |
 
 # 1 Feature Overview
 
@@ -99,8 +103,8 @@ So an interface flap affects the system in general and hence it is important to 
 - Transceiver not present  
 - Port breakout in-progress  
 - High BER  
-- PCS AM lock error  
-- PCS sync error  
+- PMD-CDR-lock  
+- PMD-signal-detected  
 - STP error disabled  
 - Transceiver error disabled  
 - UDLD error disabled  
@@ -108,7 +112,11 @@ So an interface flap affects the system in general and hence it is important to 
 - PHY link up  
 
 1.3 - The list of reasons to be supported on port channel interfaces:  
-
+- Admin down
+- Min links criteria not met
+- Error disabled
+- All the member ports are link down
+- LACP convergence failed for member ports
 
 2 Functionality
 
@@ -165,6 +173,43 @@ SAI specification has to be updated to get the events from SAI to upper layer.
 
 ### 3.2.1 CONFIG DB
 ### 3.2.2 APP DB
+A new field, reason, is been added to PORT_TABLE:  
+```
+"PORT_TABLE": {
+    "Ethernet40": {
+	...
+	"reason": "OPER_UP",
+	...
+    }
+}
+```
+
+For portchannels, a new field, reason, is been added to LAG_TABLE:  
+```
+"LAG_TABLE": {
+    ":PortChannel20": {
+        ...
+        "reason": "OPER_UP",
+        ...
+    }
+}
+```
+
+A new table is added for keeping track of the events IF_REASON_EVENT:  
+```
+"IF_REASON_EVENT": {
+    "Ethernet40": {
+        "reason": "OPER_UP",
+        "event": "PHY_link_up",
+        "timestamp": "2021-06-06 09:29:55.639018"
+    }
+    "PortChannel20": {
+        "reason": "OPER_UP",
+        "event": "Portchannel_up",
+        "timestamp": "2021-06-20 15:39:45.439412"
+    }
+}
+```  
 ### 3.2.3 STATE DB
 ### 3.2.4 ASIC DB
 ### 3.2.5 COUNTER DB
@@ -208,7 +253,7 @@ Name      Description     Oper  Reason        Speed     MTU    Alternate Name
 ----------------------------------------------------------------------------------
 Eth1/1     -         	  Down	Admin-down    100000    9100   Ethernet0
 Eth1/2/1   -              Down	Err-disabled  10000     9100   Ethernet4
-Eth1/2/2   -              Down	Phy-link-down 10000     9100   Ethernet5
+Eth1/2/2   -              Down	PHY-link-down 10000     9100   Ethernet5
 Eth1/2/3   -              Up	Link-up       10000     9100   Ethernet6
 ```
 - *show interface status <reason>*  
@@ -219,13 +264,13 @@ sonic# show interface status err-disabled
 ----------------------------------------------------------------------------------
 Name   		Event        		Timestamp
 ----------------------------------------------------------------------------------
-Eth1/2/1  	STP-down     		2021-04-16 10:23:29
+Eth1/2/1  	STP-err-disabled     	2021-04-16 10:23:29
 ```
 - *show interface <interface>*
 show interface command to display the down reasons as shown in the below example:
 ```
 sonic# show interface Eth 1/2/2
-Eth1/2/2 is up, line protocol is down, reason phy-link-down
+Eth1/2/2 is up, line protocol is down, reason PHY-link-down
 Remote-fault at 2021-01-06 07:49:45.737024
 Local-fault at 2021-01-06 07:49:45.737024
 Hardware is Eth
@@ -247,28 +292,57 @@ Output statistics:
         6 Multicasts, 0 Broadcasts, 0 Unicast
 ``` 
 
+The list of events:  
+ Admin-down  
+ Remote-fault  
+ Local-fault  
+ Link-training-failed  
+ Link-training-not-completed  
+ Link-training-not-started  
+ Link-tuning-failed  
+ Link-tuning-not-started  
+ Link-tuning-not-completed  
+ Incompatible-transceiver  
+ Transceiver-not-present  
+ Port-breakout-in-progress  
+ High-BER  
+ PMD-CDR-lock  
+ PMD-signal-detected    
+ STP-err-disabled  
+ Transceiver-err-disabled  
+ UDLD-err-disabled  
+ Link-flap-err-disabled  
+ PHY-link-up  
+
+
 #### Port channel interface
-- New “oper-status” flags in show portchannel summary command:  
-Err-disabled  
-Min-links-not-met  
+- *show interface status*  
+Along with the physical interfaces, configured portchannel interfaces are displayed in this command output. The new column, "Reason" displays the high level reason for portchannel down. The reasons are  
 Admin-down  
-LACP-convergence-failed  
+Min-links  
+Err-disabled  
+All-links-down  
+LACP-fail  
 
 ```
-sonic# show PortChannel summary
-Flags(oper-status):  E - Err-disabled M - Oper down(Min-links-not-met) A - Admin-down L - LACP  
-                               -convergence-failed D - Down U - Up (portchannel) P - Up in portchannel (members)
-------------------------------------------------------------------------------------------------
-Group           PortChannel                Type                Protocol       Member Ports
-------------------------------------------------------------------------------------------------
-1               PortChannel1   (DE)        Eth                   LACP           Ethernet48(D)
-10              PortChannel10  (U)         Eth                   LACP           Ethernet0(P) Ethernet1(D)
-12              PortChannel12  (DA)        Eth                   LACP           Ethernet3(D)
-15              PortChannel15  (DM)        Eth                   LACP           Ethernet39(D)
-16              PortChannel16  (DL)        Eth                   LACP           Ethernet52(D)
+sonic# show interface status
+Name          Description     Oper  Reason          Speed     MTU    Alternate Name
+----------------------------------------------------------------------------------
+Eth1/1         -              Down  Admin-down      100000    9100   Ethernet0
+Eth1/2/1       -              Down  Err-disabled    10000     9100   Ethernet4
+Eth1/2/2       -              Down  Phy-link-down   10000     9100   Ethernet5
+Eth1/2/3       -              Up    Link-up         10000     9100   Ethernet6
+PortChannel1   -              Down  Admin-down      20000     9100   -
+PortChannel3   -              Down  Min-links       30000     9100   -
+PortChannel5   -              Down  Err-disabled    30000     9100   -
+PortChannel7   -              Down  All-links-down  40000     9100   -
+PortChannel8   -              Down  LACP-fail       40000     9100   -
+PortChannel9   -              Up    Up              10000     9100   -
 ```
 
-show interface command to display the reason with timestamp:
+- *show interface PortChannel [id]*  
+
+show interface PortChannel command to display the reason with timestamp:  
 ```
 sonic# show interface PortChannel 1
 PortChannel1 is up, line protocol down, reason err-disable, mode LACP
@@ -288,11 +362,114 @@ LACP Partner port 0  address 00:00:00:00:00:00 key 0
 Last clearing of "show interface" counters: never
 10 seconds input rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
 10 seconds output rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
+Input statistics:
+          18378 packets, 4042580 octets
+          18378 Multicasts, 0 Broadcasts, 0 Unicasts
+          0 error, 18378 discarded
+Output statistics:
+          90435 packets, 13274184 octets
+          90435 Multicasts, 0 Broadcasts, 0 Unicasts
+          0 error, 0 discarded
+
 ```
 #### 3.6.2.3 Exec Commands
 
 ### 3.6.3 REST API Support
-*URL-based view*
+
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-ethernet:ethernet/state/openconfig-interfaces-ext:status/down-reason
+
+Example response data:
+{
+  "openconfig-interfaces-ext:down-reason": "OPER_UP"
+}
+
+
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-ethernet:ethernet/state/openconfig-interfaces-ext:reason-events
+
+Example response data:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "OPER_UP",
+          "event": "PHY-link-up",
+          "timestamp": "2021-06-06 09:29:55.639018"
+        }
+      }
+    ]
+  }
+}
+```
+
+Example response data for link down scenario:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "PHY_LINK_DOWN",
+          "event": "Remote-fault",
+          "timestamp": "2021-06-07 04:17:13.456626"
+        }
+      }
+    ]
+  }
+}
+```
+
+The values for reason can be OPER_UP, PHY_LINK_DOWN, ERR_DISABLED or ADMIN_DOWN.  
+The list of values for event is mentioned in the CLI section.  
+
+For portchannels:
+
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:down-reason
+
+Example response data:
+{
+  "openconfig-interfaces-ext:down-reason": "OPER_UP"
+}
+
+
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:reason-events
+
+Example response data:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "OPER_UP",
+          "event": "Portchannel-up",
+          "timestamp": "2021-06-01 19:23:25.838918"
+        }
+      }
+    ]
+  }
+}
+```
+
+Example response data for link down scenario:
+```
+{
+  "openconfig-interfaces-ext:reason-events": {
+    "down-reason-event": [
+      {
+        "reason-event": {
+          "reason": "ERR_DISABLED",
+          "event": "Delay-restore-Down",
+          "timestamp": "2021-06-09 04:47:33.410626"
+        }
+      }
+    ]
+  }
+}
+```
+
+The values for reason can be OPER_UP, ALL_LINKS_DOWN, ERR_DISABLED, LACP_FAIL, MIN_LINKS_NOT_MET or ADMIN_DOWN.  
 
 ### 3.6.4 gNMI Support
 *Generally this is covered by the YANG specification. This section should also cover objects where on-change and interval based telemetry subscriptions can be configured.*
