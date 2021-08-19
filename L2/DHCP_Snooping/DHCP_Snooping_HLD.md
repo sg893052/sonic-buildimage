@@ -33,6 +33,7 @@
 	- [3.7 Configuration](#37-configuration)
 		- [3.7.1 CLI](#371-cli)
 		- [3.7.2 REST API Support](#372-rest-api-support)
+		- [3.7.3 CLICK](#373-cli)
 - [4 Flow Diagrams](#4-flow-diagrams)
 - [5 Serviceability and Debug](#5-serviceability-and-debug)
 - [6 Warm Boot Support](#6-warm-boot-support)
@@ -53,6 +54,7 @@
 | 0.2 | 03/31/2021  |   Ravi Vemuri      | More details added                                   |
 | 0.3 | 06/07/2021  |   Ravi Vemuri      | Address review comments.                             |
 | 0.4 | 07/15/2021  |   Ravi Vemuri      | Add Limitations/Future enhancements section          |
+| 0.5 | 08/19/2021  |   Phanindra TV     | Added Click commands                                 |
 	
 # About this Manual
 This document provides general information about the support for DHCPv4 snooping and DHCPv6 snooping in SONiC.
@@ -111,6 +113,7 @@ Configuration and management for DHCP Snooping is supported via the following in
 
 - REST API interface generated based on OC-YANG model
 - KLISH based CLI commands using management framework
+- Click commands
 
 List of configuration and display aspects: 
 
@@ -353,24 +356,23 @@ DHCP_SNOOPING_BINDING_GLOBAL_TABLE
 
 #### 3.2.3.1 DHCP Snooping Counters DB
 
-The following counters will be added to capture statistics. This section is TBD. 
+The following counters are added to capture statistics.
 
   Error receiving from DHCP snooping socket
   DHCP message too big                    
-  Error sending from DHCP snooping socket 
   Illegal source IP address in snooped packet  
   Illegal source MAC in snooped packet  
+  Error sending from DHCP snooping socket 
   Number of DHCP messages intercepted         
   Number of DHCP messages processed          
   Number of DHCP messages filtered          
   Number of DHCP messages forwarded        
-  Number of DHCP message tx failures              
   Rx REL or DECL from client not in bindings db     
   Number of bindings added to bindings table       
   Number of bindings removed from bindings table 
+  Number of DHCP messages dropped due to MAC verification failure or server frames received on untrusted ports
   Number of DHCP messages dropped as static binding exists  
-  Packets discarded on unsupported outgoing interface 
-  Packets dropped due to no outgoing interface 
+  Packets dropped due to no outgoing interface or interface down 
 
 ## 3.3 COPP
 
@@ -550,6 +552,197 @@ For example,
 TBD
 
 Go back to [Beginning of the document](#dhcp-snooping).
+
+### 3.7.3 Click CLI
+
+#### 3.7.3.1 Configuration commands
+
+Following Click configuration commands configure DHCP Snooping
+
+##### 3.7.3.1.1 Enable DHCPv4 and DHCPv6 Snooping feature
+
+	# config dhcp-snooping feature
+
+##### 3.7.3.1.2 Enable DHCP Snooping globally
+
+	To enable/disable DHCPv4 Snooping globally. 
+	# config dhcp-snooping enable dhcpv4
+	# config dhcp-snooping disable dhcpv4
+
+	To enable/disable DHCPv6 snooping globally
+	# config dhcp-snooping enable dhcpv6
+	# config dhcp-snooping disable dhcpv6
+ 
+##### 3.7.3.1.3 Enable DHCP Snooping on a VLAN 
+
+	To enable/disable DHCPv4 Snooping on a VLAN 
+	# config dhcp-snooping vlan enable <*vlan-id*> dhcpv4
+	# config dhcp-snooping vlan disable <*vlan-id*> dhcpv4
+
+	To enable/disable DHCPv6 Snooping on a VLAN 
+	# config dhcp-snooping vlan enable <*vlan-id*> dhcpv6
+	# config dhcp-snooping vlan disable <*vlan-id*> dhcpv6
+
+##### 3.7.3.1.4 Enable DHCP Snooping on a range of VLANs 
+
+	To enable/disable DHCPv4 Snooping on a range of VLANs
+	# config dhcp-snooping vlan enable <*vlan-id-1*> <*vlan-id-2*> dhcpv4
+	# config dhcp-snooping vlan disable <*vlan-id-1*> <*vlan-id-2*> dhcpv4
+
+	To enable/disable DHCPv6 Snooping on a range of VLANs
+	# config dhcp-snooping vlan enable <*vlan-id-1*> <*vlan-id-2*> dhcpv6
+	# config dhcp-snooping vlan disable <*vlan-id-1*> <*vlan-id-2*> dhcpv6
+
+##### 3.7.3.1.3 Enable DHCP Snooping MAC address verification
+
+	To enable/disable DHCPv4 snooping MAC address verification
+	# config dhcp-snooping mac_verify dhcpv4 enable
+	# config dhcp-snooping mac_verify dhcpv4 disable
+
+	To enable/disable DHCPv6 snooping MAC address verification
+	# config dhcp-snooping mac_verify dhcpv6 enable
+	# config dhcp-snooping mac_verify dhcpv6 disable
+
+##### 3.7.3.1.4 Configure a static source address to a Layer 2 interface
+
+	To bind a static IPv4 address to a Layer 2 interface
+	# config dhcp-snooping static add *MAC-address* *vlan-id* *interface_name* *ipv4-address*
+	# config dhcp-snooping static del *MAC-address* *vlan-id* *interface_name* *ipv4-address*
+        
+	To bind a static IPv6 address to a Layer 2 interface
+	# config dhcp-snooping static add *MAC-address* *vlan-id* *interface_name* *ipv6-address*
+	# config dhcp-snooping static del *MAC-address* *vlan-id* *interface_name* *ipv6-address*
+        
+##### 3.7.3.1.5 Clear dynamic binding entries  
+
+        To clear all dynamic IP DHCP Snooping binding entries 
+	# sonic-clear ip dhcp-snooping all
+        
+        To clear a specific dynamic IP DHCP Snooping binding entry
+	# sonic-clear ip dhcp-snooping mac *MAC-address* *vlan-id* *ipv4-address* *interface_name* 
+
+        To clear all dynamic IPv6 DHCP Snooping binding entries 
+	# sonic-clear ipv6 dhcp-snooping all
+        
+        To clear a specific dynamic IPv6 DHCP Snooping binding entry
+	# sonic-clear ip dhcp-snooping mac *MAC-address* *vlan-id* *ipv6-address* *interface_name* 
+
+##### 3.7.3.1.6 Configure an interface as trusted/untrusted
+
+	To configure/unconfigure trust for an interface for DHCPv4 Snooping
+	# config dhcp-snooping trust *interface_name* dhcpv4 trust
+	# config dhcp-snooping trust *interface_name* dhcpv4 untrust
+
+	To configure/unconfigure trust for an interface for DHCPv6 snooping
+	# config dhcp-snooping trust *interface_name* dhcpv6 trust
+	# config dhcp-snooping trust *interface_name* dhcpv6 untrust
+
+##### 3.7.3.1.7 Show commands
+
+	To display general information about DHCP Snooping
+	# show ip dhcp snooping
+
+	To display the DHCP Snooping binding database
+	# show ip dhcp snooping binding
+
+	To display general information about DHCPv6 Snooping
+	# show ipv6 dhcp snooping
+
+	To display the DHCPv6 Snooping binding database
+	# show ipv6 dhcp snooping binding
+        
+        To display DHCP Snooping statistics
+        # show ip dhcp snooping statistics
+        
+        To display DHCPv6 Snooping statistics
+        # show ipv6 dhcp snooping statistics
+
+        To display DHCP Snooping counters
+        # show ip dhcp snooping counters
+        
+        To display DHCPv6 Snooping counters
+        # show ipv6 dhcp snooping counters
+        
+For example,
+
+        # show ip dhcp snooping
+ 
+        DHCP Snooping is Enabled
+        DHCP snooping source MAC verification is enabled
+        DHCP Snooping is enabled on the following VLANs: 100
+ 
+        DHCP Snooping Trust mode is enabled on the following ports:
+        Interface    Trusted
+        -----------  ---------
+        Ethernet24   Trusted
+
+	(Config)#show ip dhcp snooping binding 
+
+	Total number of Dynamic bindings: 1
+	Total number of Static bindings: 0
+	Total number of Tentative bindings: 0
+
+   	MAC Address        IP Address       VLAN   Interface    Type     Lease (Secs)
+	-----------------  ---------------  ----   -----------  -------  -----------
+	00:00:A8:5F:34:52  192.168.10.39    20     Ethernet2    DYNAMIC  86396
+
+        # show ip dhcp snooping counters
+
+
+
+        DHCPv4 Snooping Counters
+        -----------------------------------
+          errMsgRx                      : 0
+          errMsgBig                     : 0
+          errRxSrcIp                    : 0
+          errRxSrcMac                   : 0
+          errMsgTx                      : 0
+          numDhcpPktRcvd                : 0
+          numDhcpPktProc                : 0
+          numDhcpPktFiltered            : 0
+          numDhcpFwd                    : 0
+          numReleaseDeclineUnknownErr   : 0
+          numDynBindingAdd              : 0
+          numDynBindingDel              : 0
+          numDhcpPktDropped             : 0
+          numDhcpPktBindingExists       : 0
+          numDhcpTxDrops                : 0
+        
+
+        # show ipv6 dhcp snooping counters
+
+
+
+        DHCPv6 Snooping Counters
+        -----------------------------------
+          errMsgRx                      : 0
+          errMsgBig                     : 0
+          errRxSrcIp                    : 0
+          errRxSrcMac                   : 0
+          errMsgTx                      : 0
+          numDhcpPktRcvd                : 0
+          numDhcpPktProc                : 0
+          numDhcpPktFiltered            : 0
+          numDhcpFwd                    : 0
+          numReleaseDeclineUnknownErr   : 0
+          numDynBindingAdd              : 0
+          numDynBindingDel              : 0
+          numDhcpPktDropped             : 0
+          numDhcpPktBindingExists       : 0
+          numDhcpTxDrops                : 0
+        
+	#show ip dhcp snooping statistics
+
+        Interface    MAC Verify   Client Ifc   DHCP Server
+                     Failures     Mismatch     Msgs Recvd
+        -----------  ----------   ----------   -----------
+
+	(Config)#show ipv6 dhcp snooping statistics
+
+        Interface    MAC Verify   Client Ifc   DHCP Server
+                     Failures     Mismatch     Msgs Recvd
+        -----------  ----------   ----------   -----------
+
 # 4 Flow Diagrams
 ## Configuration
 
