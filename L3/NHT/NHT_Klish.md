@@ -13,7 +13,6 @@ Nexthop Tracking REST URI and KLISH CLI Support
   - [3.1 Overview](#31-Overview)
     - [3.1.1 NHT Configuration ](#311-NHT-Configuration)
     - [3.1.2 NHT Operational State](312-NHT-operational-state)
-    - [3.1.2 Minimum TTL for multi-hop peer](312-Minimum-TTL-for-multi-hop-peer)
   - [3.2 DB Changes](#32-DB-Changes)
     - [3.2.1 CONFIG DB](#321-CONFIG-DB)
       - [3.2.1.1 NHT VRF Table](3211-NHT-VRF-Table)
