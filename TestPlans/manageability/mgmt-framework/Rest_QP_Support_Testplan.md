@@ -128,7 +128,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Test Name**  | **Verify that QP returns only non config descendant data nodes** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Send query parameter with non config or operational content-type <br/> 2) Verify that QP returns only config descendant data nodes.<br/>|
+| **Steps**      | 1) Send query parameter with non config or operational content-type <br/> 2) Verify that QP returns only non config descendant data nodes.<br/>|
 
 ### 3.1.9 Verify that QP returns all descendant data nodes.
 | **Test ID**    | **REST_QP_319**                                |
@@ -152,7 +152,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Test Name**  | **Verify that QP returns only data node, matching multiple fields** |
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Send query parameter with multiple fields <br/> 2) Verify that QP returns only data node, matching multiple field.<br/>|
+| **Steps**      | 1) Send query parameter with multiple fields saperated by semi-colon(;)<br/> 2) Verify that QP returns only data node, matching multiple field.<br/>|
 
 ### 3.1.12 Verify that QP returns all descendant data nodes, matching the fields inside child container path.
 | **Test ID**    | **REST_QP_3112**                                |
@@ -169,6 +169,14 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Test Setup** | **Topology**                                                |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Send query parameter with fields at current level & child container fields path <br/> 2) Verify that QP returns data nodes matching the fields at current level and all descendant data nodes, matching the fields inside child container path.<br/>|
+
+### 3.1.14 Verify that multiple QP type support in a single GET is limited to content and depth only.
+| **Test ID**    | **REST_QP_3114**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that multiple QP type support in a single GET is limited to content and depth only** |
+| **Test Setup** | **Topology**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Send multiple QP type with content and depth saperated by ampersand(&)<br/> 2) Verify that QP returns data based on provided content type and depth.<br/>|
 
 
 ## 3.2 Scale and Performance Test Cases
