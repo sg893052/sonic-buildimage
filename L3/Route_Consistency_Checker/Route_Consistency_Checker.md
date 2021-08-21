@@ -306,14 +306,14 @@ Below table describes the summary of discrepancy and its action
 
 ### 4.1.1 Basic Approach
 
-Route Consistency Checker (Rccd) will be a new deamon running in orch agent. Rccd will interact with Zebra, Kernel, SDK, Config-DB, ASIC-DB for its working.
+Route Consistency Checker (Rccd) will be a new deamon running on host. Rccd will interact with Zebra, Kernel, SDK, Config-DB, ASIC-DB for its working.
 
-RCC will get the configuration from Config-DB. To start the route scan, RCC will get the dump of routes from Zebra by issuing 'show' commands to FRR through a socket.
+Upon user trigger RCC will start the route scan, RCC will get the dump of routes from Zebra by issuing 'show' commands to FRR through a socket.
 The above obtained output (routes, interface, nexthop, neighbor) from FRR will be redirected to a file.
 
-Similarly RCC will get the output of routes, interface, neighbors from kernel by issuing 'ip show' from terminal and redirect the output to a file. RCC will get the output of hardware routes, nexthops, neighbors by issuing bcmsh commands and it will redirect the output to a file.
+Similarly RCC will get the output of routes, interface, neighbors from kernel by issuing 'ip show' from terminal and redirect the output to a file. RCC will dump the route, nexthop and neighbor tables from APP_DB and ASIC_DB, it will also get the output of hardware routes, nexthops, neighbors by issuing bcmsh commands and it will redirect the output to a file.
 
-Once the information from Zebra, Kernel and H/W is present, RCC will flatten the routes and check for inconsistency.
+Once the information from Zebra, Kernel, APP_DB, ASIC_DB and H/W is present, RCC will flatten the routes and check for inconsistency.
 
 Any inconsistency detected will be logged, depending upon user config the inconsistency will be tried to be resolved.
 
@@ -334,7 +334,7 @@ There are no configuration command for this feature
 
 ```
 
-Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] 
+Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] [detail]
 Command to abort: consistency-check stop route
 
 ```
@@ -375,147 +375,31 @@ sonic# consistency-check stop route
 The following show command will be provided
 
 ```
-
 show consistency-check status route
 ```
 #### Example1: Display status of consistency-check for all VRFs
 sonic# show consistency-check status route
 ```
-Route Check for vrf:default address-family:ipv4 - CONSISTENT
-  Number of routes compared: 1034
-Route Check for vrf:default address-family:ipv6 - CONSISTENT
-  Number of routes compared: 6
+Route Check for vrf:default address-family:ipv4 - INCONSISTENT
+Route Check for vrf:default address-family:ipv6 - INCONSISTENT
 Route Check for vrf:Vrf1 address-family:ipv4 - CONSISTENT
-  Number of routes compared: 203
 Route Check for vrf:Vrf1 address-family:ipv6 - CONSISTENT
-  Number of routes compared: 52
+Route Check for vrf:Vrf2 address-family:ipv4 - INCONSISTENT
+Route Check for vrf:Vrf2 address-family:ipv6 - INCONSISTENT
   
+
 ```
-#### Example1: Display status of consistency-check
-This will display the last or ongoing result of consistency-check for routes
+#### Example2: Display status of consistency-check for a single VRF
+sonic# show consistency-check status route vrf default
 ```
-sonic# show consistency-check status route
 Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-  Number of routes compared: 1034
-  Mismatch report:
-    Extra prefixes:
-      200.0.0.1/32
-        ASIC-DB:1
-          (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61  
-        HARDWARE:1
-          (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)
-Route Check for vrf:default address-family:ipv6 - CONSISTENT
-  Number of routes compared: 6
-sonic# 
-
-sonic# show consistency-check status route
-Route Check for vrf:default address-family:ipv4 - CONSISTENT
-  Number of routes compared: 1034
 Route Check for vrf:default address-family:ipv6 - INCONSISTENT
-  Number of routes compared: 6
-    Mismatch report:
-    Extra prefixes:
-      200::1/128
-        ASIC-DB:1
-          (Ethernet66, 66::1, 80:a2:35:26:4a:61  
-        HARDWARE:1
-          (Ethernet66, 66::1, 80:a2:35:26:4a:61)
-sonic# 
-
-sonic# show consistency-check status route
-Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-  Number of routes compared: 1034
-  Mismatch report:
-    Unequal prefixes:
-      88.0.0.1/32 - NHop(s) do not match
-        RIB:1
-          (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
-        KERNEL:1
-          (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)	  
-        APP_DB:1
-          (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)
-        ASIC_DB:1
-          (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)	  
-        HARDWARE:1
-          (Ethernet66, 66.1.1.1, 80:a2:35:26:4a:61)
-Route Check for vrf:default address-family:ipv6 - CONSISTENT
-  Number of routes compared: 6
-sonic# 
-
-sonic# show consistency-check status route
-Route Check for vrf:default address-family:ipv4 - CONSISTENT
-  Number of routes compared: 1034
-Route Check for vrf:default address-family:ipv6 - INCONSISTENT
-  Number of routes compared: 6
-    Mismatch report:
-    Unequal prefixes:
-      88::1/128 - NHop(s) do not match
-        RIB:1
-          (Vlan200, 67::1, 80:a2:35:26:4a:61)
-        KERNEL:1
-          (Vlan200, 67::1, 80:a2:35:26:4a:61)	  
-        APP_DB:1
-          (Ethernet66, 66::1, 80:a2:35:26:4a:61)
-        ASIC_DB:1
-          (Ethernet66, 66::1, 80:a2:35:26:4a:61)	  
-        HARDWARE:1
-          (Ethernet66, 66::1, 80:a2:35:26:4a:61)
-sonic# 
-
-sonic# show consistency-check status route
-Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-  Number of routes compared: 1034
-  Mismatch report:
-    Missing prefixes:
-      RIB:1
-        88.0.0.2/32
-          (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
-      KERNEL:1
-        88.0.0.2/2
-	  (Vlan200, 67.0.0.1, 80:a2:35:26:4a:61)
-      APP_DB:0
-        -
-      ASIC_DB:0
-        -
-      HARDWARE:0
-        -
-Route Check for vrf:default address-family:ipv6 - CONSISTENT
-  Number of routes compared: 6
-
-
-sonic# show consistency-check status route
-Route Check for vrf:default address-family:ipv4 - CONSISTENT
-  Number of routes compared: 1034
-Route Check for vrf:default address-family:ipv6 - INCONSISTENT
-  Number of routes compared: 6
-    Mismatch report:
-    Missing prefixes:
-      RIB:1
-        88::2/64
-          (Vlan200, 67::1, 80:a2:35:26:4a:61)
-      KERNEL:1
-        88::2/64
-	  (Vlan200, 67::1, 80:a2:35:26:4a:61)
-      APP_DB:0
-        -
-      ASIC_DB:0
-        -
-      HARDWARE:0
-        -
-sonic# 
-
 ```
-
-
-
-#### Example2: Display status of consistency-check
-This will display the last or ongoing result of consistency-check for routes
+#### Example3: Display status of consistency-check for a single VRF in detail
 ```
-sonic(config)#show consistency-check status route detail       
-sonic# show consistency-check status
-  RESULT: inconsistent
-  Report generated at : 23/07/2021 09:24:12
-  Result for address-family ipv4 and vrf default
+		      		       
+sonic# show consistency-check status route vrf default detail
+Route Check for vrf:default address-family:ipv4 - INCONSISTENT
   Total number of route in RIB: 22
     mgmt if routes: 2
   Total number of route in KERNEL: 23
@@ -530,10 +414,10 @@ sonic# show consistency-check status
 		  
   Number of routes considered in
     RIB: 20
-    kernel: 20
+    KERNEL: 20
     APP_DB: 20
     ASIC_DB: 19
-    hardware: 19
+    HARDWARE: 19
 
   Number of common prefixes between RIB and KERNEL: 20
   Prefixes in rib not available in kernel:
@@ -547,34 +431,35 @@ sonic# show consistency-check status
   
   Number of common prefixes between RIB and ASIC_DB: 19
   Prefixes in RIB not available in ASIC_DB:
-       99.1.1.1/24
+       99.1.1.0/24
   Extra prefixes in ASIC_DB:
   Unequal prefixes between RIB and ASIC_DB:
        40.0.0.0/24 
-                rib: 2
+                RIB: 2
                        (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
                        (Ethernet0, 10.1.1.3, 00:00:00:01:02:03)
-                hw:  1
+                HW:  1
                        (Ethernet0, 10.1.1.1, 00:00:00:01:02:03) 
-
+		       
   Number of common prefixes between RIB and HARDWARE: 19
   Prefixes in RIB not available in HARDWARE:
-       99.1.1.1/24
+       99.1.1.0/24
   Extra prefixes in HARDWARE:
   Unequal prefixes between RIB and HARDWARE:
        40.0.0.0/24 
-                rib: 2
+                RIB: 2
                        (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
                        (Ethernet0, 10.1.1.3, 00:00:00:01:02:03)
-                hw:  1
-                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
- Result for address-family ipv6 and vrf default
+                HW:  1
+                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03) 		       
+		       
+Route Check for vrf:default address-family:ipv6 - INCONSISTENT
   Total number of route in RIB: 12
     mgmt if routes: 2
   Total number of route in KERNEL: 13
     mgmt if routes: 2
     host-if routes: 1
-  Total number of route in APP_DB: 10
+  Total number of route in APP_DB: 11
     drop routes: 1
    Total number of route in ASIC_DB: 10
     drop routes: 1   
@@ -583,10 +468,10 @@ sonic# show consistency-check status
 		  
   Number of routes considered in
     RIB: 10
-    kernel: 10
+    KERNEL: 10
     APP_DB: 10
     ASIC_DB: 9
-    hardware: 9
+    HARDWARE: 9
 
   Number of common prefixes between RIB and KERNEL: 10
   Prefixes in rib not available in kernel:
@@ -604,27 +489,199 @@ sonic# show consistency-check status
   Extra prefixes in ASIC_DB:
   Unequal prefixes between RIB and ASIC_DB:
        40::0/64 
-                rib: 2
-                       (Ethernet0, 10::1, 00:00:00:01:02:03)
-                       (Ethernet0, 10::3, 00:00:00:01:02:03)
-                hw:  1
-                       (Ethernet0, 10::1, 00:00:00:01:02:03) 
-
+                RIB: 2
+                       (Ethernet0, 10::1, 00:00:00:01:02:04)
+                       (Ethernet0, 10::3, 00:00:00:01:02:05)
+                HW:  1
+                       (Ethernet0, 10::1, 00:00:00:01:02:04) 
+		       
   Number of common prefixes between RIB and HARDWARE: 9
   Prefixes in RIB not available in HARDWARE:
        99::0/64
   Extra prefixes in HARDWARE:
   Unequal prefixes between RIB and HARDWARE:
-       40::0/64 
-                rib: 2
-                       (Ethernet0, 10::1, 00:00:00:01:02:03)
-                       (Ethernet0, 10::3, 00:00:00:01:02:03)
-                hw:  1
-                       (Ethernet0, 10::1, 00:00:00:01:02:03)
+       40::0/64
+                RIB: 2
+                       (Ethernet0, 10::1, 00:00:00:01:02:04)
+                       (Ethernet0, 10::3, 00:00:00:01:02:05)
+                HW:  1
+                       (Ethernet0, 10::1, 00:00:00:01:02:04) 
+ ```
+ #### Example4: Display status of consistency-check for a single VRF in detail
+ ```
+sonic# show consistency-check status route vrf Vrf1 detail
+Route Check for vrf:Vrf1 address-family:ipv4 - CONSISTENT
+  Total number of route in RIB: 32
+    mgmt if routes: 2
+  Total number of route in KERNEL: 33
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in APP_DB: 31
+    drop routes: 1
+   Total number of route in ASIC_DB: 31
+    drop routes: 1   
+  Total number of route in HARDWARE: 31
+    drop routes: 1
+		  
+  Number of routes considered in
+    RIB: 30
+    KERNEL: 30
+    APP_DB: 30
+    ASIC_DB: 30
+    HARDWARE: 30
 
-       
-  Report ends
+  Number of common prefixes between RIB and KERNEL: 30
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
+  
+  Number of common prefixes between RIB and APP_DB: 30
+  Prefixes in RIB not available in APP_DB:
+  Extra prefixes in APP_DB:
+  Unequal prefixes between RIB and APP_DB:
+
+  Number of common prefixes between RIB and ASIC_DB: 30
+  Prefixes in rib not available in ASIC_DB:
+  Extra prefixes in ASIC_DB:
+  Unequal prefixes between rib and ASIC_DB:
+  
+  Number of common prefixes between RIB and HARDWARE: 30
+  Prefixes in RIB not available in HARDWARE:
+  Extra prefixes in HARDWARE:
+  Unequal prefixes between RIB and HARDWARE:
+		       
+		       
+Route Check for vrf:Vrf1 address-family:ipv6 - CONSISTENT
+  Total number of route in RIB: 12
+    mgmt if routes: 2
+  Total number of route in KERNEL: 13
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in APP_DB: 11
+    drop routes: 1
+   Total number of route in ASIC_DB: 11
+    drop routes: 1   
+  Total number of route in HARDWARE: 11
+    drop routes: 1
+		  
+  Number of routes considered in
+    RIB: 10
+    KERNEL: 10
+    APP_DB: 10
+    ASIC_DB: 10
+    HARDWARE: 10
+
+  Number of common prefixes between RIB and KERNEL: 10
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
+  
+  Number of common prefixes between RIB and APP_DB: 10
+  Prefixes in RIB not available in APP_DB:
+  Extra prefixes in APP_DB:
+  Unequal prefixes between RIB and APP_DB:
+  
+  Number of common prefixes between RIB and ASIC_DB: 10
+  Prefixes in RIB not available in ASIC_DB:
+  Extra prefixes in ASIC_DB:
+  Unequal prefixes between RIB and ASIC_DB:
+  
+  Number of common prefixes between RIB and HARDWARE: 10
+  Prefixes in RIB not available in HARDWARE:
+  Extra prefixes in HARDWARE:
+  Unequal prefixes between RIB and HARDWARE:  
 ```
+#### Example5: Display status of consistency-check for a single VRF in detail
+```
+		      		       
+sonic# show consistency-check status route vrf Vrf2 detail
+Route Check for vrf:Vrf2 address-family:ipv4 - INCONSISTENT
+  Total number of route in RIB: 22
+    mgmt if routes: 2
+  Total number of route in KERNEL: 23
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in APP_DB: 21
+    drop routes: 1
+   Total number of route in ASIC_DB: 22
+    drop routes: 1   
+  Total number of route in HARDWARE: 22
+    drop routes: 1
+		  
+  Number of routes considered in
+    RIB: 20
+    KERNEL: 20
+    APP_DB: 20
+    ASIC_DB: 21
+    HARDWARE: 21
+
+  Number of common prefixes between RIB and KERNEL: 20
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
+  
+  Number of common prefixes between RIB and APP_DB: 20
+  Prefixes in RIB not available in APP_DB:
+  Extra prefixes in APP_DB:
+  Unequal prefixes between RIB and APP_DB:
+  
+  Number of common prefixes between RIB and ASIC_DB: 21
+  Prefixes in RIB not available in ASIC_DB:
+  Extra prefixes in ASIC_DB:
+       88.1.1.1/24
+  Unequal prefixes between RIB and ASIC_DB:
+	       
+  Number of common prefixes between RIB and HARDWARE: 21
+  Prefixes in RIB not available in HARDWARE:
+  Extra prefixes in HARDWARE:
+  Unequal prefixes between RIB and HARDWARE:
+       88.1.1.1/24
+		       
+		       
+Route Check for vrf:default address-family:ipv6 - CONSISTENT
+  Total number of route in RIB: 12
+    mgmt if routes: 2
+  Total number of route in KERNEL: 13
+    mgmt if routes: 2
+    host-if routes: 1
+  Total number of route in APP_DB: 11
+    drop routes: 1
+   Total number of route in ASIC_DB: 12
+    drop routes: 1   
+  Total number of route in HARDWARE: 12
+    drop routes: 1
+		  
+  Number of routes considered in
+    RIB: 10
+    KERNEL: 10
+    APP_DB: 10
+    ASIC_DB: 11
+    HARDWARE: 11
+
+  Number of common prefixes between RIB and KERNEL: 10
+  Prefixes in rib not available in kernel:
+  Extra prefixes in kernel:
+  Unequal prefixes between rib and kernel:
+  
+  Number of common prefixes between RIB and APP_DB: 10
+  Prefixes in RIB not available in APP_DB:
+  Extra prefixes in APP_DB:
+  Unequal prefixes between RIB and APP_DB:
+  
+  Number of common prefixes between RIB and ASIC_DB: 10
+  Prefixes in RIB not available in ASIC_DB:
+  Extra prefixes in ASIC_DB:
+        88::0/64 
+  Unequal prefixes between RIB and ASIC_DB:
+  
+  Number of common prefixes between RIB and HARDWARE: 10
+  Prefixes in RIB not available in HARDWARE:
+  Extra prefixes in HARDWARE:
+        88::0/64 
+  Unequal prefixes between RIB and HARDWARE:  
+ ```
+ 
+
 ## 6 Serviceability and Debug
 
 The existing logging mechanisms shall be used. Proposed debug framework shall be used for internal state dump.
