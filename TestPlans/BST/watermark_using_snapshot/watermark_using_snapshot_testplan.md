@@ -1,17 +1,19 @@
 #  SQA Test Plan
 # watermark using snapshot
-#  SONiC 3.0 Project and Buzznik Release
+#  SONiC 3.0-4.0.0 Projects and Buzznik/Cyrus Releases
 [TOC]
 # Test Plan Revision History
 | Rev | Date | Author | Change Description |
 |:---:|:-----------:|:------------------:|-----------------------------|
-| 0.1 | 10/30/2019 | phani kumar ravula | initial version |
+| 0.2  | 08/16/2021 | prudviraj kristipati | Enhanced version    |
+| 0.1  | 10/30/2019 | phani kumar ravula | initial version    |
 
 # List of Reviewers
 |  Function | Name |
 |:---:|:-----------:|
 | Dev | shirisha dasari  |
 | Dev | sachin suman  |
+| Dev | sharad Agarwal |
 | QA  | kalyan vadlamani |
 | QA  | giri babu sajja |
 
@@ -21,6 +23,7 @@
 |:---:|:-----------:|:------------------:|
 | Dev | shirisha dasari  |  |
 | Dev | sachin suman  | |
+| Dev | sharad Agarwal |
 | QA  | kalyan vadlamani |  |
 | QA  | giri babu sajja | |
 
@@ -35,6 +38,9 @@
 The snapshot feature supported by certain hardware provides a bird’s eye view of all the supported buffer counters at a particular instant. This enables the user to co-relate the different buffer usage statistics in co-relation with network events.
 
 The watermark feature currently supported on SONiC iterates over all the supported counters one-by-one. While this essentially allows all the counter data to be collated into the DB, since the stats are collected sequentially, it does not allow the user to accurately co-relate all the buffer usage statistics at a particular instant.
+
+In 4.0.0 Cyrus release BST is enhanced with Device buffer stats  ,Ingress and egress service pool buffer usage on global and per port                                                                                   
+
 
 
 # 1 Test Focus Areas
@@ -84,6 +90,16 @@ verifying below counter values for user watermark and persistent watermark
 | **Test Setup** | **Topology1** |
 | **Type** | **CLI** |
 | **Steps** | **1) Bring up the SONiC switch with default configuration.<br/>2) clear the snapshot interval using CLI "sonic-clear watermark interval". <br/>3) verify the snapshot interval value set to default vlaue using the command "show watermark interval" CLI command.** |
+
+### 3.1.4 verify the CLI commnd  "show device watermark" and the default contents.
+
+| **Test ID** | **ft_sf_verify_show device** |
+|--------|:----------------|
+| **Test Name** | **verify the CLI commnd  "show device watermark" and the default contents.** |
+| **Test Setup** | **Topology1** |
+| **Type** | **CLI** |
+| **Steps** | **1) Bring up the SONiC switch with default configuration.<br/>2) clear the device watermark using CLI "clear device watermark". <br/>3)  verify the CLI commnd  "show device watermark" and the default contents.** |
+
 
 ## 3.2 Functional
 ### 3.2.1 Verify that shared PG counters get updated in Counter DB for configured user watermark interval.
@@ -294,8 +310,60 @@ verifying below counter values for user watermark and persistent watermark
 | **Type**       | **Functional**                                               |
 | **Steps**      | **1) Bring up the SONiC switch with default configuration.<br/>2) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 3)  perform save and reboot.<br/>4) Send the unicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic continuously.<br/>5) verify the buffer pool counter value gets incremented properly using persistent watermark.<br/>6) stop the traffic<br/>7) clear the buffer pool counters using the cli command "sonic-clear buffer-pool persistent-watermark"<br/>8)verify that buffer_pool counters gets cleared successfully** |
 
+### 3.2.24 verify the egress multicast buffer usage on a global buffer pool is successfully incremented or not when Multicast traffic is sent.
+
+| **Test ID**    | **ft_sf_mc_share-buffer-count**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify the egress multicast buffer usage on a global buffer pool is successfully incremented or not when Multicast traffic is sent.
+.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the Multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+
+### 3.2.25 verify the device counters are updated in the counter DB when sending the congested traffic.
+
+| **Test ID**    | **ft_sf_device_counters**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify the device counters are updated in the counter DB when sending the congested traffic.
+.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the Multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+
+### 3.2.26 verify the egress unicast buffer usage on a Egress port is successfully incremented or not.
+
+| **Test ID**    | **ft_sf_uc_share-buffer-count_per_port**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify the egress unicast buffer usage on a Egress port is successfully incremented or not..
+.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface4.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the unicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+
+### 3.2.27 verify the egress shared buffer usage on a Egress port is successfully incremented or not.
+
+| **Test ID**    | **ft_sf_ucmc_share-buffer-count_per_port**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify the egress shared buffer usage on a Egress port is successfully incremented or not
+.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface4.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+
+### 3.2.28 verify the shared buffer usage on a Ingress port are successfully incremented or not.
+
+| **Test ID**    | **ft_sf_um_share-buffer-count_per_port**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify the shared buffer usage on a Ingress port are successfully incremented or not
+.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface3.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+
+
 
 # 4 Reference Links
 
 http://gerrit-lvn-07.lvn.broadcom.net:8083/plugins/gitiles/sonic/documents/+/refs/changes/15/12815/9/devops/telemetry/watermarks_HLD-snapshot.md
 
+https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/devops/telemetry/watermarks_HLD-snapshot.md
