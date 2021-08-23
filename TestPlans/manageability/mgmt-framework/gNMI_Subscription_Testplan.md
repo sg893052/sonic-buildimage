@@ -103,7 +103,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 # 3 Test  Case and Objectives
 ## 3.1 Functional
 ### 3.1.1 Verify that server first sends current data for the subscribed paths to client (initial sync). Thereafter server sends only the delta updates to client when the values are changed on the server
-| **Test ID**    | **onchange311**                                |
+| **Test ID**    | **onchange001**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that server first sends current data for the subscribed paths to client (initial sync). Thereafter server sends only the delta updates to client when the values are changed on the server** |
 | **Test Setup** | **Topology**                                                |
@@ -111,7 +111,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using any UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
 ### 3.1.2 Verify that change the value for multiple times make sure ON_CHANGE notifies it correctly.
-| **Test ID**    | **onchange312**                                |
+| **Test ID**    | **onchange002**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that change the value for multiple times make sure ON_CHANGE notifies it correctly** |
 | **Test Setup** | **Topology**                                                |
@@ -119,7 +119,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values multiple time <br/> 4) Verify that server sends only the delta updates to client for each time values get change. <br/>|
 
 ### 3.1.3 Verify that ON_CHANGE config and state calls are working fine for all(Mentioned in HLD)URI paths.
-| **Test ID**    | **onchange313**                                |
+| **Test ID**    | **onchange003**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that ON_CHANGE config and state calls are working fine for all(Mentioned in HLD)URI paths** |
 | **Test Setup** | **Topology**                                                |
@@ -127,7 +127,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe each URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> |
 
 ### 3.1.4 Verify that ON_CHANGE subscribed send notification when value change by using CLICK UI.
-| **Test ID**    | **onchange314**                                |
+| **Test ID**    | **onchange004**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that ON_CHANGE subscribed send notification when value change by using CLICK UI** |
 | **Test Setup** | **Topology**                                                |
@@ -135,7 +135,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using CLICK UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
 ### 3.1.5 Verify that ON_CHANGE subscribed send notification when value change by using Klish UI.
-| **Test ID**    | **onchange315**                                |
+| **Test ID**    | **onchange005**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that ON_CHANGE subscribed send notification when value change by using Klish UI** |
 | **Test Setup** | **Topology**                                                |
@@ -143,7 +143,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using KLISH UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
 ### 3.1.6 Verify that ON_CHANGE subscribed send notification when value change by using REST UI.
-| **Test ID**    | **onchange316**                                |
+| **Test ID**    | **onchange006**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that ON_CHANGE subscribed send notification when value change by using REST UI** |
 | **Test Setup** | **Topology**                                                |
@@ -151,7 +151,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using REST UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
 ### 3.1.7 Verify that yang feature Functionality work fine with ON_CHANGE config.
-| **Test ID**    | **onchange317**                                |
+| **Test ID**    | **onchange007**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that yang feature Functionality work fine with ON_CHANGE config** |
 | **Test Setup** | **Topology**                                                |
@@ -159,7 +159,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Configure yang feature on DUT<br/> 4) Make sure Snooping entries are getting populated during ON_CHANGE is subscribed <br/>|
 
 ### 3.1.8 Verify that Delete the value for multiple times make sure ON_CHANGE notifies it correctly.
-| **Test ID**    | **onchange318**                                |
+| **Test ID**    | **onchange008**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that Delete the value for multiple times make sure ON_CHANGE notifies it correctly** |
 | **Test Setup** | **Topology**                                                |
@@ -167,7 +167,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now delete the Subscribe path values multiple time <br/> 4) Verify that server sends only the delta updates to client for each time values get change. <br/>|
 
 ### 3.1.9 Verify that server first sends current data for the subscribed paths with wild card to client (initial sync). Thereafter server sends only the delta updates to client when the values are changed on the server
-| **Test ID**    | **onchange319**                                |
+| **Test ID**    | **onchange009**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that server first sends current data for the subscribed paths to client (initial sync). Thereafter server sends only the delta updates to client when the values are changed on the server** |
 | **Test Setup** | **Topology**                                                |
@@ -175,7 +175,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using any UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
 ### 3.1.10 Verify that ON_CHANGE functionality with wild card subscription in more than one place.
-| **Test ID**    | **onchange3110**                                |
+| **Test ID**    | **onchange010**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that ON_CHANGE functionality with wild card subscription in more than one place** |
 | **Test Setup** | **Topology**                                                |
@@ -184,7 +184,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 
 ## 3.2 Scale and Performance Test Cases
 ### 3.2.1 Verify that ON_CHANGE notification with Multiple/MAX URIs to ON_CHANGE subscription.
-| **Test ID**    | **onchange321**                                |
+| **Test ID**    | **onchange011**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that ON_CHANGE notification with Multiple/MAX URIs to ON_CHANGE subscription** |
 | **Test Setup** | **Topology**                                                |
@@ -192,7 +192,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe MAX/Available URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/>3) Change the values of all subscription paths<br/>4) Make sure delta updated should trigger for all changes<br/> |
 
 ### 3.2.2 Verify that CHANGE gets notified to corresponding client in multiple client environment.
-| **Test ID**    | **onchange322**                                |
+| **Test ID**    | **onchange012**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that CHANGE gets notified to corresponding client in multiple client environment.** |
 | **Test Setup** | **Topology**                                                |
@@ -200,7 +200,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) client1 can subscribe for paths A, B, C and client2 can subscribe to B, C, D<br/> 2) Verify that initial sync of A gets notified to only client1 whereas B should be notified to both <br/> 3) Now change the Subscribe path values <br/> 4) Verify that delta updates of A gets notified to only client1 whereas B should be notified to both. <br/>|
 
 ### 3.2.3 Verify that CHANGE gets notified to rest of clients, when other client are killed.
-| **Test ID**    | **onchange323**                                |
+| **Test ID**    | **onchange013**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that CHANGE gets notified to rest of clients, when other client are killed.** |
 | **Test Setup** | **Topology**                                                |
@@ -210,7 +210,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 
 ## 3.3 Negative Test Cases
 ### 3.3.1 Verify that Server should reject the ON_CHANGE subscribe request for URIs not support ON_CHANGE.
-| **Test ID**    | **onchange331**                                |
+| **Test ID**    | **onchange014**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that Server should reject the ON_CHANGE subscribe request for URIs not support ON_CHANGE.** |
 | **Test Setup** | **Topology**                                                |
@@ -218,7 +218,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | 1) Subscribe the unsupported URI to the ON_CHANGE notification, make sure Server should reject the subscribe request <br/> 2) Verify that server should not send data related to the path to client.<br/>|
 
 ### 3.3.2 Verify that Server should not send ON_CHANGE notification once delete the ON_CHANGE Subscription.
-| **Test ID**    | **onchange332**                                |
+| **Test ID**    | **onchange015**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that Server should not send ON_CHANGE notification once delete the ON_CHANGE Subscription.** |
 | **Test Setup** | **Topology**                                                |
@@ -228,7 +228,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 
 ## 3.4 Reboot/Reload/Upgrade Test Cases
 ### 3.4.1 Verify ON_CHANGE Subscription across warm reboot.
-| **Test ID**    | **onchange341**                                |
+| **Test ID**    | **onchange016**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify ON_CHANGE Subscription across warm reboot** |
 | **Test Setup** | **Topology**                                                |
@@ -236,7 +236,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | Verify ON_CHANGE Subscription across warm reboot <br/> |
 
 ###  3.4.2  Verify ON_CHANGE Subscription across fast reboot.
-| **Test ID**    | **onchange342**                                |
+| **Test ID**    | **onchange017**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify ON_CHANGE Subscription across fast reboot** |
 | **Test Setup** | **Topology1**                                                |
@@ -244,7 +244,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | Verify ON_CHANGE Subscription across fast reboot <br/>|
 
 ### 3.4.3 Verify ON_CHANGE Subscription across System reload.
-| **Test ID**    | **onchange343**                                |
+| **Test ID**    | **onchange018**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify ON_CHANGE Subscription across System reload** |
 | **Test Setup** | **Topology**                                                |
@@ -252,7 +252,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | Verify ON_CHANGE Subscription across System reload <br/> |
 
 ### 3.4.4 Verify ON_CHANGE Subscription across config reload.
-| **Test ID**    | **onchange344**                                |
+| **Test ID**    | **onchange019**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify ON_CHANGE Subscription across config reload** |
 | **Test Setup** | **Topology**                                                |
@@ -260,7 +260,7 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Steps**      | Verify ON_CHANGE Subscription across config reload <br/>|
 
 ### 3.4.5 Verify ON_CHANGE Subscription across telemetry docker restart.
-| **Test ID**    | **onchange345**                                |
+| **Test ID**    | **onchange020**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify ON_CHANGE Subscription across telemetry docker restart** |
 | **Test Setup** | **Topology**                                                |
