@@ -66,7 +66,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 # 3 Test Case and Objectives
 ## 3.1 Functional
 ### 3.1.1 Verify that all leaves/leaflist should be present in response.
-| **Test ID**    | **REST_QP_311**                                |
+| **Test ID**    | **REST_QP_001**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that all leaves/leaflist should be present in response** |
 | **Test Setup** | **Topology**                                                |
@@ -74,7 +74,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with depth 0 or Unbounded <br/> 2) Verify that all leaves/leaflist should be present in response.<br/>|
 
 ### 3.1.2 Verify that all leaves/leaflist till N level should be present in response.
-| **Test ID**    | **REST_QP_312**                                |
+| **Test ID**    | **REST_QP_002**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that all leaves/leaflist till N level should be present in response** |
 | **Test Setup** | **Topology**                                                |
@@ -82,7 +82,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with depth N <br/> 2) Verify that all leaves/leaflist till N level should be present in response.<br/>|
 
 ### 3.1.3 Verify that all contents of container should be present in response.
-| **Test ID**    | **REST_QP_313**                                |
+| **Test ID**    | **REST_QP_003**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that all contents of container should be present in response** |
 | **Test Setup** | **Topology**                                                |
@@ -90,7 +90,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with depth 0 or Unbounded <br/> 2) Verify that all contents of container should be present in response.<br/>|
 
 ### 3.1.4 Verify that all contents of container till N level should be present in response.
-| **Test ID**    | **REST_QP_314**                                |
+| **Test ID**    | **REST_QP_004**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that all contents of container till N level should be present in response** |
 | **Test Setup** | **Topology**                                                |
@@ -98,7 +98,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with depth N <br/> 2) Verify that all contents of container till N level should be present in response.<br/>|
 
 ### 3.1.5 Verify that all contents of list should be present in response.
-| **Test ID**    | **REST_QP_315**                                |
+| **Test ID**    | **REST_QP_005**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that all contents of list should be present in response** |
 | **Test Setup** | **Topology**                                                |
@@ -106,7 +106,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with depth 0 or Unbounded <br/> 2) Verify that all contents of list should be present in response.<br/>|
 
 ### 3.1.6 Verify that contents of list till N level should be present in response.
-| **Test ID**    | **REST_QP_316**                                |
+| **Test ID**    | **REST_QP_006**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that contents of list till N level should be present in response** |
 | **Test Setup** | **Topology**                                                |
@@ -115,7 +115,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 
 
 ### 3.1.7 Verify that QP returns only config descendant data nodes.
-| **Test ID**    | **REST_QP_317**                                |
+| **Test ID**    | **REST_QP_007**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns only config descendant data nodes** |
 | **Test Setup** | **Topology**                                                |
@@ -123,7 +123,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with config content-type <br/> 2) Verify that QP returns only config descendant data nodes.<br/>|
 
 ### 3.1.8 Verify that QP returns only non config descendant data nodes.
-| **Test ID**    | **REST_QP_318**                                |
+| **Test ID**    | **REST_QP_008**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns only non config descendant data nodes** |
 | **Test Setup** | **Topology**                                                |
@@ -131,7 +131,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with non config or operational content-type <br/> 2) Verify that QP returns only config descendant data nodes.<br/>|
 
 ### 3.1.9 Verify that QP returns all descendant data nodes.
-| **Test ID**    | **REST_QP_319**                                |
+| **Test ID**    | **REST_QP_009**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns all descendant data nodes** |
 | **Test Setup** | **Topology**                                                |
@@ -139,7 +139,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with all content-type <br/> 2) Verify that QP returns all descendant data nodes.<br/>|
 
 ### 3.1.10 Verify that QP returns only data node, matching the single field.
-| **Test ID**    | **REST_QP_3110**                                |
+| **Test ID**    | **REST_QP_010**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns only data node, matching the single field** |
 | **Test Setup** | **Topology**                                                |
@@ -147,7 +147,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with single field <br/> 2) Verify that QP returns only data node, matching the single field.<br/>|
 
 ### 3.1.11 Verify that QP returns only data node, matching multiple fields.
-| **Test ID**    | **REST_QP_3111**                                |
+| **Test ID**    | **REST_QP_011**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns only data node, matching multiple fields** |
 | **Test Setup** | **Topology**                                                |
@@ -155,7 +155,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with multiple fields <br/> 2) Verify that QP returns only data node, matching multiple field.<br/>|
 
 ### 3.1.12 Verify that QP returns all descendant data nodes, matching the fields inside child container path.
-| **Test ID**    | **REST_QP_3112**                                |
+| **Test ID**    | **REST_QP_012**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns all descendant data nodes, matching the fields inside child container path** |
 | **Test Setup** | **Topology**                                                |
@@ -163,7 +163,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with child container fields path <br/> 2) Verify that QP returns all descendant data nodes, matching the fields inside child container path.<br/>|
 
 ### 3.1.13 Verify that QP returns data nodes matching the fields at current level and all descendant data nodes, matching the fields inside child container path.
-| **Test ID**    | **REST_QP_3113**                                |
+| **Test ID**    | **REST_QP_013**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that QP returns data nodes matching the fields at current level and all descendant data nodes, matching the fields inside child container path** |
 | **Test Setup** | **Topology**                                                |
@@ -173,7 +173,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 
 ## 3.2 Scale and Performance Test Cases
 ### 3.2.1 Verify performance of QP with multiple/MAX fields is better than GET request without QP.
-| **Test ID**    | **REST_QP_321**                                |
+| **Test ID**    | **REST_QP_014**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify performance of QP with multiple/MAX fields is better than GET request without QP** |
 | **Test Setup** | **Topology**                                                |
@@ -183,7 +183,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 
 ## 3.3 Negative Test Cases
 ### 3.3.1 Verify server should reject the request if DEPTH is out of range.
-| **Test ID**    | **REST_QP_331**                                |
+| **Test ID**    | **REST_QP_015**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify server should reject the request if DEPTH is out of range** |
 | **Test Setup** | **Topology**                                                |
@@ -191,7 +191,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with depth 65536 <br/> 2) Verify REST server should retuen with 400(Bad request) status code.<br/>|
 
 ### 3.3.2 Verify server should reject the request if CONTENT is not one of "all", "config", "non-config".
-| **Test ID**    | **REST_QP_332**                                |
+| **Test ID**    | **REST_QP_016**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify server should reject the request if CONTENT is not one of "all", "config", "non-config"** |
 | **Test Setup** | **Topology**                                                |
@@ -199,7 +199,7 @@ RESTCONF operation allows zero or more query parameters to be present in the req
 | **Steps**      | 1) Send query parameter with operational content-type <br/> 2) Verify REST server should retuen with 400(Bad request) status code.<br/>|
 
 ### 3.3.3 Verify server should reject the request if FIELDS type having list.
-| **Test ID**    | **REST_QP_333**                                |
+| **Test ID**    | **REST_QP_017**                                |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **Verify that all leaves/leaflist should be present in response** |
 | **Test Setup** | **Topology**                                                |
