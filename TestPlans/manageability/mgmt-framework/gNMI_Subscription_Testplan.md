@@ -174,6 +174,13 @@ Note: If management interface or telemetry service goes down, Re-Subscription re
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Subscribe the URI to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using any UI <br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server. <br/>|
 
+### 3.1.10 Verify that ON_CHANGE functionality with wild card subscription in more than one place.
+| **Test ID**    | **onchange3110**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that ON_CHANGE functionality with wild card subscription in more than one place** |
+| **Test Setup** | **Topology**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Subscribe the URI with wild card in more than one place to the ON_CHANGE notification, make sure Server accepts the subscribe request <br/> 2) Verify that server first sends current data for the subscribed paths to client (initial sync) <br/> 3) Now change the Subscribe path values by using any UI<br/> 4) Verify that server sends only the delta updates to client when the values are changed on the server.<br/>|
 
 ## 3.2 Scale and Performance Test Cases
 ### 3.2.1 Verify that ON_CHANGE notification with Multiple/MAX URIs to ON_CHANGE subscription.
