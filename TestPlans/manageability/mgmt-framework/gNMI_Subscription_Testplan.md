@@ -39,23 +39,23 @@ The main objective of this document is to cover the test cases that will be exec
 
 For below yang modules, ON_CHANGE support going to be supported in 4.0.0 release
 ```
-        sonic-transceiver-diag.yang
-        sonic-vlan.yang
-        sonic-vlan-interface.yang
-        sonic-threshold.yang
-        sonic-system-ntp.yang
-        sonic-sflow.yang
-        sonic-queue.yang
-        sonic-qos-pfc.yang
-        sonic-qos-clear.yang
-        sonic-portchannel.yang
-        sonic-portchannel-interface.yang
-        sonic-port.yang
-        sonic-port-group.yang
-        sonic-port-breakout.yang
-        sonic-interface.yang
-        sonic-device-metadata.yang
-        sonic-counters.yang
+        OC-transceiver-diag.yang
+        OC-vlan.yang
+        OC-vlan-interface.yang
+        OC-threshold.yang
+        OC-system-ntp.yang
+        OC-sflow.yang
+        OC-queue.yang
+        OC-qos-pfc.yang
+        OC-qos-clear.yang
+        OC-portchannel.yang
+        OC-portchannel-interface.yang
+        OC-port.yang
+        OC-port-group.yang
+        OC-port-breakout.yang
+        OC-interface.yang
+        OC-device-metadata.yang
+        OC-counters.yang
 ```
 Subscription Paths are avaliable in [Telementry Subscription Path]
 
