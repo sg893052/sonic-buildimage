@@ -21,7 +21,7 @@
 | Function  |           Name         | Date Approved |
 | :-------: | :--------------------: | :-----------: |
 |   DEV     |  Anand Kumar           |               |
-|   DEV     |  Sachin Holla          |               |
+|   DEV     |  Sachin Holla          |  8/23/2021    |
 |   QA      |  Kalyan Vadlamani      |               |
 
 
