@@ -31,6 +31,7 @@
 | Rev |     Date    |       Author        | Change Description                 |
 |:---:|:-----------:|:-------------------:|:-----------------------------------|
 | 0.1 | 04/15/2021  | Dante (Kuo-Jung) Su | Initial version                    |
+| 0.2 | 08/24/2021  | Dante (Kuo-Jung) Su | Merge the YANG leaf from Google and the relevant logic |
 
 # About this Manual
 
@@ -46,6 +47,7 @@ This document provides functional requirements and high-level design for providi
 | Auto-Negotiation - What is it and how it fits into 1TPCE | https://www.ieee802.org/3/1TPCESG/public/Lo_02_0514.pdf |
 | O’Reilly Ethernet: The Definitive Guide, 2nd Edition     | https://www.oreilly.com/library/view/ethernet-the-definitive/9781449362980/ch05.html |
 | PAM-4 Auto-Negotiation & Link Training White Paper       | https://xenanetworks.com/whitepaper/autoneg-link-training/ |
+| 100GBASE-KP4 Link Training                               | https://www.ieee802.org/3/bj/public/sep12/lusted_3bj_01_0912.pdf |
 
 # Scope
 
@@ -90,14 +92,18 @@ Link Training could be enabled with or without AN Clause 73, it's performed afte
 and hence, AN does not guarantee a compatible mode of operation will result in a link being established or
 maintained.
 
-- The AN and LT should be configurable individually from the CLI.
-- The AN defaults to be disabled for the best backward compatibility.
-- The LT defaults to auto mode, the LT will be enabled/disabled as per the configuration in media_settings.json, or being activated for PAM4 links if media_settings.json does not exist.
-- The LT should never be activated for the native copper ports (e.g. RJ45)
-- When the AN is administratively enabled, it shall update the advertised capabilities as per the transceiver attached.
-- When the LT is administratively enabled, it shall be activated on PAM4 link and de-activated for NRZ links.
-- When the LT is administratively disabled, it shall be consistently deactivated.
-- The LT should be de-activated when CDR is not available on the attached transceiver.
+- The AN is disabled by default for the best backward compatibility.
+- The LT is disabled by default for the best backward compatibility.
+- The LT is not available and should be de-activated for the native copper ports. (e.g. Native RJ45)
+- The LT is only available for links greater than or equal to 10G.
+- In the case of 10G optic, the LT is only available if the attached transceiver is with CDR support.
+- The LT should be de-activated if there is a static configuration available in the media_settings.json
+- The AN and standalone-link-training should be configurable individually from the CLI.
+- When the AN is administratively enabled, the orchagent shall automatically update the advertised capabilities of the port as per the transceiver attached.
+- When the AN is administratively enabled, the LT should be activated if appliable to the attached transceiver.
+- When the AN is administratively disabled, the LT should be disabled unless the standalone-link-training is administratively enabled.
+- When the standalone-link-training is administratively enabled, the LT will be enable if appliable to the attached transceiver, regardless of the AN configuration.
+- When the standalone-link-training is administratively disabled, the LT will still be enable if AN is enabled, and the LT will be disabled if AN is disabled.
 
 ## 1.2 Configuration and Management Requirements
 
@@ -152,8 +158,8 @@ The AN port capabilities should be defined in the platform specific platform-def
 
     PORTMODE = "speed[:fec[:duplex]]"
 
-        fec defaults to "none" is not specified
-        duplex defaults to "full-duplex" is not specified
+        fec defaults to "none" if not specified
+        duplex defaults to "full-duplex" if not specified
 ```
 
 **Example**
@@ -183,8 +189,8 @@ The AN port capabilities should be defined in the platform specific platform-def
 
 - The port capabilities of the **MAC** device is specified in **platform-def.json**, and it will later be published to PORT_TABLE of APPL_DB by the **pmon#xcvrd** when pmon startup.
 - The port capabilities of the **PHY** device is determined by the **pmon#xcvrd** as per the transceiver attached to the port, and it will later be published to TRANSCEIVER_INFO of STATE_DB by the **pmon#xcvrd**.
-- The **swss#orchagent** will first select the per-lane speed from "lane_speed" of APPL_DB, and then validates the per-port speed based on the lane numbers available on the port and check if it's listed in the "port_speed" of APPL_DB, and finally generate the speed capabilities for the AN local advertisement.
-- The **swss#orchagent** will reference the "fec-mode" of platform-def.json for the FEC types of the AN advertisement.
+- The **swss#orchagent** will select the port capabilities based on the lane number of the current portmode, and only advertise the capabilities that's also available on the transceiver.
+- The **swss#orchagent** will use the "fec-mode" specified in the platform-def.json for the FEC types in the AN advertisement.
 - The "lane_speed" could be eliminated for the 1-lane ports, in this case, all the speeds listed in "port_speed" will be flagged in the AN local advertisement.
 
 ## 3.2 Media Type
@@ -209,12 +215,16 @@ The supported media types are as below, and it's the **pmon#xcvrd** which is res
 
 ### 3.3.1 Auto-negotiation and link-training in CONFIG_DB
 ```
-key              = PORT:EthernetXY
+key               = PORT:EthernetXY
 
-;field           = value
-autoneg          = ON/OFF
-linktrn          = AUTO/ON/OFF
-medium           = BACKPLANE/COPPER/OPTIC
+;field            = value
+autoneg           = on|off
+link_training     = on|off   ; This is the standalone-link-training
+admin_advertise   = PORTMODE,PORTMODE....
+
+; PORTMODE = "speed[:fec[:duplex]]"
+;        fec defaults to "none" if not specified
+;        duplex defaults to "full-duplex" if not specified
 ```
 
 ### 3.3.1 Auto-negotiation and link-training in APPL_DB
@@ -222,38 +232,45 @@ medium           = BACKPLANE/COPPER/OPTIC
 key               = PORT_TABLE:EthernetXY
 
 ;field            = value
-autoneg           = ON/OFF
+autoneg           = on|off
+link_training     = on|off   ; This is the standalone-link-training
 admin_advertise   = PORTMODE,PORTMODE....
-linktrn           = AUTO/ON/OFF
-medium            = BACKPLANE/COPPER/OPTIC
 
 ; PORTMODE = "speed[:fec[:duplex]]"
-;        fec defaults to "none" is not specified
-;        duplex defaults to "full-duplex" is not specified
+;        fec defaults to "none" if not specified
+;        duplex defaults to "full-duplex" if not specified
 ```
 
 ### 3.3.2 Auto-negotiation status in STATE_DB
 ```
-key               = PORT:EthernetXY
+key                   = PORT:EthernetXY
 
-;field            = value
-autoneg           = ON/OFF
+;field                = value
+autoneg               = on|off
 admin_advertise       = PORTMODE,PORTMODE....
 oper_local_advertise  = PORTMODE,PORTMODE....
 oper_remote_advertise = PORTMODE,PORTMODE....
-speed             = SPEED
-linktrn           = ON/OFF
-medium            = BACKPLANE/COPPER/OPTIC
-txfir_pre2        = 5*DIGIT
-txfir_pre1        = 5*DIGIT
-txfir_main        = 5*DIGIT
-txfir_post1       = 5*DIGIT
-txfir_post2       = 5*DIGIT
-txfir_post3       = 5*DIGIT
+oper_speed            = SPEED
+oper_fec              = FEC
+link_training         = on|off
 
 ; PORTMODE = "speed[:fec[:duplex]]"
-;        fec defaults to "none" is not specified
-;        duplex defaults to "full-duplex" is not specified
+;        fec defaults to "none" if not specified
+;        duplex defaults to "full-duplex" if not specified
+```
+
+### 3.3.3 Transceiver capabilities in STATE_DB
+
+```
+key                   = TRANSCEIVER_INFO:EthernetXY
+
+;field                = value
+autoneg_capability    = PORTMODE,PORTMODE....
+medium                = BACKPLANE|COPPER|OPTIC
+
+; PORTMODE = "speed[:fec[:duplex]]"
+;        fec defaults to "none" if not specified
+;        duplex defaults to "full-duplex" if not specified
 ```
 
 ## 3.4 PMON#XCVRD
@@ -261,22 +278,16 @@ txfir_post3       = 5*DIGIT
 The **pmon#xcvrd** process will be enhanced for the following activities:
 
 - Publishing the media type of the attached transceiver to STATE_DB
-- Publishing the supported speed of the attached transceiver to STATE_DB
+- Publishing the static information of the attached transceiver to STATE_DB
 
 ## 3.5 SWSS#ORCHAGENT
 
 The **swss#orchagent** process will be enhanced for the following activities:
 
-- Upon swss startup, it fetches the TX FIR/Pre-emphasis values from MAC/PHY via SAI calls, and get TX FIR published to the STATE_DB
-- Subscribing APPL_DB for the **medium** updates, and performs the tasks below.
-	- Communicating with syncd to update the media type of the port via SAI calls.
-	- Fetching the TX FIR/Pre-emphasis values from MAC/PHY via SAI library, and get it published to the STATE_DB
-- Subscribing APPL_DB for the **preemphasis** updates, and performs the tasks below
-	- Communicating with syncd to update the pre-emphasis of the port via SAI calls.
-	- Having the pre-emphasis of the port published to the STATE_DB
-- Subscribing APPL_DB for the **speed/intf_type** updates, and performs the tasks below
-	- Communicating with syncd to update the speed/interface-type of the port via SAI calls.
-	- Fetching the TX FIR/Pre-emphasis values from APPL_DB, update the pre-emphasis of the port via SAI calls, and get it published to the STATE_DB
+- Subscribing APPL_DB for the **medium** updates, and send the media type updates to syncd.
+- Subscribing APPL_DB for the **admin_advertise** updates, and send the requests to syncd.
+- Subscribing APPL_DB for the **autoneg** updates, and send the Auto-Negotiation requests to syncd.
+- If the link-training is appliable to the attached transceiver, check if **preemphasis** exists in the PORT_TABLE of APPL_DB, if positive activate the link-training, otherwise de-activated link-training and use specific **preemphasis**.
 
 ## 3.4 SAI
 
@@ -307,28 +318,18 @@ module: openconfig-interfaces
         +--rw oc-eth:ethernet
         |  +--rw oc-eth:config
         |  |  ............
-        |  |  +--rw oc-eth:auto-negotiate?             boolean
-        |  |  +--rw oc-eth:duplex-mode?                enumeration
-        |  |  +--rw oc-eth:port-speed?                 identityref
-        |  |  ............
-        |  |  +--rw oc-eth-ext2:link-training?         boolean
-        |  |  +--rw oc-eth-ext2:port-fec?              identityref
+        |  |  +--rw oc-eth:auto-negotiate?                  boolean
+        |  |  +--rw oc-eth-ext2:standalone-link-training?   boolean
         |  |  ............
         |  +--ro oc-eth:state
-        |  |  +--ro oc-eth:auto-negotiate?             boolean
-        |  |  +--ro oc-eth:duplex-mode?                enumeration
-        |  |  +--ro oc-eth:port-speed?                 identityref
-        |  |  +--ro oc-eth:negotiated-duplex-mode?     enumeration
         |  |  ............
-        |  |  +--ro oc-eth-ext2:link-training?         boolean
-        |  |  +--ro oc-eth-ext2:oper-link-training?    boolean
-        |  |  +--ro oc-eth-ext2:tx-fir-pre2?           int16
-        |  |  +--ro oc-eth-ext2:tx-fir-pre1?           int16
-        |  |  +--ro oc-eth-ext2:tx-fir-main?           int16
-        |  |  +--ro oc-eth-ext2:tx-fir-post1?          int16
-        |  |  +--ro oc-eth-ext2:tx-fir-post2?          int16
-        |  |  +--ro oc-eth-ext2:tx-fir-post3?          int16
-        |  |  +--ro oc-eth-ext2:port-fec?              identityref
+        |  |  +--ro oc-eth:auto-negotiate?                  boolean
+        |  |  +--ro oc-eth:negotiated-duplex-mode?          enumeration
+        |  |  +--ro oc-eth:negotiated-port-speed?           identityref
+        |  |  +--ro oc-eth-ext2:negotiated-port-fec?        identityref
+        |  |  +--ro oc-eth-ext2:standalone-link-training?   boolean
+        |  |  +--ro oc-eth-ext2:oper-link-training?         boolean
+        |  |  ............
 ```
 
 ### 3.5.2 CLI
@@ -338,35 +339,29 @@ module: openconfig-interfaces
 **link-training**
 
 **Default** Auto mode is activated
-**Format**  [no] link-training {auto|on|off}
+**Format**  [no] link-training {on|off}
 **Mode**    Interface Config Mode
 
-Using this command to enable or disable link-training and set the mode for the port.
+Using this command to enable or disable standalone-link-training and set the mode for the port.
 This command is only applicable to physical ports, as it's to tune the hardware signal.
 
 | Parameter | Description                                                       |
 | :-------: | :---------------------------------------------------------------- |
-| auto      | Link-training will be enabled or disabled per the configuration found in the media_setting.json, and will be enabled if attached transceiver is not specified in the media_settings.json |
-| on        | Link-training will always be enabled if applicable (e.g. Link-training is not available on native RJ45) |
-| off       | Link-training will always be disabled if applicable (e.g. Link-training is not available on native RJ45) |
+| on        | LT is enabled regardless of AN configuration |
+| off       | LT is disabled if AN is disabled, while LT will still be enabled if AN is enabled |
 
 Example:
 
-Having link-training auto mode activated on the port
-```
-sonic(config)# interface range Ethernet 0-16
-%Info: Configuring only existing interfaces in range
-sonic(conf-if-range-eth**)# link-training auto
-```
-
-Having link-training enabled on the port, regardless of the configurations in the media_settings.json
+Having the LT enabled on the port, regardless of the AN configuration<br>
+**Note: The LT will still be deactivated if the per-port static configuration is available in the media_settings.json**
 ```
 sonic(config)# interface range Ethernet 0-16
 %Info: Configuring only existing interfaces in range
 sonic(conf-if-range-eth**)# link-training on
 ```
 
-Having link-training disabled on the port, regardless of the configurations in the media_settings.json
+Having the LT disabled on the port if AN is disabled, while LT will still be enabled if AN is enabled.<br>
+**Note: The LT will still be deactivated if the per-port static configuration is available in the media_settings.json**
 ```
 sonic(config)# interface range Ethernet 0-16
 %Info: Configuring only existing interfaces in range
@@ -468,7 +463,7 @@ Name: Ethernet3
 Type: 1000BASE-T
 Link State: Down
 Auto Negotiation: Enabled
-Admin Link Training: Disabled
+Standalone Link Training: Disabled
 Oper Link Training: Disabled
                             400G 100G 40G  25G  10G  1G   100f 100h 10f  10h
                             ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -476,49 +471,6 @@ Admin Local Advertisement   no   no   no   no   no   yes  yes  no   yes  no
 Oper Local Advertisement    no   no   no   no   no   yes  yes  no   yes  no
 Oper Peer Advertisement     no   no   no   no   no   no   yes  yes  yes  yes
 ```
-
-**show interface preemphasis**
-
-Using this command to display the current transmitter equalization parameter,
-admin link-training configuration, and the operational link-training status for an interface.
-
-If this command is executed without the optional *Interface* parameter, then it displays
-the link-training state and pre-emphasis(i.e. TX FIR) for all the ports.
-
-If the port type is native copper, TX FIR will be blank and Oper Link Training should be disabled.
-
-**Format**  show interface preemphasis [Interface]
-**Mode**    EXEC Mode
-
-| Parameter | Description                                                                |
-| :-------: | :------------------------------------------------------------------------- |
-| Interface | Physical interface name (e.g. Ethernet N)                                  |
-
-Example:
-
-```
-(sonic)# show interface preemphasis
-
-Name          Type              Admin LT  Oper LT   TX FIR
-------------  ----------------  --------  --------  -----------------------------
-Ethernet0     QSFP56-DD         Disabled  Disabled  0,-16,152,0,0,0
-Ethernet1     QSFP56-DD         Disabled  Disabled  0,-16,152,0,0,0
-Ethernet2     QSFP56-DD         Disabled  Disabled  0,-16,152,0,0,0
-Ethernet3     QSFP56-DD         Disabled  Disabled  0,-16,152,0,0,0
-
-(sonic)# show interface preemphasis Ethernet 3
-
-Name: Ethernet3
-Type: QSFP56-DD
-Link State: Down
-Admin Link Training: Disabled
-Oper Link Training: Disabled
-
-pre2      pre1      main      post1     post2     post3
---------  --------  --------  --------  --------  --------
-0         -16       152       0         0         0
-```
-
 
 ## 3.6 Warm Boot Support
 
