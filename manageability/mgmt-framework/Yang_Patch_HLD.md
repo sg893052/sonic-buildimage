@@ -50,12 +50,11 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 1. The RESTCONF server should implement the "YANG PATCH" feature as described in the [RFC8072](https://tools.ietf.org/html/rfc8072)
 2. The RESTCONF server should allow multiple sub-resources to be edited within the same PATCH method.
 3. The RESTCONF server should allow a more precise edit operation than the "plain patch" mechanism found in [RFC8040](https://tools.ietf.org/html/rfc8040). i.e. edits operations can be heterogenuous.
-4. The RESTCONF server should support "create", "delete", "merge", "replace", and "remove" operations.
+4. The RESTCONF server should support "create", "delete", "merge", "replace", and "remove" operations. [More details on operations](https://datatracker.ietf.org/doc/html/rfc8072#section-2.5)
 5. The RESTCONF server should process "edits" in the explicit order. i.e. The edits are processed in client-specified order.
-6. The RESTCONF server should process errors precisely even when multiple errors occur in the same YANG Patch request.
-7. The YANG Patch request should be an atomic operation. i.e. All the edits must be succeded, otherwise an error will be thrown.
-8. The RESTCONF server should log the YANG Patch's "patch-id" in the audit-log, this is useful for debugging.
-9. The RESTCONF server MUST return the "Accept-Patch" header field in an OPTIONS response, as specified in [RFC5789], which includes the media type for YANG Patch.  This is needed by a client to determine the message-encoding formats supported by the server (e.g., XML, JSON, or both).
+6. The YANG Patch request should be an atomic operation. i.e. All the edits must be succeded, otherwise an error will be thrown.
+7. The RESTCONF server should log the YANG Patch's "patch-id" in the audit-log, this is useful for debugging. The format will be "[REST-ID] User \"<USER_ID>@<REMOTE_ADDR>\" request \"PATCH yang-yatch-id:<Patch-ID> <PATCH_URL>\" status - <STATUS_CODE>"
+8. The RESTCONF server MUST return the "Accept-Patch" header field in an OPTIONS response, as specified in [RFC5789], which includes the media type for YANG Patch.  This is needed by a client to determine the message-encoding formats supported by the server (e.g., XML, JSON, or both).
    The following is an example of an "Accept-Patch" header:
    Accept-Patch: application/yang-patch+json
 
@@ -75,7 +74,7 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 
 - Translib's Bulk API will be enhanced to process the Ordered edits. i.e. to preserve and process the edits in a order sent by a REST Client.
 - Translib's Bulk API will be enhanced to process the request atomically.
-- Translib's Bulk API currently processes the edits as per the requirement of GNMI spec, this behavior must be retained and must be used only for GNMI requests. 
+- Translib's Bulk API currently processes the edits as per the requirement of GNMI spec, there should not be any impact on current behaviour GNMI's bulk request processing.
 
 ## 3.1.3 DB Access Layer changes
 
@@ -117,6 +116,7 @@ Refer [Target Data Node](https://datatracker.ietf.org/doc/html/rfc8072#section-2
 ```
 
 Note that YANG Patch can only edit data resources.  The PATCH method cannot be used to replace the datastore resource.
+The value should be a RFC7951 JSON encoded yang data.
 
 Please refer [Unit test](#5-unit-test) examples for sample request.
 
@@ -164,6 +164,18 @@ Please refer [Unit test](#5-unit-test) examples for sample response.
 Edit operations are described breifly in the [RFC8072](https://datatracker.ietf.org/doc/html/rfc8072#section-2.5)
 
 Note: Move and Insert operations are not supported in SONiC.
+
+Below is the mapping between a yang patch operation and a translib operation
+  
+| Patch Operation | Translib operation|
+|:---------------:|:-----------------:|
+| create          | CREATE            |
+| replace         | REPLACE           |
+| merge           | UPDATE            |
+| delete          | DELETE            |
+| remove          | DELETE            |
+
+Note: Remove operation will suppress the Resource-not-found-Error (tlerr.NotFoundError), to satisfy the RFC8072 requirement.
 
 # 5 Unit Test
 
