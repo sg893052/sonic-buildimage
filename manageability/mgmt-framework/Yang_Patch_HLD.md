@@ -1,7 +1,7 @@
 # Feature Name
 YANG Patch Media Type
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 
 # Table of Contents
   - [Revision](#revision)
@@ -31,6 +31,7 @@ YANG Patch Media Type
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/23/2021  |   Mohammed Faraaz  | Initial version                   |
 | 0.2 | 05/23/2021  |   Mohammed Faraaz  | Added Design and UT sections      |
+| 0.3 | 07/23/2021  |   Mohammed Faraaz  | Addressed Review comments.        |
 
 # About this Manual
 This document provides general information about the YANG Patch Media Type feature implementation in SONiC mgmt-framework's RESTCONF server.
