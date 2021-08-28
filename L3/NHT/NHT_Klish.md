@@ -78,6 +78,10 @@ FRR introduced [Next hop Tracking](http://docs.frrouting.org/projects/dev-guide/
 
 Sometimes BGP neighbors are not directly connected and sessions are iBGP. In this case current BGP configuration prevents FRR to establish BGP connections. Reason would be waiting for NHT to resolve the routes. To fix this, it is required either to add static routes for each non-directly connected iBGPneighbor, or enable command `ip nht resolve-via-default`
 
+Nexthop resolution in rib (zebra) by default does not consider default route (0.0.0.0/0) for resolving the next-hops. In FRR, this is controlled by 'ip nht resolve-via-default' knob, and is turned off by default. If the user wishes to use default route for resolving the nexthops (including bgp peers), this configuration can be enabled.
+
+Turning on 'resolve-via-default' by default may come as a surprise after upgrade, as the routes which were unresolved due to unavailability of preferred prefixes for reachability of next-hop will automatically become resolved and installed. Therefore this configuration is not enabled by default.
+
 More information about FRR NHT feature can be found at links provided in Referenc section.
 
 This HLD defines SONiC  KLISH CLI and REST URI to support Nexthop Tracking feature. 
