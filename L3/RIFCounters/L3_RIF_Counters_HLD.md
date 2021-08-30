@@ -90,6 +90,7 @@ Provide Layer 3 Routing Interface counter support in SONIC and SAI. Routing inte
   - RIF Counters are not supported on Loopback Interfaces
   - RIF Counters are not supported on TD4, TH4 platforms due to HW limitations / unavailability of counter resources
   - RIF Counters does not show error counts, it could be either packets that are valid but not forwarded or invalid packets 
+  - RIF counters will not account for CPU generated Tx packets
 
 
 # 2 Functionality
