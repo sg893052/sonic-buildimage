@@ -1,7 +1,7 @@
 # Feature Name
 GNMI Get Request Type Field
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 
 # Scope
 This document describes the high level design of supporting the 'type' field in a gNMI [GNMI](#GNMI) GetRequest Message in the management framework.
@@ -31,6 +31,12 @@ CONFIG, and STATE are already described in the [Query Parameter Framework](#quer
 
 There is an expired draft that describes how OPERATIONAL data could be identified. Till a formal definition makes its way into the specification, we'll attempt to nail it down to mean any read-only data ("config false") that does not have a corresponding "config" path (i.e. "../../config/<data>" should not exist), excluding any data in "config" containers. Examples of this data are statistics, counters, and protocol negotiated values.
 
+# Limitations
+
+- The 'type' field of GetRequest message is supported only for the [transl clients](#translib). The "OTHERS"/Non-DB clients, and DB clients do not support this field, and will continue to return the unsupported request type error, if said 'type' field is included.
+
+- OPERATIONAL type is supported only for Openconfig Yang modeled data.
+
 # References
 
 ## GNMI
@@ -39,5 +45,9 @@ https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.
 
 ## Query Parameter Framework
 
-TBD (Add link here when ready)
+https://github.com/project-arlo/SONiC/blob/master/doc/mgmt/SONiC_QueryParameterForGet_HLD.md
+
+## Translib
+
+https://github.com/Azure/SONiC/blob/master/doc/mgmt/Management%20Framework.md#3226-Translib
 
