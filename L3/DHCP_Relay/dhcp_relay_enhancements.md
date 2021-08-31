@@ -1,7 +1,7 @@
 # Feature Name
 DHCP Relay Enhancements.
 # High Level Design Document
-#### Rev 0.6
+#### Rev 1.0
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -83,12 +83,13 @@ DHCP Relay Enhancements.
 | 0.4 | 4/29/2020   |   Abhimanyu Devarapalli   | Added IPv4 unnumbered support, VRF support, options handling. |
 | 0.5 | 7/23/2020   |   Santosh Doke   | Updated scaling limit and added server-override suboption. |
 | 0.6 | 12/28/2020   |   Santosh Doke   | Added support for L3 subinterfaces. |
+| 1.0 | 4/1/2021   |   Santosh Doke   | Redesign DHCP relay implementation to support 4K L3 interfaces. |
 ||
 &nbsp;
 # About this Manual
 This document provides general information about the DHCP Relay Enhancements implemented in SONiC.
 # Scope
-The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. This document describes the enhancements made for DHCP Relay.
+The scope of document is to describe the DHCP Relay requirements, use cases, CLI commands and internal design details.
 
 # Definition/Abbreviation
 
@@ -104,12 +105,12 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 ||
 &nbsp;
 # 1 Feature Overview
+
+DHCP relay is used to forward DHCP packets between client and server when they are not in the same L3 network. 
+
+
 ## 1.1 Requirements
 ### 1.1.1 Functional Requirements
-#### 1.1.1.1 New Functional Requirements
-1. Support DHCPv4/DHCPv6 relay over L3 subinterfaces. Unless otherwise specified, all existing DHCPv4/DHCPv6 functional requirements are supported on L3 subinterfaces.
-
-#### 1.1.1.2 Existing Functional Requirements
 1. Support relaying of IPv4 DHCP packets.
 2. Support appending Circuit ID and Remote ID sub-options(option 82) for IPv4 DHCP packets.
 3. Support rate limiting for DHCP packets.
@@ -127,13 +128,10 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 15. Support relaying of DHCPv4 packets over IPv4 unnumbered interfaces.
 16. Support Virtual subnet selection (VSS) options 151/152 for DHCPv4, and VSS option 68 for DHCPv6, as per RFC 6607.
 17. Support relaying of DHCPv4/DHCPv6 packets when client and server are in different VRFs.
+18. Support DHCPv4/DHCPv6 relay over L3 subinterfaces. Unless otherwise specified, all existing DHCPv4/DHCPv6 functional requirements are supported on L3 subinterfaces.
 
 
 ### 1.1.2 Configuration and Management Requirements
-#### 1.1.2.1 New Configuration Requirements
-1. Extend Click/KLISH configuration and show commands to support DHCPv4/DHCPv6 relay on L3 subinterfaces.
-
-#### 1.1.2.2 Existing Configuration Requirements
 1. Provide configuration and management commands using python Click module based framework.
 2. Provide per interface configuration command to add/delete DHCP relay addresses.
 3. Provide per interface show command to display the DHCP relay statistics.
@@ -143,23 +141,32 @@ The ISC-DHCP code is integrated in SONiC to provide DHCP Relay functionality. Th
 7. Provide configuration option to specify VRF in which the server resides.
 8. Provide configuration option to specify forwarding behavior  of DHCPv4 packets that already contain relay agent options.
 9. All configuration changes must be applied with out restarting the DHCP relay docker.
+10. Extend Click/KLISH configuration and show commands to support DHCPv4/DHCPv6 relay on L3 subinterfaces.
 
 ### 1.1.3 Scalability Requirements
+#### 1.1.3.1 New Scalability Requirements
+1. The maximum number of L3 interfaces that can be enabled for DHCPv4 relay is 4K.
+2. The maximum number of L3 interfaces that can be enabled for DHCPv6 relay is 4K. 
+
+#### 1.1.3.2 Existing Scalability Requirements
 1. The maximum number of Relay addresses configurable per interface are 4. 
 2. DHCPv4/v6 relay is qualified to handle up to 2000 DHCP clients.
-3. DHCPv4 relay is qualified to support up to 128 L3 interfaces.
-4. DHCPv6 relay is qualified to support up to 128 L3 interfaces. 
 
-Note that the limit on L3 interfaces is not enforced via configuration, but represents the maximum scale that is qualified/supported.  
+Note that the 4K limit on L3 interfaces is not enforced via configuration, but represents the maximum scale that is qualified/supported. The number of L3 interfaces is dependent on the underlying platform and can be less than 4K.  
 
 ### 1.1.4 Warm Boot Requirements
 DHCP Relay configuration is stateless and hence no state is restored after warm reboot. Any UDP broadcast traffic that is relayed to IP Helper addresses is disrupted/dropped during the duration of the warm reboot or normal reboot.
 
 ## 1.2 Design Overview
 ### 1.2.1 Basic Approach
-SONiC uses open source ISC DHCP to support DHCP Relay.
 
-For each routing interface which has a DHCP Relay address configured, a DHCP relay agent process is created, by passing this routing interface as downstream interface and all other interfaces as upstream interfaces.
+A DHCP relay daemon is spawned as part for DHCP relay docker and is responsbile for:
+
+* registering with CONFIG_DB to process configuration changes
+* registering UDP socket to send/receive DHCPv4 and DHCPv6 packets
+* updating DHCPv4/DHCPv6 TX/RX statistics to COUNTERS_DB
+
+Note: The previous ISC DHCP solution has been deprecated due to scaling issues and an in-house implementation is added to support DHCP relay on 4K L3 interfaces.
 
 ### 1.2.2 Container
 dhcp_relay
@@ -234,24 +241,28 @@ Generally, the DHCP packets are broadcast. These broadcast packets cannot be exc
 # 3 Design
 ## 3.1 Overview
 
-The IPv4 DHCP relay process is spawned with the below options supported by ISC-DHCP
+To implement DHCP relay functionality, a relay manager process `dhcprelaymgrd` is spawned as part of the `dhcp_relay` docker. The process handles both DHCPv4 and DHCPv6 packets. It is marked as a critical process so that any process termination event will cause the DHCP docker to restart and spawn the process again.
 
-| **Protocol options** | **Description** |
-|----------------------|-----------------|
-|-id *ifname* | Specifies a downstream network interface: an interface from which requests from clients and other relay agents will be accepted. Multiple interfaces may be specified by using more than one -id option. This argument is intended to be used in conjunction with one or more -i or -iu arguments. |
-|-iu *ifname* | Specifies an upstream network interface: an interface from which replies from servers and other relay agents will be accepted. Multiple interfaces may be specified by using more than one -iu option. This argument is intended to be used in conjunction with one or more -i or -id arguments. |
-|-a | Append an agent option field to each request before forwarding it to the server. Agent option fields in responses sent from servers to clients will be stripped before forwarding such responses back to the client. The agent option field contains two IDs: the Circuit ID sub-option and the Remote ID sub-option. The Circuit ID is set to the printable name of the interface on which the client request was received. The Remote ID is set to the MAC address of the interface. |
-|-U *ifname* | Enables the addition of a RFC 3527 compliant link selection suboption for clients directly connected to the relay. This RFC allows a relay to specify two different IP addresses: one for the server to use when communicating with the relay (giaddr) the other for choosing the subnet for the client (the suboption). This can be useful if the server is unable to send packets to the relay via the address used for the subnet. |
-|-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
-||
-&nbsp;
-Below is a sample IPv4 DHCP Relay process command:
+Below are the supervisor settings for the DHCP relay process.
 ```
-/usr/sbin/dhcrelay -d -m discard -a %%p %%P --name-alias-map-file /tmp/port-name-alias-map.txt -id Vlan10
- -iu Ethernet64 -iu Vlan56 -iu PortChannel60 2.0.1.1 -c 12 -U Loopback1
+[program:dhcprelaymgrd]
+command=/usr/bin/dhcprelaymgrd
+priority=4
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
 ```
 
-Below is a sample IPv4 DHCP relayed packet with option 82:
+The relay manager creates one global UDP socket to receive and transmit DHCPv4/v6 packets from different interfaces in different VRFs. The DHCPv4 socket  is bound to UDP port 67, and the DHCPv6 socket is bound to UDP port 547. If the DHCP server resides in a VRF that is different from client, then an additional UDP socket is created to relay DHCPv4/v6 packets in the server VRF - this socket is bound to the server VRF. To determine the incoming interface of the received packet, IP_PKTINFO/IPV6_RECVPKTINFO socket options are enabled.
+
+```
+    socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);  /* Global DHCPv4 socket */ 
+    socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP); /* Global DHCPv6 socket */
+```
+
+For DHCPv4 packets received from the client, the relay manager appends the option 82 - Circuit ID and remote ID. The format of option 82 is not configurable. The Circuit ID is formatted based on the incoming interface name and the Remote ID is formatted based on the MAC address of the incoming interface.  When DHCP server responds to the relay agent, the relay manager strips the Option 82 and identifies the client interface using the Circuit ID and Remote ID fields in the response. The DHCP server response is then forwarded to the client interface. Below is a sample IPv4 DHCP relayed packet with option 82.
+
 ```
 Option: (82) Agent Information Option
   Length: 31
@@ -263,23 +274,20 @@ Option: (82) Agent Information Option
       Agent Remote ID: 63633a33373a61623a31373a36633a3961 ("cc:37:ab:17:6c:9a")
 ```
 
-The IPv6 DHCP relay process is spawned with the below options supported by ISC-DHCP
+The relay manager registers with the following CONFIG_DB tables to receive updates to the DHCP relay configuration parameters:
 
-| **Protocol options** | **Description** |
-|----------------------|-----------------|
-|-6 | Run dhcrelay as a DHCPv6 relay agent.|
-|-l [*address%*]*ifname*[#*index*] | Specifies the "lower" network interface for DHCPv6 relay mode: the interface on which queries will be received from clients or from other relay agents. At least one -l option must be included in the command line when running in DHCPv6 mode. The interface name "ifname" is a mandatory parameter. The link address can be specified by address%; if it is not, dhcrelay will use the first non-link-local address configured on the interface. The optional #index parameter specifies the interface index. |
-|-u [*address%*]*ifname* | Specifies the "upper" network interface for DHCPv6 relay mode: the interface to which queries from clients and other relay agents should be forwarded. At least one -u option must be included in the command line when running in DHCPv6 mode. The interface name ifname is a mandatory parameter. The destination unicast or multicast address can be specified by address%; if not specified, the relay agent will forward to the DHCPv6 All_DHCP_Relay_Agents_and_Servers multicast address. |
-|-c *count* | Maximum hop count. When forwarding packets, dhcrelay discards packets which have reached a hop count of COUNT. Default is 10. |
-||
-&nbsp;
-Below is a sample IPv6 DHCP Relay process command:
 ```
-/usr/sbin/dhcrelay -6 -d --name-alias-map-file /tmp/port-name-alias-map.txt -l Vlan10 -u Ethernet64 -u Vlan56 -u PortChannel60 -c 15
+{
+     CFG_INTF_TABLE_NAME,
+     CFG_LAG_INTF_TABLE_NAME,
+     CFG_VLAN_TABLE_NAME,
+     CFG_VLAN_SUB_INTF_TABLE_NAME,
+     CFG_VLAN_INTF_TABLE_NAME,
+     CFG_LOOPBACK_INTERFACE_TABLE_NAME,
+     CFG_SAG_TABLE_NAME,
+     CFG_SAG_GLOBAL_TABLE_NAME
+}
 ```
-
-Please refer the [manual pages](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcrelay) of ISC-DHCP for more information.
-
 
 ### 3.1.1 Option 82 Link-selection sub-option
 Typically, DHCP deployment involves a single routing domain between the client and server.  In such deployments, the 'giaddr' in relayed packet is used to identify the client subnet and also to communicate with the relay agent. In some networks, the client and server could be in different domains and may not be able to communicate directly. This is done to isolate the server from client attacks. In such scenarios, there is a need to differentiate the client subnet and the relay agent address ('giaddr').
@@ -582,9 +590,9 @@ config interface ip dhcp-relay add Vlan10 172.0.0.1 -src-intf=Loopback1 -link-se
 
 In the above sample configuration for Leaf switch, the SAG gateway '192.168.0.1' is configured on VLAN10. The DHCP relay is enabled on VLAN10. For relaying packet to DHCP server, the 'giaddr' is set to the SAG IP '55.55.55.55'. The DHCP server uses link-selection sub-option 5 to identify the client subnet to be leased. The response from DHCP server is sent to the Loopback IP which is unique to the originating leaf switch.
 
-### 3.1.8 Rate limiting
+### 3.1.8 COPP and Rate limiting
 
-The switch default forwarding behavior for DHCPv4 and DHCPv6 packets is to trap them to CPU. This is irrespective of whether DHCP relay is enabled. As part of switch initialization, the COPP rules are installed by SWSS. These COPP rules are part of SWSS docker and contain traps for DHCPv4 and DHCPv6 packets.
+The switch default forwarding behavior for DHCPv4 and DHCPv6 packets is to trap them to CPU. This is irrespective of whether DHCP relay is enabled. As part of switch initialization, the COPP rules are installed by SWSS. These COPP rules are part of SWSS docker and contain traps for DHCPv4 and DHCPv6 packets. There are 2 versions of DHCPv4/v6 COPP rules. (1) L2 version (2) L3 version. The DHCP relay application relies on the L3 version of the DHCP COPP trap, which matches DHCP packets received on L3 interfaces. The L2 version of the trap is intended for applications like ZTP and DHCP snooping. 
 
 The 'show copp config' command can be used to check the COS queue assignment for DHCP packets and associated rate limiting. Packets exceeding the rate limit are dropped. Please refer to SONIC Control Plane Policing HLD for more details.
 
@@ -606,6 +614,17 @@ root@sonic:/home/admin# show copp config
       "trap_priority": "3"
     }
   }
+
+/* To install L2 DHCP rules using KLISH CLI */
+sonic# configure terminal
+sonic(config)# policy-map copp-system-policy type copp
+sonic(config-policy-map)# class copp-system-dhcpl2
+sonic(config-policy-map-flow)# set copp-action copp-system-dhcp
+
+/* To remove DHCP L2 COPP rule using KLISH CLI */
+sonic# configure terminal
+sonic(config)# policy-map copp-system-policy type copp
+sonic(config-policy-map)# no class copp-system-dhcpl2
 ```
 
 ### 3.1.9 IPv4 unnumbered support
@@ -784,7 +803,75 @@ No changes are required in STATE DB for this feature.
 ### 3.2.4 ASIC DB
 No changes are required in ASIC DB for this feature.
 ### 3.2.5 COUNTER DB
-No changes are required in COUNTER DB for this feature.
+
+To support statistics, DHCP relay maintains the following tables in the COUNTERS_DB. The statistics can be cleared using the CLI command.
+
+* COUNTERS_DHCP_RELAY_IPV4 - Stores DHCPv4 packet Tx/Rx counters
+* COUNTERS_DHCP_RELAY_IPV6 - Stores DHCPv6 packet Tx/Rx counters
+
+```
+root@sonic:/home/admin# sonic-db-cli COUNTERS_DB hgetall "COUNTERS_DHCP_RELAY_IPV4:Ethernet9"
+BOOTREQUEST-RECEIVED 0
+BOOTREQUEST-SENT 0
+BOOTREPLY-SENT 0
+DHCP-DISCOVER-RECEIVED 0
+DHCP-OFFER-SENT 0
+DHCP-REQUEST-RECEIVED 0
+DHCP-ACK-SENT 0
+DHCP-RELEASE-RECEIVED 0
+DHCP-DECLINE-RECEIVED 0
+DHCP-INFORM-RECEIVED 0
+DHCP-NACK-SENT 0
+TOTAL-DROPPED 0
+INVALID-OPCODE 0
+INVALID-OPTIONS 0
+CLIENT-PACKET-ERRORS 0
+SERVER-PACKET-ERRORS 0
+BOGUS-GIADDR-DROPS 0
+CORRUPT-AGENT-OPTIONS 0
+MISSING-AGENT-OPTION 0
+INVALID-HEADER-LENGTHS 0
+DROPPED-NO-IP-ADDRESS 0
+WRONG-TYPE-ON-DOWNSTREAM 0
+WRONG-TYPE-ON-UPSTREAM 0
+DHCP-OFFER-RECEIVED 0
+DHCP-ACK-RECEIVED 0
+DHCP-NACK-RECEIVED 0
+MAX-HOP-COUNT-DROPS 0
+DHCP-OFFER-SENT-OTHER 0
+DHCP-ACK-SENT-OTHER 0
+DHCP-NACK-SENT-OTHER 0
+
+
+root@sonic:/home/admin# sonic-db-cli COUNTERS_DB hgetall "COUNTERS_DHCP_RELAY_IPV6:Ethernet9"
+DHCPV6-SOLICIT-RECEIVED 0
+DHCPV6-ADVERTISE-SENT 0
+DHCPV6-REQUEST-RECEIVED 0
+DHCPV6-REPLY-SENT 0
+DHCPV6-CONFIRM-RECEIVED 0
+DHCPV6-RELEASE-RECEIVED 0
+DHCPV6-DECLINE-RECEIVED 0
+DHCPV6-REBIND-RECEIVED 0
+DHCPV6-RECONFIGURE-SENT 0
+DHCPV6-INFO-REQUEST-RECEIVED 0
+DHCPV6-RELAY-REPLY-RECEIVED 0
+DHCPV6-RELAY-FORW-SENT 0
+TOTAL-DROPPED 0
+INVALID-OPCODE 0
+INVALID-OPTIONS 0
+DHCPV6-TOTAL-REPLIES-SENT 0
+DHCPV6-RENEW-RECEIVED 0
+DHCPV6-LEASE-QUERY-RECEIVED 0
+DHCPV6-DHCPV4-QUERY-RECEIVED 0
+DHCPV6-RELAY-FORWARD-RECEIVED 0
+DHCPV6-LEASEQUERY-REPLY-SENT 0
+DHCPV6-DHCPV4-RESPONSE-SENT 0
+DHCPV6-ADVERTISE-SENT-OTHER 0
+DHCPV6-REPLY-SENT-OTHER 0
+DHCPV6-RECONFIGURE-SENT-OTHER 0
+DHCPV6-LEASEQUERY-REPLY-SENT-OTHER 0 
+DHCPV6-DHCPV4-RESPONSE-SENT-OTHER 0
+```
 
 ## 3.3 Switch State Service Design
 No changes are required in SWSS for this feature.
@@ -1594,15 +1681,10 @@ sonic# clear ipv6 dhcp-relay statistics Vlan100
 
 # 4 Flow Diagrams
 
-The below flow diagram indicates the sequence of events involved when relay configuration is applied or when the DHCP relay docker is started/restarted.
+The below flow diagram indicates the sequence of events involved in processing of DHCP relay configuration and DHCP packets:
 
-DHCP configuration manager (dhcpcfgmgr) monitors the CONFIG_DB for any changes to relay configuration. For incremental configuration changes, like max-hop-count, the manager sends a signal to corresponding DHCP relay process to apply the configuration. If the DHCP server address is added/modified/removed, the supervisor configuration is regenerated and the associated relay process is started/restarted/stopped accordingly. 
+![Figure10](./dhcp_relay_flow.png "Figure10: DHCP Relay Flow Diagram")
 
-In older implementation with out dhcpcfgmgr, some of the configuration changes would require DHCP docker restart to take affect. In current implementation, the dhcpcfgmgr handles the  process management using supervisorctl and applies incremental configuration using signal mechanism (avoiding the need to restart the entire docker). 
-
-![Figure10](./dhcp_relay_flow_diagram.png "Figure10: DHCP Relay configuration Flow Diagram")
-
-__Figure10: DHCP Relay configuration Flow Diagram__
 
 # 5 Error Handling
 N/A
@@ -1614,7 +1696,7 @@ New debug command is added to toggle the logging of the DHCP relay process betwe
 Not applicable for this feature.
 
 # 8 Scalability
-Up to 4 DHCP relay addresses can be configured on each routing interface in the system.
+Up to 4 DHCP relay addresses can be configured on each L3 interface in the system. All L3 interfaces can be enabled for DHCPv4 and DHCPv6 relay operation. The maximum number of L3 interface supported is up to 4K.
 
 # 9 Unit Test
 1. Configure ip dhcp relay address on a physical routing interface in a default router and verify that relay is working.
@@ -1652,6 +1734,9 @@ Up to 4 DHCP relay addresses can be configured on each routing interface in the 
 33. Verify that adding/modifying/deleting of DHCP server address on the interface does not restart the docker. Check 'uptime' of the docker using 'docker ps' command.
 34. Verify that the packets with agent option 82 are handled as per the configured policy action (discard/append/replace).
 35. Verify DHCPv4/DHCPv6 relay functionality on L3 subinterfaces (Ethernet and PortChannel based).
+36. Verify enabling DHCPv4/DHCPv6 relay functionality on 4K L3 interfaces. 
+37. Verify DHCPv4/DHCPv6 statistics on 4K L3 interfaces.
+38. Verify config-reload, fast-reboot, warm-reboot operations with DHCPv4/DHCPv6 relay enabled on 4K L3 interfaces.
 
 # 10 Future enhancements
 

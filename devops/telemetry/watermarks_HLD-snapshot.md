@@ -31,13 +31,13 @@
   - [3.1 Modules that need to be updated](#31-modules-that-need-to-be-updated)
     - [3.1.1 Counter DB](#311-counter-db)
     - [3.1.2 CLI](#312-cli)
-      - [3.1.2.1 CLI show](#3121-cli-show)
-      - [3.1.2.2 CLI clear](#3122-cli-clear)
-      - [3.1.2.3 Show/configure telemetry interval](#3123-showconfigure-telemetry-interval)
-      - [3.1.2.4 KLISH config](#3124-klish-cli-config)
-      - [3.1.2.5 KLISH no config](#3125-klish-cli-no-config)
-      - [3.1.2.6 KLISH show](#3126-klish-cli-show)
-      - [3.1.2.7 KLISH clear](#3127-klish-cli-clear)
+      - [3.1.2.1 CLICK CLI show](#3121-click-cli-show)
+      - [3.1.2.2 CLICK CLI clear](#3122-click-cli-clear)
+      - [3.1.2.3 CLICK Show/configure telemetry interval](#3123-click-showconfigure-telemetry-interval)
+      - [3.1.2.4 KLISH CLI config](#3124-klish-cli-config)
+      - [3.1.2.5 KLISH CLI no config](#3125-klish-cli-no-config)
+      - [3.1.2.6 KLISH CLI show](#3126-klish-cli-show)
+      - [3.1.2.7 KLISH clear](#3127-klish-clear)
     - [3.1.3 Lua plugins](#313-lua-plugins)
     - [3.1.4 SWSS](#314-swss)
     - [3.1.5 SAI Redis](#315-sai-redis)
@@ -158,6 +158,9 @@ The following watermarks should be supported:
 | Ingress headroom per PG                                                                     | SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_XOFF\_ROOM\_WATERMARK\_BYTES |
 | Ingress shared pool occupancy per PG                                                        | SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_SHARED\_WATERMARK\_BYTES     |
 | Egress shared pool occupancy per queue (including both unicast queues and multicast queues) | SAI\_QUEUE\_STAT\_SHARED\_WATERMARK\_BYTES                        |
+| Device buffer stats                                                                         | SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES                       |
+| Ingress and egress service pool buffer usage on global and per port                         | SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES                         |
+
 
 System behavior: We consider a maximum of one regular user and a maximum
 of one special user that comes from streaming telemetry (grpc)
@@ -254,6 +257,16 @@ Following is the PR for buffer pool watermark support:
       - SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_XOFF\_ROOM\_WATERMARK\_BYTES
       - SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_SHARED\_WATERMARK\_BYTES
 
+**For every Buffer Pool (global and per interface) the following should be available in the DB:**
+
+  - "COUNTERS:pool\_vid"
+      - SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES
+
+**For Device buffer the following should be available in the DB:**
+
+  - "COUNTERS:device\_vid"
+      - SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES
+
 **Additionally a few mappings should be added:**
 
   - "COUNTERS\_PG\_PORT\_MAP" - map PG oid to port oid
@@ -294,6 +307,18 @@ For
   - "USER\_WATERMARKS:pg\_vid"
       - "SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_XOFF\_ROOM\_WATERMARK\_BYTES"
       - "SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_SHARED\_WATERMARK\_BYTES"
+  - "PERIODIC\_WATERMARKS:device\_vid"
+      - "SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES"
+  - "PERSISTENT\_WATERMARKS:device\_vid"
+      - "SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES"
+  - "USER\_WATERMARKS:device\_vid"
+      - "SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES"
+  - "PERIODIC\_WATERMARKS:pool\_vid"
+      - "SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES"
+  - "PERSISTENT\_WATERMARKS:pool\_vid"
+      - "SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES"
+  - "USER\_WATERMARKS:pool\_vid"
+      - "SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES"
 
 ### 3.1.2 CLI
 
@@ -374,9 +399,8 @@ $ show buffer_pool \[watermark|persistent-watermark\] \[-p\]
      egress_lossless_pool           45
         egress_lossy_pool            0
     ingress_lossless_pool           16
-
+    
 Note: [-p] option is to display value in percentages
-
 
 #### 3.1.2.2 CLICK CLI clear
 
@@ -448,6 +472,13 @@ the current telemetry interval ends.
 
     # sonic# show queue persistent-watermark {unicast|multicast|cpu} [interface Ethernet <num>]
 
+    # sonic# show buffer-pool watermark [interface Ethernet <num>]
+
+    # sonic# show buffer-pool persistent-watermark [interface Ethernet <num>]
+
+    # sonic# show device watermark
+
+    # sonic# show device persistent-watermark
 
 
 #### 3.1.2.7 KLISH clear 
@@ -459,6 +490,14 @@ the current telemetry interval ends.
     # sonic# clear priority-group persistent-watermark {headroom|shared} [interface Ethernet <num>]
 
     # sonic# clear queue persistent-watermark {unicast|multicast} [interface Ethernet <num>]
+
+    # sonic# clear buffer-pool watermark [interface Ethernet <num>]
+
+    # sonic# clear buffer-pool persistent-watermark [interface Ethernet <num>]
+
+    # sonic# clear device watermark
+
+    # sonic# clear device persistent-watermark
 
 ### 3.1.3 Lua plugins
 
@@ -749,4 +788,6 @@ TBD.
 
 7.  Verify each port multicast counters are getting updated into Counter DB.
 
-8.  Verify buffer pool counters are getting updated into Counter DB
+8.  Verify buffer pool counters (global pool and per port) are updated into Counter DB
+
+9.  Verify that device counter is updated into Counter DB.
