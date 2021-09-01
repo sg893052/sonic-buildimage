@@ -345,9 +345,9 @@ PortChannel9   -              Up    Up              10000     9100   -
 show interface PortChannel command to display the reason with timestamp:  
 ```
 sonic# show interface PortChannel 1
-PortChannel1 is up, line protocol down, reason err-disable, mode LACP
-Delay-restore-down at 2021-01-06 07:49:45.737024
-STP-down at 2021-01-06 11:54:15.137023
+PortChannel1 is up, line protocol down, reason ERR-DISABLED, mode LACP
+delay_restore_status_down at 2021-01-06 07:49:45.737024
+stp_status_down at 2021-01-06 11:54:15.137023
 Minimum number of links to bring PortChannel up is 1
 Mode of IPV4 address assignment: not-set
 Mode of IPV6 address assignment: not-set
@@ -425,26 +425,27 @@ The list of values for event is mentioned in the CLI section.
 
 For portchannels:
 
-GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:down-reason
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:reason
 
 Example response data:
+```
 {
-  "openconfig-interfaces-ext:down-reason": "OPER_UP"
+  "openconfig-interfaces-ext:reason": "OPER_UP"
 }
+```
 
-
-GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/state/openconfig-interfaces-ext:reason-events
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-aggregate:aggregation/openconfig-interfaces-ext:reason-events
 
 Example response data:
 ```
 {
   "openconfig-interfaces-ext:reason-events": {
-    "down-reason-event": [
+    "reason-event": [
       {
-        "reason-event": {
-          "reason": "OPER_UP",
-          "event": "Portchannel-up",
-          "timestamp": "2021-06-01 19:23:25.838918"
+        "state": {
+          "event": "All-links-down",
+          "reason": "ALL_LINKS_DOWN",
+          "timestamp": "2021-08-30 05:53:31.432785"
         }
       }
     ]
@@ -456,11 +457,11 @@ Example response data for link down scenario:
 ```
 {
   "openconfig-interfaces-ext:reason-events": {
-    "down-reason-event": [
+    "reason-event": [
       {
-        "reason-event": {
+        "state": {
+          "event": "delay_restore_status_down",
           "reason": "ERR_DISABLED",
-          "event": "Delay-restore-Down",
           "timestamp": "2021-06-09 04:47:33.410626"
         }
       }
