@@ -2,7 +2,7 @@
 
 # EVPN VXLAN HLD
 
-#### Rev 1.2
+#### Rev 1.3
 
 # Table of Contents
 
@@ -22,10 +22,11 @@
 - [4 Feature Design](#4-feature-design)
   - [4.1 Overview](#41-design-overview)
   - [4.2 DB Changes](#42-db-changes)
-    - [CONFIG DB](#config_db-changes)
-    - [APP DB](#app_db-changes)
-    - [STATE DB](#state_db-changes)
-    - [COUNTER_DB](#counter_db-changes)
+    - [CONFIG DB](#421-config_db-changes)
+    - [APP DB](#422-app_db-changes)
+    - [STATE DB](#423-state_db-changes)
+    - [COUNTER_DB](#424-counter_db-changes)
+    - [FLEX_COUNTER_DB](#425-flex_counter_db-changes)
   - [4.3 Modules Design and Flows](#43-modules-design-and-flows)
     - [4.3.1 Tunnel Creation](#431-tunnel-auto-discovery-and-creation)
     - [4.3.2 Tunnel Deletion](#432-tunnel-deletion)
@@ -44,9 +45,12 @@
   - [5.1 Click CLI](#51-click-based-cli)
     - [5.1.1 Configuration Commands](#511-configuration-commands)
     - [5.1.2 Show Commands](#512-show-commands)
+    - [5.1.3 Clear Commands](#513-clear-commands)
   - [5.2 SONiC CLI](#52-sonic-cli)
     - [5.2.1 Configuration Commands](#521-configuration-commands)
     - [5.2.2 Show Commands](#522-show-commands)
+    - [5.2.3 Validations](#523-validations)
+    - [5.2.4 Clear Commands](#524-clear-commands)
   - [5.3 Openconfig URI](#53-openconfig-uri)
 - [6 Serviceability and Debug](#6-serviceability-and-debug)
 - [7 Warm reboot Support](#7-warm-reboot-support)
@@ -55,6 +59,7 @@
   - [8.2 Underlays supported](#82-underlays-supported)
   - [8.3 VxLAN QoS Mode](#83-vxlan-qos-mode)
   - [8.4 Unit Test Plans](#84-unit-test-plans)
+- [9 References ](#9-references)
 
 # List of Tables
 
@@ -73,7 +78,7 @@
 | 0.8  | 24/04/2020 | Nikhil Kelapure | Updated Warm-reboot section |
 | 1.1  | 04/14/2020 | Mohanarajan Selvaraj | VXLAN QoS Changes |
 | 1.2  | 04/24/2020 | Rajesh Sankaran | VLAN interface underlay support |
-| 1.3  | 05/14/2021 | Rajesh Sankaran | VXLAN stats support |
+| 1.3  | 09/02/2021 | Rajesh Sankaran | VXLAN stats support |
 
 # Definition/Abbreviation
 
@@ -416,6 +421,26 @@ vni = 1*8DIGIT ; VNI associated with VRF
 
 ```
 
+**FLEX_COUNTER_TABLE**
+
+Producer:  config manager
+
+Consumer: Flexcounterorch 
+
+Description:
+
+- Contains the polling interval in msec for VXLAN tunnels.
+
+Schema:
+
+```
+; Existing table
+key                           = FLEX_COUNTER_TABLE|TUNNEL ; 
+; field                       = value
+POLL_INTERVAL           = number    ;uint32 
+FLEX_COUNTER_STATUS     = enable/disable    ; enable or disable tunnel counters
+```
+
 ### 4.2.2 APP_DB Changes
 
 **EVPN_NVO_TABLE**
@@ -573,6 +598,8 @@ operstatus      = "oper_up"/"oper_down"
 
 ### 4.2.4 COUNTER_DB changes
 
+**COUNTERS TABLE**
+
 Producer: syncd
 
 Consumer: show scripts
@@ -594,7 +621,80 @@ SAI_TUNNEL_STAT_OUT_OCTETS    = number    ;uint64
 SAI_TUNNEL_STAT_OUT_PACKETS   = number    ;uint32
 ```
 
+**COUNTERS_BACKUP TABLE**
 
+This table is a backup of the counters table with the backup taken everytime the 
+counters are cleared. In addition to the same fields as the counters table it 
+also holds the LAST_CLEAR_TIMESTAMP field which captures the last time the counters
+were cleared.
+
+**COUNTERS_TUNNEL_NAME_MAP TABLE**
+
+Producer: VxlanOrch
+
+Consumer: show scripts
+
+Description:
+
+- Mapping between tunnel sip,dip to tunnel oid.
+
+Schema:
+
+```
+; New table
+key                           = COUNTERS_TUNNEL_NAME_MAP ; 
+; field                       = value
+sip:dip     = tunnel_vid    ;uint64 
+```
+
+**RATES TABLE**
+
+Producer: syncd
+
+Consumer: show scripts
+
+Description:
+
+- Per Tunnel Rx/Tx packets and octet rate counters are added.
+- Per Tunnel Last recorded Rx/Tx packet and octet counters
+
+Schema:
+
+```
+; Existing table
+key                           = RATES:tunnel_vid   ; tunnel oid
+; field                       = value
+SAI_TUNNEL_STAT_IN_OCTETS_last     = number    ;uint64 
+SAI_TUNNEL_STAT_IN_PACKETS_last    = number    ;uint32  
+SAI_TUNNEL_STAT_OUT_OCTETS_last    = number    ;uint64 
+SAI_TUNNEL_STAT_OUT_PACKETS_last   = number    ;uint32
+RX_BPS   = number    ;uint32
+RX_PPS   = number    ;uint32
+TX_BPS   = number    ;uint32
+TX_PPS   = number    ;uint32
+```
+
+### 4.2.5 FLEX_COUNTER_DB changes
+
+**FLEX_COUNTER_GROUP TABLE**
+
+Producer: Flexcounterorch
+
+Consumer: syncd 
+
+Description:
+
+- Contains the polling interval for VXLAN tunnels.
+
+Schema:
+
+```
+; Existing table
+key                           = FLEX_COUNTER_GROUP_TABLE:TUNNEL_STAT_COUNTER ; 
+; field                       = value
+POLL_INTERVAL           = number    ;uint32 in msec
+FLEX_COUNTER_STATUS     = enable/disable    ; enable or disable tunnel counters
+```
 
 ## 4.3 Modules Design and Flows
 
@@ -1014,6 +1114,8 @@ Kernel uses a single flag for both ARP & ND suppression, We support only one CLI
 ### 4.3.11 Support for Tunnel Statistics
 
 With the L2 and L3 support over VXLAN it is useful to support tunnel statistics. 
+The support for Tunnel statistics shall follow the existing counter architecture. 
+The calculation of tunnel counter rates shall be as described in the Reference section.
 
 #### 4.3.11.1 Counters supported. 
 
@@ -1022,13 +1124,16 @@ These will be stored in the counters DB for each tunnel.
 
 ####  4.3.11.2 Changes to SwSS
 
-- Flexcounter group for tunnels added with poll interval of 1 second and stat mode being STAT_MODE_READ. This is called as part of VxlanOrch constructor.
+- Flexcounter group for tunnels added with default poll interval of 3 second and stat mode being STAT_MODE_READ. This is called as part of VxlanOrch constructor.
 - VxlanOrch adds and removes tunnels in the FLEX_COUNTER_DB when a tunnel gets created or destroyed. Addition to the FLEX_COUNTER_DB will be done after all the SAI calls to create the tunnel. Removal from the DB will be done before  SAI calls to delete the tunnel. 
+- Handles polling interval changes by processing the FLEX_COUNTER_TABLE in the CONFIG_DB.
 
 #### 4.3.11.3 Changes to syncd
 
 - Flex counter and Flex group counter processing to also include tunnels. 
 - Include Tunnel counters as part of FlexCounter::collectCounters call. 
+- The existing get_tunnel_stats API shall be used to fetch the stats from the sai driver.
+- Handle polling interval changes for the tunnel group.
 
 ### 4.3.12 VXLAN QoS mode
 
@@ -1118,6 +1223,9 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    - config neigh_suppress enable <vid>
    - config neigh_suppress disable <vid>
    - vid represents the vlan_id. By default ARP/ND suppression is disabled.
+6. VXLAN counter polling interval
+   - counterpoll tunnel interval <poll_interval> 
+   - poll_interval is in msec. Range is 3000-30000. Default is 3000.
 
 ```
 
@@ -1172,11 +1280,11 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    +---------+---------+-------------------+--------------+
    Total count : 2
 
-5. show vxlan remote_mac <remoteip/all>  <vlanid/all> 
+5. show vxlan remotemac <remoteip/all>  <vlanid/all> 
    - lists all the MACs learnt from the specified remote ip or all the remotes for the specified/all vlans. (APP DB view) 
    - VLAN, MAC, RemoteVTEP,  VNI,  Type are the columns.
 
-   show vxlan remote_mac all
+   show vxlan remotemac all
    +---------+-------------------+--------------+-------+--------+
    | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
    +=========+===================+==============+=======+========+
@@ -1194,7 +1302,7 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    +---------+-------------------+--------------+-------+--------+
    Total count : 6
    
-   show vxlan remote_mac 3.3.3.3
+   show vxlan remotemac 3.3.3.3
    +---------+-------------------+--------------+-------+--------+
    | VLAN    | MAC               | RemoteVTEP   |   VNI | Type   |
    +=========+===================+==============+=======+========+
@@ -1205,11 +1313,11 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    Total count : 2
 
 
-6. show vxlan remote_vni <remoteip/all> 
+6. show vxlan remotevni <remoteip/all> 
    - lists all the VLANs learnt from the specified remote ip or all the remotes.  (APP DB view) 
    - VLAN, RemoteVTEP, VNI are the columns
 
-   show vxlan remote_vni all
+   show vxlan remotevni all
    +---------+--------------+-------+
    | VLAN    | RemoteVTEP   |   VNI |
    +=========+==============+=======+
@@ -1219,7 +1327,7 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    +---------+--------------+-------+
    Total count : 2
    
-   show vxlan remote_vni 3.3.3.3
+   show vxlan remotevni 3.3.3.3
    +---------+--------------+-------+
    | VLAN    | RemoteVTEP   |   VNI |
    +=========+==============+=======+
@@ -1227,6 +1335,24 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    +---------+--------------+-------+
    Total count : 1
 
+7. show vxlan counters <remoteip/all>
+   - lists all the tunnel statistics
+
+   SIP     DIP        RX_OK    RX_BPS    RX_PPS    TX_OK    TX_BPS    TX_PPS    
+  ------   ---       --------  --------  --------  -------  --------  --------  
+ 2.2.2.2   3.3.3.3     0         0         0         0        0         0  
+ 2.2.2.2   3.3.3.4     0         0         0         0        0         0  
+
+8. counterpoll show enhanced to display the tunnel polling interval.
+
+```
+
+#### 5.1.3 Clear Commands
+
+
+```
+1. sonic-clear tunnelcounters 
+   clears counters for all the tunnels.
 
 ```
 
@@ -1257,6 +1383,9 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    - switch(config) interface vlan <vlan-id-xxx>
    - switch(conf-if-vlanxxx)# [no] neigh-suppress
    - This command will suppress both ARP & ND flooding over the tunnel when Vlan is extended.
+6. VXLAN counter polling interval
+   - switch(config) counters vxlan interval <polling_interval>
+   - polling_interval is in seconds from 3-30 sec.
 
 ```
 
@@ -1287,6 +1416,14 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
 - VRF is already configured    
 - VNI VLAN map should be configured prior to VRF VNI map configuration, since VNI should be both L2 and L3.
 - VNI VLAN map cannot be deleted if there is corresponding VRF VNI map.
+
+```
+
+#### 5.2.4 Clear commands 
+
+```
+1. clear counters vxlan <remoteip>
+   Clears counters for a specific or all tunnels.
 
 ```
 
@@ -1383,6 +1520,21 @@ GET support - state
 
 curl -v -X GET -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-vxlan:vxlan/state/vxlan-vni-peer-infos -k
 curl -v -X GET -u admin:YourPaSsWoRd https://10.59.132.165/restconf/data/openconfig-vxlan:vxlan/state/vxlan-tunnel-infos/vxlan-tunnel-info -k
+
+VXLAN Counter commands
+-----------------------
+
+Show Command
+
+        curl -v -X GET  -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-counters-ext:tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:input\":{\"tunneliface\":\"all\"}}" -k
+
+Clear Command
+
+    curl -v -X POST -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-interfaces-ext:clear-tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-interfaces-ext:input\":{\"tunnel\":\"all\"}}" -k
+
+Config Command
+
+    curl -v -X PATCH -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/data/openconfig-counters-ext:tunnel-counters/tunnel-counter=time_value/config" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"tunnel-counter-interval\":time_value}}" -k
 
 ```
 
@@ -1610,4 +1762,11 @@ Queuing on tunnel termination is to queue 0 by default. User should bind a DSCP 
 6. Install remote MAC entry in Linux kernel and verify MAC is present in VXLAN_FDB_TABLE
 7. Move remote MAC to local by programming same entry in STATE_FDB_TABLE and verify Linux and FRR are updated
 8. Move local MAC entry to remote by replacing fdb entry in Linux and verify VXLAN_FDB_TABLE and STATE_FDB_TABLE are updated.
+
+## 9 References
+
+- [SONiC VXLAN HLD](https://github.com/Azure/SONiC/blob/master/doc/vxlan/Vxlan_hld.md)
+- [SONiC Counter Rates](https://github.com/Azure/SONiC/tree/master/doc/rates-and-utilization)
+- [RFC 7432](https://tools.ietf.org/html/rfc7432)
+- [RFC 8365](https://tools.ietf.org/html/rfc8365)
 
