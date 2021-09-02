@@ -90,6 +90,7 @@ Provide Layer 3 Routing Interface counter support in SONIC and SAI. Routing inte
   - RIF Counters are not supported on Loopback Interfaces
   - RIF Counters are not supported on TD4, TH4 platforms due to HW limitations / unavailability of counter resources
   - RIF Counters does not show error counts, it could be either packets that are valid but not forwarded or invalid packets 
+  - RIF counters will not account for CPU generated Tx packets
 
 
 # 2 Functionality
@@ -168,9 +169,6 @@ Below is the command for configuring interval between 2 consecutive read/fetch f
 	
 Default value for interval is 1 second. The range for interval is 1-30 seconds.
 
-The click configuration command for the same is
-
-       counterpoll rif_rates interval <seconds>
 
 ### 3.6.3 Show Commands
 
@@ -191,9 +189,7 @@ Here is a sample output of the above command
     PortChannel001     0        0         0       N/A      4852        68       12       N/A
  ----------------------------------------------------------------------------------------------
 
-The click show command for the same is
-
-         show interfaces counters rif       
+     
 
 ### 3.6.4 Clear Commands
 
@@ -201,9 +197,6 @@ Below is the command for clearing Layer 3 routing interface counters
 
         clear counters interface rif
 	
-The click command for the same is
-
-        sonic-clear rifcounters
 	
 ### 3.6.5 Debug Commands
 Not applicable
@@ -220,6 +213,27 @@ Clear Command
 Config Command
 
     curl -X PATCH "https://x.x.x.x/restconf/data/openconfig-counters-ext:rif-counters/rif-counter=time_value/config" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"rif-counter-interval\":time_value}}" -k
+
+### 3.6.7 Click Commands
+The click show command is as below
+
+         show interfaces counters rif [OPTOINS] [interface_name]
+
+ 	 Show interface counters
+
+	 Options:
+
+  	 -p, --period TEXT
+	 
+The click clear command is as below
+
+        sonic-clear rifcounters
+	
+The click configuration command is as below
+
+       counterpoll rif_rates interval <seconds>
+       
+For details of click commands please refer community HLD (https://github.com/Azure/SONiC/blob/eeebbf6f8a32e5d989595b0816849e8ef0d15141/doc/rif-counters/RIF_counters.md)
 
 # 4 Flow Diagrams
 Not applicable

@@ -54,6 +54,7 @@ This document provides comprehensive functional information about the REST and K
 | VRF      | Virtual Routing and Forwarding instance        |
 | iBGP     | Interior Boarder Gateway Protocol              |
 
+
 # 1 Feature Overview
 
 ## 1.1 Requirements
@@ -89,7 +90,6 @@ This HLD defines SONiC  KLISH CLI and REST URI to support Nexthop Tracking featu
 This feature will add new Open Config extended URIs to support NHT config and state information.
 
 New KLISH Config CLIs will be added to enable  nexthop resolution by default as part of this feature.
-
 
 
 # 3 Design
@@ -150,7 +150,6 @@ No new show CLI commands will be added.
 
 Configuration information will be displayed as part of show running-configuration.
 
- 
 
 ## 3.2 DB Changes
 
@@ -213,7 +212,6 @@ REST URI will be as below
 /openconfig-netinst:network-instances/openconfig-netinst:network-instance/openconfig-nexthop-tracking-ex:nexthop-tracking/openconfig-nexthop-tracking-ex:address-family/openconfig-nexthop-tracking-ex:routes/openconfig-nexthop-tracking-ex:route/openconfig-nexthop-tracking-ex:state
 
 
-
 ```
 
 
@@ -237,7 +235,6 @@ curl --insecure -X DELETE "https://<server>:<port>/restconf/data/openconfig-netw
 
 
 
-
 ### 3.3.2 CLI
 
 #### 3.3.2.1 Show Commands
@@ -253,6 +250,7 @@ Command Syntax
 ip [vrf <vrf-name>] nht resolve-via-default
 
 ipv6 [vrf <vrf-name>] nht resolve-via-default
+
 ```
 
 
@@ -263,10 +261,10 @@ There is no impact on upgrading the image to latest version.
 
 On downgrading to previous release version NHT configurations will be lost.
 
+
 ## 3.5 Scale Considerations
 
 Not applicable.
-
 
 
 ## 3.6 UT Cases
@@ -288,6 +286,5 @@ Not applicable.
 FRR NHT feature http://docs.frrouting.org/projects/dev-guide/en/latest/next-hop-tracking.html
 
 SONiC UT additions https://github.com/Azure/sonic-buildimage/pull/5600
-
 
 

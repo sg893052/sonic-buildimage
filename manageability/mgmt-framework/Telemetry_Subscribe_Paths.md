@@ -12,6 +12,8 @@ This document lists Telemetry ON_CHANGE and wildcard path subscription enabled Y
   - [2.1 openconfig-network-instance](#21-openconfig-network-instance)
     - [2.1.1 IGMP Snooping](#211-igmp-snooping)
   - [2.2 openconfig-tam](#22-openconfig-tam)
+  - [2.3 openconfig-qos](#23-openconfig-qos)
+    - [2.3.1 Telemetry Threshold](#231-telemetry-threshold)
 
 ## Revision
 
@@ -177,3 +179,16 @@ ON_CHANGE subscription is also supported for all paths except for the following:
 
 Flowgroup statistics are actually ACL counters and are read from COUNTERS DB.
 ON_CHANGE is disabled to avoid possibility of continuous notifications.
+
+### 2.3 openconfig-qos
+
+#### 2.3.1 Telemetry Threshold
+The following paths of **openconfig-qos** are related to Telemetry Threshold and Watermark features.
+All sub-paths under these paths supports ON_CHANGE subscription.
+
+```text
+/openconfig-qos:qos/thresholds
+/openconfig-qos:qos/watermark
+/openconfig-qos:qos/telemetry-watermark
+/openconfig-qos:qos/threshold-breaches
+```
