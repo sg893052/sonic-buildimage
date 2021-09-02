@@ -15,6 +15,10 @@ YANG Patch Media Type
      - [3.1.2 Translib changes](#312-translib-changes)
      - [3.1.3 DB Access Layer changes](#313-db-access-layer-changes)
      - [3.1.4 REST CLI Client changes](#314-rest-cli-client-changes)
+      - [3.1.4.1 Bulk Class](#3141-bulk-class)
+      - [3.1.4.2 yang_patch API](#3142-yang_patch-api)
+      - [3.1.4.3 YangPatchResponse Class](#3143-yangpatchresponse-class)
+      - [3.1.4.4 Usage Example](#3144-usage-example)
   - [4 Functionality](#4-functionality)
     - [4.1 Target Resource](#41-target-resource)
     - [4.2 Yang Patch Request](#42-yang-patch-request)
@@ -86,7 +90,7 @@ The YANG Patch operation is invoked by the RESTCONF client by sending a PATCH me
 
 The Generic CLI Client in CLI Actioner infrastructure has been extended with below enhancements
 
-### 3.1.4.1  Bulk Class
+### 3.1.4.1 Bulk Class
 
 A new Class called `Bulk` is added, which can be used to create a Bulk Request. This Class when instantiated adds a request attribute `<bulk_instance>.req`, which contains a YANG-PATCH-Request data. Bulk class also exposes below instance methods to fill the YANG PATCH request.
 
@@ -96,18 +100,18 @@ A new Class called `Bulk` is added, which can be used to create a Bulk Request. 
 - `delete`  - Adds an edit to the YANG-PATCH-Request with operation as Delete
 - `remove`  - Adds an edit to the YANG-PATCH-Request with operation as Remove
 
-### 3.1.4.2  yang_patch API
+### 3.1.4.2 yang_patch API
 
 The `ApiClient` class has been extended to provide `yang_patch` API, which the Actioner scripts can invoke to send a YANG-PATCH Request and YANG-PATCH Response
 
-### 3.1.4.3  YangPatchResponse Class
+### 3.1.4.3 YangPatchResponse Class
 
 A new class called `YangPatchResponse` is added, which inherits `Response` class. The (yang_patch API)[#3142-yang_patch-API] returns an instance of this class. All the instance methods which are applicable to instance of `Response` class can be used with the instance of this class. Below are some of the additional instance attributes `YangPatchResponse` provides
 - **global_status** - This provides overall status of the Yang-Patch request. Contains `Boolen` value(True/False)
 - **global_errors** - This contains a Global Error data (/ietf-yang-patch:/yang-patch-status/errors)
 - **edit_status**   - This contains a list of status for individual yang patch edit operations.
 
-### 3.1.4.4  Usage Example
+### 3.1.4.4 Usage Example
 
  ```python
 patch_url = Path("/restconf/data/openconfig-interfaces:interfaces")
@@ -224,7 +228,7 @@ Note: Remove operation will suppress the Resource-not-found-Error (tlerr.NotFoun
 
 - **Edit specific Error** - When one of the edit in the yang patch request fails, all the subsequent edits will not be processed. The yang-patch-status will contain an edit-status subtree (ietf-yang-patch:yang-patch-status/edit-status/edit/errors) filled. The **edit-status** subtree will only contain status for the edits which are processed.
   
-For more information, please refer [Error handling](https://datatracker.ietf.org/doc/html/rfc8072#page-12), [RFC Examples](https://datatracker.ietf.org/doc/html/rfc8072#page-29), and [Unit Test Examples](5-unit-test)
+For more information, please refer [Error handling](https://datatracker.ietf.org/doc/html/rfc8072#page-12), [RFC Examples](https://datatracker.ietf.org/doc/html/rfc8072#page-29), and [Unit Test Examples](#5-unit-test)
 
 # 5 Unit Test
 
