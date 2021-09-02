@@ -52,26 +52,45 @@ This document provides comprehensive functional information about the REST and K
 | IPv6     | Internet Protocol Version 6, IP address family |
 | CLI      | Command Line Interface                         |
 | VRF      | Virtual Routing and Forwarding instance        |
+| iBGP     | Interior Boarder Gateway Protocol              |
+
 
 # 1 Feature Overview
 
 ## 1.1 Requirements
 
-1. Support REST URIs for Nexthop tracking configurations 
+1. Support REST URIs for Nexthop tracking configurations
 
 2. Support REST URIs for  Nexthop tracking operational state data.
 
-3. Support KLISH CLI for Nexthop tracking configurations 
+3. Support KLISH CLIs for Nexthop tracking configurations
 
-4. Support REST URIs for  Nexthop tracking operational state data.
+4. Support KLISH CLIs for Nexthop tracking operational state data.
 
-   
+
 
 # 2 Functionality
 
-Nexthop Tracking (NHT) feature allows users to configure and track IP route Next hop resolution. IP route nexthop resolutions can be controlled by user configured parameters. NHT operational state details about how the Nexthops are resolved for any IP route. 
 
-This feature supports REST URIs and KLISH CLIs for configureing NHT route resolution rules and retrieving operational deatils on IP route next hop resolution.
+
+Next hop tracking (NHT) is an optimization feature that reduces the processing time involved in the BGP bestpath algorithm by monitoring changes to the routing table.
+
+FRR introduced [Next hop Tracking](http://docs.frrouting.org/projects/dev-guide/en/latest/next-hop-tracking.html) functionality. This functionality requires resolving BGP neighbors before setting BGP connection. This required explicit config named ebgp-multihop. 
+
+Sometimes BGP neighbors are not directly connected and sessions are iBGP. In this case current BGP configuration prevents FRR to establish BGP connections. Reason would be waiting for NHT to resolve the routes. To fix this, it is required either to add static routes for each non-directly connected iBGPneighbor, or enable command `ip nht resolve-via-default`
+
+Nexthop resolution in rib (zebra) by default does not consider default route (0.0.0.0/0) for resolving the next-hops. In FRR, this is controlled by 'ip nht resolve-via-default' knob, and is turned off by default. If the user wishes to use default route for resolving the nexthops (including bgp peers), this configuration can be enabled.
+
+Turning on 'resolve-via-default' by default may come as a surprise after upgrade, as the routes which were unresolved due to unavailability of preferred prefixes for reachability of next-hop will automatically become resolved and installed. Therefore this configuration is not enabled by default.
+
+More information about FRR NHT feature can be found at links provided in Referenc section.
+
+This HLD defines SONiC  KLISH CLI and REST URI to support Nexthop Tracking feature. 
+
+This feature will add new Open Config extended URIs to support NHT config and state information.
+
+New KLISH Config CLIs will be added to enable  nexthop resolution by default as part of this feature.
+
 
 # 3 Design
 
@@ -81,86 +100,55 @@ This feature supports REST URIs and KLISH CLIs for configureing NHT route resolu
 
 #### 3.1.1.1 Configure NHT resolution via default route
 
-Nexthop resoltion using feault rote can be configured using below KLISH CLI command under VRF config mode.  seperate commands will be provided for IPV4 and IPV6 address family types. both ipv4 and ipv6 configurations will be disabled by default.
+Nexthop resoltion using default route can be configured using below KLISH CLI command under global config mode. 
 
-A new VRF mode will be added to configure the NHT parameters. These configurations are allowed on both deault and user VRF instances.
+Command Syntax
+
 
 ```
-sonic(config)# vrf <vrf-name>
-sonic(conf-vrf)# ip nht ?
-  resolve-via-default  Resolve via default route
-sonic(conf-vrf)# ip nht resolve-via-default 
-sonic(conf-vrf)#
-  
-sonic(config)# vrf <vrf-name>
-sonic(conf-vrf)# ipv6 nht ?
-  resolve-via-default  Resolve via default route
-sonic(conf-vrf)# ipv6 nht resolve-via-default 
-sonic(conf-vrf)#
+ip [vrf <vrf-name>] nht resolve-via-default
 
+ipv6 [vrf <vrf-name>] nht resolve-via-default
+```
+
+
+
+Examples  
+
+
+```
+sonic(confg)# ip ?
+  . . .
+  nht                  Nexthop Tracking and resolution
+  vrf                  VRF instance configuration
+sonic(config)# ip nht ?
+  resolve-via-default  Resolve via default route
+sonic(config)#
+
+sonic(config)# ip vrf Vrf-blue nht ?
+  resolve-via-default  Resolve via default route
+sonic(config)#
+ 
+sonic(confg)# ipv6 ?
+  . . .
+  nht                  Nexthop Tracking and resolution
+  vrf                  VRF instance configuration
+sonic(config)# ipv6 nht ?
+  resolve-via-default  Resolve via default route
+sonic(config)#
+
+sonic(config)# ipv6 vrf Vrf-blue nht ?
+  resolve-via-default  Resolve via default route
+sonic(config)#
 ```
 
 ### 3.1.2 NHT operational States
 
 #### 3.1.2.1 NHT state information retreival
 
-Show Klish CLI commands will be provided to retrieve Nexthop tracking configurations as below syntax.
+No new show CLI commands will be added.
 
-```
-show ip nht [ <IPv4-Address> | vrf <vrf-name> [ <IPv4-Address> ] ]
-
-show ipv6 nht [ <IPv6-Address> | vrf <vrf-name> [ <IPv6-Address> ] ]
-
-sonic# show ip nht ?
-  <cr>
-  A.B.C.D    IPv4 Address
-  vrf        Specify the VRF
-sonic# show ip nht vrf Vrf-blue ?
-  <cr>
-  A.B.C.D   IPv4 Address
-sonic# 
-
-sonic# show ipv6 nht ?
-  <cr>
-  X:X::X:X  IPv6 Address
-  vrf        Specify the VRF
-sonic# show ip nht vrf Vrf-blue ?
-  <cr>
-  X:X::X:X  IPv6 Address
-sonic# 
-
-```
-
-Same show command will display all the Routes with their nexthop reoltion information. Command doesnot support all VRF option.
-
- Show command CLI output will be as below [ TBD: more detailed and coorected CLI show output]
-
-```
-sonic# show ip nht 
-VRF Name: default
- IPv4 nexthop resolve by default: enabled
- Routes
-  3.3.3.3
-   Resolved via kernel
-   via 11.0.0.6, swp1
-   Client list: bgp(fd 12)
-  11.0.0.10
-   resolved via connected
-   is directly connected, swp2
-   Client list: bgp(fd 12)
-  11.0.0.18
-   resolved via connected
-   is directly connected, swp4
-   Client list: bgp(fd 12)
-  11.11.11.11
-   resolved via kernel
-   via 10.0.1.2, eth0
-   Client list: bgp(fd 12) 
-sonic# 
-
-
-```
-
+Configuration information will be displayed as part of show running-configuration.
 
 
 ## 3.2 DB Changes
@@ -196,43 +184,18 @@ openconfig-nexthop-tracking-ext.yang
 module: openconfig-network-instance
   +--rw network-instances
      +--rw network-instance* [name]
-        +--rw name 
+        +--rw name
         +- . . . <snip>
-        +--rw oc-nexthop-tracking-ext:nexthop-tracking
-        |  +--rw oc-nexthop-tracking-ext:address-family* [family]
-        |     +--rw oc-nexthop-tracking-ext:family    -> ../config/family
-        |     +--rw oc-nexthop-tracking-ext:config
-        |     |  +--rw oc-nexthop-tracking-ext:family?                oc-inet:ip-version
-        |     |  +--rw oc-nexthop-tracking-ext:resolve-via-default?   boolean
-        |     +--ro oc-nexthop-tracking-ext:state
-        |     |  +--ro oc-nexthop-tracking-ext:family?                oc-inet:ip-version
-        |     |  +--ro oc-nexthop-tracking-ext:resolve-via-default?   boolean
-        |     +--ro oc-nexthop-tracking-ext:routes
-        |        +--ro oc-nexthop-tracking-ext:route* [prefix]
-        |           +--ro oc-nexthop-tracking-ext:prefix      -> ../state/prefix
-        |           +--ro oc-nexthop-tracking-ext:state
-        |           |  +--ro oc-nexthop-tracking-ext:prefix?             oc-inet:ip-prefix
-        |           |  +--ro oc-nexthop-tracking-ext:connected?          boolean
-        |           |  +--ro oc-nexthop-tracking-ext:status?             string
-        |           |  +--ro oc-nexthop-tracking-ext:psuedowires?        string
-        |           |  +--ro oc-nexthop-tracking-ext:update-sent?        boolean
-        |           |  +--ro oc-nexthop-tracking-ext:last-update-time?   uint32
-        |           +--ro oc-nexthop-tracking-ext:nexthops
-        |           |  +--ro oc-nexthop-tracking-ext:nexthop* [type gateway out-interface]
-        |           |     +--ro oc-nexthop-tracking-ext:type             -> ../state/type
-        |           |     +--ro oc-nexthop-tracking-ext:gateway          -> ../state/gateway
-        |           |     +--ro oc-nexthop-tracking-ext:out-interface    -> ../state/out-interface
-        |           |     +--ro oc-nexthop-tracking-ext:state
-        |           |        +--ro oc-nexthop-tracking-ext:type?            identityref
-        |           |        +--ro oc-nexthop-tracking-ext:gateway?         oc-inet:ip-address
-        |           |        +--ro oc-nexthop-tracking-ext:out-interface?   string
-        |           +--ro oc-nexthop-tracking-ext:clients
-        |              +--ro oc-nexthop-tracking-ext:client* [protocol]
-        |                 +--ro oc-nexthop-tracking-ext:protocol    -> ../state/protocol
-        |                 +--ro oc-nexthop-tracking-ext:state
-        |                    +--ro oc-nexthop-tracking-ext:protocol?    identityref
-        |                    +--ro oc-nexthop-tracking-ext:filtered?    boolean
-        |                    +--ro oc-nexthop-tracking-ext:socket-fd?   uint32
+        +--rw openconfig-nexthop-tracking-ex:nexthop-tracking
+        |  +--rw openconfig-nexthop-tracking-ex:address-family* [family]
+        |     +--rw openconfig-nexthop-tracking-ex:family    -> ../config/family
+        |     +--rw openconfig-nexthop-tracking-ex:config
+        |     |  +--rw openconfig-nexthop-tracking-ex:family?                oc-inet:ip-version
+        |     |  +--rw openconfig-nexthop-tracking-ex:resolve-via-default?   boolean
+        |     +--ro openconfig-nexthop-tracking-ex:state
+        |     |  +--ro openconfig-nexthop-tracking-ex:family?                oc-inet:ip-version
+        |     |  +--ro openconfig-nexthop-tracking-ex:resolve-via-default?   boolean
+        
 ```
 
 
@@ -240,30 +203,35 @@ module: openconfig-network-instance
 REST URI will be as below
 
 ```
-/oc-netinst:network-instances/oc-netinst:network-instance/oc-nexthop-tracking-ext:nexthop-tracking/oc-nexthop-tracking-ext:address-family/oc-nexthop-tracking-ext:config/oc-nexthop-tracking-ext:resolve-via-default
+/openconfig-netinst:network-instances/openconfig-netinst:network-instance/openconfig-nexthop-tracking-ex:nexthop-tracking/openconfig-nexthop-tracking-ex:address-family/openconfig-nexthop-tracking-ex:config/openconfig-nexthop-tracking-ex:resolve-via-default
 
-/oc-netinst:network-instances/oc-netinst:network-instance/oc-nexthop-tracking-ext:nexthop-tracking/oc-nexthop-tracking-ext:address-family/oc-nexthop-tracking-ext:state/oc-nexthop-tracking-ext:resolve-via-default
+/openconfig-netinst:network-instances/openconfig-netinst:network-instance/openconfig-nexthop-tracking-ex:nexthop-tracking/openconfig-nexthop-tracking-ex:address-family/openconfig-nexthop-tracking-ex:state/openconfig-nexthop-tracking-ex:resolve-via-default
 
-/oc-netinst:network-instances/oc-netinst:network-instance/oc-nexthop-tracking-ext:nexthop-tracking/oc-nexthop-tracking-ext:address-family/oc-nexthop-tracking-ext:routes/oc-nexthop-tracking-ext:route/oc-nexthop-tracking-ext:config
+/openconfig-netinst:network-instances/openconfig-netinst:network-instance/openconfig-nexthop-tracking-ex:nexthop-tracking/openconfig-nexthop-tracking-ex:address-family/openconfig-nexthop-tracking-ex:routes/openconfig-nexthop-tracking-ex:route/openconfig-nexthop-tracking-ex:config
 
-/oc-netinst:network-instances/oc-netinst:network-instance/oc-nexthop-tracking-ext:nexthop-tracking/oc-nexthop-tracking-ext:address-family/oc-nexthop-tracking-ext:routes/oc-nexthop-tracking-ext:route/oc-nexthop-tracking-ext:state
-
-
-
-```
-
-
-
-CURL config command examples 
-
-```
-curl  --insecure -X PUT "https://lvnvde3550.lvn.broadcom.net:9869/restconf/data/openconfig-network-instance:network-instances/network-instance=default/openconfig-nexthop-tracking-ext:nexthop-tracking" -H "accept: */*" -H  "Content-Type: application/yang-data+json" -d "{\"openconfig-nexthop-tracking-ext:nexthop-tracking\":{\"openconfig-nexthop-tracking-ext:address-family\":[{\"openconfig-nexthop-tracking-ext:config\":{\"openconfig-nexthop-tracking-ext:family\" : \"IPV4\",\"openconfig-nexthop-tracking-ext:resolve-via-default\" : true}, \"openconfig-nexthop-tracking-ext:family\" : \"IPV4\"}]}}"
-
+/openconfig-netinst:network-instances/openconfig-netinst:network-instance/openconfig-nexthop-tracking-ex:nexthop-tracking/openconfig-nexthop-tracking-ex:address-family/openconfig-nexthop-tracking-ex:routes/openconfig-nexthop-tracking-ex:route/openconfig-nexthop-tracking-ex:state
 
 
 ```
 
- 
+
+
+CURL config command examples
+
+```
+curl  --insecure -X PUT "https://<server>:<port>/restconf/data/openconfig-network-instance:network-instances/network-instance=default/openconfig-nexthop-tracking-ext:nexthop-tracking" -H "accept: */*" -H  "Content-Type: application/yang-data+json" -d "{\"openconfig-nexthop-tracking-ext:nexthop-tracking\":{\"openconfig-nexthop-tracking-ext:address-family\":[{\"openconfig-nexthop-tracking-ext:config\":{\"openconfig-nexthop-tracking-ext:family\" : \"IPV4\",\"openconfig-nexthop-tracking-ext:resolve-via-default\" : true}, \"openconfig-nexthop-tracking-ext:family\" : \"IPV4\"}]}}"
+
+curl  --insecure -X PATCH "https://<server>:<port>/restconf/data/openconfig-network-instance:network-instances/network-instance=default/openconfig-nexthop-tracking-ext:nexthop-tracking/openconfig-nexthop-tracking-ext:family=IPV4" -H "accept: */*" -H  "Content-Type: application/yang-data+json" -d "{\"openconfig-nexthop-tracking-ext:nexthop-tracking\":{\"openconfig-nexthop-tracking-ext:address-family\":[{\"openconfig-nexthop-tracking-ext:config\":{\"openconfig-nexthop-tracking-ext:family\" : \"IPV4\",\"openconfig-nexthop-tracking-ext:resolve-via-default\" : true}, \"openconfig-nexthop-tracking-ext:family\" : \"IPV4\"}]}}"
+
+curl --insecure -X GET "https://<server>:<port>/restconf/data/openconfig-network-instance:network-instances/network-instance=default/openconfig-nexthop-tracking-ext:nexthop-tracking" -H "accept: application/yang-data+json"
+
+curl --insecure -X DELETE "https://<server>:<port>/restconf/data/openconfig-network-instance:network-instances/network-instance=default/openconfig-nexthop-tracking-ext:nexthop-tracking/address-family=IPV4" -H "accept: */*"
+
+curl --insecure -X DELETE "https://<server>:<port>/restconf/data/openconfig-network-instance:network-instances/network-instance=default/openconfig-nexthop-tracking-ext:nexthop-tracking" -H "accept: */*"
+
+
+```
+
 
 
 
@@ -273,30 +241,16 @@ curl  --insecure -X PUT "https://lvnvde3550.lvn.broadcom.net:9869/restconf/data/
 
 ##### 3.3.2.1.1 Show NHT state information
 
-A new command is added to display NHT information as detailed in section 3.1.2 
+Nexthop resoltion using default route can be configured using below KLISH CLI command under global config mode. 
+
+Command Syntax
+
 
 ```
-show ip nht [ <IPv4-Address> | vrf <vrf-name> [ <IPv4-Address> ] ]
+ip [vrf <vrf-name>] nht resolve-via-default
 
-show ipv6 nht [ <IPv6-Address> | vrf <vrf-name> [ <IPv6-Address> ] ]
+ipv6 [vrf <vrf-name>] nht resolve-via-default
 
-sonic# show ip nht ?
-  <cr>
-  A.B.C.D    IPv4 Address
-  vrf        Specify the VRF
-sonic# show ip nht vrf Vrf-blue ?
-  <cr>
-  A.B.C.D   IPv4 Address
-sonic# 
-
-sonic# show ipv6 nht ?
-  <cr>
-  X:X::X:X  IPv6 Address
-  vrf        Specify the VRF
-sonic# show ip nht vrf Vrf-blue ?
-  <cr>
-  X:X::X:X  IPv6 Address
-sonic# 
 ```
 
 
@@ -305,29 +259,32 @@ sonic#
 
 There is no impact on upgrading the image to latest version.
 
-On downgrading to previous release version NHT configurations will be lost.  
+On downgrading to previous release version NHT configurations will be lost.
+
 
 ## 3.5 Scale Considerations
 
 Not applicable.
 
 
-
 ## 3.6 UT Cases
 
-1. Configure NHT resolve via default route for ipv4 and verify running configuration and the show command output for configured value.
+1. Configure NHT resolve via default route for ipv4 and verify running configuration for configured value.
 
-2. Configure NHT resolve via default route for ipv6 and verify running configuration and the show command output for configured value.
+2. Configure NHT resolve via default route for ipv6 and verify running configuration for configured value.
 
-3. Configure NHT resolve via default route for ipv4 within a user VRF and verify running configuration and the show command output for configured value.
+3. Configure NHT resolve via default route for ipv4 for a user VRF and verify running configuration for configured value.
 
-4. Configure NHT resolve via default route for ipv6 within a user VRF verify running configuration and the show command output for configured value.
+4. Configure NHT resolve via default route for ipv6 within a user VRF verify running configuration  for configured value.
 
 5. Configure NHT resolve via default route for both IPV4 and IPV6 on both default and user VRF. Save configuration. Restart the systema and verify that the configuration is intack over restart.
 
-6. Configure OSPF and BGP on two nodes with user and default VRFs resulting in multiple routes. Verify NHT route listing in CLI and REST GET commands.
 
-   
 
 ## 3.6 References
+
+FRR NHT feature http://docs.frrouting.org/projects/dev-guide/en/latest/next-hop-tracking.html
+
+SONiC UT additions https://github.com/Azure/sonic-buildimage/pull/5600
+
 
