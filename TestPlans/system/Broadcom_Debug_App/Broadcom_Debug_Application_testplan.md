@@ -88,11 +88,11 @@ verifying below counter values for user watermark and persistent watermark
 | **Type** | **CLI** |
 | **Steps** | **1) configure the bdbg config congestion congestion-threshold CLI command. <br/>2) The command should not through any error. <br/>3) verify the default values observed** |
 
-### 3.1.4 Verify  different congestion show commands "bdbg show congestion"  and "bdbg show congestion active" "bdbg show congestion top" and validate the contents.
+### 3.1.4 Verify  different history congestion show commands "bdbg show congestion history"  and "bdbg show congestion history interface <>" "bdbg show congestion history buffer <>" and validate the contents.
 
 | **Test ID** | **ft_show_congestion** |
 |--------|:----------------|
-| **Test Name** | **Verify  different congestion show commands "bdbg show congestion"  and "bdbg show congestion active" "bdbg show congestion top" and validate the contents.** |
+| **Test Name** | **Verify  different history congestion show commands "bdbg show congestion history"  and "bdbg show congestion history interface <>" "bdbg show congestion history buffer <>" and validate the contents.** |
 | **Test Setup** | **Topology1** |
 | **Type** | **CLI** |
 | **Steps** | **1) configure the bdbg config congestion congestion-threshold CLI command. <br/>2) The command should not through any error. <br/>3) verify the default values observed** |
@@ -105,6 +105,33 @@ verifying below counter values for user watermark and persistent watermark
 | **Test Setup** | **Topology1** |
 | **Type** | **CLI** |
 | **Steps** | **1) verify command bdbg clear collection-interval. <br/> 2) verify command bdbg clear max-retention-interval. <br/> 3) verify command bdbg clear history.<br/> 4) verify command bdbg clear congestion history.<br/> 5) The command should not through any error. <br/> 6) verify the default values observed** |
+
+### 3.1.6  Verify  different history congestion show commands "bdbg show congestion history"  and "bdbg show congestion history interface <>" "bdbg show congestion history buffer <>" and validate the contents.
+
+| **Test ID** | **ft_show_congestion_history** |
+|--------|:----------------|
+| **Test Name** | **Verify  different history congestion show commands "bdbg show congestion history"  and "bdbg show congestion history interface <>" "bdbg show congestion history buffer <>" and validate the contents.** |
+| **Test Setup** | **Topology1** |
+| **Type** | **CLI** |
+| **Steps** | **1) configure the bdbg config congestion congestion-threshold CLI command. <br/>2) The command should not through any error. <br/>3) verify the default values observed** |
+
+### 3.1.7  Verify  different show commands "bdbg show  drops hisotry"  and "bdbg show  drops hisotry reasons" ,"bdbg show  drops hisotry flows","bdbg show  drops hisotry Locations"  and validate the contents.
+
+| **Test ID** | **ft_show_drops_history** |
+|--------|:----------------|
+| **Test Name** | **Verify  different show commands "bdbg show  drops hisotry"  and "bdbg show  drops hisotry reasons" ,"bdbg show  drops hisotry flows","bdbg show  drops hisotry Locations"  and validate the contents.** |
+| **Test Setup** | **Topology1** |
+| **Type** | **CLI** |
+| **Steps** | **1) configure the bdbg config congestion congestion-threshold CLI command. <br/>2) The command should not through any error. <br/>3) verify the default values observed** |
+
+### 3.1.8 Verify  different clear history commands.
+
+| **Test ID** | **ft_clear_history** |
+|--------|:----------------|
+| **Test Name** | **Verify  different clear history commands** |
+| **Test Setup** | **Topology1** |
+| **Type** | **CLI** |
+| **Steps** | **1) verify command bdbg clear collection-interval. <br/> 2) verify command bdbg clear max-retention-interval. <br/> 3) verify command bdbg clear history.<br/> 4) verify command bdbg clear congestion history.<br/> 5) verify command bdbg clear drop history.<br/> 6) The command should not through any error. <br/> 7) verify the default values observed** |
 
 ## 3.2 Functional
 ### 3.2.1 Verify that congestion for shared PG can be seen in show congestion output.
@@ -161,6 +188,60 @@ verifying below counter values for user watermark and persistent watermark
 | **Test Setup** | **Topology**                                                 |
 | **Type**       | **Functional**                                               |
 | **Steps**      | **Setup:<br/>i. DUT with 4 TG ports and reachable through management interface<br/>ii. L3 IXIA stream having 'L3_DEST_MISS'. Do not install L3 route/L3 host entry.<br/>iii. Place the ACL rule and ACL table in the 'config_db.json' file such that configured ACL should have rule i.e. MONITOR_DROP. Routing configured and ARP resolved for TG ports.<br/>Procedure:<br/>1) Bring up the DUT with default configuration.<br/>2) Enable 'Drop Monitor' feature, configure sampling rate, aging interval and a collector.<br/>3) Configure a flow using 5-Tuple info to look for a specific pattern in the incoming flow of traffic.<br/>4) Send 'L3_DEST_MISS' packets and check the behavior on collector after capturing the packets.<br/>5) Verify that 'L3_DEST_MISS' packets are dropped and the drop event with the help of show drops active interface Ethernet0 command.**
+
+### 3.2.7 Verify that congestion for service pool  can be seen in show congestion output.
+
+| **Test ID**    | **ft_port_service**                                            |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that congestion for service pool  can be seen in show congestion output.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the congestion threshold.<br/>3) Send the traffic in from 3 TG ports to the 4th TG port (i.e. send 3:1 congested traffic) continuously.<br/>4) Verify show congestion output..<br/>5) stop the traffic.** |
+
+### 3.2.8 Verify that congestion for global  pool  can be seen in show congestion output.
+
+| **Test ID**    | **ft_global_pool**                                            |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | ** Verify that congestion for global  pool  can be seen in show congestion output.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the congestion threshold.<br/>3) Send the traffic in from 3 TG ports to the 4th TG port (i.e. send 3:1 congested traffic) continuously.<br/>4) Verify show congestion output..<br/>5) stop the traffic.** |
+
+### 3.2.9 Verify that congestion for device  can be seen in show congestion output.
+
+| **Test ID**    | **ft_global_pool**                                            |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that congestion for device  can be seen in show congestion output.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the congestion threshold.<br/>3) Send the traffic in from 3 TG ports to the 4th TG port (i.e. send 3:1 congested traffic) continuously.<br/>4) Verify show congestion output..<br/>5) stop the traffic.** |
+
+### 3.2.10  Verify that congestion for shared PG can be seen in show congestion output.
+
+| **Test ID**    | **ft_shared_PG**                                             |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that congestion for shared PG can be seen in show congestion output.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the congestion threshold.<br/>3) Send the traffic in from 3 TG ports to the 4th TG port (i.e. send 3:1 congested traffic) continuously.<br/>4) show congestion output .<br/>5) stop the traffic.** |
+
+### 3.2.11  Verify the packet drop counts for cpu which can be observed with 'show drops active flows'
+
+| **Test ID**    | **ft_pkt_flows**                             |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify the packet drop counts for a interface which can be observed with 'show drops active flows'.** |
+| **Test Setup** | **Topology**                                                 |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **Setup:<br/>i. DUT with 4 TG ports and reachable through management interface<br/>ii. L3 IXIA stream having 'L3_DEST_MISS'. Do not install L3 route/L3 host entry.<br/>iii. Place the ACL rule and ACL table in the 'config_db.json' file such that configured ACL should have rule i.e. MONITOR_DROP. Routing configured and ARP resolved for TG ports.<br/>Procedure:<br/>1) Bring up the DUT with default configuration.<br/>2) Enable 'Drop Monitor' feature, configure sampling rate, aging interval and a collector.<br/>3) Configure a flow using 5-Tuple info to look for a specific pattern in the incoming flow of traffic.<br/>4) Send 'L3_DEST_MISS' packets and check the behavior on collector after capturing the packets.<br/>5) Verify that 'L3_DEST_MISS' packets are dropped and the drop event with the help of show drops active flows.<br/>6) Verify the drops  in show drops active flows locations also.**
+
+### 3.2.12  Verify that  drop events  recorded behavior and the historical data behavior when max-retention-interval is exceeded.
+
+| **Test ID**    | **ft_drop_recorded**                                         |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that  drop events  recorded behavior and the historical data behavior when max-retention-interval is exceeded.** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the collector and max-retention-interval.<br/>3) Send the traffic in from 3 TG ports to the 4th TG port (i.e. send 3:1 congested traffic) continuously.<br/>4)Record the traffic.<br/>5) clear the drops history.<br/>6)Try to see the historical records exceeds the configured retention value the traffic.<br/> 7)After the retention interval the records purged and and will not be counted as historical data.<br/> 8)stop the traffic.** |
 
 # 4 Reference Links
 

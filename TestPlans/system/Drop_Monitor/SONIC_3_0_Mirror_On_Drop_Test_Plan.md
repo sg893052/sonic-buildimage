@@ -238,12 +238,12 @@ Note : VLAN tagged packet for the VLAN which is not configured / exists on the s
 
 ### 3.1.16 Verify that clear dropped flows  functionality after  'Unknown VLAN' packets are dropped and dropped events are sent to the configured Drop Monitor mode local.
 
-| **Test ID**    | **ft_mod_unknown_vlan_pkt_drop**_local                       |
+| **Test ID**    | **ft_mod_unknown_vlan_pkt_drop_local**                       |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | ** Verify that clear dropped flows  functionality after  'Unknown VLAN' packets are dropped and dropped events are sent to the configured Drop Monitor mode local.** |
 | **Test Setup** | **Topology**                                                 |
 | **Type**       | **Functional**                                               |
-| **Steps**      | **Setup:<br/>i. DUT with 4 TG ports and reachable through management interface.<br/>ii. L2 IXIA stream having VLAN tag with the VLAN which does not exist on the DUT.<br/>iii. Place the ACL rule and ACL table in the 'config_db.json' file such that configured ACL should have rule i.e. MONITOR_DROP.<br/>Procedure:<br/>1) Bring up the DUT with default configuration.<br/>2) Enable 'Drop Monitor' feature, configure sampling rate, aging interval and mode local.<br/>3) Configure a flow using 5-Tuple info to look for a specific pattern in the incoming flow of traffic.<br/>4) Send 'Unknown VLAN' packets and check the behavior from respective show command.<br/>5) Send 'Unknown VLAN' packets after the aging interval.<br/>6) Issue clear tam drop-monitor flows command <br/>Expected Behavior:<br/>1) Verify that DUT is UP with default configuration.<br/>2) Verify that configuration is successful and 'Drop Monitor' feature is enabled, sampling config is successful, aging interval and local configuration is successful.<br/>3) Verify that a flow is configured using 5-tuple.<br/>4) Verify that 'TTL1_ERR' packets are dropped and the drop event is sent to the local collector having part of packet, flow details, drop reason opcode.<br/>5) Verify that drop reasons are not sent to the local collector.<br/>6) observe that flow are cleared and verify the same in respective show command** |
+| **Steps**      | **Setup:<br/>i. DUT with 4 TG ports and reachable through management interface.<br/>ii. L2 IXIA stream having VLAN tag with the VLAN which does not exist on the DUT.<br/>iii. Place the ACL rule and ACL table in the 'config_db.json' file such that configured ACL should have rule i.e. MONITOR_DROP.<br/>Procedure:<br/>1) Bring up the DUT with default configuration.<br/>2) Enable 'Drop Monitor' feature, configure sampling rate, aging interval and mode local.<br/>3) Configure a flow using 5-Tuple info to look for a specific pattern in the incoming flow of traffic.<br/>4) Send 'Unknown VLAN' packets and check the behavior from respective show command.<br/>5) Send 'Unknown VLAN' packets after the aging interval.<br/>6) Issue clear tam drop-monitor flows command.<br/>7) Send 'Unknown VLAN' packets and check the behavior from respective show command.<br/>Expected Behavior:<br/>1) Verify that DUT is UP with default configuration.<br/>2) Verify that configuration is successful and 'Drop Monitor' feature is enabled, sampling config is successful, aging interval and local configuration is successful.<br/>3) Verify that a flow is configured using 5-tuple.<br/>4) Verify that 'TTL1_ERR' packets are dropped and the drop event is sent to the local collector having part of packet, flow details, drop reason opcode.<br/>5) Verify that drop reasons are not sent to the local collector.<br/>6) observe that flow are cleared and verify the same in respective show command<br/>7) Verify that 'TTL1_ERR' packets are dropped and the drop event is sent to the local collector having part of packet, flow details, drop reason opcode.** |
 Note : VLAN tagged packet for the VLAN which is not configured / exists on the switch is Unkown VLAN.
 
 ### 3.1.17 Verify that 'L3HEADER Error' packets are dropped and dropped events are sent to configured Drop Monitor mode local when continuous traffic is sent.
@@ -283,20 +283,20 @@ Note : VLAN tagged packet for the VLAN which is not configured / exists on the s
 | **Type**       | **Negative**                                                                                                                  |
 | **Steps**      | **Setup:<br/>i. L2 IXIA stream having VLAN tag with the VLAN which is not configured on the DUT.<br/>Procedure:<br/>1) Bring up the DUT with default configuration.<br/>2) Enable 'Drop Monitor' feature, configure sampling rate, aging interval and a collector.<br/>3) Configure a flow using 5-Tuple info to look for a specific pattern in the incoming flow of traffic.<br/>4) Send packets to 'Unknown VLAN' and check the behavior on collector after capturing the packets.<br/>5) Do a shut/no-shut on traffic sending links and check feature behavior. <br/>Expected Behavior:<br/>1) Verify that DUT is UP with default configuration.<br/>2) Verify that configuration is successful and 'Drop Monitor' feature is enabled, sampling config is successful, aging interval and collector configuration is successful.<br/>3) Verify that a flow is configured using 5-tuple.<br/>4) Verify that packets are dropped and events are sent to the collector.<br/> 5) Verify that once the link come back UP, feature functionality resumes, dropped packets events are sent to the collector in protobuf format having part of packet, flow details, drop reason opcode.** |
 
-### 3.2.3 verify that when the mode is changed to local from external no active sessions must be present on the switch.
+### 3.2.3 verify that  mode change is not allowed  when the active sessions present  on the switch.
 
 | **Test ID**    | **ft_neg_external_local                                      |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **verify that when the mode is changed to local from external no active sessions must be present on the switch.** |
+| **Test Name**  | ** verify that  mode change is not allowed  when the active sessions present  on the switch.** |
 | **Test Setup** | **Topology**                                                 |
 | **Type**       | **Negative**                                                 |
-| **Steps**      | **1) verify the default mode.<br/>2) check any available sessions.<br/>3) configure the mode as local.<br/>4) check no sessions should be seen in show command.** |
+| **Steps**      | **1) verify the default mode.<br/>2) check any available sessions.<br/>3) configure the mode as local.<br/>4) check that mode change is not allowed as active sessions present on the switch.** |
 
-### 3.2.4 verify the command 'show tam drop-monitor flows' throws appropriate error when there are no drops present. 
+### 3.2.4 verify the command 'show tam drop-monitor flows' throws appropriate error when  collector is configured as external. 
 
 | **Test ID**    | **ft_neg_error_drop                                     |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **verify the command 'show tam drop-monitor flows' throws appropriate error when there are no drops present. ** |
+| **Test Name**  | **verify the command 'show tam drop-monitor flows' throws appropriate error when  collector is configured as external. ** |
 | **Test Setup** | **Topology**                                                 |
 | **Type**       | **Negative**                                                 |
 | **Steps**      | **1)Make sure no dropped events are present in the device.<br/>2) verify the which mode is configured on the device.<br/>3)Try to issue the command show tam drop-monitor flows on the device .<br/>4)Appropriate error should be seen on the console.** |

@@ -318,17 +318,16 @@ verifying below counter values for user watermark and persistent watermark
 .** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the Multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the Multicast traffic from 3 or 4 ports  continuously.<br/>6) Verify buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
 
 ### 3.2.25 verify the device counters are updated in the counter DB when sending the congested traffic.
-
-| **Test ID**    | **ft_sf_device_counters**                                |
+| **Test ID**    | **ft_sf_device_counters**                           	     |
 | -------------- | :----------------------------------------------------------- |
 | **Test Name**  | **verify the device counters are updated in the counter DB when sending the congested traffic.
 .** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the Multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the unicast traffic from port-1 and port-2 destined to port-3 continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) Send the Multicast or unknown traffic from port-3 and port-4 that floods to remaining 3 ports continuously.<br/>8)Verify device buffer pool counters get updated in Counter DB.<br/>9) stop the traffic.** |
 
 ### 3.2.26 verify the egress unicast buffer usage on a Egress port is successfully incremented or not.
 
@@ -338,17 +337,16 @@ verifying below counter values for user watermark and persistent watermark
 .** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface4.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the unicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface4.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the unicast traffic from 3 or 4 ports continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.<br/>8) Send the unicast traffic from 3 or 4 ports continuously.<br/>9) Verify device buffer pool counters get updated in Counter DB are showing 0.** |
 
 ### 3.2.27 verify the egress shared buffer usage on a Egress port is successfully incremented or not.
 
-| **Test ID**    | **ft_sf_ucmc_share-buffer-count_per_port**                                |
+| **Test ID**    | **ft_sf_ucmc_share-buffer-count_per_port**                   |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **verify the egress shared buffer usage on a Egress port is successfully incremented or not
-.** |
+| **Test Name**  | **verify the egress shared buffer usage on a Egress port is successfully incremented or not.** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface4.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface4.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the unicast traffic from port-1 and port-2 destined to port-3 continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) Send the Multicast or unknown traffic from port-3 and port-4 that floods to remaining 3 ports continuously.<br/>8)Verify device buffer pool counters get updated in Counter DB.<br/>9) stop the traffic..<br/>10) Repeat step 5 and step 7.<br/>11) Verify device buffer pool counters get updated in Counter DB are showing 0.** |
 
 ### 3.2.28 verify the shared buffer usage on a Ingress port are successfully incremented or not.
 
@@ -358,7 +356,7 @@ verifying below counter values for user watermark and persistent watermark
 .** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface3.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the multicast traffic from 3 TG ports to the 4th TG port (i.e. send 3:1 congested trafic) continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
+| **Steps**      | **1)  Bring up the SONiC switch with default configuration.<br/>2) configure the non default watermark interval on interface3.<br/>3) convert the buffers.json.j2 file to buffers.json and load into the DUT.<br/> 4)  perform save and reboot.<br/>5) Send the multicast traffic from 3 to 4 ports continuously.<br/>6) Verify device buffer pool counters get updated in Counter DB.<br/>7) stop the traffic.** |
 
 
 
