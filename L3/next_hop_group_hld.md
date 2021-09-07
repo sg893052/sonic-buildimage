@@ -94,6 +94,7 @@ This design adds a new NEXT_HOP_GROUP_TABLE, to store next hop group information
     nexthop       = *prefix,           ; IP addresses separated “,” (empty indicates no gateway)
     ifname        = *PORT_TABLE.key,   ; zero or more separated by “,” (zero indicates no interface)
     vni_label     = VRF.vni            ; New Field. zero or more separated by ',' (empty value for non-vxlan next-hops)
+    blackhole     = BIT ; Set to 1 if this group is a blackhole (or null0). ( When this field is present, other fields will not be present)
     nexthop_group = NEXT_HOP_GROUP_TABLE:key, ; index within the NEXT_HOP_GROUP_TABLE seperated by "," used for recursice/ecmp routes. ( When this field is present, other fields will not be present)
 ```
 Note that the identifier for a next hop group is entirely the decision of the programming application. Whether this is done randomly or algorithmically is up to the application - this design imposes no requirements on this.
