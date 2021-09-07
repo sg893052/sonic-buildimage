@@ -49,7 +49,7 @@ Scaling improvements
 |System MAC configured SVI             | 4k   | 4k  | 4k  | 4k  | 4k  |
 |MCLAG Gateway MAC with same ip SVI    | 4k   | 4k  | 4k  | 4k  | 4k  |
 |MCLAG with unique ip SVI              | 4k   | 4k  | 1k  | 1k  | 1k  |
-|MCLAG with peer gateway enabled SVI   | 4k   | 4k  | 1k  | 1k  | 1k  |
+|MCLAG with peer gateway enabled SVI   | 1k   | 4k  | 1k  | 1k  | 1k  |
 |SAG MAC configured SVI                | 4k   | 4k  | 1k  | 1k  | 1k  |
 |VRRP MAC SVI                          | 4k   | 4k  | 1k  | 1k  | 1k  |
 |--------------------------------------|------|-----|-----|-----|-----|
