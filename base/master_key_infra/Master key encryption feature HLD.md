@@ -100,7 +100,7 @@ Encryption/decryption services are centralized and available to applications via
 
 
 
-![img](file:///C:/Users/sd938894/Desktop/Masterkey/Design.jpg)
+![Design](Design.jpg)
 
 The master key encryption framework running on the host provides an interface to applications wanting to avail AES based (as of today) encryption/decryption services via D-BUS. D-BUS is an IPC mechanism in Linux which enables host-container and container-host communication seamlessly. The D-BUS model requires the master key encryption framework to act as a server while the applications/containers become the clients availing the server's services.
 
@@ -289,7 +289,7 @@ Config migration will be supported with upgrade and downgrade scenarios.
 
 
 
-![img](file:///C:/Users/sd938894/Desktop/Masterkey/PasswordConfigFlow.jpg)
+![Sample config flow](PasswordConfigFlow.jpg)
 
 
 
@@ -470,7 +470,7 @@ NA
 
 
 
-![img](file:///C:/Users/sd938894/Desktop/Masterkey/Flow_diagram.jpg)
+![Flow diagram](Flow_diagram.jpg)
 
 
 
