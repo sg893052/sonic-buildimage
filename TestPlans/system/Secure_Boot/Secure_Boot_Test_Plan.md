@@ -6,22 +6,24 @@
 |:---:|:-----------:|:-----------------------:|:---------------------------:|
 | 0.1 | 30/07/2021  | Santosh Votarikari      | Initial version             |
 | 0.2 | 10/08/2021  | Santosh Votarikari      | Fixed Typo errors           |
+| 0.3 | 09/09/2021  | Santosh Votarikari      | Added Rajendra as Approver  |
 
 # List of Reviewers
-|  Function 		  | Name  				 |
+|  Function 	      | Name  		     |
 |:-------------------:|:---------------------|
-|   Dev				  |  Babu Rajaram 	     |
+|   Dev		      |  Babu Rajaram 	     |
 |   Dev               |  Fuzail Khan         |
 |   QA                |  Kalyan Vadlamani    |
 |   QA                |  Chandra Bhushan     |
 
 # List of Approvers
-|  Function    | Name             | Date Approved      |
-|:------------:|:----------------:|:------------------:|
-| Dev          |  Babu Rajaram    |                    |                  
-| Dev          |  Fuzail Khan     |                    |
-| QA           |  Kalyan Vadlamani|                    |
-| QA           |  Chandra Bhushan |                    |
+|  Function    | Name                | Date Approved      |
+|:------------:|:-------------------:|:------------------:|
+| Dev          |  Babu Rajaram       |                    |                  
+| Dev          |  Fuzail Khan        |                    |
+| Dev          |  Rajendra Dendukuri |                    |
+| QA           |  Kalyan Vadlamani   |                    |
+| QA           |  Chandra Bhushan    |                    |
 
 
 # Definition/Abbreviation
