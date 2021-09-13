@@ -187,11 +187,10 @@ in SONiC.
 3. Support configuration of a global VLAN-VNI map.
 4. Support configuration of L3VNI association with VRF. 
 5. Support display of packet tx and rx stats.
-6. Support display of octet tx and rx stats. 
-7. Support display of rx and tx bit rates.
-8. Support per tunnel and all tunnel stats display.
-9. Support clearing of stats per tunnel and all tunnels. 
-10.Support Click, KLISH, REST interfaces for stats.
+6. Support display of rx and tx bit rates.
+7. Support per tunnel and all tunnel stats display.
+8. Support clearing of stats per tunnel and all tunnels. 
+9.Support Click, KLISH, REST interfaces for stats.
 
 
 
@@ -1337,13 +1336,26 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
 
 7. show vxlan counters <remoteip/all>
    - lists all the tunnel statistics
+   - lists also the configured polling interval
 
+   Polling Interval : 3 seconds
    SIP     DIP        RX_OK    RX_BPS    RX_PPS    TX_OK    TX_BPS    TX_PPS    
   ------   ---       --------  --------  --------  -------  --------  --------  
  2.2.2.2   3.3.3.3     0         0         0         0        0         0  
  2.2.2.2   3.3.3.4     0         0         0         0        0         0  
 
 8. counterpoll show enhanced to display the tunnel polling interval.
+
+   counterpoll show
+   Type                        Interval (in ms)    Status
+   --------------------------  ------------------  --------
+   QUEUE_STAT                  default (10000)     enable
+   PORT_STAT                   default (1000)      enable
+   PORT_BUFFER_DROP            default (60000)     enable
+   RIF_STAT                    default (1000)      enable
+   TUNNEL_STAT                 default (3000)      enable
+   BUFFER_POOL_WATERMARK_STAT  default (10000)     enable
+   PG_WATERMARK_STAT           default (10000)     disable
 
 ```
 
@@ -1422,7 +1434,7 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
 #### 5.2.4 Clear commands 
 
 ```
-1. clear counters vxlan <remoteip>
+1. clear counters vxlan <remoteip/all>
    Clears counters for a specific or all tunnels.
 
 ```
@@ -1526,15 +1538,15 @@ VXLAN Counter commands
 
 Show Command
 
-        curl -v -X GET  -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-counters-ext:tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:input\":{\"tunneliface\":\"all\"}}" -k
+        curl -v -X GET  -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-counters-ext:vxlan-tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:input\":{\"tunneliface\":\"all\"}}" -k
 
 Clear Command
 
-    curl -v -X POST -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-interfaces-ext:clear-tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-interfaces-ext:input\":{\"tunnel\":\"all\"}}" -k
+    curl -v -X POST -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-interfaces-ext:clear-vxlan-tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-interfaces-ext:input\":{\"tunnel\":\"all\"}}" -k
 
 Config Command
 
-    curl -v -X PATCH -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/data/openconfig-counters-ext:tunnel-counters/tunnel-counter=time_value/config" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"tunnel-counter-interval\":time_value}}" -k
+    curl -v -X PATCH -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/data/openconfig-counters-ext:vxlan-tunnel-counters/vxlan-tunnel-counter=time_value/config" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"vxlan-tunnel-counter-interval\":time_value}}" -k
 
 ```
 
