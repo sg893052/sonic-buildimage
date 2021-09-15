@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.2
+### Rev 0.1
 
 # Table of Contents
 
@@ -102,7 +102,6 @@
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
 | 0.1 | 08/18/2020  | Bandaru Viswanath  | New draft for SONiC TAM Infrastructure            |
-| 0.2 | 09/14/2021  | Bandaru Viswanath  | Added VLAN ID support for flowgroups.        |
 
 ## About This Manual
 
@@ -467,7 +466,6 @@ The following flow-group attribtes are supported. Except the `name` attribute, a
 | `name`               | A string that uniquely identifies the flow-group, and will be referrenced from other configurations        |
 | `src-mac`            | Source MAC address of the packets belonging to the flow-group |
 | `dst-mac`               | Destination MAC address of the packets belonging to the flow-group   |
-| `vlan-id`            | VLAN Id of the packets belonging to the flow-group          |
 | `ethertype`            | Ethertype of the packets belonging to the flow-group          |
 | `src-ip`               | Source IP address of the packets belonging to the flow-group       |
 | `dst-ip`               | Destination IP address of the packets belonging to the flow-group       |
@@ -480,7 +478,7 @@ The following flow-group attribtes are supported. Except the `name` attribute, a
 The command syntax for setting up the flow-groups is as follows:
 
 ```
-sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [vlan-id <vlan_value>] [ethertype <ethertype>]  [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>]
+sonic (config-tam)# flow-group <name> [src-mac <src_mac>] [dst-mac <dst_mac>] [ethertype <ethertype>] [src-ip <src_ip>] [dst-ip <dst_ip>] [src-l4-port <src_l4_port>] [dst-l4-port <dst_l4_port>] [protocol <protocol>] [priority <priority_value>]
 
 sonic (config-tam)# no flow-group <name> 
 ```

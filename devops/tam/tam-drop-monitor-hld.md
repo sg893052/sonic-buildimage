@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.3
+### Rev 0.2
 
 # Table of Contents
 
@@ -82,7 +82,6 @@
 |---|-----------|------------------|-----------------------------------|
 | 0.1 | 10/15/2019  | Shirisha Dasari  | Initial Version            |
 | 0.2 | 07/01/2020  | Bandaru Viswanath  | Major update to accomodate enhancements to use new TAM infrastructure, DB schmas and UI              |
-| 0.3 | 09/14/2021  | Bandaru Viswanath  | Updated the restrictions in the Broadcom-only section             |
 
 ## About This Manual
 
@@ -727,10 +726,8 @@ TBD
 Drop Monitor feature in SONiC inherits the limitations of the underlying firmware and the hardware. These are listed below.
 
 1. Only a single collector is supported
-2. Drop Monitor flows must be IPv4 flows only, this restriction is only on TH2.
+2. Drop Monitor flows must be IPv4 flows
 3. Drop Monitor is supported on TD3-X7, TH2 and TH3 platforms only.
-4. Drop Monitor can't report the ingress interface, this restriction is only on TH2.
-
 
 ## Supported Drop Reasons
 
