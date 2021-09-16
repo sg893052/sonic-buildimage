@@ -14,12 +14,13 @@ Port Link Flap Error Disable
 [Table 1: Abbreviations](#table-1-abbreviations)
 
 # Revision
-| Rev |     Date    |       Author       | Change Description                                   |
-|:---:|:-----------:|:------------------:|------------------------------------------------------|
-| 0.1 | 04/14/2021  |   Steven Lu        | Initial version for requirements                     |
-| 0.2 | 04/20/2021  |   Steven Lu        | Change feature name to Port Link Flap Error Disable  |
-| 0.3 | 05/11/2021  |   Steven Lu        | Add design details                                   | 
-| 0.4 | 05/24/2021  | Prasanth Kunjum Veettil | Add CLI and RESTCONF details                    |
+| Rev |     Date    |       Author            | Change Description                                   |
+|:---:|:-----------:|:-----------------------:|------------------------------------------------------|
+| 0.1 | 04/14/2021  |   Steven Lu             | Initial version for requirements                     |
+| 0.2 | 04/20/2021  |   Steven Lu             | Change feature name to Port Link Flap Error Disable  |
+| 0.3 | 05/11/2021  |   Steven Lu             | Add design details                                   | 
+| 0.4 | 05/24/2021  | Prasanth Kunjum Veettil | Add CLI and RESTCONF details                         |
+| 0.5 | 09/16/2021  | Steven Lu               | Removed "Not-err-disabled" state                     |
 
 # About this Manual
 This document provides general information about the Port Link Flap Error Disable feature implementation in SONiC.
@@ -182,15 +183,14 @@ sonic#show errdisable link-flap
 Interface  Flap-threshold  Sampling-interval   Recovery-interval Status
 ---------------------------------------------------------------------------
 Ethernet0  10              3                   30                Errdisabled
-Ethernet4  10              3                   60                Not-errdisabled
+Ethernet4  10              3                   60                On
 Ethernet8  5               10                  300               Off
 ```
 
 The possible status values are  
 1. Errdisabled: The number of link flaps in a sampling interval crossed the threshold and port is currently in err-disabled state.  
-2. Not-errdisabled: The err-disable is enabled, but number of flaps in sampling intervals did not cross the configured threshold.  
+2. On:  The err-disable is enabled, but number of flaps in sampling intervals has not cross the configured threshold.  
 3. Off: The err-disable parameters are configured but it is not enabled.  
-4. On: The err-disable is enabled, and no link flaps since then.  
 
 # 2.2 Functional Description
 
