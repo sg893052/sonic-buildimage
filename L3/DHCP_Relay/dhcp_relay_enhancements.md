@@ -1,7 +1,7 @@
 # Feature Name
 DHCP Relay Enhancements.
 # High Level Design Document
-#### Rev 1.0
+#### Rev 1.1
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -84,6 +84,7 @@ DHCP Relay Enhancements.
 | 0.5 | 7/23/2020   |   Santosh Doke   | Updated scaling limit and added server-override suboption. |
 | 0.6 | 12/28/2020   |   Santosh Doke   | Added support for L3 subinterfaces. |
 | 1.0 | 4/1/2021   |   Santosh Doke   | Redesign DHCP relay implementation to support 4K L3 interfaces. |
+| 1.1 | 9/16/2021  |   Santosh Doke   | Updated the OC yang tree. |
 ||
 &nbsp;
 # About this Manual
@@ -1322,6 +1323,7 @@ The following REST APIs are not supported.  For the detailed list of deviations 
     |  --extensions                          /* Extension YANGs */
     |    --openconfig-relay-agent-ext.yang   /* Deviations      */
 ```
+
 ## openconfig-relay-agent
 ```diff
   +--rw relay-agent
@@ -1339,18 +1341,16 @@ The following REST APIs are not supported.  For the detailed list of deviations 
      |     +--rw interface* [id]
      |        +--rw id                          -> ../config/id
      |        +--rw config
-     |        |  +--rw id?                                 oc-if:interface-id
-     |        |  +--rw helper-address*                     inet:ip-address
-+    |        |  +--rw oc-relay-ext:link-select?           enumeration
-+    |        |  +--rw oc-relay-ext:src-intf?              string
-+    |        |  +--rw oc-relay-ext:max-hop-count?         uint32
-+    |        |  +--rw oc-relay-ext:server-vrf?            string
-+    |        |  +--rw oc-relay-ext:relay-vrf-select?      enumeration
-+    |        |  +--rw oc-relay-ext:relay-policy-action?   enumeration
--    |        |  +--rw enable?                             boolean
+     |        |  +--rw id?                           oc-if:interface-id
+     |        |  +--rw helper-address*               inet:ip-address
++    |        |  +--rw oc-relay-ext:src-intf?        string
++    |        |  +--rw oc-relay-ext:vrf?             string
++    |        |  +--rw oc-relay-ext:max-hop-count?   uint32
++    |        |  +--rw oc-relay-ext:policy-action?   enumeration
+-    |        |  +--rw enable?                       boolean
      |        +--ro state
-     |        |  +--ro id?               oc-if:interface-id
-     |        |  +--ro helper-address*   inet:ip-address
+     |        |  +--ro id?                           oc-if:interface-id
+     |        |  +--ro helper-address*               inet:ip-address
      |        |  +--ro counters
      |        |  |  +--ro total-dropped?            yang:counter64
      |        |  |  +--ro invalid-opcode?           yang:counter64
@@ -1366,7 +1366,11 @@ The following REST APIs are not supported.  For the detailed list of deviations 
      |        |  |  +--ro dhcp-offer-sent?          yang:counter64
      |        |  |  +--ro dhcp-ack-sent?            yang:counter64
      |        |  |  +--ro dhcp-nack-sent?           yang:counter64
--    |        |  +--ro enable?           boolean
++    |        |  +--ro oc-relay-ext:src-intf?        string
++    |        |  +--ro oc-relay-ext:vrf?             string
++    |        |  +--ro oc-relay-ext:max-hop-count?   uint32
++    |        |  +--ro oc-relay-ext:policy-action?   enumeration
+-    |        |  +--ro enable?                       boolean
      |        +--rw interface-ref
      |        |  +--rw config
 -    |        |  |  +--rw interface?      -> /oc-if:interfaces/interface/name
@@ -1376,15 +1380,19 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 -    |        |     +--ro interface?      -> /oc-if:interfaces/interface/name
      |        +--rw agent-information-option
      |           +--rw config
--    |           |  +--rw remote-id?    string
--    |           |  +--rw enable?       boolean
--    |           |  +--rw circuit-id?   string
++    |           |  +--rw oc-relay-ext:vrf-select?    mode
++    |           |  +--rw oc-relay-ext:link-select?   mode
+-    |           |  +--rw remote-id?                  string
+-    |           |  +--rw enable?                     boolean
+-    |           |  +--rw circuit-id?                 string
      |           +--ro state
--    |              +--ro enable?            boolean
--    |              +--ro circuit-id?        string
--    |              +--ro remote-id?         string
--    |              +--ro sent-circuit-id?   string
--    |              +--ro sent-remote-id?    string
++    |              +--ro oc-relay-ext:vrf-select?    mode
++    |              +--ro oc-relay-ext:link-select?   mode
+-    |              +--ro enable?                     boolean
+-    |              +--ro circuit-id?                 string
+-    |              +--ro remote-id?                  string
+-    |              +--ro sent-circuit-id?            string
+-    |              +--ro sent-remote-id?             string
      +--rw dhcpv6
         +--rw config
 -       |  +--rw enable-relay-agent?   boolean
@@ -1401,16 +1409,15 @@ The following REST APIs are not supported.  For the detailed list of deviations 
            +--rw interface* [id]
               +--rw id               -> ../config/id
               +--rw config
-              |  +--rw id?                              oc-if:interface-id
-              |  +--rw helper-address*                  inet:ipv6-address
-+             |  +--rw oc-relay-ext:src-intf?           string
-+             |  +--rw oc-relay-ext:max-hop-count?      uint32
-+             |  +--rw oc-relay-ext:server-vrf?         string
-+             |  +--rw oc-relay-ext:relay-vrf-select?   enumeration
--             |  +--rw enable?                          boolean
+              |  +--rw id?                           oc-if:interface-id
+              |  +--rw helper-address*               inet:ipv6-address
++             |  +--rw oc-relay-ext:src-intf?        string
++             |  +--rw oc-relay-ext:vrf?             string
++             |  +--rw oc-relay-ext:max-hop-count?   uint32
+-             |  +--rw enable?                       boolean
               +--ro state
-              |  +--ro id?               oc-if:interface-id
-              |  +--ro helper-address*   inet:ipv6-address
+              |  +--ro id?                           oc-if:interface-id
+              |  +--ro helper-address*               inet:ipv6-address
               |  +--ro counters
               |  |  +--ro total-dropped?                  yang:counter64
               |  |  +--ro invalid-opcode?                 yang:counter64
@@ -1427,7 +1434,10 @@ The following REST APIs are not supported.  For the detailed list of deviations 
               |  |  +--ro dhcpv6-reply-sent?              yang:counter64
               |  |  +--ro dhcpv6-reconfigure-sent?        yang:counter64
               |  |  +--ro dhcpv6-relay-forw-sent?         yang:counter64
--             |  +--ro enable?           boolean
++             |  +--ro oc-relay-ext:src-intf?        string
++             |  +--ro oc-relay-ext:vrf?             string
++             |  +--ro oc-relay-ext:max-hop-count?   uint32
+-             |  +--ro enable?                       boolean
               +--rw interface-ref
               |  +--rw config
 -             |  |  +--rw interface?      -> /oc-if:interfaces/interface/name
@@ -1437,17 +1447,20 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 -             |     +--ro interface?      -> /oc-if:interfaces/interface/name
               +--rw options
                  +--rw config
--                |  +--rw interface-id?          string
--                |  +--rw enable-interface-id?   boolean
--                |  +--rw enable-remote-id?      boolean
--                |  +--rw remote-id?             string
++                |  +--rw oc-relay-ext:vrf-select?   mode
+-                |  +--rw interface-id?              string
+-                |  +--rw enable-interface-id?       boolean
+-                |  +--rw enable-remote-id?          boolean
+-                |  +--rw remote-id?                 string
                  +--ro state
--                   +--ro sent-interface-id?     string
--                   +--ro sent-remote-id?        string
--                   +--ro interface-id?          string
--                   +--ro enable-interface-id?   boolean
--                   +--ro enable-remote-id?      boolean
--                   +--ro remote-id?             string
++                   +--ro oc-relay-ext:vrf-select?   mode
+-                   +--ro sent-interface-id?         string
+-                   +--ro sent-remote-id?            string
+-                   +--ro interface-id?              string
+-                   +--ro enable-interface-id?       boolean
+-                   +--ro enable-remote-id?          boolean
+-                   +--ro remote-id?                 string
+
 ```
 
 ### 3.6.4 KLISH CLI
