@@ -43,6 +43,7 @@ SpyTest framework TG packet capture utility will be used for analyzing the drop 
 ### What tests will be covered / clubbed together?<br/>
 All the drop reasons will be covered while clubbing feature functionality i.e. sampling, aging-interval behavior, 2 drop reasons per flow, checking different drop events.<br/>
 All Drop Reasons tests will be clubbed and will be part of one test function.<br/> Also memory-leak test case can be clubbed along with drop reason functional test cases verification.<br/>
+
 ### What 3rd party tools to be tested for?<br/>
 NA<br/>
 ### Combinations covered<br/>
@@ -309,7 +310,10 @@ Note : VLAN tagged packet for the VLAN which is not configured / exists on the s
 | **Type**       | **Scalability**                                              |
 | **Steps**      | **Procedure:<br/>1) Bring up the DUT with default configuration.<br/>2) Enable 'Drop Monitor' feature, configure sampling rate, aging interval and a collector.<br/>3) Configure max flows using 5-Tuple info to look for a specific pattern in the incoming flow of traffic.<br/>4) Pick any 2 of the configured flows and test feature functionality.<br/>Expected Behavior:<br/>1) Verify that DUT is UP with default configuration.<br/>2) Verify that configuration is successful and 'Drop Monitor' feature is enabled, sampling config is successful, aging interval and collector configuration is successful.<br/>3) Verify that max flows are configured and are shown correctly.<br/>4) Verify that drop events are generated for the selected 2 flows and sent to the collector.<br/>** | Note : 'Drop Monitor' max flows depend on max ACL rules supported per platform.
 
+
+
 ## 5 Reference Links
+
 SONIC 3.0 'Drop Monitor' feature HLD @
 http://gerrit-lvn-07.lvn.broadcom.net:8083/c/sonic/documents/+/12993
 
