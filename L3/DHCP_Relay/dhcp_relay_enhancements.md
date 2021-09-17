@@ -56,8 +56,6 @@ DHCP Relay Enhancements.
         * [3.6.2.1 Configuration Commands](#3621-configuration-commands)
         * [3.6.2.2 Show Commands](#3622-show-commands)
         * [3.6.2.3 Clear Commands](#3623-clear-commands)
-        * [3.6.2.4 Debug Commands](#3623-debug-commands)
-        * [3.6.2.5 IS-CLI Compliance](#3624-is-cli-compliance)
       * [3.6.3 REST API Support](#363-rest-api-support)
       * [3.6.4 KLISH CLI](#364-klish)
         * [3.6.4.1 Configuration Commands](#3641-configuration-commands)
@@ -1244,32 +1242,6 @@ Commands:
 # sonic-clear ip dhcp-relay statistics Vlan100 
 # sonic-clear ipv6 dhcp-relay statistics Vlan100 
 ```
-#### 3.6.2.4 Debug Commands
-
-**debug dhcp-relay**
-This command toggles the logging level between DEBUG and INFO for the DHCP Relay.
-```
-debug dhcp-relay
-    Toggle DHCP Relay debug level  
-```
-
-**debug [ip|ipv6] dhcp-relay <interface_name>**
-- The above command toggles the IPv4/IPv6 DHCP Relay process syslog level on the given interface.
-```
-Usage:
-debug ip dhcp-relay [OPTIONS] COMMAND [ARGS]...
-
-  Toggle DHCP Relay debug level
-
-Options:
-  -?, -h, --help  Show this message and exit.
-
-Commands:
-  default*  Toggle DHCP Relay on an interface
-
-# debug ip dhcp-relay Vlan100
-# debug ipv6 dhcp-relay Vlan100
-```
 
 ### 3.6.3 REST API Support
 The REST SET and GET APIs supported by DHCP relay are listed below.  The REST APIs are generated based on the OpenConfig YANG model [relay-agent.yang](https://github.com/openconfig/public/blob/master/release/models/relay-agent/openconfig-relay-agent.yang).
@@ -1703,7 +1675,17 @@ The below flow diagram indicates the sequence of events involved in processing o
 N/A
 
 # 6 Serviceability and Debug
-New debug command is added to toggle the logging of the DHCP relay process between INFO and DEBUG levels.
+SWSS log level utility can be used to enable debug traces in the DHCP relay manager daemon. 
+
+To change log level to INFO:
+```
+# swssloglevel -l INFO -c dhcprelaymgrd
+```
+
+To display current log level setting for components:
+```
+# swssloglevel -p
+```
 
 # 7 Warm Boot Support
 Not applicable for this feature.
