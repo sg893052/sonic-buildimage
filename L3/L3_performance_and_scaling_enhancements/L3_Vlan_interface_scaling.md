@@ -51,7 +51,7 @@ Scaling improvements
 |MCLAG with unique ip SVI              | 4k   | 4k  | 1k  | 1k  | 1k  |
 |MCLAG with peer gateway enabled SVI   | 1k   | 4k  | 1k  | 1k  | 1k  |
 |SAG MAC configured SVI                | 4k   | 4k  | 1k  | 1k  | 1k  |
-|VRRP MAC SVI                          | 4k   | 4k  | 1k  | 1k  | 1k  |
+|VRRP MAC SVI                          | 128  | 128 | 128 | 128 | 128 |
 |--------------------------------------|------|-----|-----|-----|-----|
 
 
@@ -73,7 +73,7 @@ TD4 already uses L2 table for inner mac termination. No change for TD4 platform.
 In TD3, for all SVI interfaces, L2 table will be programmed instead of MyStationTcam.
 
 Entry will be added with respective mac,vfi and flags as BCM_L2_STATIC. One entry per each SVI will be programmed.
-Note :- If 4k VRRP SVI interfaces are configured ,8k L2 table entries will be consumed.Rest of the cases 4k L2 table entries are consumed.
+Note :- If 128 VRRP SVI interfaces are configured ,256(1282) L2 table entries will be consumed.One entry with system MAC for main interface and another entry with VRRP VMAC for virtual VRRP interface.Rest of the cases the number of L2 table entries created is same as the number of SVI interfaces configured.
 
 ## 2.2  MyStationTcam lookup key modification
 This is applicable for only TH/TH2/TH3 platforms.
