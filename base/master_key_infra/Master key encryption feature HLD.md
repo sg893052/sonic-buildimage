@@ -239,6 +239,8 @@ For example, to decrypt a RADIUS global password , the API must send the followi
 
 **"RADIUS|global:passkey"**
 
+Additionally, a decrypt API that takes the encrypted string(to be decrypted) as an input vs the REDIS key will also be provided. The specific use-case for this API is in the UMF where a user provided encrypted password can be decrypted and validated prior to saving it into the DB.
+
 ### 2.2.6 Password re-encryption - Registration framework
 
 The UMF framework today accepts user configured protocol  passwords from CLI, encrypts them and saves them into CONFIG_DB. The protocol dockers decrypt the ciphertext from CONFIG_DB and use it as appropriate. On an update of the master key, these protocol passwords saved in CONFIG_DB must be decrypted using the old encryption key and re-encrypted using the new encryption key. The infra provides this service of re-encrypting existing protocol passwords via a registration mechanism.
@@ -454,7 +456,8 @@ sonic#
 #### 3.6.2.4 IS-CLI Compliance
 |CLI Command|Compliance|IS-CLI Command (if applicable)| Link to the web site identifying the IS-CLI command (if applicable)|
 |:---:|:-----------:|:------------------:|-----------------------------------|
-| **key config-key password-encryption \*[master key]\*** | Compliant | **key config-key password-encryption \*[master key]\*** | https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/46420-pre-sh-keys-ios-rtr-cfg.html |
+| **key config-key password-encryption \*[master key]\*** | Compliant | **key config-key password-encryption \*[master key]\*** | https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/46420-pre-sh-keys-ios-rtr-cfg.html
+ https://www.juniper.net/documentation/us/en/software/junos/user-access/topics/topic-map/master-password-configuration-encryption.html|
 
 ### 3.6.3 REST API Support
 
