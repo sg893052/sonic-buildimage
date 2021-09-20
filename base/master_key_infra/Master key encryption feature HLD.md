@@ -456,8 +456,7 @@ sonic#
 #### 3.6.2.4 IS-CLI Compliance
 |CLI Command|Compliance|IS-CLI Command (if applicable)| Link to the web site identifying the IS-CLI command (if applicable)|
 |:---:|:-----------:|:------------------:|-----------------------------------|
-| **key config-key password-encryption \*[master key]\*** | Compliant | **key config-key password-encryption \*[master key]\*** | https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/46420-pre-sh-keys-ios-rtr-cfg.html
- https://www.juniper.net/documentation/us/en/software/junos/user-access/topics/topic-map/master-password-configuration-encryption.html|
+| **key config-key password-encryption \*[master key]\*** | Compliant | **key config-key password-encryption \*[master key]\*** | https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/46420-pre-sh-keys-ios-rtr-cfg.html https://www.juniper.net/documentation/us/en/software/junos/user-access/topics/topic-map/master-password-configuration-encryption.html|
 
 ### 3.6.3 REST API Support
 
