@@ -249,19 +249,19 @@ Components are required to register with the infra to get their keys re-encrypte
 
 a) Component name - Protocol requesting to be registered.
 
-b)  Key and field in **CONFIG_DB** to access the configured protocol password. Keep in mind that every key can be unique and protocol functions are required to enlist each unique key separately in the registration API (For example, RADIUS global password and per server passwords).
+b)  Table and field in **CONFIG_DB** to access configured protocol passwords for keys in the table.
 
 The API writes all the registration data to CONFIG_DB, the master key infra will use the same for re-encryption(schema can be found in section 3.2.1). The API to be called to register with the infra is:
 
-**func keyInfraRegister(comp string, key string, field string) **
+**func keyInfraRegister(comp string, table string, field string) **
 
- **comp** is the component registering with the infra while **key** contains the data used to access the protocol password in CONFIG_DB. **field** is the field to be read within the table in CONFIG_DB to access the protocol password.
+ **comp** is the component registering with the infra while **table** contains the table whose keys are used to access the protocol password in CONFIG_DB. **field** is the field to be read within the table per key in CONFIG_DB to access the protocol password.
 
 For example, user could have configured the RADIUS global and per server key. The registration API must enlist both the keys separately:
 
 **keyInfraRegister("radius", RADIUS|global", "passkey")**
 
-**keyInfraRegister("radius, "RADIUS_SERVER|10.10.10.10", "passkey")**
+**keyInfraRegister("radius, "RADIUS_SERVER", "passkey")**
 
 The component xfmrs can choose to de-register with the infra when the user deletes the protocol passwords. A de-register API will be provided on the lines of the register API for the same. 
 
