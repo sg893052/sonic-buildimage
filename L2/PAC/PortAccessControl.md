@@ -208,7 +208,7 @@ The following are the requirements for Port Access Control feature:
 
 
 ### 1.3.2 Configuration and Management Requirements
-This feature shall support CLI and REST based configurations.
+This feature shall support CLI REST and GNMI based configurations.
 
 List of configuration shall include the following:   
 - enable the Authentication monitor mode on the switch.
