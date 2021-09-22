@@ -266,6 +266,11 @@ The **swss#orchagent** process will be enhanced for the following activities:
 - Subscribing APPL_DB for the **adv_speeds**, and send the AN advertisement requests to syncd.
 - Subscribing APPL_DB for the **autoneg**, and send the AN requests to syncd.
 - Subscribing APPL_DB for the **link_training**, and send the LT requests to syncd.
+- Publishing the operational link speed (**oper_speed**) to APPL_DB
+- Publishing the operational local AN advertisement (**oper_adv_speeds**) to APPL_DB
+- Publishing the operational remote AN advertisement (**remote_adv_speeds**) to APPL_DB
+- Publishing the operational LT state (**oper_link_training**) to APPL_DB
+- Publishing the operational FEC mode (**oper_fec**) to APPL_DB
 
 ## 3.4 SAI
 
