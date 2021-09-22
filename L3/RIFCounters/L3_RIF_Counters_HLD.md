@@ -91,6 +91,7 @@ Provide Layer 3 Routing Interface counter support in SONIC and SAI. Routing inte
   - RIF Counters are not supported on TD4, TH4 platforms due to HW limitations / unavailability of counter resources
   - RIF Counters does not show error counts, it could be either packets that are valid but not forwarded or invalid packets 
   - RIF counters will not account for CPU generated Tx packets
+  - RIF counters rx stats will not account for packets destined to CPU
 
 
 # 2 Functionality
@@ -167,7 +168,7 @@ Below is the command for configuring interval between 2 consecutive read/fetch f
 
         counters rif interval <value>
 	
-Default value for interval is 1 second. The range for interval is 1-30 seconds.
+Default value for interval is 5 second. The range for interval is 3-30 seconds.
 
 
 ### 3.6.3 Show Commands
