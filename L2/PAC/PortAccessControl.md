@@ -223,8 +223,6 @@ List of configuration shall include the following:
 - set the authentication mode to use on the specified interface.
 - configure the host mode of a port.
 - configure the period of time after which the Authenticator attempts to reauthenticate a supplicant on the port.
-- configure the actions to take when all the authentication servers are dead.
-- configure the actions to take when one authentication server comes back alive after all are dead.
 - configure Open Authentication mode on the port.
 - set the order of authentication methods used on a port.
 - set the priority for the authentication methods used on a port.
@@ -1155,9 +1153,6 @@ This command displays the authentication manager information for the interface
 | Maximum Users | The maximum number of clients that can be authenticated on the interface if the interface is configured as multi-auth host mode. |
 | Guest VLAN ID | The VLAN id to be used to authorize clients that time out or fail authentication due to invalid credentials. This is applicable only for 802.1x unaware clients. |
 | Unauthenticated VLAN ID | The VLAN id to be used to authorize clients that that time out or fail authentication due to invalid credentials. This is applicable only for 802.1x clients. |
-| Authentication Server Dead action | The action to be undertaken for data clients when all RADIUS servers are found dead. |
-| Authentication Server Dead action for Voice | The action to be undertaken for voice clients when all RADIUS servers are found dead. |
-| Authentication Server Alive action | The action to be undertaken for data clients when a RADIUS server comes back alive after all were found dead. |
 | Allowed protocols on unauthorized port | The action to drop or forward the particular protocol packet from and to unauthorized clients on the port |
 | Open Authentication | Indicates if Open Authentication is enabled on the interface. |
 | PAE role | Indicates the configured PAE role as authenticator or none. |
@@ -1179,9 +1174,6 @@ Reauthentication Enabled....................... False
 Maximum Users.................................. 48
 Guest VLAN ID..... ............................ 0
 Unauthenticated VLAN ID........................ 0
-Authentication Server Dead action.............. None
-Authentication Server Dead action for Voice.... None
-Authentication Server Alive action............. None
 Allowed protocols on unauthorized port......... dhcp
 Open Authentication............................ Disabled
 PAE role....................................... authenticator
