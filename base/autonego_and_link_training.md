@@ -626,7 +626,7 @@ In the case of Cyrus, this feature is primarily targeting TD4 and TH3 with TD3 o
 ## Table 3: Supported platform list
 
 | **Vendor**  |  **Platform**  | **Switch** | **Gearbox**  | **AN/LT Support**   |
-|:------------|:---------------|:--------------------------|:--------------------|
+|:------------|:---------------|:-----------|:-------------|:--------------------|
 | Accton      | AS4630-54PE    | TD3-X3(HX5)| No           | Yes                 |
 | Accton      | AS5835-54X     | TD3-X5(MV2)| No           | Yes                 |
 | Accton      | AS5835-54T     | TD3-X5(MV2)| Yes          | No                  |
