@@ -23,8 +23,9 @@
 
 # List of Tables
 
-[Table 1: References](#table-1-references)<br>
-[Table 2: Abbreviations](#table-2-abbreviations)
+[Table 1: References](#table-1-references)  
+[Table 2: Abbreviations](#table-2-abbreviations)  
+[Table 3: Supported platform list](#table-3-supported-platform-list)  
 
 # Revision
 
@@ -551,11 +552,11 @@ None
 - LT finds appropriate TX FIR that's sufficient to bring up the link, instead of the optimal TX FIR
 - LT requires a longer time for PAM4 links compared to NRZ links. (e.g. Max. 15 sec for 400G)
 - AN/LT is not working on an **DR link** between TD4/TH3 and TD3/TH2/TH  
-		- The DR1 modules are with hardware FEC engine on the PHY and it can't be disabled, hence the MAC will need to have FEC disabled
-		- The system side of DR1 module is actually NRZ mode while the line side is PAM4 mode
-		- The DR4 modules are without hardware FEC engine on the PHY, hence the MAC will need to have FEC enabled
-		- The system side and line side of DR4 module is PAM4 mode
-		- Hence, this AN/LT is not working on a transceiver like this
+		- The DR1 modules are with hardware FEC engine on the PHY and it can't be disabled, hence the MAC will need to have FEC disabled  
+		- The system side of DR1 module is actually NRZ mode while the line side is PAM4 mode  
+		- The DR4 modules are without hardware FEC engine on the PHY, hence the MAC will need to have FEC enabled  
+		- The system side and line side of DR4 module is PAM4 mode  
+		- Hence, this AN/LT is not working on a transceiver like this  
 - AN/LT is not working on an **AOC link** between TD4(DELL Z9432) and TH3(DELL Z9332)  
 ```
 Ethernet8: SFP EEPROM detected
@@ -591,6 +592,8 @@ bcm_ltsw_port_autoneg_ability_remote_get(int unit, bcm_port_t port,
 ```
 - AN/LT will not work at 4x100G mode in the case of self-loop
 - AN/LT will not work on the Cu SFPs
+- AN/LT does not work in the case of medium/interface mismatch
+- AN can not change the current medium/interface type, it has to be configured before enabling AN
 - AN/LT will not work between DELL and non-DELL platform, this is due to the missing interface type support on the non-DELL platforms  
 		- While the code changes are ready for this, there are connection failures between AS7816 and AS7326 in the sanity testbed, will circle back on this later.
 - TD3-X7 supports only 10G and 1G for 10G ports and 25G only for 25G ports, this is a VCO hardware constraint.  
@@ -620,7 +623,8 @@ bcm_ltsw_port_autoneg_ability_remote_get(int unit, bcm_port_t port,
 
 In the case of Cyrus, this feature is primarily targeting TD4 and TH3 with TD3 on a best-effort basis.
 
-## Table 1: AN/LT supported platform list
+## Table 3: Supported platform list
+
 | **Vendor**  |  **Platform**  | **Switch** | **Gearbox**  | **AN/LT Support**   |
 |:------------|:---------------|:--------------------------|:--------------------|
 | Accton      | AS4630-54PE    | TD3-X3(HX5)| No           | Yes                 |
@@ -631,6 +635,8 @@ In the case of Cyrus, this feature is primarily targeting TD4 and TH3 with TD3 o
 | Accton      | AS7726-32X     | TD3-X7     | No           | Yes                 |
 | Accton      | AS7816-64X     | TH2        | No           | No                  |
 | Accton      | AS9716-32D     | TH3        | No           | Yes                 |
+| AlphaNetworks | BES2348t     | TD3-X3(HR4)| Yes(Ethernet0-23) | Yes (Only available for non-Gearbox ports) |
+| Celestica   | BELGITE        | TD3-X3(HX5)| No           | Yes                 |
 | Dell        | S5212          | TD3-X7     | No           | Yes                 |
 | Dell        | S5224          | TD3-X7     | No           | Yes                 |
 | Dell        | S5232          | TD3-X7     | No           | Yes                 |
