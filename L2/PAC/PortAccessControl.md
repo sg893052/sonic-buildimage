@@ -1407,8 +1407,9 @@ Compatibility across software versions are not guaranteed. Upgrade/downgrade acr
 
 # 11 Unit Test
 
-*fpinfra*   
 
+**fpinfra**   
+ 
 fpinfra is a shared library that provides C APIs. Its unit tested using a C/C++ based test utility that exercises these APIs in sequence. The unit test is build up on the google test (gtest) infrastructure. The test infra relies on the automake "make check" and gets executed during the compliation of sonic-secutity docker. The test code is spread into the following file/modules.
 1. Semaphore API tests.
 2. Task API tests
@@ -1417,6 +1418,49 @@ fpinfra is a shared library that provides C APIs. Its unit tested using a C/C++ 
 5. Tree API tests.
 6. OS API tests.
 7. NIM task and API tests.
+
+**Authentication method 802.1x**   
+ 
+1. Port-pae-role:-none:   
+  Verify that the port allows all traffic that it is expected to allow as per its non PAC configuration.  
+
+2. Port-pae-role:-Authenticator / Port-control-mode:-Force Authorized:    
+  Verify that the port allows all traffic that it is expected to allow as per its non PAC configuration.   
+
+3. Port-pae-role:-Authenticator / Port-control-mode:-Force Unauthorized:   
+  Verify that the port does not allow any ingress and egress data traffic.   
+
+4. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-Any / No client is authorized on port:  
+  Verify that the port does not allow any ingress and egress data traffic.   
+
+5. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-MultiHost / Radius assigns a VLAN to client:   
+  Verify that client is able to authenticate and send traffic and the traffic is classified on the RADIUS assigned VLAN as it egresses out of the DUT on the uplink.   
+  Verify that any other device connected to the port is able to send traffic and it is classified on the RADIUS assigned VLAN as it egresses out of the DUT on the uplink.   
+  Verify that client is able to receive traffic on the port.   
+  Verify that any other device connected to the port is able to receive traffic on the port.   
+ 
+6. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-MultiAuth / Radius assigns a VLAN to client:   
+  Verify that multiple clients are able to authenticate individually and send traffic and their traffic is classified on their RADIUS assigned VLANs as it egresses out of the DUT.   
+  Verify that clients are able to receive traffic on the port.   
+
+7. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-SingleAuth / Radius assigns a VLAN to client:     
+  Verify that only one client is able to authenticate and send traffic and the traffic is classified on the RADIUS assigned VLAN as it egresses out of the DUT.   
+  Verify that the client is able to receive traffic on the port.   
+ 
+8. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-Any / Auth Fail VLAN not configured:   
+  Verify that if an authentication fails, the client is not authorized on the port and is not able to send or receive any traffic.   
+ 
+9. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-Any / Auth Fail VLAN configured:   
+  Verify that if an authentication fails, the client is authorized on the Auth Fail VLAN.   
+  Verify that the client is able to send traffic and the traffic is classified on the Auth Fail VLAN as it egresses out of the DUT on the uplink.   
+ 
+10. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-Any / Radius does not assign a VLAN to client:   
+  Verify that client is able to authenticate and send traffic and the traffic is classified on the port's configured PVID as it egresses out of the DUT on the uplink.   
+ 
+11. Port-pae-role:-Authenticator / Port-control-mode:-Auto / Port-host-mode:-Any / Reauthentication configured on the port:   
+  Verify that client is able to authenticate and is reauthenticated as per the configuration.   
+  Verify that client is able to send traffic after reauthentication and the traffic is classified on the assigned VLAN as it egresses out of the DUT on the uplink.   
+	
 
 # 12 Appendix: Sample configuration
 
