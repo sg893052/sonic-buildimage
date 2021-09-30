@@ -394,6 +394,7 @@ PAC interacts with FDB to modify the learning mode of a port and add static FDB 
       "802.1x",
       "mab"
     ],
+    "port_pae_role": "authenticator",
     "port_control_mode": "auto",
     "host_control_mode": "multi_auth",
     "quiet_period": 10,
@@ -416,9 +417,12 @@ method_list               =      "dot1x"/"mab"                  ;List of methods
      
 priority_list             =      "dot1x"/"mab"                  ;Relative priority of methods to be used for authentication
      
-port_control_mode         =      "auto"/"force_authorized"/     'auto": authentication enforced on port
-                                "force_unauthorized" ;         'force_authorized": authentication not enforced on port
-                                                                'force_unauthorized": authentication not enforced on port but port is blocked for all traffic
+port_pae_role             =      "none"/"authenticator"         ;"none": PAC is disabled on the port
+                                                                "authenticator": PAC is enabled on the port
+
+port_control_mode         =      "auto"/"force_authorized"/     ;"auto": authentication enforced on port
+                                "force_unauthorized" ;          "force_authorized": authentication not enforced on port
+                                                                "force_unauthorized": authentication not enforced on port but port is blocked for all traffic
      
 host_control_mode         =      "multi-host"/"multi-domain"/   ;"multi-host": One data client can be authenticated on the port. Rest of the
                                 "multi-auth"/"single-auth"      clients tailgate once the first client is authenticated.
@@ -498,9 +502,7 @@ None
     "enabled_priority_list": [
       "802.1x",
       "mab"
-    ],
-    "num_clients_authenticated": 10,
-    "open_authentication_mode": "enabled"
+    ]
   }
 }
 
@@ -511,15 +513,13 @@ key                     =    PAC_PORT_OPER_TABLE:port               ;Physical po
 
 enabled_method_list       =     "dot1x"/"mab"                       ;List of methods to be used for authentication
 enabled_priority_list     =     "dot1x"/"mab"                       ;Relative priority of methods to be used for authentication
-num_clients_authenticated =     1*2DIGIT                            ;Number of clients authenticated on the port.
-       
-open_authentication_mode  =     "enabled"/"disabled"                ;Indicates if open authentication mode is enabled on the port.
 
 ```    
 
 
 **PAC_AUTHENTICATED_CLIENT_OPER_TABLE**   
 ```
+
 "PAC_AUTHENTICATED_CLIENT_OPER_TABLE": {
   "ethernet1": [
     {
@@ -538,7 +538,9 @@ open_authentication_mode  =     "enabled"/"disabled"                ;Indicates i
         "vlan_id": 194,
         "vlan_type": "radius",
         "backend_auth_method": "radius",
-        "session_time": 511
+        "session_time": 511,
+        "filter_id": "ClientACL",
+        "dacl": "ClientDynACL"
       }
     },
     {
@@ -557,7 +559,9 @@ open_authentication_mode  =     "enabled"/"disabled"                ;Indicates i
         "vlan_id": 194,
         "vlan_type": "radius",
         "backend_auth_method": "radius",
-        "session_time": 51
+        "session_time": 51,
+        "filter_id": "ClientACL",
+        "dacl": "ClientDynACL"
       }
     }
   ]
@@ -589,6 +593,8 @@ vlan_type            = "RADIUS"/"Default"/"Voice"/"Unauthenticated"/"Guest"/"Mon
                                  ; Monitor Mode: The client has been authenticated by Monitor mode.
 backend_auth_method = "radius" ; Backend authentication method used to authorize the client.
 session_time        = 1*10DIGIT ; Client session time.
+filter_id           = 1*252VCHARS ; Named ACL name
+dacl                = 1*252VCHARS ; Dynamic ACL name
 
 ```   
 
@@ -675,6 +681,18 @@ key = HOSTAPD_OPER_PORT_TABLE : port ; Physical Port: client mac; Client MAC
 user_name = 1*255VCHARS ; Client user name
 ```
 
+***PAC_GLOBAL_OPER_TABLE***
+```
+"PAC_GLOBAL_OPER_TABLE": {
+    "num_clients_authenticated": 10,
+    "num_clients_authenticated_monitor": 2
+}
+
+;field                       =    value
+
+num_clients_auth             =    1*10DIGIT                      ;number of clients authenticated
+num_clients_auth_monitor     =    1*10DIGIT                      ;number of clients authenticated in monitor mode
+```
 
 
 ## 3.3 Switch State Service Design
@@ -1161,20 +1179,17 @@ Example:
 ```
 show  authentication interface 1/1
 
-Authentication Manager Status.................. Enabled
-
 Interface...................................... Eth1/1
 Authentication Restart timer................... 300
-Configured method order........................ mab undefined undefined
-Enabled method order........................... mab undefined undefined
-Configured method priority..................... dot1x mab captive-portal
-Enabled method priority........................ dot1x mab undefined
+Configured method order........................ mab undefined
+Enabled method order........................... mab undefined
+Configured method priority..................... dot1x mab
+Enabled method priority........................ dot1x mab
 Reauthentication Period (secs)................. 3600
 Reauthentication Enabled....................... False
 Maximum Users.................................. 48
 Guest VLAN ID..... ............................ 0
 Unauthenticated VLAN ID........................ 0
-Allowed protocols on unauthorized port......... dhcp
 Open Authentication............................ Disabled
 PAE role....................................... authenticator
 
@@ -1271,7 +1286,6 @@ Filter-Id ..................................... None
 ACS ACL Name................................... xACSACLx-IP-FP_ACL-5ee227a2
 DACL........................................... None
 Session Termination Action..................... Default
-Acct SessionId:................................ testixia:200000003
 
 ```
 
