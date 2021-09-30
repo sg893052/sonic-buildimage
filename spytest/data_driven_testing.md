@@ -881,19 +881,21 @@ Sample test logic which Adds ACL and Rule
 
 ```python
 
-from apis.yang.codegen.messages.Acl import Acl
-from apis.yang.codegen.messages.Acl import AclSet
-from apis.yang.codegen.messages.Acl import AclEntry
+from apis.yang.codegen.messages.acl.Acl import Acl
+from apis.yang.codegen.messages.acl.AclSet import AclSet
+from apis.yang.codegen.messages.acl.AclSetAclEntriesAclEntry import AclSetAclEntriesAclEntry
 
-acl=Acl("INTERFACE_ONLY", "INTERFACE_ONLY")
-aclSet1 = AclSet("MYACL1", "ACL_IPV4")
-aclSet1.configDescription = "Faraaz1"
-aclSet2 = AclSet("MYACL2", "ACL_IPV4", "faraaz2")
-acl_entry = AclEntry("1", "cool")
 dut = None
-aclSet1.add_acl_entry(acl_entry)
-acl.add_acl_set(aclSet1)
-acl.add_acl_set(aclSet2)
+acl=Acl(ConfigCounterCapability="INTERFACE_ONLY", StateCounterCapability="INTERFACE_ONLY")
+aclSet1 = AclSet(AclSetName="MYACL1", AclSetType="ACL_IPV4")
+
+aclSet1.configDescription = "sample"
+aclSet2 = AclSet(AclSetName="MYACL2", AclSetType="ACL_IPV4", ConfigDescription="faraaz2")
+acl_entry = AclSetAclEntriesAclEntry(AclEntrySequenceId=1, ConfigDescription="cool")
+aclSet1.add_AclSetAclEntriesAclEntry(acl_entry)
+acl.add_AclSet(aclSet1)
+acl.add_AclSet(aclSet2)
+
 acl.configure(dut, ui="rest", target_path="/acl-sets/acl-set")
 acl.configure_rest(dut, target_path="/acl-sets/acl-set")
 acl_entry.unconfigure()
