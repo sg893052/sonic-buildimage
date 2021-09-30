@@ -107,12 +107,12 @@ Following are some of the Generic APIs
 ### 3.1.3.1 Configuration API
 
 This is a generic method which will be invoked by the Action API inside the message class, this API is added to the spytest infrastructure, this method does the below things
+
 - Generates payload for configuration request
 - Builds URIs for configuration request
 - Executes the request
 
 For KLISH, it invokes the corresponding obj.configure_klish(...), which may have been implemented by the feature owner in the derived class of obj’s base class.
-
 
 ### 3.1.3.2 Verification API
 
@@ -120,7 +120,8 @@ Bala/Arun - Please fill
 
 ### 3.1.3.3 Subscription API
 
-Sachin - Please fill
+Subscription test APIs will use the existing gNMI request and verification APIs defined
+in `apis/yang/utils/gnmi.py` module.
 
 ### 3.1.3.4 RPC API
 
@@ -846,7 +847,7 @@ Arun- Please fill
 
 Bala - Please fill
 
-# Developer Steps
+# 5 Developer Steps
 
 Yang models will be placed under ***brcm-spytest/apis/yang/models***
 When developer modifies the YANG contents or rebases with newer versions, they are required to regenerate Messages and Bindings using below steps. Once the Messages and Bindings are regenerated, they need to be committed along with the YANG changes.
@@ -871,9 +872,19 @@ brcm-spytest/apis/yang/codegen/tools/generate_msg_class.sh openconfig-acl.yang e
 
 ## 5.2 Yang Binding Generation
 
-Sachin - Please fill
+Script **brcm-spytest/apis/yang/codegen/tools/generate_bindings.sh** will generate the pyangbind
+bindings for the required YANG files.
+It will be automatically triggered by the *generate_msg_class.sh* script.
+Runs the pyangbind generator in "split-class-dir" mode, which generates a separate python module
+directory for every container and list nodes.
+All binding artifacts will be generated under **brcm-spytest/apis/yang/codegen/bindings** directory.
+Developer must commit these generated files to the spytest repo as-is.
 
-***NOTE:*** Bindings will be generated under brcm-spytest/apis/yang/codegen/bindings
+Usage:
+
+```text
+generate_bindings.sh <YANG-1> ... <YANG-N>
+```
 
 ## 5.3 Testcase Sample For Configuration
 
