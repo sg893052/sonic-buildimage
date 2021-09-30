@@ -171,7 +171,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the STP protocol CPU pkt counter                   |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) As per the topology, enable STP on both the edge ports and make sure the STP states are established<br/> 2) Set the bridge priority such that TGEN is the root bridge and STP BPDU's are sent out to the dut<br/> 3) Verify the CPU counters and make sure STP Rx & TX counter is getting incrementing  <br/> 4) We need to simulate the Rx error by shutting down the net device using the internal command as mentioned in section 1.4  while keeping the physical interface up and running<br/> 5) Now verify Rx error is incrementing both in global and interface levels  <br/> 6) Disable the simulation and make sure CPU Rx counter is incrementing instead of Rx err  <br/> 7) Change the root bridge to Dut and verify now the CPU Tx counter is incremented  <br/> 8) We need to simulate the Tx error by decreasing the KNET buffer to pile up the CPU queue and pump in traffic  <br /> 9) Now verify the Tx error is incrementing, clear the counters and make sure the counters are cleared and Tx error counter is incremented again once the traffic starts to flow<br /> |
+| **Steps**      | 1) As per the topology, configure vlan from 2 - 500 and enable STP on both the edge ports and make sure the STP states are established<br/> 2) Set the bridge priority such that TGEN is the root bridge and STP BPDU's are sent out to the dut<br/> 3) Verify the CPU counters and make sure STP Rx & TX counter is getting incrementing  <br/> 4) We need to simulate the Rx error by shutting down the net device using the internal command as mentioned in section 1.3  while keeping the physical interface up and running<br/> 5) Now verify Rx error is incrementing both in global and interface levels  <br/> 6) Disable the simulation and make sure CPU Rx counter is incrementing instead of Rx err  <br/> 7) Change the root bridge to Dut and verify now the CPU Tx counter is incremented  <br/> 8) We need to simulate the Tx error by decreasing the KNET buffer to pile up the CPU queue and pump in traffic  <br /> 9) Now verify the Tx error is incrementing, clear the counters and make sure the counters are cleared and Tx error counter is incremented again once the traffic starts to flow<br /> |
 
 
 
@@ -193,7 +193,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the VRRP protocol CPU pkt counter                  |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Enable VRRP on the dut and make sure the edge port is part of the vlan on which VRRP is enabled<br/> 2) On the spirent port create the a VRRP stream and start sending traffic <br/> 3) Verify the CPU counters and make sure VRRP Rx & TX counter is getting incrementing  <br/> 4) Clear and make sure the counter is incremented again <br/> 5) Execute "show knet <intf> stats protocol" and verify the VRRP rx error counters are incrementing<br /> |
+| **Steps**      | 1) Enable VRRP on the dut and make sure the edge port is part of the vlan on which VRRP is enabled<br/> 2) On the spirent port create the a VRRP stream and start sending traffic <br/> 3) Verify the CPU counters and make sure VRRP Rx & TX counter is getting incrementing  <br/> 4) Clear and make sure the counter is incremented again <br/> 5) Simulate the Rx error by shutting down the net device using the internal command as mentioned in section 1.3  while keeping the physical interface up and running <br/> 6) Execute "show knet <intf> stats protocol" and verify the VRRP rx error counters are incrementing<br /> |
 
 
 
@@ -292,7 +292,7 @@ In order to verify the CPU counters we need to create a custom packet from TGEN 
 | **Test Name**  | To verify the LACP CPU pkt counter                           |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure  a LACP between the 2 nodes  <br/> 2) Verify the portchannel is up and running <br/> 3) Remove the interface from portchannel on one of the node <br />4) The LACP pkt from the other node will still be received on this interface and this will be punted to CPU<br/> 5) Execute "show knet <intf> stats protocol" and verify the Kernal_drop is incrementing under LACP <br/> 6) Clear the counter and verify the same <br/> 5) Similarly configure a different portchannel number on either side of the nodes and verify the drop counter is incrementing <br /> |
+| **Steps**      | 1) Configure  a LACP between the 2 nodes  <br/> 2) Verify the portchannel is up and running <br/> 3) Remove the interface from portchannel on one of the node <br />4) The LACP pkt from the other node will still be received on this interface and this will be punted to CPU<br/> 5) Execute "show knet <intf> stats protocol" and verify the Kernal_drop is incrementing under LACP <br/> 6) Clear the counter and verify the same <br/> |
 
 
 
