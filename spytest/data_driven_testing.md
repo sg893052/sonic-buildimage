@@ -3,7 +3,8 @@
 SpytTest - Data driven test development
 
 # High Level Design Document
-#### Rev 0.1
+
+#### Rev 0.2
 
 # Table of Contents
   - [Revision](#revision)
@@ -25,6 +26,9 @@ SpytTest - Data driven test development
   - [4 Functionality](#4-functionality)
     - [4.1 Code Generation](#41-code-generation)
     - [4.2 Subscription Support](#42-subscription-support)
+      - [4.2.1 Connection Management](#421-connection-management)
+      - [4.2.2 Creating Subscription](#422-creating-subscription)
+      - [4.2.3 Verifying Notifications](#423-verifying-notifications)
     - [4.3 GNOI Support](#43-gnoi-support)
     - [4.4 RPC Support](#43-rpc-support)
   - [5 Developer Steps](#5-developer-steps) 
@@ -41,6 +45,7 @@ SpytTest - Data driven test development
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 09/29/2021  |   Mohammed Faraaz  | Initial version                   |
+| 0.2 | 09/30/2021  | Sachin Holla       | Add subscription test details     |
 
 # About this Manual
 
@@ -837,7 +842,101 @@ class Acl(AclBase):
 
 ## 4.2 Subscription Support
 
-Sachin - Please fill
+Message classes will support gNMI subscription test cases similar to the existing APIs provided by
+the `apis/yang/utils/gnmi` module.
+Existing APIs operate on path and JSON payload.
+Message classes will provide a thin wrapper around them so that developer can use only the
+message classes in his test code.
+This should cover simple one-path subscription cases.
+Developer should directly use APIs from `apis/yang/utils/gnmi.py` for multi-path subscriptions
+and other advanced test cases.
+
+Note that all the APIs discussed in this section automatically use "gnmi" UI.
+
+### 4.2.1 Connection Management
+
+Will be same as gNMI get/set operations.
+**TODO: revisit**
+
+### 4.2.2 Creating Subscription
+
+Every message base class will have a `subscribe()` method which can be used to create a subscription.
+This method will accept the subscription mode, optional property name and other optional subscription
+parameters as shown below.
+
+```python
+def subscribe(self, dut, mode, target_attr=None, timeout=None, target=None, origin=None,
+              updates_only=False, suppress_redundant=False, sample_interaval=None):
+    """Creates gNMI subscription for path self.get_path(ui="gnmi", target_attr=target_attr).
+    Returns a RpcContext object which can be used for validating the notification messages.
+
+    Parameters:
+    dut             DUT name
+    mode            Subscription mode -- should be one of "on_change", "sample", "target_defined",
+                    "poll" or "once". Values are case insensitive.
+    target_attr     An optional property name of this message class. Used to derive the subpath.
+    timeout         Hard timeout for test case; in seconds. Used to break verification loop when
+                    expected notifications are not received. It is recommended that developers pass
+                    an appropriate timeout value based on the verification steps in the test case.
+    target          A string value to be used as 'target' property of request path prefix.
+    origin          A string value to be used as 'origin' property of request path prefix.
+    updates_only    Boolean value for the 'updates_only' property in the request.
+    suppress_redundant
+                    Boolean value for the 'suppress_redundant' property in the request. Used only
+                    when mode is 'sample' or 'target_defined'.
+    sample_interval Number of seconds for the 'sample_interval' property in the request. Used only
+                    when mode is 'sample' or 'target_defined'.
+    """
+```
+
+### 4.2.3 Verifying Notifications
+
+The RpcContext class will provide `verify_notifications` method to verify whether the notification
+messages contained expected values or not.
+They are wrappers for the existing `verify_notifications` function in `apis/yang/utils/gnmi` module.
+Refer to the `verify_notifications` documentation for more details on the verification logic.
+
+```python
+class Notification(ABC):
+    """Abstract base class to express expected notification data"""
+
+class UpdateNotification(Notification):
+    def __init__(self, data, prefix=None, target_path=None, iterations=1, interval=20):
+        """Expected update notification data.
+        Parameters:
+        data        A message class containing the expected notification data.
+                    if this message class a parent message in the class hierarchy, the parent
+                    context should be filled either in this message instance itself; or
+                    can be separately passed as the prefix.
+        prefix      Optional message class that defines the parent context for data.
+        target_path Property name indicating the subpath inside the data class.
+        iterations  Expected number of notification messages containing the values in data class. 
+        interval    Number of seconds between notifications when iterations > 1.
+        """
+
+class DeleteNotification(Notification):
+    def __init__(self, data, target_path=None):
+        """Expecteds delete notification path.
+        Parameters:
+        data        A message class or string path indicating the expected delete path.
+        target_path Property name indicating the subpath inside the data class.
+        """
+
+def RpcContext:
+    def verify_notifications(data, sync=False):
+        """Verify expected notification values are received. Blocks till expected values
+        are received or the timeout (specified in the subscribe API) and returns True.
+        Returns False as soon as it encounters an unexpected notification data.
+
+        Parameters:
+        data        A Notification object or a list of Notification objects indicating the
+                    expected notification data.
+        sync        Indicates whether a sync message is expected. When True, this function
+                    waits for a sync message after expected notification data is received.
+                    It is an error if sync message is received when it is not expected or
+                    all expected notification data are not received yet.
+        """
+```
 
 ## 4.3 GNOI Support
 
@@ -924,7 +1023,26 @@ Arun- Please fill
 
 ## 5.6 Testcase Sample For Subscription
 
-Sachin- Please fill
+```python
+def test_onchange_acl_description():
+    # Subscribe ON_CHANGE of ACL description
+    aclPattern = AclSet(Name="*", Type="*")
+    rpc = aclPattern.subscribe(dut, mode="on_change", timeout=10)
+    # There should not be any sync updates -- description is not configured yet
+    if not rpc.verify_notifications(None, sync=True):
+         st.report_fail("msg", "Not expecting any sync update")
+    # Create an ACL
+    acl1 = AclSet(Name="ONE", Type="ACL_IPV4", Description="Hello, world!")
+    acl1.configure(dut)
+    # Look for the update notification...
+    if not rpc.verify_notifications(UpdateNotification(acl1)):
+        st.report_fail("msg", "Invalid notification after ACL description change")
+    # Delete the ACL
+    acl1.unconfigure(dut)
+    # Look for the delete notification...
+    if not rpc.verify_notifications(DeleteNotification(acl1)):
+        st.report_fail("msg", "Invalid notification after ACL delete")
+```
 
 ## 5.7 Testcase Sample For GNOI
 
