@@ -309,9 +309,9 @@ and operational state data
         self.AclSet_dict = OrderedDict()
         self.Interface_dict = OrderedDict()
         self.ObjectGroup_dict = OrderedDict()
-        self.GlobalIngressAclSet_dict = OrderedDict()
-        self.GlobalEgressAclSet_dict = OrderedDict()
-        self.ControlPlaneIngressAclSet_dict = OrderedDict()
+        self.GlobalIngressAclSetsIngressAclSet_dict = OrderedDict()
+        self.GlobalEgressAclSetsEgressAclSet_dict = OrderedDict()
+        self.ControlPlaneIngressAclSetsIngressAclSet_dict = OrderedDict()
 
 
 
@@ -353,50 +353,62 @@ by the target
     def add_AclSet(self, AclSet):
         """ Adds AclSet(/openconfig-acl:acl/acl-sets/acl-set) instance inside AclBase (/openconfig-acl:acl)"""
         self.AclSet_dict[(AclSet.AclSetName, AclSet.AclSetType)] = AclSet
+        AclSet.Acl = self
     
     def del_AclSet(self, AclSet):
         """ Deletes AclSet(/openconfig-acl:acl/acl-sets/acl-set) instance from AclBase (/openconfig-acl:acl)"""
         del(self.AclSet_dict[(AclSet.AclSetName, AclSet.AclSetType)])
+        AclSet.Acl = None
 
     def add_Interface(self, Interface):
         """ Adds Interface(/openconfig-acl:acl/interfaces/interface) instance inside AclBase (/openconfig-acl:acl)"""
         self.Interface_dict[(Interface.InterfaceId)] = Interface
+        Interface.Acl = self
     
     def del_Interface(self, Interface):
         """ Deletes Interface(/openconfig-acl:acl/interfaces/interface) instance from AclBase (/openconfig-acl:acl)"""
         del(self.Interface_dict[(Interface.InterfaceId)])
+        Interface.Acl = None
 
     def add_ObjectGroup(self, ObjectGroup):
         """ Adds ObjectGroup(/openconfig-acl:acl/openconfig-acl-ext:object-groups/object-group) instance inside AclBase (/openconfig-acl:acl)"""
         self.ObjectGroup_dict[(ObjectGroup.ObjectGroupName)] = ObjectGroup
+        ObjectGroup.Acl = self
     
     def del_ObjectGroup(self, ObjectGroup):
         """ Deletes ObjectGroup(/openconfig-acl:acl/openconfig-acl-ext:object-groups/object-group) instance from AclBase (/openconfig-acl:acl)"""
         del(self.ObjectGroup_dict[(ObjectGroup.ObjectGroupName)])
+        ObjectGroup.Acl = None
 
-    def add_GlobalIngressAclSet(self, GlobalIngressAclSet):
-        """ Adds GlobalIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/ingress-acl-sets/ingress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
-        self.GlobalIngressAclSet_dict[(GlobalIngressAclSet.IngressAclSetSetName, GlobalIngressAclSet.IngressAclSetType)] = GlobalIngressAclSet
+    def add_GlobalIngressAclSetsIngressAclSet(self, GlobalIngressAclSetsIngressAclSet):
+        """ Adds GlobalIngressAclSetsIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/ingress-acl-sets/ingress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
+        self.GlobalIngressAclSetsIngressAclSet_dict[(GlobalIngressAclSetsIngressAclSet.IngressAclSetSetName, GlobalIngressAclSetsIngressAclSet.IngressAclSetType)] = GlobalIngressAclSetsIngressAclSet
+        GlobalIngressAclSetsIngressAclSet.Acl = self
     
-    def del_GlobalIngressAclSet(self, GlobalIngressAclSet):
-        """ Deletes GlobalIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/ingress-acl-sets/ingress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
-        del(self.GlobalIngressAclSet_dict[(GlobalIngressAclSet.IngressAclSetSetName, GlobalIngressAclSet.IngressAclSetType)])
+    def del_GlobalIngressAclSetsIngressAclSet(self, GlobalIngressAclSetsIngressAclSet):
+        """ Deletes GlobalIngressAclSetsIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/ingress-acl-sets/ingress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.GlobalIngressAclSetsIngressAclSet_dict[(GlobalIngressAclSetsIngressAclSet.IngressAclSetSetName, GlobalIngressAclSetsIngressAclSet.IngressAclSetType)])
+        GlobalIngressAclSetsIngressAclSet.Acl = None
 
-    def add_GlobalEgressAclSet(self, GlobalEgressAclSet):
-        """ Adds GlobalEgressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/egress-acl-sets/egress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
-        self.GlobalEgressAclSet_dict[(GlobalEgressAclSet.EgressAclSetSetName, GlobalEgressAclSet.EgressAclSetType)] = GlobalEgressAclSet
+    def add_GlobalEgressAclSetsEgressAclSet(self, GlobalEgressAclSetsEgressAclSet):
+        """ Adds GlobalEgressAclSetsEgressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/egress-acl-sets/egress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
+        self.GlobalEgressAclSetsEgressAclSet_dict[(GlobalEgressAclSetsEgressAclSet.EgressAclSetSetName, GlobalEgressAclSetsEgressAclSet.EgressAclSetType)] = GlobalEgressAclSetsEgressAclSet
+        GlobalEgressAclSetsEgressAclSet.Acl = self
     
-    def del_GlobalEgressAclSet(self, GlobalEgressAclSet):
-        """ Deletes GlobalEgressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/egress-acl-sets/egress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
-        del(self.GlobalEgressAclSet_dict[(GlobalEgressAclSet.EgressAclSetSetName, GlobalEgressAclSet.EgressAclSetType)])
+    def del_GlobalEgressAclSetsEgressAclSet(self, GlobalEgressAclSetsEgressAclSet):
+        """ Deletes GlobalEgressAclSetsEgressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/egress-acl-sets/egress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.GlobalEgressAclSetsEgressAclSet_dict[(GlobalEgressAclSetsEgressAclSet.EgressAclSetSetName, GlobalEgressAclSetsEgressAclSet.EgressAclSetType)])
+        GlobalEgressAclSetsEgressAclSet.Acl = None
 
-    def add_ControlPlaneIngressAclSet(self, ControlPlaneIngressAclSet):
-        """ Adds ControlPlaneIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:control-plane/ingress-acl-sets/ingress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
-        self.ControlPlaneIngressAclSet_dict[(ControlPlaneIngressAclSet.IngressAclSetSetName, ControlPlaneIngressAclSet.IngressAclSetType)] = ControlPlaneIngressAclSet
+    def add_ControlPlaneIngressAclSetsIngressAclSet(self, ControlPlaneIngressAclSetsIngressAclSet):
+        """ Adds ControlPlaneIngressAclSetsIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:control-plane/ingress-acl-sets/ingress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
+        self.ControlPlaneIngressAclSetsIngressAclSet_dict[(ControlPlaneIngressAclSetsIngressAclSet.IngressAclSetSetName, ControlPlaneIngressAclSetsIngressAclSet.IngressAclSetType)] = ControlPlaneIngressAclSetsIngressAclSet
+        ControlPlaneIngressAclSetsIngressAclSet.Acl = self
     
-    def del_ControlPlaneIngressAclSet(self, ControlPlaneIngressAclSet):
-        """ Deletes ControlPlaneIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:control-plane/ingress-acl-sets/ingress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
-        del(self.ControlPlaneIngressAclSet_dict[(ControlPlaneIngressAclSet.IngressAclSetSetName, ControlPlaneIngressAclSet.IngressAclSetType)])
+    def del_ControlPlaneIngressAclSetsIngressAclSet(self, ControlPlaneIngressAclSetsIngressAclSet):
+        """ Deletes ControlPlaneIngressAclSetsIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:control-plane/ingress-acl-sets/ingress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.ControlPlaneIngressAclSetsIngressAclSet_dict[(ControlPlaneIngressAclSetsIngressAclSet.IngressAclSetSetName, ControlPlaneIngressAclSetsIngressAclSet.IngressAclSetType)])
+        ControlPlaneIngressAclSetsIngressAclSet.Acl = None
 
     def _generate_bind(self, content="all", target_attr=None, parent=None):
         """
@@ -409,15 +421,15 @@ by the target
         # ConfigCounterCapability
         if self.ConfigCounterCapability is not None:
             if content == "config" or content == "all":
-                self.acl.config.counter_capability = self.ConfigCounterCapability
+                acl.config.counter_capability = self.ConfigCounterCapability
         if target_attr == "ConfigCounterCapability":
-            return self.acl.config.counter_capability
+            return acl.config.counter_capability
         # StateCounterCapability
         if self.StateCounterCapability is not None:
             if content == "state" or content == "all":
-                self.acl.state._set_counter_capability(self.StateCounterCapability)
+                acl.state._set_counter_capability(self.StateCounterCapability)
         if target_attr == "StateCounterCapability":
-            return self.acl.state.counter_capability
+            return acl.state.counter_capability
 
         if content == "all" or content == "config":
             for key in self.AclSet_dict:
@@ -429,14 +441,14 @@ by the target
             for key in self.ObjectGroup_dict:
                 self.ObjectGroup_dict[key]._generate_bind(content=content, parent=acl)
         if content == "all" or content == "config":
-            for key in self.GlobalIngressAclSet_dict:
-                self.GlobalIngressAclSet_dict[key]._generate_bind(content=content, parent=acl)
+            for key in self.GlobalIngressAclSetsIngressAclSet_dict:
+                self.GlobalIngressAclSetsIngressAclSet_dict[key]._generate_bind(content=content, parent=acl)
         if content == "all" or content == "config":
-            for key in self.GlobalEgressAclSet_dict:
-                self.GlobalEgressAclSet_dict[key]._generate_bind(content=content, parent=acl)
+            for key in self.GlobalEgressAclSetsEgressAclSet_dict:
+                self.GlobalEgressAclSetsEgressAclSet_dict[key]._generate_bind(content=content, parent=acl)
         if content == "all" or content == "config":
-            for key in self.ControlPlaneIngressAclSet_dict:
-                self.ControlPlaneIngressAclSet_dict[key]._generate_bind(content=content, parent=acl)
+            for key in self.ControlPlaneIngressAclSetsIngressAclSet_dict:
+                self.ControlPlaneIngressAclSetsIngressAclSet_dict[key]._generate_bind(content=content, parent=acl)
         
         if target_attr is not None:
             return None
@@ -455,7 +467,6 @@ by the target
             return rest_template
         else:
             return gnmi_template
-
 ```
 
 ### 4.1.1.1.2.2 Sample Base Class
@@ -549,7 +560,7 @@ entries
         self.__yang_path_gnmi_dict["Source"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/openconfig-acl-ext:source"
 
         # Dict for child lists
-        self.AclSetAclEntry_dict = OrderedDict()
+        self.AclSetAclEntriesAclEntry_dict = OrderedDict()
 
         # Parent's ref
         self.Acl = Acl
@@ -701,13 +712,15 @@ or port-authentication control(PAC).
         self.__Source = Source        
 
 
-    def add_AclSetAclEntry(self, AclSetAclEntry):
-        """ Adds AclSetAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance inside AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
-        self.AclSetAclEntry_dict[(AclSetAclEntry.AclEntrySequenceId)] = AclSetAclEntry
+    def add_AclSetAclEntriesAclEntry(self, AclSetAclEntriesAclEntry):
+        """ Adds AclSetAclEntriesAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance inside AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
+        self.AclSetAclEntriesAclEntry_dict[(AclSetAclEntriesAclEntry.AclEntrySequenceId)] = AclSetAclEntriesAclEntry
+        AclSetAclEntriesAclEntry.AclSet = self
     
-    def del_AclSetAclEntry(self, AclSetAclEntry):
-        """ Deletes AclSetAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance from AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
-        del(self.AclSetAclEntry_dict[(AclSetAclEntry.AclEntrySequenceId)])
+    def del_AclSetAclEntriesAclEntry(self, AclSetAclEntriesAclEntry):
+        """ Deletes AclSetAclEntriesAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance from AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
+        del(self.AclSetAclEntriesAclEntry_dict[(AclSetAclEntriesAclEntry.AclEntrySequenceId)])
+        AclSetAclEntriesAclEntry.AclSet = None
 
     def _generate_bind(self, content="all", target_attr=None, parent=None):
         """
@@ -723,56 +736,56 @@ or port-authentication control(PAC).
         # ConfigName
         if self.ConfigName is not None:
             if content == "config" or content == "all":
-                self.acl_set.config.name = self.ConfigName
+                acl_set.config.name = self.ConfigName
         if target_attr == "ConfigName":
-            return self.acl_set.config.name
+            return acl_set.config.name
         # ConfigType
         if self.ConfigType is not None:
             if content == "config" or content == "all":
-                self.acl_set.config.type = self.ConfigType
+                acl_set.config.type = self.ConfigType
         if target_attr == "ConfigType":
-            return self.acl_set.config.type
+            return acl_set.config.type
         # ConfigDescription
         if self.ConfigDescription is not None:
             if content == "config" or content == "all":
-                self.acl_set.config.description = self.ConfigDescription
+                acl_set.config.description = self.ConfigDescription
         if target_attr == "ConfigDescription":
-            return self.acl_set.config.description
+            return acl_set.config.description
         # StateName
         if self.StateName is not None:
             if content == "state" or content == "all":
-                self.acl_set.state._set_name(self.StateName)
+                acl_set.state._set_name(self.StateName)
         if target_attr == "StateName":
-            return self.acl_set.state.name
+            return acl_set.state.name
         # StateType
         if self.StateType is not None:
             if content == "state" or content == "all":
-                self.acl_set.state._set_type(self.StateType)
+                acl_set.state._set_type(self.StateType)
         if target_attr == "StateType":
-            return self.acl_set.state.type
+            return acl_set.state.type
         # StateDescription
         if self.StateDescription is not None:
             if content == "state" or content == "all":
-                self.acl_set.state._set_description(self.StateDescription)
+                acl_set.state._set_description(self.StateDescription)
         if target_attr == "StateDescription":
-            return self.acl_set.state.description
+            return acl_set.state.description
         # Source
         if self.Source is not None:
             if content == "state" or content == "all":
-                self.acl_set.state._set_source(self.Source)
+                acl_set.state._set_source(self.Source)
         if target_attr == "Source":
-            return self.acl_set.state.source
+            return acl_set.state.source
 
         if content == "all" or content == "config":
-            for key in self.AclSetAclEntry_dict:
-                self.AclSetAclEntry_dict[key]._generate_bind(content=content, parent=acl_set)
+            for key in self.AclSetAclEntriesAclEntry_dict:
+                self.AclSetAclEntriesAclEntry_dict[key]._generate_bind(content=content, parent=acl_set)
         
         if target_attr is not None:
             return None
         return acl_set
     
     def get_keys(self):
-        return (self.AclSetName, self.AclSetType)
+        return (str(self.AclSetName), str(self.AclSetType))
 
     def get_path(self, target_attr=None, ui="rest"):
         if target_attr is None:
@@ -797,12 +810,11 @@ or port-authentication control(PAC).
 Below class is generated for XPATH ***/openconfig-acl:acl***
 
 ```python
-
-from apis.yang.codegen.acl.base.Acl import Acl
+from apis.yang.codegen.messages.acl.Base.Acl import AclBase
 
 class Acl(AclBase):
-    def __init__(self, configCounterCapability=None, stateCounterCapability=None):
-        super(Acl, self).__init__(configCounterCapability, stateCounterCapability)
+    def __init__(self,  ConfigCounterCapability=None, StateCounterCapability=None):
+        super(Acl, self).__init__( ConfigCounterCapability, StateCounterCapability)
 
     def configure_klish(self, dut, target_attr=None, operation="update", success=True, ignore_error=False, **kwargs):
         ''' Developers will implement this '''
@@ -820,7 +832,6 @@ class Acl(AclBase):
         ''' Users required to write code for klish '''
         status = True
         return status
-
 ```
 
 ## 4.2 Subscription Support
