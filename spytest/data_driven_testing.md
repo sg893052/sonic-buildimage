@@ -4,7 +4,7 @@ SpytTest - Data driven test development
 
 # High Level Design Document
 
-#### Rev 0.3
+#### Rev 0.4
 
 # Table of Contents
   - [Revision](#revision)
@@ -50,6 +50,7 @@ SpytTest - Data driven test development
 | 0.1 | 09/29/2021  |   Mohammed Faraaz  | Initial version                   |
 | 0.2 | 09/30/2021  |   Sachin Holla     | Add subscription test details     |
 | 0.3 | 09/30/2021  |   Balachandar Mani | Add verification test details     |
+| 0.4 | 09/30/2021  |   Arun Barboza     | Add RPC and GNOI test details     |
 
 # About this Manual
 
@@ -160,11 +161,21 @@ in `apis/yang/utils/gnmi` module.
 
 ### 3.1.3.4 RPC API
 
-Arun - Please fill
+This is a generic method which will be invoked by the Action API inside the message class. It is part of the spytest infra, and does the following:
+
+- Generates payload from the input field of the message object
+- Builds the URI from the message object
+- Executes the RPC
+- If the verify option is given, it compares the returned payload from the DUT with the (generated) payload from the output in the message object
 
 ### 3.1.3.4 GNOI API
 
-Arun - Please fill
+GNOI does not have a corresponding Yang model. Thus, there is no corresponding message It It is part of the spytest infra, and does the following:
+
+- Generates payload from the user supplied input
+- Generates a command to execute the gnoi_client in the telemetry docker
+- Executes the command on the DUT
+- If the verify option is given, it compares the returned payload with the user supplied expected output
 
 ### 3.1.3.5 get_ietf_json
 
@@ -895,11 +906,11 @@ def RpcContext:
 
 ## 4.3 GNOI Support
 
-Arun- Please fill
+TBD
 
 ## 4.4 RPC Support
 
-Arun - Please fill
+TBD
 
 # 5 Developer Steps
 
@@ -1000,7 +1011,7 @@ acl.verify_rest(dut, ui="rest")
 
 ## 5.6 Testcase Sample For RPC
 
-Arun- Please fill
+TBD
 
 ## 5.7 Testcase Sample For Subscription
 
@@ -1030,6 +1041,6 @@ def test_onchange_acl_description():
 
 ## 5.8 Testcase Sample For GNOI
 
-Arun- Please fill
+TBD
 
 
