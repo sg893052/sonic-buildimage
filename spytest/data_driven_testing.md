@@ -17,11 +17,13 @@ SpytTest - Data driven test development
      - [3.1.1 Code Generator](#311-code-generator)
      - [3.1.2 Message](#312-message)
      - [3.1.3 Generic APIs](#313-generic-apis)
-      - [3.1.3.1 Configuration API](#3141-configuration-api)
-      - [3.1.3.2 Verification API](#3142-verification-api)
-      - [3.1.3.3 Subscription API](#3143-subscription-class)
-      - [3.1.3.4 RPC API](#3143-rpc-api)
-      - [3.1.3.5 GNOI API](#3143-gnoi-api)
+      - [3.1.3.1 Configuration API](#3131-configuration-api)
+      - [3.1.3.2 Verification API](#3132-verification-api)
+      - [3.1.3.3 Subscription API](#3133-subscription-class)
+      - [3.1.3.4 RPC API](#3134-rpc-api)
+      - [3.1.3.5 GNOI API](#3135-gnoi-api)
+      - [3.1.3.6 get_ietf_json](#3136-get_ietf_json)
+      - [3.1.3.7 get_bind](#3137-get_bind)
      - [3.1.4 SpyTest Utils](#314-spytest-utils)
   - [4 Functionality](#4-functionality)
     - [4.1 Code Generation](#41-code-generation)
@@ -46,7 +48,7 @@ SpytTest - Data driven test development
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 09/29/2021  |   Mohammed Faraaz  | Initial version                   |
-| 0.2 | 09/30/2021  | Sachin Holla       | Add subscription test details     |
+| 0.2 | 09/30/2021  |   Sachin Holla     | Add subscription test details     |
 
 # About this Manual
 
@@ -104,10 +106,13 @@ Along with attributes the messages also contain below Action methods
 
 ## 3.1.3 Generic APIs
 
-Generic APIs are not part of message class, they sit outside the message class. They are part of spytest infrastructure. 
+Generic APIs are not part of generated code. They are added in **apis/yang/codegen/base.py** module (This module is a master base class for all generated message classes).
+
 The role of generic APIs is to service the request from Action methods. Below are the some of task Generic APIs perform
 - Building a configuration, deconfiguration, subscription and a verification request specific to the UI type.
 - Executing the request and validating the response.
+- Building an IETF JSON.
+- Getting a pyangbind object for a specific class, attribute or a path.
 
 Following are some of the Generic APIs
 
@@ -137,6 +142,26 @@ Arun - Please fill
 ### 3.1.3.4 GNOI API
 
 Arun - Please fill
+
+### 3.1.3.5 get_ietf_json
+
+Generates the IETF JSON for a specific class, attribute or a path.
+
+```python
+    def get_ietf_json(self, content="all", target_attr=None, target_path=None, indent=2):
+        """ Generates the IETF JSON for a specific class, attribute or a path.
+        """
+```
+
+### 3.1.3.6 get_bind
+
+Generates the Pyangbind Object for a specific class, attribute or a path.
+
+```python
+    def get_bind(self,content="all", target_attr=None, target_path=None):
+        """ Generates the Pyangbind Object for a specific class, attribute or a path.
+        """
+```
 
 ## 3.1.4 SpyTest Utils
 
