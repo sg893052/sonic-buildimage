@@ -30,15 +30,15 @@ SpytTest - Data driven test development
       - [4.2.2 Creating Subscription](#422-creating-subscription)
       - [4.2.3 Verifying Notifications](#423-verifying-notifications)
     - [4.3 GNOI Support](#43-gnoi-support)
-    - [4.4 RPC Support](#43-rpc-support)
+    - [4.4 RPC Support](#44-rpc-support)
   - [5 Developer Steps](#5-developer-steps) 
     - [5.1 Message Generation](#51-message-generation) 
     - [5.2 Yang Binding Generation](#52-yang-binding-generation) 
     - [5.3 Testcase Sample For Configuration](#53-testcase-sample-for-configuration)
-    - [5.4 Testcase Sample For Verification](#53-testcase-sample-for-verification)
-    - [5.5 Testcase Sample For RPC](#53-testcase-sample-for-rpc)
-    - [5.6 Testcase Sample For Subscription](#53-testcase-sample-for-subscription)
-    - [5.7 Testcase Sample For GNOI](#53-testcase-sample-for-gnoi)
+    - [5.4 Testcase Sample For Verification](#54-testcase-sample-for-verification)
+    - [5.5 Testcase Sample For RPC](#55-testcase-sample-for-rpc)
+    - [5.6 Testcase Sample For Subscription](#56-testcase-sample-for-subscription)
+    - [5.7 Testcase Sample For GNOI](#57-testcase-sample-for-gnoi)
   
 # Revision
 
@@ -860,7 +860,7 @@ Will be same as gNMI get/set operations.
 
 ### 4.2.2 Creating Subscription
 
-Every message base class will have a `subscribe()` method which can be used to create a subscription.
+Message master base class will have a `subscribe()` method which can be used to create a subscription.
 This method will accept the subscription mode, optional property name and other optional subscription
 parameters as shown below.
 
@@ -891,6 +891,10 @@ def subscribe(self, dut, mode, target_attr=None, target_path=None, timeout=None,
                     when mode is 'sample' or 'target_defined'.
     """
 ```
+
+Testcase should create a message class, fill the key attributes and invoke its subscribe() method.
+Keys can be a wildcard character (`*`) too.
+The subscribe() method will return a `RpcContext` object, which can be used for verifying notification messages.
 
 ### 4.2.3 Verifying Notifications
 
@@ -1031,12 +1035,15 @@ Arun- Please fill
 
 ## 5.6 Testcase Sample For Subscription
 
+Following is a sample test case to subscribe for ACL changes and verify the notifications
+for ACL create and delete cases.
+
 ```python
 def test_onchange_acl_description():
     # Subscribe ON_CHANGE of ACL description
     aclPattern = AclSet(Name="*", Type="*")
     rpc = aclPattern.subscribe(dut, mode="on_change", timeout=10)
-    # There should not be any sync updates -- description is not configured yet
+    # There should not be any sync updates -- ACL is not configured yet
     if not rpc.verify_notifications(None, sync=True):
          st.report_fail("msg", "Not expecting any sync update")
     # Create an ACL
