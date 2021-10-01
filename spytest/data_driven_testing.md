@@ -108,7 +108,7 @@ Along with attributes the messages also contain below Action methods
 
 ## 3.1.3 Generic APIs
 
-Generic APIs are not part of generated code. They are added in **apis/yang/codegen/base.py** module (This module is a master base class for all generated base message classes).
+Generic APIs are not part of generated code. They are added in **apis/yang/codegen/base.py** module (This module contains a class **Base**, which is a master base class for all generated base message classes).
 
 The role of generic APIs is to service the request from Action methods. Below are the some of task Generic APIs perform
 - Building a configuration, deconfiguration, subscription and a verification request specific to the UI type.
