@@ -880,14 +880,15 @@ Bala - Please fill
 
 # 5 Developer Steps
 
-Yang models will be placed under ***brcm-spytest/apis/yang/models***
-When developer modifies the YANG contents or rebases with newer versions, they are required to regenerate Messages and Bindings using below steps. Once the Messages and Bindings are regenerated, they need to be committed along with the YANG changes.
-
 ## 5.1 Copying Relevant YANGs
 
 Yang models will be placed under **brcm-spytest/apis/yang/modules**
+
 Developers should be copying relevant yangs from sonic-mgmt-common/build/yang to brcm-spytest/apis/yang/modules directory.
-When developer modifies the YANG contents **brcm-spytest/apis/yang/modules** or rebases with newer versions from **sonic-mgmt-common/build/yang**, they are required to regenerate Messages and Bindings using below steps. Once the Messages and Bindings are regenerated, they need to be committed along with the YANG changes.
+
+When developer modifies the YANG contents **brcm-spytest/apis/yang/modules** or rebases with newer versions from **sonic-mgmt-common/build/yang**, they are required to regenerate Messages and Bindings using below steps.
+
+Once the Messages and Bindings are regenerated, they need to be committed along with the YANG changes.
 
 ## 5.2 Message Generation
 
