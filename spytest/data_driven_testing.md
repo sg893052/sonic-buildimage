@@ -1,6 +1,6 @@
 # Feature Name
 
-SpytTest - Data driven test development
+SpyTest - Data Driven Test Development
 
 # High Level Design Document
 
