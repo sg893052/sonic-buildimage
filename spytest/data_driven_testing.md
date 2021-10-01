@@ -126,7 +126,7 @@ Bala/Arun - Please fill
 ### 3.1.3.3 Subscription API
 
 Subscription test APIs will use the existing gNMI request and verification APIs defined
-in `apis/yang/utils/gnmi.py` module.
+in `apis/yang/utils/gnmi` module.
 
 ### 3.1.3.4 RPC API
 
@@ -848,7 +848,7 @@ Existing APIs operate on path and JSON payload.
 Message classes will provide a thin wrapper around them so that developer can use only the
 message classes in his test code.
 This should cover simple one-path subscription cases.
-Developer should directly use APIs from `apis/yang/utils/gnmi.py` for multi-path subscriptions
+Developer should directly use APIs from `apis/yang/utils/gnmi` for multi-path subscriptions
 and other advanced test cases.
 
 Note that all the APIs discussed in this section automatically use "gnmi" UI.
@@ -865,8 +865,9 @@ This method will accept the subscription mode, optional property name and other 
 parameters as shown below.
 
 ```python
-def subscribe(self, dut, mode, target_attr=None, timeout=None, target=None, origin=None,
-              updates_only=False, suppress_redundant=False, sample_interaval=None):
+def subscribe(self, dut, mode, target_attr=None, target_path=None, timeout=None,
+              target=None, origin=None, updates_only=False,
+              suppress_redundant=False, sample_interaval=None):
     """Creates gNMI subscription for path self.get_path(ui="gnmi", target_attr=target_attr).
     Returns a RpcContext object which can be used for validating the notification messages.
 
@@ -875,6 +876,8 @@ def subscribe(self, dut, mode, target_attr=None, timeout=None, target=None, orig
     mode            Subscription mode -- should be one of "on_change", "sample", "target_defined",
                     "poll" or "once". Values are case insensitive.
     target_attr     An optional property name of this message class. Used to derive the subpath.
+    target_path     Subpath inside this message class.
+                    Only one of target_attr or target_path can be specified.
     timeout         Hard timeout for test case; in seconds. Used to break verification loop when
                     expected notifications are not received. It is recommended that developers pass
                     an appropriate timeout value based on the verification steps in the test case.
@@ -901,7 +904,7 @@ class Notification(ABC):
     """Abstract base class to express expected notification data"""
 
 class UpdateNotification(Notification):
-    def __init__(self, data, prefix=None, target_path=None, iterations=1, interval=20):
+    def __init__(self, data, prefix=None, target_attr=None, target_path=None, iterations=1, interval=20):
         """Expected update notification data.
         Parameters:
         data        A message class containing the expected notification data.
@@ -909,17 +912,22 @@ class UpdateNotification(Notification):
                     context should be filled either in this message instance itself; or
                     can be separately passed as the prefix.
         prefix      Optional message class that defines the parent context for data.
-        target_path Property name indicating the subpath inside the data class.
+        target_attr Property name indicating the subpath inside the data class.
+        target_path Subpath inside the data class.
+                    Only one of target_attr or target_path can be specified.
         iterations  Expected number of notification messages containing the values in data class. 
         interval    Number of seconds between notifications when iterations > 1.
         """
 
 class DeleteNotification(Notification):
-    def __init__(self, data, target_path=None):
+    def __init__(self, data, prefix=None, target_attr=None, target_path=None):
         """Expecteds delete notification path.
         Parameters:
         data        A message class or string path indicating the expected delete path.
-        target_path Property name indicating the subpath inside the data class.
+        prefix      Optional message class that defines the parent context for data.
+        target_attr Property name indicating the subpath inside the data class.
+        target_path Subpath inside the data class.
+                    Only one of target_attr or target_path can be specified.
         """
 
 def RpcContext:
