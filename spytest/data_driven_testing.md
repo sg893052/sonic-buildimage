@@ -4,7 +4,7 @@ SpytTest - Data driven test development
 
 # High Level Design Document
 
-#### Rev 0.2
+#### Rev 0.3
 
 # Table of Contents
   - [Revision](#revision)
@@ -49,6 +49,7 @@ SpytTest - Data driven test development
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 09/29/2021  |   Mohammed Faraaz  | Initial version                   |
 | 0.2 | 09/30/2021  |   Sachin Holla     | Add subscription test details     |
+| 0.3 | 09/30/2021  |   Balachandar Mani | Add verification test details     |
 
 # About this Manual
 
@@ -106,7 +107,7 @@ Along with attributes the messages also contain below Action methods
 
 ## 3.1.3 Generic APIs
 
-Generic APIs are not part of generated code. They are added in **apis/yang/codegen/base.py** module (This module is a master base class for all generated message classes).
+Generic APIs are not part of generated code. They are added in **apis/yang/codegen/base.py** module (This module is a master base class for all generated base message classes).
 
 The role of generic APIs is to service the request from Action methods. Below are the some of task Generic APIs perform
 - Building a configuration, deconfiguration, subscription and a verification request specific to the UI type.
@@ -128,7 +129,29 @@ For KLISH, it invokes the corresponding obj.configure_klish(...), which may have
 
 ### 3.1.3.2 Verification API
 
-Bala/Arun - Please fill
+This is a generic API which will be invoked from the message class's method to verify the REST/GNMI GET method's response.
+
+#### 3.1.3.2.1 REST GET Verification API
+
+This API performs the GET request using the REST interface which will be invoked by the verfiy_rest method inside the message class, this API is added to the spytest infrastructure, this method does the below things
+
+- Invoke the get_path() method of the Message class to get the URL path.
+- Perform the REST GET request on the URL path of the Message class and get its response.
+- Get the pyangbind object by calling get_bind() method of the Message class.
+- Call the generate_elements method of the pybindCustomIETFJSONEncoder to create the dictionary of the pyanbind object.
+- Get the response payload of the GET request and compare it with pyangbind's dictionary based on the encoding type.(IETF_JSON)
+- Return the status of the comparison.
+
+#### 3.1.3.2.2 GNMI GET Verification API
+
+This API performs the GET request using the GNMI interface which will be invoked by the verfiy_gnmi method inside the message class, this API is added to the spytest infrastructure, this method does the below things
+
+- Invoke the get_path() method of the Message class to get the URL path.
+- Perform the GNMI GET request on the URL path of the Message class and get its response
+- Get the pyangbind object by calling get_bind() method of the Message class
+- Call the generate_elements method of the pybindCustomIETFJSONEncoder to create the JSON dictionary of the pyanbind object.
+- Get the response payload of the GET request and compare it with pyangbind's dictionary based on the encoding type.(IETF_JSON)
+- Return the status of the comparison.
 
 ### 3.1.3.3 Subscription API
 
@@ -876,7 +899,7 @@ Arun- Please fill
 
 ## 4.4 RPC Support
 
-Bala - Please fill
+Arun - Please fill
 
 # 5 Developer Steps
 
@@ -954,7 +977,26 @@ acl.unconfigure(dut)
 
 ## 5.5 Testcase Sample For Verification
 
-Bala - Please fill
+```python
+
+from apis.yang.codegen.messages.acl.Acl import Acl
+from apis.yang.codegen.messages.acl.AclSet import AclSet
+from apis.yang.codegen.messages.acl.AclSetAclEntriesAclEntry import AclSetAclEntriesAclEntry
+
+dut = None
+acl=Acl(ConfigCounterCapability="INTERFACE_ONLY", StateCounterCapability="INTERFACE_ONLY")
+aclSet1 = AclSet(AclSetName="MYACL1", AclSetType="ACL_IPV4")
+
+aclSet1.configDescription = "sample"
+aclSet2 = AclSet(AclSetName="MYACL2", AclSetType="ACL_IPV4", ConfigDescription="faraaz2")
+acl_entry = AclSetAclEntriesAclEntry(AclEntrySequenceId=1, ConfigDescription="cool")
+aclSet1.add_AclSetAclEntriesAclEntry(acl_entry)
+acl.add_AclSet(aclSet1)
+acl.add_AclSet(aclSet2)
+
+acl.verify_rest(dut, ui="rest")
+
+```
 
 ## 5.6 Testcase Sample For RPC
 
