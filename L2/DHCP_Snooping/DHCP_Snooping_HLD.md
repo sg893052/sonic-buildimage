@@ -129,9 +129,8 @@ List of configuration and display aspects:
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 1.3 Scalability Requirements
 
-1. DHCP Snooping feature is qualified to handle upto 4096 DHCPv4 clients. 
-1. DHCP Snooping feature is qualified to handle upto 4096 DHCPv6 clients. 
-2. DHCP Snooping feature is qualified to handle upto 1024 static binding entries.   
+1. DHCP Snooping feature is qualified to handle upto 4096 DHCPv4 clients (1024 static entries, 3072 dynamic entries).
+2. DHCP Snooping feature is qualified to handle upto 4096 DHCPv6 clients (1024 static entries, 3072 dynamic entries)
 
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 1.4 Warm Boot Requirements
@@ -567,6 +566,8 @@ The following REST URIs are supported:
 <REST-SERVER:PORT>/restconf/operations/openconfig-dhcp-snooping:clear-dhcpv6-snooping-binding
 <REST-SERVER:PORT>/restconf/operations/openconfig-dhcp-snooping:clear-dhcp-snooping-statistics
 <REST-SERVER:PORT>/restconf/operations/openconfig-dhcp-snooping:clear-dhcpv6-snooping-statistics
+<REST-SERVER:PORT>/restconf/data/openconfig-dhcp-snooping:dhcp-snooping
+<REST-SERVER:PORT>/restconf/data/openconfig-dhcp-snooping:dhcp-snooping-binding
 
 ##openconfig-dhcp-snooping
 
@@ -770,8 +771,8 @@ For example,
 
         DHCP snooping is Enabled
         DHCP snooping source MAC verification is enabled
-        DHCP snooping is enabled on the following VLANs: 10, 20
-        DHCP snooping trusted interfaces: Ethernet2, Ethernet10
+        DHCP snooping is enabled on the following VLANs: 10 20
+        DHCP snooping trusted interfaces: Ethernet2 Ethernet10
 
         root@sonic:/home/admin# show ip dhcp-snooping binding 
 
@@ -874,7 +875,7 @@ The DHCP Snooping binding DB is updated to the APP_DB. Post a warm boot, this ta
 Go back to [Beginning of the document](#dhcp-snooping).
 # 7 Scalability
 
-DHCP Snoopoing feature allows 1024 Static entries to be configured. A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
+A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). For each pool by IP version type, DHCP Snooping feature allows 1K static entries and 3K dynamic entries. Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 
