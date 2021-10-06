@@ -2719,8 +2719,8 @@ Seq     Binding    Data                 AppDB              ASICDB         HW
 Extra entries in ApplDB: 1
   Entry 1 for port Ethernet0:
     DstIP=200.1.1.0/24
-	Seq=15
-	Action=Deny
+    Seq=15
+    Action=Deny
 
 Extra entries in ASIC DB: 1
   Entry 1 for port Ethernet0:
