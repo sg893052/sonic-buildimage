@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.11
+High level design document version 0.12
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -119,6 +119,7 @@ High level design document version 0.11
 | 0.9  | 07/12/2021 | Prabhu Sreenivasan, Amitabha Sen | Removed "dot1x timeout" and "clear dot1x statistics" commands, Removed scale limit for max ports supporting mab, dot1x. modified show dot1x output. |
 | 0.10 | 07/14/2021 | Prabhu Sreenivasan, Amitabha Sen | Added "dot1x pae" command and updated "show authentication interface" for the same. Updated section 6 Serviceability and Debug with syslog messages. Updated section 3.5 SAI with details. |
 | 0.11 | 09/21/2021 | Prabhu Sreenivasan, Amitabha Sen | section 1.3.1, Removed "Critical VLAN" from the requirement. section 3.6.2, Removed commands "aaa authentication pac", "authentication critical recovery max-reauth", "authentication event server dead action", "authentication event server dead action authorize voice" and "authentication event server alive action reinitialize". Updated "show authentication" output. Updated PAC_CONFIG_TABLE on section 3.2.1. Renamed section 2.2.3 to "Dynamic ACL". Updated section 9 - Limitations. Updated PAC_PORT_CONFIG_TABLE on section 3.2.1 and PAC_GLOBAL_CONFIG_TABLE on section 3.2.2.  Removed HOST_APD_STATS_TABLE from section 3.2.4. Removed section 3.3.2.8 Critical VLAN processing |
+| 0.12  | 10/08/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated section 3.6.1 with REST URL details. Updated section 3.2.5 PAC_CLIENT_HISTORY_TABLE schema.  |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -600,33 +601,36 @@ dacl                = 1*252VCHARS ; Dynamic ACL name
 
 **PAC_CLIENT_HISTORY_TABLE**   
 ```   
-"PAC_CLIENT_HISTORY_TABLE": {
-"ethernet1": [{
-"31-March-2021-13:46:02": {
-"client_mac_addr": "00:00:00:11:22:33",
-"authentication_method": "mab",
-"backend_auth_method": "radius",
-"auth_status": "authorized"
-}
-},
 {
-"31-March-2021-13:45:58": {
-"client_mac_addr": "00:00:00:11:22:33",
-"authentication_method": "802.1X",
-"backend_auth_method": "radius",
-"auth_status": "un-authorized"
-}
-}
-]
+	"PAC_CLIENT_HISTORY_TABLE": [
+    {
+      "index": "1",
+      "time_stamp": "May 07 2020 13:02:41",
+      "client_mac_addr": "00:00:00:11:22:33",
+      "authentication_method": "mab",
+      "auth_status": "authorized"
+    },
+    {
+      "index": "2",
+      "time_stamp": "May 07 2020 13:02:41",
+      "client_mac_addr": "00:00:00:11:22:33",
+      "authentication_method": "802.1X",
+      "auth_status": "un-authorized"
+    }
+  ]
 }
 
+key                    = PAC_CLIENT_HISTORY_TABLE: index                    ;index
 
-key = PAC_CLIENT_HISTORY_TABLE : port : date ; Physical Port Clientmac; Client MAC address ; Date
-;field = value
-client_mac_addr       =  <mac-address> ; Client MAC address
-authentication_method = "802.1x"/'mab" ; Method used to authenticate the client
-backend_auth_method   = "radius" ; Backend authentication method used to authorize the client.
-auth_status           = "authorized"/"unauthorized" ; Authorization status of the client
+;field                 = value
+
+index                  =  1*5DIGIT                                          ;entry index
+
+client_mac_addr        =  <mac-address>                                     ;Client MAC address
+
+authentication_method  = "802.1x"/'mab"                                     ;Method used to authenticate the client
+
+auth_status            = "authorized"/"unauthorized"                        ;Authorization status of the client
 
 ```   
 
@@ -829,15 +833,15 @@ This is a special VLAN which is used to authorize clients which fail authenticat
 *Guest VLAN*   
 This is a special VLAN used to authorize 802.1X unaware clients. Refer [4] for details.
 
-#### 3.3.2.9 Monitor Mode   
+#### 3.3.2.8 Monitor Mode   
 If Monitor mode is enabled, Authentication Manager places the client in Monitor mode as applicable.   
 
 
-#### 3.3.2.10 Authentication History   
+#### 3.3.2.9 Authentication History   
 Authentication Manager maintains a database of authentication events. Events like “Authorized” or “Unauthorized” are recorded along with the timestamp, port number, client MAC address, and the authentication method used.   
 
 
-#### 3.3.2.11 Open Authentication  
+#### 3.3.2.10 Open Authentication  
 The Open Authentication capability allows Authentication Manager to allow client traffic events before it authenticates. This is typically used to allow certain devices to allow access to network resources prior to authenticating to obtain IP address and download configuration or firmware upgrades. Once the information is downloaded, the device will authenticate to the network.  
 
 Open Authentication is configured per interface. The open authentication settings are ignored for force-authorized and force-unauthorized ports.   
@@ -978,7 +982,153 @@ sai_fdb_apis->set_fdb_entry_attribute(&fdb_entry1, &attr);
 ## 3.6 Manageability
 
 ### 3.6.1 Data Models
-Since Openconfig models are not available, Openconfig dot1x and mab are proprietary yang model following openconfig style.
+Since Openconfig models are not available, Openconfig dot1x and mab are proprietary yang model follow openconfig style.
+	
+```
+POST "REST-SERVER:PORT/restconf/data/openconfig-authmgr:authmgr/authmgr-global-config/config" Request body: {
+  "openconfig-authmgr:config": {
+    "monitor-mode-enable": true
+  }
+}
+Example:
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-authmgr:authmgr/authmgr-global-config" Request body: {
+"openconfig-authmgr:config":{"monitor-mode-enable":true}
+}
+
+
+GET "REST-SERVER:PORT/restconf/data/openconfig-authmgr:authmgr/authmgr-global-config/state"
+
+Example:
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-authmgr:authmgr/authmgr-global-config/state"
+Response data: 
+{
+  "openconfig-authmgr:state": {
+    "monitor-mode-enable": true
+  }
+}
+
+POST "REST-SERVER:PORT/restconf/data/openconfig-authmgr:authmgr/authmgr-port-config/interface={name}" Request body: { "openconfig-authmgr:config":{"name":"Ethernet8","port-control-mode":"AUTO","host-control-mode":"SINGLE_HOST","reauth-enable":true,"open-authentication-mode":true,"quiet-period":11,"reauth-period":2,"reauth-period-from-server":true,"max-users-per-port":6,"guest-vlan-id":1,"auth-fail-vlan-id":1,"max-reauth-attempts":5,"method-list":["DOT1X"],"priority-list":["DOT1X"],"port-pae-role":"AUTHENTICATOR"}}
+
+
+Example:
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-authmgr:authmgr/authmgr-port-config/interface=Ethernet8"
+{
+  "openconfig-authmgr:config": {
+  "name": "Ethernet20",
+        "port-control-mode": "AUTO",
+        "host-control-mode": "SINGLE_HOST",
+        "reauth-enable": true,
+        "open-authentication-mode": true,
+        "quiet-period": 11,
+        "reauth-period": 2,
+        "reauth-period-from-server": true,
+        "max-users-per-port": 6,
+        "guest-vlan-id": 1,
+        "auth-fail-vlan-id": 1,
+        "max-reauth-attempts": 5,
+        "method-list": [
+          "DOT1X"
+        ],
+        "priority-list": [
+          "DOT1X"
+        ],
+        "port-pae-role": "AUTHENTICATOR"
+  }
+}
+
+
+GET "REST-SERVER:PORT/restconf/data/openconfig-authmgr:authmgr/authmgr-port-config/interface={name}/state"
+
+Example:
+
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-authmgr:authmgr/authmgr-port-config/interface=Ethernet8/state"
+Response data:
+{
+  "openconfig-authmgr:state": {
+    "auth-fail-vlan-id": 1,
+    "guest-vlan-id": 1,
+    "host-control-mode": "SINGLE_HOST",
+    "max-reauth-attempts": 5,
+    "max-users-per-port": 6,
+    "method-list": [
+      "DOT1X"
+    ],
+    "open-authentication-mode": true,
+    "port-control-mode": "AUTO",
+    "port-pae-role": "AUTHENTICATOR",
+    "priority-list": [
+      "DOT1X"
+    ],
+    "quiet-period": 11,
+    "reauth-enable": true,
+    "reauth-period": 2,
+    "reauth-period-from-server": true
+  }
+}
+
+
+POST "REST-SERVER:PORT/restconf/data/openconfig-mab:mab/mab-global-config/config" Request body: {
+  "openconfig-mab:config": {
+    "group-size": 2,
+    "separator": ":",
+    "case": "LOWERCASE"
+  }
+}
+
+Example:
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-mab:mab/mab-global-config" Request body: {
+"openconfig-mab:config":{"group-size":2,"separator":":","case":"LOWERCASE"}
+}
+
+GET "REST-SERVER:PORT/restconf/data/openconfig-mab:mab/mab-global-config/state"
+
+Example:
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-mab:mab/mab-global-config/state"
+Response data: 
+{
+  "openconfig-mab:state": {
+    "case": "LOWERCASE",
+    "group-size": 2,
+    "separator": ":"
+  }
+}
+
+POST "REST-SERVER:PORT/restconf/data/openconfig-mab:mab/mab-port-config/interface={name}" Request body: { 
+"openconfig-mab:config":{"name":"Ethernet0","mab-enable":true,"mab-auth-type":"PAP"}}
+
+Example:
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-mab:mab/mab-port-config/interface=Ethernet0/state"
+Response data:
+{
+  "openconfig-mab:state": {
+    "mab-enable":true,
+    "mab-auth-type":"PAP" 
+  }
+}
+
+
+POST "REST-SERVER:PORT/restconf/data/openconfig-hostapd:hostapd/hostapd-global-config/config" Request body: {
+  "openconfig-hostapd:config": {
+	"dot1x-system-auth-control": true
+  }
+}
+
+Example:
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-hostapd:hostapd/hostapd-global-config" Request body: {
+"openconfig-hostapd:config":{"dot1x-system-auth-control": true}
+}
+
+GET "REST-SERVER:PORT/restconf/data/openconfig-hostapd:hostapd/hostapd-global-config/state"
+
+Example:
+GET "<REST-SERVER:PORT>/restconf/data/openconfig-hostapd:hostapd/hostapd-global-config/state"
+Response data: 
+{
+  "openconfig-hostapd:state": {
+    "dot1x-system-auth-control": true
+  }
+}	
+```
 
 ### 3.6.2 Configuration Commands
 
