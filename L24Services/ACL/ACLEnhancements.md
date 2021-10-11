@@ -52,11 +52,12 @@ High level design document version 0.7
 				- *[2.2.2.2.3 Policy of type Forwarding](#22223-policy-of-type-forwarding)*
 				- *[2.2.2.2.4 Policy of type ACL-COPP](#22224-policy-of-type-acl-copp)*
 			- [2.2.2.3 Policy based forwarding next-hop groups](#2223-policy-based-forwarding-next-hop-groups)
-			- [2.2.2.4 Applying policies to interfaces](#2224-applying-policies-to-interfaces)
-				- *[2.2.2.4.1 Evaluation of traffic within the same policy](#22241-evaluation-of-traffic-within-the-same-policy)*
-				- *[2.2.2.4.2 Evaluation of traffic across interfaces of same types](#22242-evaluation-of-traffic-across-interfaces-of-same-types)*
-				- *[2.2.2.4.3 Evaluation of traffic across interfaces of different types](#22243-evaluation-of-traffic-across-interfaces-of-different-types)*
-				- *[2.2.2.4.4 Evaluation of traffic across policies of different types](#22244-evaluation-of-traffic-across-policies-of-different-types)*
+			- [2.2.2.4 Policy based forwarding replication groups](#2224-policy-based-forwarding-replication-groups)
+			- [2.2.2.5 Applying policies to interfaces](#2225-applying-policies-to-interfaces)
+				- *[2.2.2.5.1 Evaluation of traffic within the same policy](#22251-evaluation-of-traffic-within-the-same-policy)*
+				- *[2.2.2.5.2 Evaluation of traffic across interfaces of same types](#22252-evaluation-of-traffic-across-interfaces-of-same-types)*
+				- *[2.2.2.5.3 Evaluation of traffic across interfaces of different types](#22253-evaluation-of-traffic-across-interfaces-of-different-types)*
+				- *[2.2.2.5.4 Evaluation of traffic across policies of different types](#22254-evaluation-of-traffic-across-policies-of-different-types)*
 	- [2.3 Feature support matrix](#23-feature-support-matrix)
 		- [2.3.1 Policy Type support](#231-policy-type-support)
 		- [2.3.2 QoS policy actions support](#232-qos-policy-actions-support)
@@ -77,16 +78,19 @@ High level design document version 0.7
 			- [3.2.1.6 Policy sections table](#3216-policy-sections-table)
 			- [3.2.1.7 Policy binding table](#3217-policy-binding-table)
 			- [3.2.1.8 Policy based forwarding next hop group table](#3218-policy-based-forwarding-next-hop-group-table)
-			- [3.2.1.9 Config DB schema changes history](#3219-config-db-schema-changes-history)
-				- *[3.2.1.9.1 Schema changes in SONiC 3.1.1](#32191-schema-changes-in-sonic-311)*
+			- [3.2.1.9 Policy based forwarding replication group table](#3219-policy-based-forwarding-replication-group-table)
+			- [3.2.1.10 Config DB schema changes history](#32110-config-db-schema-changes-history)
+				- *[3.2.1.10.1 Schema changes in SONiC 3.1.1](#321101-schema-changes-in-sonic-311)*
 		- [3.2.2 App DB](#322-app-db)
 			- [3.2.2.1 ACL Table](#3221-acl-table)
 			- [3.2.2.2 ACL Rule Table](#3222-acl-rule-table)
 			- [3.2.2.3 Policy based forwarding group table](#3223-policy-based-forwarding-group-table)
 			- [3.2.2.4 Policy based forwarding next hop group table](#3224-policy-based-forwarding-next-hop-group-table)
+			- [3.2.2.5 Policy based forwarding replication group table](#3225-policy-based-forwarding-replication-group-table)
 		- [3.2.3 State DB](#323-state-db)
 			- [3.2.3.1 Policy based forwarding group state](#3231-policy-based-forwarding-group-state)
 			- [3.2.3.2 Policy based forwarding next-hop group table state](#3232-policy-based-forwarding-next-hop-group-table-state)
+			- [3.2.3.3 Policy based forwarding replication group table state](#3233-policy-based-forwarding-replication-group-table-state)
 		- [3.2.4 ASIC DB](#324-asic-db)
 		- [3.2.5 Counter DB](#325-counter-db)
 	- [3.3 Switch State Service Design](#33-switch-state-service-design)
@@ -151,77 +155,85 @@ High level design document version 0.7
 			- [3.6.2.19 Updating PBF next-hop group members](#36219-updating-pbf-next-hop-group-members)
 			- [3.6.2.20 Setting PBF next-hop group threshold](#36220-setting-pbf-next-hop-group-threshold)
 			- [3.6.2.21 Deleting a PBF next-hop group](#36221-deleting-a-pbf-next-hop-group)
-			- [3.6.2.22 Add flow identified by a classifier to a policy](#36222-add-flow-identified-by-a-classifier-to-a-policy)
-				- *[3.6.2.22.1 Add flow using Sonic-CLI](#362221-add-flow-using-sonic-cli)*
-				- *[3.6.2.22.2 Add flow using Click CLI (Deprecated)](#362222-add-flow-using-click-cli-deprecated)*
-			- [3.6.2.23 Delete flow identified by a classifier to a policy](#36223-delete-flow-identified-by-a-classifier-to-a-policy)
-			- [3.6.2.24 Deleting flow using Sonic-CLI](#36224-deleting-flow-using-sonic-cli)
-			- [3.6.2.25 Deleting flow using Click CLI (Deprecated)](#36225-deleting-flow-using-click-cli-deprecated)
-			- [3.6.2.26 Add flow description](#36226-add-flow-description)
-			- [3.6.2.27 Delete flow description](#36227-delete-flow-description)
-			- [3.6.2.28 Add action(s) to flows](#36228-add-actions-to-flows)
-				- *[3.6.2.28.1 Add QoS actions to the flow using Sonic-CLI](#362281-add-qos-actions-to-the-flow-using-sonic-cli)*
-					- *[3.6.2.28.1.1 Add DSCP remarking action](#3622811-add-dscp-remarking-action)*
-					- *[3.6.2.28.1.2 Delete DSCP remarking action](#3622812-delete-dscp-remarking-action)*
-					- *[3.6.2.28.1.3 Add PCP remarking action](#3622813-add-pcp-remarking-action)*
-					- *[3.6.2.28.1.4 Delete PCP remarking action](#3622814-delete-pcp-remarking-action)*
-					- *[3.6.2.28.1.5 Add policer action](#3622815-add-policer-action)*
-					- *[3.6.2.28.1.6 Delete policer action](#3622816-delete-policer-action)*
-					- *[3.6.2.28.1.7 Add set traffic-class action](#3622817-add-set-traffic-class-action)*
-					- *[3.6.2.28.1.8 Delete set traffic-class action](#3622818-delete-set-traffic-class-action)*
-				- *[3.6.2.28.2 Adding monitoring actions to the flow](#362282-adding-monitoring-actions-to-the-flow)*
-					- *[3.6.2.28.2.1 Adding mirror session action](#3622821-adding-mirror-session-action)*
-					- *[3.6.2.28.2.2 Deleting mirror session action](#3622822-deleting-mirror-session-action)*
-				- *[3.6.2.28.3 Adding forwarding actions to the flow](#362283-adding-forwarding-actions-to-the-flow)*
-					- *[3.6.2.28.3.1 Adding / Deleting IPv4 next-hop](#3622831-adding--deleting-ipv4-next-hop)*
-					- *[3.6.2.28.3.2 Adding / Deleting IPv6 next-hop](#3622832-adding--deleting-ipv6-next-hop)*
-					- *[3.6.2.28.3.3 Adding / Deleting egress interface](#3622833-adding--deleting-egress-interface)*
-					- *[3.6.2.28.3.4 Adding / Deleting default drop action](#3622834-adding--deleting-default-drop-action)*
-					- *[3.6.2.28.3.5 Adding / Deleting IPv4 next-hop group action](#3622835-adding--deleting-ipv4-next-hop-group-action)*
-					- *[3.6.2.28.3.6 Adding / Deleting IPv6 next-hop group action](#3622836-adding--deleting-ipv6-next-hop-group-action)*
-				- *[3.6.2.28.4 Adding CoPP actions to the flow](#362284-adding-copp-actions-to-the-flow)*
-					- *[3.6.2.28.4.1 Adding / Deleting trap Queue action](#3622841-adding--deleting-trap-queue-action)*
-					- *[3.6.2.28.4.2 Adding / Deleting Policer action](#3622842-adding--deleting-policer-action)*
-				- *[3.6.2.28.5 Add flow actions using Click CLIs (Deprecated)](#362285-add-flow-actions-using-click-clis-deprecated)*
-			- [3.6.2.29 Applying the policy to an interface](#36229-applying-the-policy-to-an-interface)
-				- *[3.6.2.29.1 Applying policy to an interface using Sonic-CLI](#362291-applying-policy-to-an-interface-using-sonic-cli)*
-				- *[3.6.2.29.2 Applying policy to an interface using Click CLI (Deprecated)](#362292-applying-policy-to-an-interface-using-click-cli-deprecated)*
-			- [3.6.2.30 Removing policy from an interface](#36230-removing-policy-from-an-interface)
-				- *[3.6.2.30.1 Removing policy from an interface using Sonic-CLI](#362301-removing-policy-from-an-interface-using-sonic-cli)*
-				- *[3.6.2.30.2 Removing policy from an interface using Click CLI (Deprecated)](#362302-removing-policy-from-an-interface-using-click-cli-deprecated)*
+			- [3.6.2.22 Adding a PBF replication group](#36222-adding-a-pbf-replication-group)
+			- [3.6.2.23 Updating PBF replication group members](#36223-updating-pbf-replication-group-members)
+			- [3.6.2.24 Deleting a PBF replication group](#36224-deleting-a-pbf-replication-group)
+			- [3.6.2.25 Add flow identified by a classifier to a policy](#36225-add-flow-identified-by-a-classifier-to-a-policy)
+				- *[3.6.2.25.1 Add flow using Sonic-CLI](#362251-add-flow-using-sonic-cli)*
+				- *[3.6.2.25.2 Add flow using Click CLI (Deprecated)](#362252-add-flow-using-click-cli-deprecated)*
+			- [3.6.2.26 Delete flow identified by a classifier to a policy](#36226-delete-flow-identified-by-a-classifier-to-a-policy)
+			- [3.6.2.27 Deleting flow using Sonic-CLI](#36227-deleting-flow-using-sonic-cli)
+			- [3.6.2.28 Deleting flow using Click CLI (Deprecated)](#36228-deleting-flow-using-click-cli-deprecated)
+			- [3.6.2.29 Add flow description](#36229-add-flow-description)
+			- [3.6.2.30 Delete flow description](#36230-delete-flow-description)
+			- [3.6.2.31 Add action(s) to flows](#36231-add-actions-to-flows)
+				- *[3.6.2.31.1 Add QoS actions to the flow using Sonic-CLI](#362311-add-qos-actions-to-the-flow-using-sonic-cli)*
+					- *[3.6.2.31.1.1 Add DSCP remarking action](#3623111-add-dscp-remarking-action)*
+					- *[3.6.2.31.1.2 Delete DSCP remarking action](#3623112-delete-dscp-remarking-action)*
+					- *[3.6.2.31.1.3 Add PCP remarking action](#3623113-add-pcp-remarking-action)*
+					- *[3.6.2.31.1.4 Delete PCP remarking action](#3623114-delete-pcp-remarking-action)*
+					- *[3.6.2.31.1.5 Add policer action](#3623115-add-policer-action)*
+					- *[3.6.2.31.1.6 Delete policer action](#3623116-delete-policer-action)*
+					- *[3.6.2.31.1.7 Add set traffic-class action](#3623117-add-set-traffic-class-action)*
+					- *[3.6.2.31.1.8 Delete set traffic-class action](#3623118-delete-set-traffic-class-action)*
+				- *[3.6.2.31.2 Adding monitoring actions to the flow](#362312-adding-monitoring-actions-to-the-flow)*
+					- *[3.6.2.31.2.1 Adding mirror session action](#3623121-adding-mirror-session-action)*
+					- *[3.6.2.31.2.2 Deleting mirror session action](#3623122-deleting-mirror-session-action)*
+				- *[3.6.2.31.3 Adding forwarding actions to the flow](#362313-adding-forwarding-actions-to-the-flow)*
+					- *[3.6.2.31.3.1 Adding / Deleting IPv4 next-hop](#3623131-adding--deleting-ipv4-next-hop)*
+					- *[3.6.2.31.3.2 Adding / Deleting IPv6 next-hop](#3623132-adding--deleting-ipv6-next-hop)*
+					- *[3.6.2.31.3.3 Adding / Deleting egress interface](#3623133-adding--deleting-egress-interface)*
+					- *[3.6.2.31.3.4 Adding / Deleting default drop action](#3623134-adding--deleting-default-drop-action)*
+					- *[3.6.2.31.3.5 Adding / Deleting IPv4 next-hop group action](#3623135-adding--deleting-ipv4-next-hop-group-action)*
+					- *[3.6.2.31.3.6 Adding / Deleting IPv6 next-hop group action](#3623136-adding--deleting-ipv6-next-hop-group-action)*
+					- *[3.6.2.31.3.7 Adding / Deleting IPv4 replication group action](#3623137-adding--deleting-ipv4-replication-group-action)*
+					- *[3.6.2.31.3.8 Adding / Deleting IPv6 replication group action](#3623138-adding--deleting-ipv6-replication-group-action)*
+				- *[3.6.2.31.4 Adding CoPP actions to the flow](#362314-adding-copp-actions-to-the-flow)*
+					- *[3.6.2.31.4.1 Adding / Deleting trap Queue action](#3623141-adding--deleting-trap-queue-action)*
+					- *[3.6.2.31.4.2 Adding / Deleting Policer action](#3623142-adding--deleting-policer-action)*
+				- *[3.6.2.31.5 Add flow actions using Click CLIs (Deprecated)](#362315-add-flow-actions-using-click-clis-deprecated)*
+			- [3.6.2.32 Applying the policy to an interface](#36232-applying-the-policy-to-an-interface)
+				- *[3.6.2.32.1 Applying policy to an interface using Sonic-CLI](#362321-applying-policy-to-an-interface-using-sonic-cli)*
+				- *[3.6.2.32.2 Applying policy to an interface using Click CLI (Deprecated)](#362322-applying-policy-to-an-interface-using-click-cli-deprecated)*
+			- [3.6.2.33 Removing policy from an interface](#36233-removing-policy-from-an-interface)
+				- *[3.6.2.33.1 Removing policy from an interface using Sonic-CLI](#362331-removing-policy-from-an-interface-using-sonic-cli)*
+				- *[3.6.2.33.2 Removing policy from an interface using Click CLI (Deprecated)](#362332-removing-policy-from-an-interface-using-click-cli-deprecated)*
 		- [3.6.3 Show Commands](#363-show-commands)
 			- [3.6.3.1 Show ACL binding summary](#3631-show-acl-binding-summary)
 			- [3.6.3.2 Show ACL Rules and statistics](#3632-show-acl-rules-and-statistics)
 			- [3.6.3.3 Clear ACL statistics](#3633-clear-acl-statistics)
-			- [3.6.3.4 Show classifier details](#3634-show-classifier-details)
-				- *[3.6.3.4.1 Show classifier details using Sonic-CLI](#36341-show-classifier-details-using-sonic-cli)*
-				- *[3.6.3.4.2 Show classifier details using Click CLI (Deprecated)](#36342-show-classifier-details-using-click-cli-deprecated)*
-				- *[3.6.3.4.3 Show classifier sample output](#36343-show-classifier-sample-output)*
-			- [3.6.3.5 Show policy details](#3635-show-policy-details)
-				- *[3.6.3.5.1 Show policy details using Sonic-CLI](#36351-show-policy-details-using-sonic-cli)*
-				- *[3.6.3.5.2 Show policy details using Click-CLI (Deprecated)](#36352-show-policy-details-using-click-cli-deprecated)*
-				- *[3.6.3.5.3 Sample output](#36353-sample-output)*
-			- [3.6.3.6 Show policy binding summary](#3636-show-policy-binding-summary)
-				- *[3.6.3.6.1 Show policy binding summary using Sonic-CLI](#36361-show-policy-binding-summary-using-sonic-cli)*
-				- *[3.6.3.6.2 Show policy binding summary using Click CLI (Deprecated)](#36362-show-policy-binding-summary-using-click-cli-deprecated)*
-				- *[3.6.3.6.3 Show policy binding summary sample output](#36363-show-policy-binding-summary-sample-output)*
-			- [3.6.3.7 Show / Clear policy binding and counters for an interface](#3637-show--clear-policy-binding-and-counters-for-an-interface)
-				- *[3.6.3.7.1 Show / Clear policy binding and counters using SONiC-CLI](#36371-show--clear-policy-binding-and-counters-using-sonic-cli)*
-				- *[3.6.3.7.2 Show / Clear policy binding and counters using Click CLI (Deprecated)](#36372-show--clear-policy-binding-and-counters-using-click-cli-deprecated)*
-				- *[3.6.3.7.3 Show policy binding and counters sample output](#36373-show-policy-binding-and-counters-sample-output)*
-			- [3.6.3.8 Show policy based forwarding next-hop groups](#3638-show-policy-based-forwarding-next-hop-groups)
-			- [3.6.3.9 Show policy based forwarding next-hop group state for a specified interface](#3639-show-policy-based-forwarding-next-hop-group-state-for-a-specified-interface)
-			- [3.6.3.10 TCAM Allocation](#36310-tcam-allocation)
-				- *[3.6.3.10.1 Available predefined TCAM profiles](#363101-available-predefined-tcam-profiles)*
-				- *[3.6.3.10.2 Predefined TCAM profile details](#363102-predefined-tcam-profile-details)*
-				- *[3.6.3.10.3 Setting the predefined profile](#363103-setting-the-predefined-profile)*
-				- *[3.6.3.10.4 Checking the current TCAM Allocation](#363104-checking-the-current-tcam-allocation)*
-				- *[3.6.3.10.5 Clearing the TCAM Allocation scheme.](#363105-clearing-the-tcam-allocation-scheme)*
-				- *[3.6.3.10.6 Modifying the current TCAM allocation](#363106-modifying-the-current-tcam-allocation)*
-				- *[3.6.3.10.7 Setting a custom TCAM allocation](#363107-setting-a-custom-tcam-allocation)*
+			- [3.6.3.4 Showing object groups](#3634-showing-object-groups)
+			- [3.6.3.5 Show classifier details](#3635-show-classifier-details)
+				- *[3.6.3.5.1 Show classifier details using Sonic-CLI](#36351-show-classifier-details-using-sonic-cli)*
+				- *[3.6.3.5.2 Show classifier details using Click CLI (Deprecated)](#36352-show-classifier-details-using-click-cli-deprecated)*
+				- *[3.6.3.5.3 Show classifier sample output](#36353-show-classifier-sample-output)*
+			- [3.6.3.6 Show policy details](#3636-show-policy-details)
+				- *[3.6.3.6.1 Show policy details using Sonic-CLI](#36361-show-policy-details-using-sonic-cli)*
+				- *[3.6.3.6.2 Show policy details using Click-CLI (Deprecated)](#36362-show-policy-details-using-click-cli-deprecated)*
+				- *[3.6.3.6.3 Sample output](#36363-sample-output)*
+			- [3.6.3.7 Show policy binding summary](#3637-show-policy-binding-summary)
+				- *[3.6.3.7.1 Show policy binding summary using Sonic-CLI](#36371-show-policy-binding-summary-using-sonic-cli)*
+				- *[3.6.3.7.2 Show policy binding summary using Click CLI (Deprecated)](#36372-show-policy-binding-summary-using-click-cli-deprecated)*
+				- *[3.6.3.7.3 Show policy binding summary sample output](#36373-show-policy-binding-summary-sample-output)*
+			- [3.6.3.8 Show / Clear policy binding and counters for an interface](#3638-show--clear-policy-binding-and-counters-for-an-interface)
+				- *[3.6.3.8.1 Show / Clear policy binding and counters using SONiC-CLI](#36381-show--clear-policy-binding-and-counters-using-sonic-cli)*
+				- *[3.6.3.8.2 Show / Clear policy binding and counters using Click CLI (Deprecated)](#36382-show--clear-policy-binding-and-counters-using-click-cli-deprecated)*
+				- *[3.6.3.8.3 Show policy binding and counters sample output](#36383-show-policy-binding-and-counters-sample-output)*
+			- [3.6.3.9 Show policy based forwarding next-hop groups](#3639-show-policy-based-forwarding-next-hop-groups)
+			- [3.6.3.10 Show policy based forwarding next-hop group state for a specified interface](#36310-show-policy-based-forwarding-next-hop-group-state-for-a-specified-interface)
+			- [3.6.3.11 Show policy based forwarding replication groups](#36311-show-policy-based-forwarding-replication-groups)
+			- [3.6.3.12 Show policy based forwarding next-hop group state for a specified interface](#36312-show-policy-based-forwarding-next-hop-group-state-for-a-specified-interface)
+			- [3.6.3.13 ACL and Flow based services key profiles](#36313-acl-and-flow-based-services-key-profiles)
+			- [3.6.3.14 TCAM Allocation](#36314-tcam-allocation)
+				- *[3.6.3.14.1 Available predefined TCAM profiles](#363141-available-predefined-tcam-profiles)*
+				- *[3.6.3.14.2 Predefined TCAM profile details](#363142-predefined-tcam-profile-details)*
+				- *[3.6.3.14.3 Setting the predefined profile](#363143-setting-the-predefined-profile)*
+				- *[3.6.3.14.4 Checking the current TCAM Allocation](#363144-checking-the-current-tcam-allocation)*
+				- *[3.6.3.14.5 Clearing the TCAM Allocation scheme.](#363145-clearing-the-tcam-allocation-scheme)*
+				- *[3.6.3.14.6 Modifying the current TCAM allocation](#363146-modifying-the-current-tcam-allocation)*
+				- *[3.6.3.14.7 Setting a custom TCAM allocation](#363147-setting-a-custom-tcam-allocation)*
 	- [3.7 Consistency checker](#37-consistency-checker)
 		- [3.7.1 ACL consistency checker](#371-acl-consistency-checker)
-		- [3.7.2 Flow based services consistency checker](#372-flow-based-services-consistency-checker)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 	- [4.1 Create a Classifier](#41-create-a-classifier)
 	- [4.2 Create a QoS Policy and Section](#42-create-a-qos-policy-and-section)
@@ -253,6 +265,7 @@ High level design document version 0.7
 | 0.4  | 03/25/2020 | Abhishek Dharwadkar | Add FBS support for forwarding |
 | 0.5  | 11/25/2020 | Abhishek Dharwadkar | Add *established* keyword support for ACL |
 | 0.6 | 12/05/2020 | Abhishek Dharwadkar | Add FBS support for ACL-COPP and PBR enhancements for service-chaining |
+| 0.7 | 10/02/2021 | Abhishek Dharwadkar | Added PBR replication groups and ACL consistency checker details |
 
 # About this Manual
 This document provides general information about the ACL enhancements and Flow Based Services feature in SONiC.
@@ -328,7 +341,8 @@ The following are the requirements for ACL enhancements and Flow Based Services 
 10. Enhance monitoring capabilities by supporting Flow based sFlow in future.
 11. Ability to bind multiple policies of different types to Ports/LAGs, VLANs and Switch.
 12. Independent ingress and egress policy binding for a given interface.
-13. Merge non conflicting actions from different policies using ASIC capabilities to simplify user configuration. 
+13. Merge non conflicting actions from different policies using ASIC capabilities to simplify user configuration.
+14. Provide a mechanism to replicate FTB ICMP packets  to multiple anycast servers so that appropriate actions are taken by servers
 
 ### 1.3.2 Configuration and Management Requirements
 1. Provide config commands to support configuration and application of Flow based Services Policies.
@@ -346,7 +360,7 @@ ACL consistency checker must support the following
 
 1. Check consistency across all the databases involved ie Config DB, Application DB, ASIC DB
 2. Check consistency between ASIC DB and SDK/HW
-3. Output in Text and JSON format
+3. CLI and RPC support for output in text format and JSON format respectively.
 4. Check consistency for all ACLs, ACL type or ACL type and ACL name.
 
 ## 1.4 Design Overview
@@ -550,10 +564,40 @@ The traffic will be shared equally between all members of the next-hop group. By
 **Figure 3: PBR Traffic distribution with directly connected Next-hop-group members**
 The same pattern of traffic distribution is also observed for indirectly connected next-hops as well. Example if a next-hop group has 10 members NH0 to NH9 but NH0 to NH4 is reachable through router A, NH5 to NH7 is reachable through router B and NH8, NH9 is reachable through router C, then under ideal traffic and hashing conditions router A should see 50%, router B should see 30% and router C should see 20% of traffic forwarded by the forwarding policy.
 
-![PBR Traffic distribution with indirectly connected Next-hop-group members](images/PBRNhGrpIndirect.png "PBR Traffic distribution with indirectly connected Next-hop-group members")
+![PBR Traffic distribution with indirectly connected Next-hop-group members](images/PBRNHGrpIndirect.png "PBR Traffic distribution with indirectly connected Next-hop-group members")
 
 **Figure 4: PBR Traffic distribution with indirectly connected Next-hop-group members**
-#### 2.2.2.4 Applying policies to interfaces
+
+#### 2.2.2.4 Policy based forwarding replication groups
+
+PBF replication groups implement the FTB frame hashing problem as described in RFC7690. The following is a brief description of the problem description
+
+![FTB hashing problem overview](images/FTBHashProblem.png "FTB hashing problem overview")
+
+**Figure 5: FTB hashing problem overview**
+In the figure there are 4 anycast servers with the same IP address used for load sharing. All routers are configured with symmetric hashing to hash on SIP, DIP, Layer 4 source and destination ports. As shown in the magenta request and response packet flows, if the packet size sent is less than path MTU then the routers will be able to route the response to the same server which originated the requested as the hash for both packets will be same. If the packet size sent by a server is greater than path MTU (with don't fragment flag set) as described in the blue packet flow, the packet will be dropped by a router whose configured MTU is less than the packet size. In response it will generate a Frame Too Big (FTB) ICMP packet which may be routed to incorrect server as the ICMP packet hash may not be same as the original TCP packet hash. Since the ICMP doesn't have required information to route the packet to the originating server, it needs to replicated to all the servers with the same IP so that server which sent the big packet can adjust the size in the subsequent packets.  Policy based replication groups feature is used to implement replication of the necessary packets to various paths of the ECMP.
+
+Policy based replication provides a generic mechainsm to replicate a given packet to multiple paths of the ECMP as well to all the paths of different next-hops. This allows flexibility to use this feature in atypical scenarios not described in RFC7690. Replication group can consist of members / paths which have different speeds. The replication group is made up of the following elements
+
+1. Replication group type i.e. IPv4 or IPv6. Replication group member next-hops must be of the same type as well i.e. its not valid to have IPv6 member next-hops for IPv4 next-hop group or vice versa.
+2. Replication group members which are used as egress for forwarding traffic. Each member is identified by using a unique member/entry ID assigned by the user. Adding duplicate next-hops with different entry IDs is not supported.
+3. Replication member VRF for inter-VRF routing (optional). If VRF is not specified then its assumed as the VRF of the interface on which the policy is applied.
+4. Optional configuration for the member to be considered part of the group only if they are directly, indirectly connected or connected over a VxLAN tunnel. Default is any i.e. the next-hops can be directly or indirectly connected or reachable via VxLAN tunnel.
+5. Option to disable replication of the packets per path if its reachable via ECMP. 
+
+The number of copies generated by the replication group depends on the unique paths through which all the next-hops are reachable and not the number of next-hops configured. For example if a next-hop is reachable via an ECMP of 4 paths then 4 copy of the packet will be generated i.e. 1 per path by default unless **single-copy** is enabled. If  more than 1 next-hop is reachable via the same  path then only 1 copy will be generated for them. 
+
+The following diagram shows the packet replication to same server reachable locally and remote ECMP. The ingress router replicates the packets to the unique paths and sends 1 copy per VXLAN tunnel.  The policy applied on other leaf routers will replicate the packet to local interfaces.
+
+![ACL Replication Over VxLAN fabric](images/ACLReplOverVxLAN.png "ACL Replication Over VxLAN fabric")
+
+**Figure 6: ACL Replication Over VxLAN fabric**
+The following diagram shows the packet replication to different next-hops where single-copy per next-hop is useful. In the following diagram the packet needs to replicated to 2 next-hops S0 and S1. S0 is reachable via ECMP but there is only 1 physical server so only 1 packet copy needs to be generated. S1 are multiple physical severs so 1 copy needs to be generated per path.
+
+!["ACL replication with single-copy option"](images/ACLReplSingleCopy.png "ACL replication with single-copy option")
+
+**Figure 7: ACL replication with single-copy option**
+#### 2.2.2.5 Applying policies to interfaces
 When a policy is applied to an interface at ingress or egress (if supported), action will be taken in case of match, only traffic if the traffic ingresses or egresses from that interface. Traffic ingressing or egressing from other interfaces will not be affected. 
 
 A policy can be applied in the following direction (if supported)
@@ -573,7 +617,7 @@ Only 1 policy of a given type (e.g QoS) can be applied to an interface in a give
 
 The same policy can be also be applied to different interfaces and both ingress and egress (if supported).
 
-##### 2.2.2.4.1 Evaluation of traffic within the same policy
+##### 2.2.2.5.1 Evaluation of traffic within the same policy
 
 As mentioned in [section 2.2.2.2](#2_2_2_2-policies), a policy can have multiple sections. Each section has a classifier, priority and actions associated with it. The policies are programmed in the ASIC in the order of the priority or the sections. The order of the evaluation is based on the numerical value of `PRIORITY`.
 
@@ -581,29 +625,29 @@ The following diagram shows the order in which the policy sections are evaluated
 
 ![Policy evaluation with single match](images/PolicyEval.png "Policy evaluation with single match")
 
-**Figure 5: Policy evaluation with single match**
+**Figure 8: Policy evaluation with single match**
 
 The following diagram shows the order in which the policy sections are evaluated and final results when multiple sections match the traffic. The final result is picked up from the section with highest numerical value of the priority.
 
 ![Policy evaluation with multiple match](images/PolicyEvalMultiHit.png "Policy evaluation with multiple match")
 
-**Figure 6: Policy evaluation with multiple match**
+**Figure 9: Policy evaluation with multiple match**
 
-##### 2.2.2.4.2 Evaluation of traffic across interfaces of same types
+##### 2.2.2.5.2 Evaluation of traffic across interfaces of same types
 
 Policies applied to interfaces of same types are always non conflicting hence there is no conflict resolution between them.
 
-##### 2.2.2.4.3 Evaluation of traffic across interfaces of different types
+##### 2.2.2.5.3 Evaluation of traffic across interfaces of different types
 
 A policy can be applied at Port level, VLAN level and Switch level. A given packet can match all the 3 policies.  All interface types have a implicit priority associated with them which is in the order CPU > Port/LAG > VLAN > Switch. When a packet matches Port Policy, VLAN Policy and Switch policy, only Port policy will be applied. The evaluation of the port policy is  same as described in [section 2.2.2.3.1](#2_2_2_3_1-evaluation-of-traffic-within-the-same-policy). Counter of only Port policy will increment.
 
 ![Policy evaluation across interface types](images/PolicyEvalMultiIntf.png "Policy evaluation across interface types")
 
-**Figure 7: Policy evaluation across interface types**
+**Figure 10: Policy evaluation across interface types**
 
 The CPU port is equivalent to that of Switch as the traffic can go to CPU port from any interface. Since CPU port is at highest priority, its recommended to configure specific match criteria to prevent masking of Port/LAG/VLAN/Switch policies .  
 
-##### 2.2.2.4.4 Evaluation of traffic across policies of different types
+##### 2.2.2.5.4 Evaluation of traffic across policies of different types
 
 Data path ACLs and Flow based services policies are internally converted into ACL tables and are added as members of a parallel lookup ACL table group. This results in all ACL tables to be looked up in parallel and results merged in ASIC. The maximum number of tables that can be looked up in parallel is ASIC dependent. CRM statistics for ACL table will provide this information.
 
@@ -611,7 +655,7 @@ Policies of different types are designed to take specific actions. QoS Polices a
 
 ![Result merge across interfaces of different types](images/PolicyEvalMultiPolicy.png "Result merge across interfaces of different types")
 
-**Figure 8: Result merge across interfaces of different types**
+**Figure 11: Result merge across interfaces of different types**
 
 ## 2.3 Feature support matrix
 
@@ -648,6 +692,7 @@ Policies of different types are designed to take specific actions. QoS Polices a
 | Default drop action  | SONiC 3.1 |
 | IPv4 / IPv6 overlay next hop | SONiC 3.1.1 |
 | Next-hop groups | SONiC 3.2 |
+| Replication groups | SONiC 4.0 |
 
 ### 2.3.5 ACL-COPP Policy actions support
 | Feature        | Release supported |
@@ -662,7 +707,7 @@ The following diagram shows the high level design overview of ACL enhancements a
 
 ![Flow Based Service Overview](images/Overview.png "Flow Based Service Overview")
 
-**Figure 9: Flow Based Service Overview**
+**Figure 12: Flow Based Service Overview**
 
 ## 3.2 DB Changes
 
@@ -891,6 +936,8 @@ DEFAULT_PACKET_ACTION   = "DROP" / "FORWARD" ; Valid only when policy is of type
 SET_TRAP_QUEUE          = cpu_queue_val ; valid only when policy is of type "acl-copp"
 SET_IP_NEXTHOP_GROUP    = [1-64]*group-entry ; Valid only when policy is of type "forwarding"
 SET_IPV6_NEXTHOP_GROUP  = [1-64]*group-entry ; Valid only when policy is of type "forwarding"
+SET_IP_REPLICATION_GROUP   = [1-64]*group-entry ; Valid only when policy is of type "forwarding"
+SET_IPV6_REPLICATION_GROUP = [1-64]*group-entry ; Valid only when policy is of type "forwarding"
 
 ;value annotations
 dscp_val = DIGIT / %x31-36 %x30-33
@@ -963,15 +1010,37 @@ SET_IP_NEXTHOP   = [1-64]*ip-member-config
 SET_IPV6_NEXTHOP = [1-64]*ipv6-member-config
 
 ; value annotations
-ip-member-config   = entry-id "|" ip-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" ]
-ipv6-member-config = entry-id "|" ipv6-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" ]
+ip-member-config   = entry-id "|" ip-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" / "overlay" ]
+ipv6-member-config = entry-id "|" ipv6-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" / "overlay" ]
 entry-id           = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
 ```
-#### 3.2.1.9 Config DB schema changes history
+#### 3.2.1.9 Policy based forwarding replication group table
+
+The following provides information about the schema for a policy based forwarding next hop group table
+
+```
+key        = PBF_REPLICATION_GROUP_TABLE:group_name  ; group_name is a string made up of 1-63 
+                                                     ; characters and can have a-z,A-Z,0-9,
+                                                     ; hyphen and underscore
+                                                     
+;field           = value                                                     
+GROUP_NAME       = 1*63VCHAR
+DESCRIPTION      = 1*255VCHAR   ; Group Description
+TYPE             = "IPV4" / "IPV6"
+SET_IP_NEXTHOP   = [1-64]*ip-member-config
+SET_IPV6_NEXTHOP = [1-64]*ipv6-member-config
+
+; value annotations
+ip-member-config   = entry-id "|" ip-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" / "overlay" "|" [ "single-copy" ] ]
+ipv6-member-config = entry-id "|" ipv6-addr  "|" [ vrf-name ] "|" [ "recursive" / "non-recursive" / "overlay" "|" [ "single-copy" ] ]
+entry-id           = 1*4DIGIT / %x31-36 %x30-35 %x30-35 %x30-33 %x30-35
+```
+
+#### 3.2.1.10 Config DB schema changes history
 
 The following table shows the DB schema changes and the details of the DB migration
 
-##### 3.2.1.9.1 Schema changes in SONiC 3.1.1
+##### 3.2.1.10.1 Schema changes in SONiC 3.1.1
 
 | Table name | Field name | Details of the change                                        | Upgrade                                                      | Downgrade                                                    |
 | ---------- | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -1047,6 +1116,10 @@ DERIVED_EGRESS      = [1-64]*ip-member-config / [1-64]*ipv6-member-config
 ;The details of ip-member-config, ipv6-member-config is same as described in Config DB. 
 ```
 
+#### 3.2.2.5 Policy based forwarding replication group table
+
+Similar to `PBF_NEXTHOP_GROUP_TABLE` , a table called `PBF_REPLICATION_GROUP_TABLE` is used to store the fully qualified replication group members. The schema is same as `PBF_NEXTHOP_GROUP_TABLE`  but will not have threshold parameters as they are not applicable for replication group.
+
 ### 3.2.3 State DB
 
 #### 3.2.3.1 Policy based forwarding group state
@@ -1060,6 +1133,7 @@ key: PBF_GROUP_TABLE:group_name ; group_name will be internally generated by acl
 TYPE                  = "IPV4" / "IPV6" / "L2"
 SELECTED_CONFIGURED   = nh-entry / v6nh-entry / port-entry / "DROP"
 SELECTED_DERIVED      = nh-entry / v6nh-entry / port-entry / "DROP"
+SELECTED_TYPE         = "NEXT_HOP" / "INTERFACE" / "NEXT_HOP_GROUP" / "REPLICATION_GROUP"
 
 ;value annotations
 The details of nh-entry or v6nh-entry or port-entry is same as described in Config DB.
@@ -1067,7 +1141,7 @@ The details of nh-entry or v6nh-entry or port-entry is same as described in Conf
 
 #### 3.2.3.2 Policy based forwarding next-hop group table state
 
-The PBF_NEXTHOP_GROUP_TABLE contains information about the operational state of the group. This information can be used to show the same information to the user. This table will be populated by PBF orch agent. The `CONFIGURED_EGRESS` and `DERIVED_EGRESS` information is same as AppDB. `EGRESS_STATE` information contains either a 0 or 1 for every group member to indicate if the member is used for forwarding or not. 
+The `PBF_NEXTHOP_GROUP_TABLE` contains information about the operational state of the group. This information can be used to show the same information to the user. This table will be populated by PBF orch agent. The `CONFIGURED_EGRESS` and `DERIVED_EGRESS` information is same as AppDB. `EGRESS_STATE` information contains either a 0 or 1 for every group member to indicate if the member is used for forwarding or not. 
 
 ```
 Key: PBF_NEXTHOP_GROUP_TABLE:group_name:vrf_name
@@ -1081,6 +1155,20 @@ STATUS              = "Online" / "Offline"
 
 ;value annotations
 ;The details of ip-member-config, ipv6-member-config is same as described in Config DB.
+```
+
+#### 3.2.3.3 Policy based forwarding replication group table state
+
+Similar to `PBF_NEXTHOP_GROUP_TABLE`, `PBF_REPLICATION_GROUP_TABLE` is used to store the operation state of the group in StateDB. The schema and its fields are same as `PBF_NEXTHOP_GROUP_TABLE`. In addition to that the following extra fields are 
+
+```
+REPLICATION_PATHS = [1-64] * [path-identfier]   
+
+;value annotations
+path-identfier = <IP_Address> "|" <Vlan> "|" <Port>      ; In case of SVI with Ethernet or LAG as L2 intf
+path-identfier = <IP_Address> "|" <Port> "|"             ; In case of router-port
+path-identfier = <IP_Address> "|" <SubPort> "|"          ; In case of sub-intf
+path-identfier = <IP_Address> "|" <Vlan> "|" Port_EVPN_<IP-Address> "|" <VNI> ; In case of SVI with Tunnel as L2 intf
 ```
 
 ### 3.2.4 ASIC DB
@@ -1097,7 +1185,7 @@ ACL_COUNTERS: rule_counter_name
             ; <ACL_TABLE_NAME>:<ACL_RULE_NAME>:<INTERFACE_NAME>:<ACL_STAGE>
 
 Packets : <packets_counter_value>
-Bytes : <bytes_counter_value>
+Bytes   : <bytes_counter_value>
 ```
 
  For FBS policies the counters will be saved in
@@ -1108,7 +1196,7 @@ FBS_COUNTERS: flow_counter_name
              ; <POLICY_NAME>:<CLASSIFIER_NAME>:<INTERFACE_NAME>:<ACL_STAGE>
 
 Packets : <packets_counter_value>
-Bytes : <bytes_counter_value>
+Bytes   : <bytes_counter_value>
 ```
 
 The Policer counters will be stored in
@@ -1118,12 +1206,12 @@ POLICER_COUNTERS: policer_counter_name
                 ; policer_counter_name is a unique name generated in the following format 
                 ; <POLICY_NAME>:<CLASSIFIER_NAME>:<INTERFACE_NAME>:<ACL_STAGE>
 
-GreenPackets : <packets_counter_value>
-GreenBytes : <bytes_counter_value>
+GreenPackets  : <packets_counter_value>
+GreenBytes    : <bytes_counter_value>
 YellowPackets : <packets_counter_value>
-YellowBytes : <bytes_counter_value>
-RedPackets : <packets_counter_value>
-RedBytes : <bytes_counter_value>
+YellowBytes   : <bytes_counter_value>
+RedPackets    : <packets_counter_value>
+RedBytes      : <bytes_counter_value>
 ```
 
 ## 3.3 Switch State Service Design
@@ -1580,9 +1668,9 @@ Specifying the type is mandatory during creating of the group. After create the 
 
 | Mode | PBF next-hop group |
 | --- | --- |
-| Syntax | SONiC(config-pbf-next-hop-group)# **entry** *ID* **next-hop** *IP_ADDR* \[ **vrf** *VRF_NAME* \] \[ **recursive** \| **non-recursive** \] |
+| Syntax | SONiC(config-pbf-next-hop-group)# **entry** *ID* **next-hop** *IP_ADDR* \[ **vrf** *VRF_NAME* \] \[ **recursive** \| **non-recursive** \| **overlay** \] |
 | Syntax | SONiC(config-pbf-next-hop-group)# **no entry** *ID* |
-| Arguments | ***IP_ADDR***: IPv4 or IPv6 Address of the next-hop depending on the group type. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application. <br/>**Next-hop type** If ***recursive*** or ***non-recursive*** is not specified then the next-hop can be reachable by any means. |
+| Arguments | ***IP_ADDR***: IPv4 or IPv6 Address of the next-hop depending on the group type. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application. <br/>**Next-hop type** If ***recursive*** , ***non-recursive***  or ***overlay*** is not specified then the next-hop can be reachable by any means. |
 | Change history | SONiC 3.2 - Introduced |
 
 #### 3.6.2.20 Setting PBF next-hop group threshold
@@ -1601,9 +1689,34 @@ If no threshold values are set then the default type is count with up value of 1
 | Syntax | SONiC(config)# **no pbf next-hop-group** *NAME* |
 | Change history | SONiC 3.2 - Introduced |
 
-#### 3.6.2.22 Add flow identified by a classifier to a policy
+#### 3.6.2.22 Adding a PBF replication group
 
-##### 3.6.2.22.1 Add flow using Sonic-CLI
+| Mode           | Config                                                       |
+| -------------- | ------------------------------------------------------------ |
+| Syntax         | SONiC(config)# **pbf replication-group** *NAME* [ **type** { **ip** \| **ipv6** } ] |
+| Change history | SONiC 4.0 - Introduced                                       |
+
+Specifying the type is mandatory during creating of the group. After create the replication group mode can be entered without specifying the type. The type of the replication group cant be updated.
+
+#### 3.6.2.23 Updating PBF replication group members
+
+| Mode           | PBF replication group                                        |
+| -------------- | ------------------------------------------------------------ |
+| Syntax         | SONiC(config-pbf-replication-group)# **entry** *ID* **next-hop** *IP_ADDR* \[ **vrf** *VRF_NAME* \] \[ **recursive** \| **non-recursive** \| **overlay** \] \[ **single-copy** \] |
+| Syntax         | SONiC(config-pbf-replication-group)# **no entry** *ID*       |
+| Arguments      | ***IP_ADDR***: IPv4 or IPv6 Address of the next-hop depending on the group type. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application. <br/>**Next-hop type** If ***recursive*** , ***non-recursive***  or ***overlay*** is not specified then the next-hop can be reachable by any means. <br/>***single-copy*** will disable replication of the packet to very path and will just pick 1 path to create 1 copy. |
+| Change history | SONiC 4.0 - Introduced                                       |
+
+#### 3.6.2.24 Deleting a PBF replication group
+
+| Mode           | Config                                             |
+| -------------- | -------------------------------------------------- |
+| Syntax         | SONiC(config)# **no pbf replication-group** *NAME* |
+| Change history | SONiC 4.0 - Introduced                             |
+
+#### 3.6.2.25 Add flow identified by a classifier to a policy
+
+##### 3.6.2.25.1 Add flow using Sonic-CLI
 
 | Mode   | Policy |
 | ------ | ------ |
@@ -1611,7 +1724,7 @@ If no threshold values are set then the default type is count with up value of 1
 | Arguments | ***NAME***: Classifier name. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_).<br/>***PRIORITY***: Priority number in range 0-4095. Priority is mandatory at the time for creating the flow. For updating any actions for that flow, the flow mode can be entered without specifying priority. |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.22.2 Add flow using Click CLI (Deprecated)
+##### 3.6.2.25.2 Add flow using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config flow add --help
@@ -1626,9 +1739,9 @@ Options:
   --help                          Show this message and exit.
 ```
 
-#### 3.6.2.23 Delete flow identified by a classifier to a policy
+#### 3.6.2.26 Delete flow identified by a classifier to a policy
 
-#### 3.6.2.24 Deleting flow using Sonic-CLI
+#### 3.6.2.27 Deleting flow using Sonic-CLI
 
 | Mode   | Policy |
 | ------ | ------ |
@@ -1636,7 +1749,7 @@ Options:
 | Arguments | ***NAME***: Classifier name. String of 1-63 characters in length. Must begin with a alpha numeric character. Rest of the characters can be alpha numeric or hyphen (-) or underscore (\_). |
 | Change history | SONiC 3.1 - Introduced |
 
-#### 3.6.2.25 Deleting flow using Click CLI (Deprecated)
+#### 3.6.2.28 Deleting flow using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config flow del --help
@@ -1647,7 +1760,7 @@ Usage: config flow del [OPTIONS] <policy_name> <classifier_name>
 Options:
   --help  Show this message and exit.
 ```
-#### 3.6.2.26 Add flow description
+#### 3.6.2.29 Add flow description
 
 | Mode   | Flow |
 | ------ | ------ |
@@ -1655,47 +1768,47 @@ Options:
 | Arguments | *STRING*: A string describing the flow. Max 256 characters. Description should be in double quotes if it has spaces. |
 | Change history | SONiC 3.1 - Introduced |
 
-#### 3.6.2.27 Delete flow description
+#### 3.6.2.30 Delete flow description
 
 | Mode   | Flow |
 | ------ | ------ |
 | Syntax | SONiC(config-class-map)# **no description** |
 | Change history | SONiC 3.1 - Introduced |
 
-#### 3.6.2.28 Add action(s) to flows
+#### 3.6.2.31 Add action(s) to flows
 
-##### 3.6.2.28.1 Add QoS actions to the flow using Sonic-CLI
+##### 3.6.2.31.1 Add QoS actions to the flow using Sonic-CLI
 The following QoS actions can be added to the flow. QoS actions can be added/enabled only if the policy is of type **qos**.
 
-###### 3.6.2.28.1.1 Add DSCP remarking action
+###### 3.6.2.31.1.1 Add DSCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **set dscp** *\<0-63\>* |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.1.2 Delete DSCP remarking action
+###### 3.6.2.31.1.2 Delete DSCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **no set dscp** |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.1.3 Add PCP remarking action
+###### 3.6.2.31.1.3 Add PCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **set pcp** *\<0-7\>* |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.1.4 Delete PCP remarking action
+###### 3.6.2.31.1.4 Delete PCP remarking action
 
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **no set pcp** |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.1.5 Add policer action
+###### 3.6.2.31.1.5 Add policer action
 
 | Mode   | Flow |
 | ------ | ---- |
@@ -1707,64 +1820,72 @@ If only CIR is configured, then its 1 rate, 2 color policer. Any traffic exceedi
 
 If both CIR and PIR is configured, then is 2 rate 3 color policer. Any traffic that exceeds CIR but less than PIR will be marked as yellow. Any traffic that is more than PIR will be marked as red and will be dropped.  
 
-###### 3.6.2.28.1.6 Delete policer action
+###### 3.6.2.31.1.6 Delete policer action
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **no police** \[ **cir** \] \[**cbs** \] \[**pir** \] \[**pbs** \] |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.1.7 Add set traffic-class action
+###### 3.6.2.31.1.7 Add set traffic-class action
 
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **set traffic-class** *\<0-7\>* |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.1.8 Delete set traffic-class action
+###### 3.6.2.31.1.8 Delete set traffic-class action
 
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **no set traffic-class** |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.28.2 Adding monitoring actions to the flow
+##### 3.6.2.31.2 Adding monitoring actions to the flow
 The following monitoring actions can be added to the flow. Monitoring actions can be added/enabled only if the policy is of type **monitoring**.
 
-###### 3.6.2.28.2.1 Adding mirror session action
+###### 3.6.2.31.2.1 Adding mirror session action
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **set mirror-session** *SESSION_NAME* |
 | Arguments | *SESSION_NAME*: Mirror session name |
 | Change history | SONiC 3.1 - Introduced |
 
-###### 3.6.2.28.2.2 Deleting mirror session action
+###### 3.6.2.31.2.2 Deleting mirror session action
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **no set mirror-session** |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.2.28.3 Adding forwarding actions to the flow
-The following forwarding actions can be added to the flow. Forwarding actions can be added/enabled only if the policy is of type **forwarding**. This configuration is only available in Sonic-CLI.
+##### 3.6.2.31.3 Adding forwarding actions to the flow
+The following forwarding actions can be added to the flow. Forwarding actions can be added/enabled only if the policy is of type **forwarding**. Forwarding policies can only forward the traffic and not trap/switch/route to CPU.
 
-###### 3.6.2.28.3.1 Adding / Deleting IPv4 next-hop
+IPv4 next-hops / next-hop- groups / replication groups are valid only if the classifier uses MAC/IPv4 ACL or IPv4 header fields for match. MAC header fields can be used in additional to IPv4 header fields. Only IPv4 routed traffic will be forwarded to the configured with IPv4 next-hop / next-hop group / replication groups. 
+
+IPv6 next-hops / next-hop- groups / replication groups are valid only if the classifier uses MAC/IPv6 ACL or IPv6 header fields for match. MAC header fields can be used in additional to IPv6 header fields. Only IPv6 routed traffic will be forwarded to the configured with IPv6 next-hop / next-hop group / replication groups. 
+
+Combining IPv4 egress sets with IPv6 egress sets or egress interface (except NULL) is not permitted. Similarly combining IPv6 egress sets with IPv4 egress sets or egress interface (except NULL) is not permitted. The configured egress must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally. The next-hop IP should not be that of any local interface when used directly or inside next-hop or replication groups. 
+
+The following are the list of configuration CLIs. These CLIs are only available in sonic-cli (Klish)
+
+The following are the definition of the common arguments of all CLIs
+
+***PRIORITY***: Priority of the egress set configuration. Range is 1-65535. Default is 0 i.e. lowest priority if not configured by the user. The next-hop / next-hop-group / replication-group with the highest priority that's reachable/online will be picked up for forwarding first. If more than 1 next-hops / next-hop-groups / replication-groups have the same priority and reachable/online then the next-hop / next-hop-group / replication-group which is configured first will be used for forwarding.
+
+###### 3.6.2.31.3.1 Adding / Deleting IPv4 next-hop
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set ip next-hop** *IP_ADDR* \[ **vrf** *VRF_NAME* \] \[ **priority** *PRIORITY* \] |
-| Arguments | ***IP_ADDR***: IPv4 Address of the next-hop. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 i.e. lowest priority if not configured by the user. The next-hop / next-hop-group with the higher priority will be picked up for forwarding first. If more than 1 next-hops / next-hop-groups have the same priority then the next-hop / next-hop-group which is configured first will be used. |
+| Arguments | ***IP_ADDR***: IPv4 Address of the next-hop. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application. |
 | Change history | SONiC 3.1 - Introduced |
 
-IPv4 next-hops are valid only if the classifier uses MAC/IPv4 ACL or IPv4 header fields for match. MAC header fields can be used in additional to IPv4 header fields. Only IPv4 routed traffic will be forwarded to the configured next-hop. Combining IPv4 next-hops with IPv6 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally. The next-hop IP should not be that of any local interface. Forwarding policies can only forward the traffic and not trap/switch/route to CPU.
-
-###### 3.6.2.28.3.2 Adding / Deleting IPv6 next-hop
+###### 3.6.2.31.3.2 Adding / Deleting IPv6 next-hop
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set ipv6 next-hop** *IPV6_ADDR* \[ **vrf** *VRF_NAME* \] \[ **priority** *PRIORITY* \] |
-| Arguments | ***IPV6_ADDR***: IPv6 Address. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 i.e. lowest priority if not configured by the user. The next-hop / next-hop-group with the higher priority will be picked up for forwarding first. If more than 1 next-hops / next-hop-groups have the same priority then the next-hop / next-hop-group which is configured first will be used. |
+| Arguments | ***IPV6_ADDR***: IPv6 Address. It can be reachable via underlay or over VxLAN tunnel.<br/>***VRF_NAME***: VRF name. If the VRF name is not specified then it will be derived from the VRF of the interface on which the policy is applied or default will be used for global application. |
 | Change history | SONiC 3.1 - Introduced |
 
-IPv6 next-hops are valid only if the classifier uses MAC/IPv6 ACL or IPv6 header fields for match. MAC header fields can be used in additional to IPv4 header fields. Only IPv6 routed traffic will be forwarded to the configured next-hop. Combining IPv6 next-hops with IPv4 next-hops or egress interface (except NULL) is not permitted. The next-hop must be reachable for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hops are reachable. If NULL egress is not configured then the traffic will be routed normally. The next-hop IP should not be that of any local interface. Forwarding policies can only forward the traffic and not trap/switch/route to CPU.
-
-###### 3.6.2.28.3.3 Adding / Deleting egress interface
+###### 3.6.2.31.3.3 Adding / Deleting egress interface
 
 | Mode   | Flow |
 | ------ | ---- |
@@ -1772,10 +1893,10 @@ IPv6 next-hops are valid only if the classifier uses MAC/IPv6 ACL or IPv6 header
 | Arguments | ***ID***: Ethernet or PortChannel number.<br/>***PRIORITY***: Priority of the egress port. Range is 1-65535. Default is 0 ie lowest priority if not configured by the user. The port with the higher priority will be picked up for forwarding first. If more than 1 ports have the same priority then the port which is configured first will be used. |
 | Change history | SONiC 3.1 - Introduced |
 
-Egress interfaces configuration is applicable for classifiers which use L2/IPv4/IPv6 ACL or fields. Only L2 switched traffic will be forwarded to the configured egress interface. Combining egress interface with IPv4 or IPv6 next-hops / next-hop-groups is not permitted. The egress interface must be a switchport and online for it to be selectable for forwarding, else it will be forward referenced. User is expected to make sure egress interface is part of necessary VLANs. NULL egress can be configured to select drop as egress action if none of the egress interfaces are online. If NULL egress is not configured then the traffic will be forwarded normally.
+Egress interfaces configuration is applicable for classifiers which use L2/IPv4/IPv6 ACL or fields. Only L2 switched traffic will be forwarded to the configured egress interface. Combining egress interface with IPv4 or IPv6 next-hops / next-hop-groups / replication-groups is not permitted. The egress interface must be a switchport and online for it to be selectable for forwarding, else it will be forward referenced. User is expected to make sure egress interface is part of necessary VLANs. NULL egress can be configured to select drop as egress action if none of the egress interfaces are online. If NULL egress is not configured then the traffic will be forwarded normally.
 
 
-###### 3.6.2.28.3.4 Adding / Deleting default drop action
+###### 3.6.2.31.3.4 Adding / Deleting default drop action
 
 | Mode   | Flow |
 | ------ | ---- |
@@ -1784,41 +1905,53 @@ Egress interfaces configuration is applicable for classifiers which use L2/IPv4/
 
 Drop action if configured will be of the lowest priority and will be chosen if none of the configured next-hops or egress interfaces can be used for forwarding.
 
-###### 3.6.2.28.3.5 Adding / Deleting IPv4 next-hop group action
+###### 3.6.2.31.3.5 Adding / Deleting IPv4 next-hop group action
 
 | Mode | Flow |
 | --- | ---- |
 | Syntax | SONiC(config-policy-map-flow)# \[ **no** \] **set ip next-hop-group** *NAME* \[ **priority** *PRIORITY* \] |
-| Arguments | ***NAME***: Name of next-hop group name of type ipv4.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 i.e. lowest priority if not configured by the user. The next-hop / next-hop-group with the higher priority will be picked up for forwarding first. If more than 1 next-hops / next-hop-groups have the same priority then the next-hop / next-hop-group which is configured first will be used. |
+| Arguments | ***NAME***: Name of next-hop group name of type ipv4. |
 | Change history | SONiC 3.2 - Introduced |
 
-IPv4 next-hop-groups are valid only if the classifier uses L2/IPv4 ACL / Fields for match. Only IPv4 routed traffic will be forwarded to the configured next-hop. Combining IPv4 next-hops with IPv6 next-hops or egress interface (except NULL) is not permitted. The next-hop-group must be online for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hop-groups are reachable. If NULL egress is not configured then the traffic will be routed normally.
-
-###### 3.6.2.28.3.6 Adding / Deleting IPv6 next-hop group action
+###### 3.6.2.31.3.6 Adding / Deleting IPv6 next-hop group action
 
 | Mode | Flow |
 | --- | ---- |
 | Syntax         | SONiC(config-policy-map-flow)# \[ **no** \] **set ipv6 next-hop-group** *NAME* \[ **priority** *PRIORITY* \] |
-| Arguments      | ***NAME***: Name of next-hop group name of type ipv6.<br/>***PRIORITY***: Priority of the next-hop. Range is 1-65535. Default is 0 i.e. lowest priority if not configured by the user. The next-hop / next-hop-group with the higher priority will be picked up for forwarding first. If more than 1 next-hops / next-hop-groups have the same priority then the next-hop / next-hop-group which is configured first will be used. |
+| Arguments      | ***NAME***: Name of next-hop group name of type ipv6. |
 | Change history | SONiC 3.2 - Introduced |
 
-IPv6 next-hop-groups are valid only if the classifier uses L2/IPv6 ACL / Fields for match. Only IPv6 routed traffic will be forwarded to the configured next-hop. Combining IPv6 next-hops with IPv4 next-hops or egress interface (except NULL) is not permitted. The next-hop-group must be online for it to be selected for routing. NULL egress can be configured to select drop as egress action if none of the next-hop-groups are reachable. If NULL egress is not configured then the traffic will be routed normally.
+###### 3.6.2.31.3.7 Adding / Deleting IPv4 replication group action
 
-##### 3.6.2.28.4 Adding CoPP actions to the flow
+| Mode           | Flow                                                         |
+| -------------- | ------------------------------------------------------------ |
+| Syntax         | SONiC(config-policy-map-flow)# \[ **no** \] **set ip replication-group** *NAME* \[ **priority** *PRIORITY* \] |
+| Arguments      | ***NAME***: Name of replication group name of type ipv4.     |
+| Change history | SONiC 4.0 - Introduced                                       |
+
+###### 3.6.2.31.3.8 Adding / Deleting IPv6 replication group action
+
+| Mode           | Flow                                                         |
+| -------------- | ------------------------------------------------------------ |
+| Syntax         | SONiC(config-policy-map-flow)# \[ **no** \] **set ipv6 replication-group** *NAME* \[ **priority** *PRIORITY* \] |
+| Arguments      | ***NAME***: Name of next-hop group name of type ipv6.        |
+| Change history | SONiC 4.0 - Introduced                                       |
+
+##### 3.6.2.31.4 Adding CoPP actions to the flow
 The following actions can be added to a ACL-CoPP Policy flow
 
-###### 3.6.2.28.4.1 Adding / Deleting trap Queue action
+###### 3.6.2.31.4.1 Adding / Deleting trap Queue action
 | Mode   | Flow |
 | ------ | ---- |
 | Syntax | SONiC(config-policy-map-flow)# **set trap-queue <0-47>** |
 | Syntax | SONiC(config-policy-map-flow)# **no set trap-queue** |
 | Change history | SONiC 3.2 - Introduced |
 
-###### 3.6.2.28.4.2 Adding / Deleting Policer action
+###### 3.6.2.31.4.2 Adding / Deleting Policer action
 
 The policer CLIs will be same as mentioned in 
 
-##### 3.6.2.28.5 Add flow actions using Click CLIs (Deprecated)
+##### 3.6.2.31.5 Add flow actions using Click CLIs (Deprecated)
 
 ```
 root@sonic:~# config flow update --help
@@ -1852,9 +1985,9 @@ If both CIR and PIR is configured, then is 2 rate 3 color policer. Any traffic t
 
 Forwarding actions are supported only in Sonic-CLI.
 
-#### 3.6.2.29 Applying the policy to an interface
+#### 3.6.2.32 Applying the policy to an interface
 
-##### 3.6.2.29.1 Applying policy to an interface using Sonic-CLI
+##### 3.6.2.32.1 Applying policy to an interface using Sonic-CLI
 | Mode   | Config or Interface |
 | ------ | ------------------- |
 | Syntax | SONiC(config)# **service-policy type qos** { **in** \| **out** } *NAME* <br/>SONiC(config)# **service-policy type** { **monitoring** \| **forwarding** } **in** *NAME* |
@@ -1868,7 +2001,7 @@ Forwarding actions are supported only in Sonic-CLI.
 **NOTE**: Forwarding, ACL-CoPP policy can be applied only using Sonic-CLI. When a forwarding policy is applied globally, the next-hops
 are assumed to be in default VRF unless user has specified the VRF explicitly.
 
-##### 3.6.2.29.2 Applying policy to an interface using Click CLI (Deprecated)
+##### 3.6.2.32.2 Applying policy to an interface using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config service-policy bind --help
@@ -1880,9 +2013,9 @@ Options:
   --help  Show this message and exit.
 ```
 
-#### 3.6.2.30 Removing policy from an interface
+#### 3.6.2.33 Removing policy from an interface
 
-##### 3.6.2.30.1 Removing policy from an interface using Sonic-CLI
+##### 3.6.2.33.1 Removing policy from an interface using Sonic-CLI
 | Mode   | Config or Interface |
 | ------ | ------------------- |
 | Syntax | SONiC(config)# **no service-policy type qos** { **in** \| **out** } <br/>SONiC(config)# **no service-policy type** { **monitoring** \| **forwarding** } **in** |
@@ -1890,11 +2023,11 @@ Options:
 | Syntax | SONiC(config-subintf-xxxx)# **no service-policy type qos** { **in** \| **out** }<br/>SONiC(config-subintf-xxxx)# **no service-policy type** { **monitoring** \| **forwarding** } **in** |
 | Syntax | SONiC(config-line-vty)# **no service-policy type qos in** *NAME* |
 | Syntax | SONiC(config-if-CPU)# **no service-policy type acl-copp in** *NAME* |
-| Change history | SONiC 3.1 - Introduced <br/>SONiC3.1.1 - Added QoS policy unbinding from line vty<br/>SONiC 3.2 - Added acl-copp Policy unbinding from CPU interface.<br/>SONiC 3.2 - Added QoS, Monitoring and Forwarding policy binding for sub interfaces. |
+| Change history | SONiC 3.1 - Introduced <br/>SONiC 3.1.1 - Added QoS policy unbinding from line vty<br/>SONiC 3.2 - Added acl-copp Policy unbinding from CPU interface.<br/>SONiC 3.2 - Added QoS, Monitoring and Forwarding policy binding for sub interfaces. |
 
 NOTE: Forwarding, ACL-CoPP policy can be removed only using Sonic-CLI.
 
-##### 3.6.2.30.2 Removing policy from an interface using Click CLI (Deprecated)
+##### 3.6.2.33.2 Removing policy from an interface using Click CLI (Deprecated)
 
 ```
 root@sonic:~# config service-policy unbind --help
@@ -1948,16 +2081,43 @@ ip access-list ipacl
 | Syntax | SONiC# **clear** { **mac** \| **ip** \| **ipv6** } **counters access-list**  \[ *NAME* \] |
 | Change history | SONiC 3.1 - Introduced |
 
-#### 3.6.3.4 Show classifier details
+#### 3.6.3.4 Showing object groups
 
-##### 3.6.3.4.1 Show classifier details using Sonic-CLI
+Dynamic ACLs applied by the PAC can be shared by multiple clients. Such common client IPs are grouped by using network object groups. The following command is used to get the details of the object group
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | SONiC# **show object-groups** { **type network** \| *NAME* } |
+| Change history | SONiC 4.0 - Introduced |
+
+The following shows the sample output
+```
+sonic# show object-groups type network 
+Network object-group PAC_IPV4_SIP_ObjGrp_1 address-family ipv4
+  Referenced by:
+     IPV4 access-list PAC_IPV4_ACL_1 on Ethernet0
+
+sonic# show object-groups PAC_IPV4_SIP_ObjGrp_1
+Network object-group PAC_IPV4_SIP_ObjGrp_1 address-family ipv4
+  Entries:
+    network-object host 10.1.1.4
+    network-object host 10.1.1.3
+    network-object host 10.1.1.2
+    network-object host 10.1.1.1
+  Referenced by:
+     IPV4 access-list PAC_IPV4_ACL_1 on Ethernet0
+```
+
+#### 3.6.3.5 Show classifier details
+
+##### 3.6.3.5.1 Show classifier details using Sonic-CLI
 
 | Mode   | Exec |
 | ------ | ------------------- |
 | Syntax | SONiC# **show class-map** [ *NAME* \| **match-type** { **acl** \| **fields** } ] |
 | Change history | SONiC 3.1 - Introduced |
 
-##### 3.6.3.4.2 Show classifier details using Click CLI (Deprecated)
+##### 3.6.3.5.2 Show classifier details using Click CLI (Deprecated)
 
 ```
 root@sonic:~# show classifier --help
@@ -1970,7 +2130,7 @@ Options:
   -?, -h, --help                 Show this message and exit.
 ```
 
-##### 3.6.3.4.3 Show classifier sample output
+##### 3.6.3.5.3 Show classifier sample output
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
@@ -1984,15 +2144,15 @@ Options:
 | Click-CLI *(Deprecated)* | root@sonic:~# show classifier -m fields |
 | Sample Output | Classifier fields_class_0 match-type fields<br/>&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;Match:<br/>&nbsp;&nbsp;&nbsp;&nbsp;src-ip 40.1.1.100/32<br/>&nbsp;&nbsp;Referenced in flows:<br/>&nbsp;&nbsp;&nbsp;&nbsp;policy mon_policy_0 at priority 999<br/>&nbsp;&nbsp;&nbsp;&nbsp;policy qos_policy_0 at priority 999 |
 
-#### 3.6.3.5 Show policy details
+#### 3.6.3.6 Show policy details
 
-##### 3.6.3.5.1 Show policy details using Sonic-CLI
+##### 3.6.3.6.1 Show policy details using Sonic-CLI
 | Mode   | Exec |
 | ------ | ------------------- |
 | Syntax | SONiC# **show policy-map** [ *NAME* \| **type** { **qos** \| **monitoring** \| **forwarding** \| **acl-copp**} ] |
 | Change history | SONiC 3.1 - Introduced<br/>SONiC 3.2 - Added **acl-copp** keyword |
 
-##### 3.6.3.5.2 Show policy details using Click-CLI (Deprecated)
+##### 3.6.3.6.2 Show policy details using Click-CLI (Deprecated)
 
 ```
 root@sonic:~# show policy --help
@@ -2006,7 +2166,7 @@ Options:
   -?, -h, --help     Show this message and exit.
 ```
 
-##### 3.6.3.5.3 Sample output
+##### 3.6.3.6.3 Sample output
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
@@ -2021,9 +2181,9 @@ Options:
 | Click-CLI (Deprecated) | root@sonic~# show policy -t monitoring |
 | Sample Output | Policy mon_policy_0 Type monitoring<br/>&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;Flow fields_class_0 at priority 999<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_50.1.1.2<br/>&nbsp;&nbsp;Flow fields_class_1 at priority 998<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_60.1.1.2<br/>&nbsp;&nbsp;Flow fields_class_2 at priority 997<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_50.1.1.2<br/>&nbsp;&nbsp;Flow fields_class_3 at priority 996<br/>&nbsp;&nbsp;&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;&nbsp;&nbsp;mirror-session ERSPAN_DestIP_60.1.1.2<br/>&nbsp;&nbsp;Applied to:<br/>&nbsp;&nbsp;&nbsp;&nbsp;Ethernet0 at ingress |
 
-#### 3.6.3.6 Show policy binding summary
+#### 3.6.3.7 Show policy binding summary
 
-##### 3.6.3.6.1 Show policy binding summary using Sonic-CLI
+##### 3.6.3.7.1 Show policy binding summary using Sonic-CLI
 
 | Mode      | Exec |
 | --------- | ---- |
@@ -2031,7 +2191,7 @@ Options:
 | Arguments | *ID*: Number of Ethernet or PortChannel or Vlan |
 | Change history | SONiC 3.1 - Introduced<br/>SONiC 3.2 - Added **acl-copp** keyword <br/>SONiC 3.2 - Added subinterface name argument |
 
-##### 3.6.3.6.2 Show policy binding summary using Click CLI (Deprecated)
+##### 3.6.3.7.2 Show policy binding summary using Click CLI (Deprecated)
 
 ```
 root@sonic:~# show service-policy summary --help
@@ -2047,7 +2207,7 @@ Options:
 
 **NOTE:** Sub interface interface names will not be supported in Click CLIs which accept interface name as argument.
 
-##### 3.6.3.6.3 Show policy binding summary sample output
+##### 3.6.3.7.3 Show policy binding summary sample output
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
@@ -2055,16 +2215,16 @@ Options:
 | Click-CLI (Deprecated) | root@sonic~# show service-policy summary |
 | Sample Output | Ethernet0<br/>&nbsp;&nbsp;qos policy qos_policy0 at ingress<br/>&nbsp;&nbsp;monitoring policy mon_policy_0 at ingress<br/>PortChannel100<br/>&nbsp;&nbsp;qos policy policy0 at egress<br/>Vlan100<br/>&nbsp;&nbsp;forwarding policy pbr0 at ingress<br/>CPU<br/>&nbsp;&nbsp;acl-copp policy copp at ingress |
 
-#### 3.6.3.7 Show / Clear policy binding and counters for an interface
+#### 3.6.3.8 Show / Clear policy binding and counters for an interface
 
-##### 3.6.3.7.1 Show / Clear policy binding and counters using SONiC-CLI
+##### 3.6.3.8.1 Show / Clear policy binding and counters using SONiC-CLI
 | Mode      | Exec |
 | --------- | ---- |
 | Syntax    | SONiC# **show service-policy** { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Ethernet** *ID*.*SUBPORT* \| **PortChannel** *ID*.*SUBPORT* } \| **Switch** \[ **type** { **qos** \| **monitoring** \| **forwarding** } \] \| **policy-map** *NAME* \[ **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Ethernet** *ID*.*SUBPORT* \| **PortChannel** *ID*.*SUBPORT* } \| **Switch** \] } <br/><br/>SONiC# **show service-policy** { **interface CPU** [ **type acl-copp** ] \| [ **policy-map** *NAME* [ **interface CPU** ] } <br/><br/>SONiC# **clear counters service-policy** { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Ethernet** *ID*.*SUBPORT* \| **PortChannel** *ID*.*SUBPORT* } \| **Switch** \[ **type** { **qos** \| **monitoring** \| **forwarding** } \] \| **policy-map** *NAME* \[ **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Ethernet** *ID*.*SUBPORT* \| **PortChannel** *ID*.*SUBPORT* } \| **Switch** \] } <br/><br/>SONiC# **clear counters service-policy** { **interface CPU** [ **type acl-copp** ] \| **policy-map** *NAME* [ **interface CPU** ] }</br> |
 | Arguments | *ID*: Number of Ethernet or PortChannel or Vlan<br/>*NAME*: Name of the policy applied.<br/>**acl-copp** policies are applicable only for **CPU** interface. |
 | Change history | SONiC 3.1 - Introduced<br/>SONiC 3.2 - Added **acl-copp** keyword and **CPU** interface<br/>SONiC 3.2 - Added subinterface name argument |
 
-##### 3.6.3.7.2 Show / Clear policy binding and counters using Click CLI (Deprecated)
+##### 3.6.3.8.2 Show / Clear policy binding and counters using Click CLI (Deprecated)
 
 ```
 root@sonic:~# show service-policy interface --help
@@ -2093,7 +2253,7 @@ Options:
 
 **NOTE:** Sub interface interface names will not be supported in Click CLIs which accept interface name as argument.
 
-##### 3.6.3.7.3 Show policy binding and counters sample output
+##### 3.6.3.8.3 Show policy binding and counters sample output
 
 | CLI Type | CLI Syntax |
 | -------- | ---------- |
@@ -2123,7 +2283,7 @@ Options:
 | Sonic-CLI | SONiC# show service-policy interface Vlan 1000 type forwarding |
 | Sample Output | Vlan1000<br/>&nbsp;&nbsp;Policy pbr_policy_example_2 Type forwarding at ingress<br/>&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow acl_class_1000 at priority 1000 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set ip next-hop 10.1.1.1 vrf default<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set ip next-hop 20.1.1.1 vrf VrfRed<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set ip next-hop 30.1.1.1 (Selected)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set interface null<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 128 frames 128000 bytes<br/>&nbsp;&nbsp;&nbsp;&nbsp;Flow acl_class_999 at priority 999 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description: <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set ip next-hop-group ip-load-share (Selected)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set ip next-hop-group backup-load-share<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set ip next-hop 31.1.1.1<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set interface null<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Packet matches: 0 frames 0 bytes |
 
-#### 3.6.3.8 Show policy based forwarding next-hop groups
+#### 3.6.3.9 Show policy based forwarding next-hop groups
 
 The following CLI is used to display the next-hop groups configuration and references
 
@@ -2133,9 +2293,9 @@ The following CLI is used to display the next-hop groups configuration and refer
 | Change history | SONiC 3.2 - Introduced |
 | Sample output | Next-hop-group&nbsp;ipv4-test&nbsp;Type&nbsp;ip<br/>&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;Threshold&nbsp;type: percentage<br/>&nbsp;&nbsp;Threshold&nbsp;up: 80<br/>&nbsp;&nbsp;Threshold&nbsp;down: 30<br/>&nbsp;&nbsp;Members:<br/>&nbsp;&nbsp;&nbsp;&nbsp;entry&nbsp;1&nbsp;next-hop&nbsp;10.1.1.1&nbsp;recursive<br/>&nbsp;&nbsp;&nbsp;&nbsp;entry&nbsp;2&nbsp;next-hop&nbsp;10.1.1.2&nbsp;vrf&nbsp;VrfRed&nbsp;non-recursive<br/>&nbsp;&nbsp;&nbsp;&nbsp;entry&nbsp;3&nbsp;next-hop&nbsp;10.1.1.3<br/>&nbsp;Referenced&nbsp;in&nbsp;flows:<br/>&nbsp;&nbsp;&nbsp;&nbsp;policy-map&nbsp;pbr-test&nbsp;at&nbsp;priority&nbsp;100 |
 
-#### 3.6.3.9 Show policy based forwarding next-hop group state for a specified interface
+#### 3.6.3.10 Show policy based forwarding next-hop group state for a specified interface
 
-The following CLI is used to display the operational state of the next-hop group when the next-hop-group is not selected for forwarding. 
+The following CLI is used to display the operational state of the next-hop group. 
 
 | Mode | Exec |
 | ------ | --- |
@@ -2143,7 +2303,64 @@ The following CLI is used to display the operational state of the next-hop group
 | Change history | SONiC 3.2 - Introduced |
 | Sample output | Ethernet0<br/>&nbsp;&nbsp;Next-hop-group&nbsp;ipv4-test&nbsp;Type&nbsp;ip<br/>&nbsp;&nbsp;&nbsp;&nbsp;Status: Active<br/>&nbsp;&nbsp;&nbsp;&nbsp;Members:<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Entry&nbsp;1&nbsp;next-hop&nbsp;10.1.1.1&nbsp;recursive (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Entry&nbsp;2&nbsp;next-hop&nbsp;10.1.1.2&nbsp;vrf&nbsp;VrfRed&nbsp;non-recursive<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Entry&nbsp;3&nbsp;next-hop&nbsp;10.1.1.3 (Active) |
 
-#### 3.6.3.10 TCAM Allocation
+#### 3.6.3.11 Show policy based forwarding replication groups
+
+The following CLI is used to display the next-hop groups configuration and references
+
+| Mode           | Exec                                                         |
+| -------------- | ------------------------------------------------------------ |
+| Syntax         | SONiC# **show pbf replication-group** [ *NAME* \| **type** { **ip** \| **ipv6** } ] |
+| Change history | SONiC 4.0 - Introduced                                       |
+| Sample output  | Replication-group&nbsp;ipv4-test&nbsp;Type&nbsp;ip<br/>&nbsp;&nbsp;Description:<br/>&nbsp;&nbsp;Members:<br/>&nbsp;&nbsp;&nbsp;&nbsp;entry&nbsp;1&nbsp;next-hop&nbsp;10.1.1.1&nbsp;overlay<br/>&nbsp;Referenced&nbsp;in&nbsp;flows:<br/>&nbsp;&nbsp;&nbsp;&nbsp;policy-map&nbsp;pbr-test&nbsp;at&nbsp;priority&nbsp;100 |
+
+#### 3.6.3.12 Show policy based forwarding next-hop group state for a specified interface
+
+The following CLI is used to display the operational state of the replication group 
+
+| Mode           | Exec                                                         |
+| -------------- | ------------------------------------------------------------ |
+| Syntax         | SONiC# **show pbf next-hop-group status**  { **interface** { **Ethernet** *ID* \| **PortChannel** *ID* \| **Vlan** *ID* \| **Ethernet** *ID*.*SUBPORT* \| **PortChannel** *ID*.*SUBPORT* } \| **Switch** } [ *NAME* \| **type** { **ip** \| **ipv6** } ] |
+| Change history | SONiC 4.0 - Introduced                                       |
+| Sample output  | Ethernet0<br/>&nbsp;&nbsp;Next-hop-group&nbsp;ipv4-test&nbsp;Type&nbsp;ip<br/>&nbsp;&nbsp;&nbsp;&nbsp;Status: Active<br/>&nbsp;&nbsp;&nbsp;&nbsp;Members:<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Entry&nbsp;1&nbsp;next-hop&nbsp;10.1.1.1&nbsp;recursive (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Entry&nbsp;2&nbsp;next-hop&nbsp;10.1.1.2&nbsp;vrf&nbsp;VrfRed&nbsp;non-recursive<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Entry&nbsp;3&nbsp;next-hop&nbsp;10.1.1.3 (Active)<br/>&nbsp;&nbsp;&nbsp;&nbsp;Replication paths:<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IP:100.1.1.1&nbsp;Vlan:100&nbsp;Port:Ethernet0<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IP:100.1.1.2&nbsp;Port:Ethernet1<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IP:100.1.1.3&nbsp;Port:Ethernet2.100<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IP:100.1.1.4&nbsp;Port:Tunnel 1.1.1.1&nbsp;VNI:10000<br/>&nbsp;|
+
+#### 3.6.3.13 ACL and Flow based services key profiles
+
+ACL and FBS keyprofiles are used to use a predefined set of keys for ACLs and Flow based services policies. Before SONiC 4.0 the qualifiers used for hardware programming is dependent on the the ACL type and ACLs used inside the policy after the policy is applied to an interface. Key profiles provide a mechanism to pre-allocate the qualifiers so its no longer dependent on the policy binding. For PAC ACLs it also provide a smaller set of qualifiers which can help scale up the ACL rules count. To maintain backward compatibility, the default is still dynamic and depends on the policy contents and ACL types
+
+| Mode  | hardware-tcam |
+| ----- | ------------------------------------------------------------ |
+| Syntax | SONiC(config-hardware-tcam)# ( **mac-acl** \| **ip-acl** \| **ipv6-acl** ) **ingress** **key-profile** ( **default** \| **pac** ) |
+| Syntax | SONiC(config-hardware-tcam)# ( **qos-fbs** \| **monitoring-fbs** \| **forwarding-fbs** ) ( **ingress** \| **egress** ) **key-profile** ( **l2** \| **ipv4** \| **ipv6** \| **l2-ipv4** \| **l2-ipv6** \| **ip** ) |
+| Change history | SONiC 4.0 - Introduced |
+
+To view the details of the individual key profiles i.e. the qualifiers supported by each, the following command is used
+
+| Mode           | Exec  |
+| -------- | -------------- |
+| Syntax         | show hardware tcam key-profile ( **mac-acl** \|**ip-acl** \|**ipv6-acl** \| **fbs** ) *NAME* |
+| Change history | SONiC 4.0 - Introduced |
+
+The following shows a sample output for default key profile for IPv4 ACL
+
+```
+sonic# show hardware tcam key-profile ip-acl default
+-----------------------------------------------------------------------------------------------
+Qualifiers                                        Ingress     Egress    
+-----------------------------------------------------------------------------------------------
+ICMP Type                                         Yes         Yes       
+ICMP Code                                         Yes         Yes       
+L4 source port                                    Yes         Yes       
+L4 destination port                               Yes         Yes       
+L4 source port range                              Yes         No        
+L4 destination port range                         Yes         No        
+IP Protocol                                       Yes         Yes       
+DSCP                                              Yes         Yes       
+Source IPv4 address                               Yes         Yes       
+Destination IPv4 address                          Yes         Yes       
+TCP Flags                                         Yes         Yes       
+```
+
+#### 3.6.3.14 TCAM Allocation
 
 By default the TCAM allocation is set to First come first serve. When certain features are configured beyond scale, after reboot they may consume more resources than pre-reboot which may affect other features. The feature behavior becomes unpredictable across reboots. A TCAM allocation utility is provided to partition the TCAMs as per users requirements. This ensures that all TCAM based features only consume the resources allocated to them and not impact others when they are configured beyond what's allocation in the allocation scheme.
 
@@ -2155,7 +2372,7 @@ By default the TCAM allocation is set to First come first serve. When certain fe
 
 3) PFC Watchdog
 
-##### 3.6.3.10.1 Available predefined TCAM profiles
+##### 3.6.3.14.1 Available predefined TCAM profiles
 
 The following command can be used to view the predefined profile names.
 
@@ -2168,7 +2385,7 @@ DEFAULT-L2       Optimized for Layer 2 ACLs
 DEFAULT-L3       Optimized for Layer 3 ACLs
 ```
 
-##### 3.6.3.10.2 Predefined TCAM profile details
+##### 3.6.3.14.2 Predefined TCAM profile details
 
 The following command can be used to see the predefined profile details. The following is an example and the output will be different on different platforms depending on the capabilities of the ASIC used.
 
@@ -2214,7 +2431,7 @@ Total 9 TCAM slices of 9 allocated. Each slice has 256 entries
 Total 2 TCAM slices of 2 allocated. Each slice has 256 entries
 ```
 
-##### 3.6.3.10.3 Setting the predefined profile
+##### 3.6.3.14.3 Setting the predefined profile
 
 The following command is used to set the TCAM profile. A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
 
@@ -2225,7 +2442,7 @@ Example:
 admin@sonic:~$ sudo tcamutil set profile DEFAULT-L2
 ```
 
-##### 3.6.3.10.4 Checking the current TCAM Allocation
+##### 3.6.3.14.4 Checking the current TCAM Allocation
 
 The following command can be used to check the current TCAM allocation
 
@@ -2272,7 +2489,7 @@ Total 2 TCAM slices of 2 allocated. Each slice has 256 entries
 
 ```
 
-##### 3.6.3.10.5 Clearing the TCAM Allocation scheme.
+##### 3.6.3.14.5 Clearing the TCAM Allocation scheme.
 
 The following command can be used to clear the TCAM allocation scheme and set it to First Come First Serve.  A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
 
@@ -2281,7 +2498,7 @@ admin@sonic:~$ sudo tcamutil clear
 Info: TCAM Allocation cleared from the running config. Please save the config before doing reboot or config reload
 ```
 
-##### 3.6.3.10.6 Modifying the current TCAM allocation
+##### 3.6.3.14.6 Modifying the current TCAM allocation
 
 The following command is used to modify the current TCAM allocation scheme. A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
 
@@ -2331,7 +2548,7 @@ tables or NumEntries if the feature supports single table. Example 2x256 or
 
 A TCAM allocation must be set currently to modify it. If no current TCAM allocation is set then use the **set** option described below.
 
-##### 3.6.3.10.7 Setting a custom TCAM allocation
+##### 3.6.3.14.7 Setting a custom TCAM allocation
 
 The following command is used to set the current TCAM allocation scheme. This can be used when the predefined profile fit the requirement and  and its not desired to set a predefined profile and modify it multiple times to fit the need. A `--startup` option is also available to modify the TCAM allocation in startup configuration. `--startup` requires the system to be rebooted/config reload for the TCAM allocation to take effect.
 
@@ -2431,28 +2648,26 @@ tables or NumEntries if the feature supports single table. Example 2x256 or
 
 ### 3.7.1 ACL consistency checker
 
-The following is the CLI syntax for ACL consistency checker. The following CLIs are available in SONiC CLI (Klish) or SONiC Debug Shell.
+The following is the CLI syntax for ACL consistency checker. The following CLIs are available in SONiC CLI (Klish)
 <table>
   <tbody>
     <tr>
       <th>Mode</th>
-      <th align="left">Klish Exec Mode, SONiC Debug Shell</th>
+      <th align="left">Klish Exec Mode</th>
     </tr>
     <tr>
       <td>Syntax</td>
-      <td><b>show consistency-checker acl</b> [ { <b>mac</b> | <b>ip</b> | <b>ipv6</b> } <i>NAME</i> ] [ <b>brief</b> | <b>detail</b> ] [ <b>hardware</b> ] [ <b>errors</b> ] [ <b>json</b> ]</td>
+      <td><b>consistency-check start access-list</b> [ [ <b>mac</b> | <b>ip</b> | <b>ipv6</b> ] <i>NAME</i> ]<br/><b>consistency-check stop access-list</b><br/><b>show consistency-check status access-list </b>[ <b>brief</b> | <b>detail</b> ] [<b>errors</b>]</td>
     </tr>
     <tr>
       <td>Arguments</td>
       <td>
         <ul>
-          <li>If no arguments are specified then the out will only contain final status is SUCCESS or FAIL</li>
+          <li>If no arguments are specified then the out will only contain final status ie consistent or inconsistent</li>
           <li>If ACL type is specified without name then all ACLs matching the type will be checked. Name can be specified to further narrow down the match criteria</li>
-          <li>If <b>brief</b> keyword is specified, the output will contain if there was a match in different DBs</li>
+          <li>If <b>brief</b> keyword is specified, the output will contain the final status from all DBs on per entry basis</li>
           <li>If <b>detail</b> keyword is specified, the output will contain the entry data from all DBs</li>
-          <li>If <b>hardware</b> keyword is specified, ASIC DB entries will be checked against the SDK data. For the first release it will only check if the entry exists in SDK/HW. SDK/HW output is not parsed to match to match the fields of ASIC DB</li>
-          <li>If <b>errors</b> keyword is specified, the output will contain only errors ie the entries which are not in sync</li>
-          <li>If <b>json</b> keyword is specified the output will be in json format else by default it will be in text format. The JSON schema is as per RPC. Please refer to swagger UI for details</li>
+          <li>If <b>errors</b> keyword is specified, the output will contain the entry data from all DBs which are inconsistent</li>
         </ul>
       </td>
     </tr>
@@ -2460,176 +2675,64 @@ The following is the CLI syntax for ACL consistency checker. The following CLIs 
       <td>Change history</td>
       <td>SONiC 4.0 - Introduced</td>
     </tr>
-    <tr>
-      <td>Sample Output</td>
-      <td>
-          The following is the sample output for <b>show consistency-checker acl mac</b> which will check consisteny for all MAC ACLs. It only shows the final result as <b>brief</b> or <b>detail</b> is not specified.<br/><br/>
-          <b>sonic# show consistency-checker acl mac</b><br/>
-          ACL consistency checker status: SUCCESS<br/>
-          <b>sonic# show consistency-checker acl mac</b><br/>
-          ACL consistency checker status: FAIL<br/><br/>
-          The following is the sample output for <b>show consistency-checker acl mac MAC-ACL-1 brief</b>. The command will verify  the consistency of the specified ACL <br/>
-          <table>
-          	<tbody>
-                <tr>
-                    <th>ACL Name</th>
-                    <th>ACL Type</th>
-                    <th>SequenceNo</th>
-                    <th>ConfigDB</th>
-                    <th>ApplDB</th>
-                    <th>StateDB</th>
-                    <th>ASICDB</th>
-                </tr>
-                <tr>
-                    <td>MAC-ACL-1</td>
-                    <td>MAC</td>
-                    <td></td>
-                    <td>Yes</td>
-                    <td>In sync</td>
-                    <td>In sync</td>
-                    <td>Table:In sync<br/>Group member:In sync<br/></td>
-                </tr>
-                <tr>
-                    <td>MAC-ACL-1</td>
-                    <td>MAC</td>
-                    <td>10</td>
-                    <td>Yes</td>
-                    <td>In sync</td>
-                    <td>In sync</td>
-                    <td>Entry:In sync<br/>Counter:In sync<br/></td>
-                </tr>
-                <tr>
-                    <td>MAC-ACL-1</td>
-                    <td>MAC</td>
-                    <td>20</td>
-                    <td>Yes</td>
-                    <td>In sync</td>
-                    <td>In sync</td>
-                    <td>Entry:Out of sync<br/>Counter:In sync<br/></td>
-                </tr>
-                <tr>
-                    <td>MAC-ACL-1</td>
-                    <td>MAC</td>
-                    <td>30</td>
-                    <td>Yes</td>
-                    <td>Not found</td>
-                    <td>Not found</td>
-                    <td>Entry:Not found<br/>Counter:Not found<br/></td>
-                </tr>
-            </tbody>
-          </table>
-      </td>
-    </tr>
   </tbody>
 </table>
 
-For Restconf, a RPC with name ```verify-acl-consistency``` will be implemented. For Input and Output details please use swagger UI at ```https:://<IP_ADDRESS>/ui/model.html?urls.primaryName=sonic-acl.yaml```
 
-### 3.7.2 Flow based services consistency checker
+The following is the sample output for consistency checker with no args. It only shows the final result as <b>brief</b> or <b>detail</b> is not specified.
 
-The following is the CLI syntax for flow based services consistency checker
+```
+sonic# show consistency-checker status access-list
+ACL consistency checker status: Consistent
 
-<table>
-  <tbody>
-    <tr>
-      <th>Mode</th>
-      <th align="left">Klish Exec Mode, SONiC Debug Shell</th>
-    </tr>
-    <tr>
-      <td>Syntax</td>
-      <td><b>show consistency-checker policy-map</b> [ { <b>qos</b> | <b>monitoring</b> | <b>forwarding</b> | <b>acl-copp</b> } <i>NAME</i> ] [ <b>brief</b> | <b>detail</b> ] [ <b>hardware</b> ] [ <b>errors</b> ] [ <b>json</b> ]</td>
-    </tr>
-    <tr>
-      <td>Arguments</td>
-      <td>
-        <ul>
-          <li>If no arguments are specified then the out will only contain final status is SUCCESS or FAIL for all policies</li>
-          <li>If policy-map type is specified without name then all policy-maps matching the type will be checked. Name can be specified to further narrow down the match criteria</li>
-          <li>If <b>brief</b> keyword is specified, the output will contain if there was a match in different DBs</li>
-          <li>If <b>detail</b> keyword is specified, the output will contain the entry data from all DBs</li>
-          <li>If <b>hardware</b> keyword is specified, ASIC DB entries will be checked against the SDK data. For the first release it will only check if the entry exists in SDK/HW. SDK/HW output is not parsed to match to match the fields of ASIC DB</li>
-          <li>If <b>errors</b> keyword is specified, the output will contain only errors ie the entries which are not in sync</li>
-          <li>If <b>json</b> keyword is specified the output will be in json format else by default it will be in text format. The JSON schema is as per RPC. Please refer to swagger UI for details</li>
-        </ul>
-      </td>
-    </tr>
-    <tr>
-      <td>Change history</td>
-      <td>SONiC 4.0 - Introduced</td>
-    </tr>
-    <tr>
-      <td>Sample Output</td>
-      <td>
-          The following is the sample output for <b>show consistency-checker policy-map qos</b> which will check consisteny for all QoS policies. It only shows the final result as <b>brief</b> or <b>detail</b> is not specified.<br/><br/>
-          <b>sonic# show consistency-checker policy-map qos</b><br/>
-          Policy-map consistency checker status: SUCCESS<br/>
-          <b>sonic# show consistency-checker policy-map qos</b><br/>
-          Policy-map consistency checker status: FAIL<br/><br/>
-          The following is the sample output for <b>show consistency-checker policy-map QoS-pmap brief</b>. The command will verify  the consistency of the specified policy <br/>
-          <table>
-          	<tbody>
-                <tr>
-                    <th>Policy Name</th>
-                    <th>Policy Type</th>
-                    <th>FlowPriority</th>
-                    <th>ConfigDB</th>
-                    <th>ApplDB</th>
-                    <th>StateDB</th>
-                    <th>ASICDB</th>
-                </tr>
-                <tr>
-                    <td>QoS-pmap</td>
-                    <td>QoS</td>
-                    <td></td>
-                    <td>Yes</td>
-                    <td>In sync</td>
-                    <td>In sync</td>
-                    <td>Table:In sync<br/>Group member:In sync</td>
-                </tr>
-                <tr>
-                    <td>QoS-pmap</td>
-                    <td>QoS</td>
-                    <td>100</td>
-                    <td>Yes</td>
-                    <td>In sync</td>
-                    <td>In sync</td>
-                    <td>Entry:In sync<br/>Counter:In sync<br/>Policer:In sync</td>
-                </tr>
-                <tr>
-                    <td>QoS-pmap</td>
-                    <td>QoS</td>
-                    <td>50</td>
-                    <td>Yes</td>
-                    <td>In sync</td>
-                    <td>In sync</td>
-                    <td>Entry:In sync<br/>Counter:In sync<br/>Policer:Out of sync</td>
-                </tr>
-                <tr>
-                    <td>QoS-pmap</td>
-                    <td>QoS</td>
-                    <td>20</td>
-                    <td>Yes</td>
-                    <td>Not found</td>
-                    <td>Not found</td>
-                    <td>Entry:Not found<br/>Counter:Not found<br/>Policer:Not found</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>Extra entry found</td>
-                </tr>
-            </tbody>
-          </table>
-      </td>
-    </tr>
-  </tbody>
-</table>
+sonic# show consistency-checker status access-list
+ACL consistency checker status: Inconsistent
+```
 
-For Restconf, a RPC with name ```verify-policy-map-consistency``` will be implemented. For Input and Output details please use swagger UI at ```https:://<IP_ADDRESS>/ui/model.html?urls.primaryName=sonic-flow-based-services.yaml```
+The following is the sample output for **show consistency-check status access-list brief**. The command will verify  the consistency of the specified ACL
+
+```
+ACL consistency status for macacl-test
+===========================================================
+Seq         Binding         AppDB        ASICDB       HW
+===========================================================
+10          Ethernet0       IC           IC           IC
+10          Ethernet1       C            C            IC
+20          Ethernet0       C            C            IC
+20          Ethernet1       C            C            C
+
+(C) Data is consistent
+(IC) Data is Inconsistent
+```
+
+The following shows the output for **show consistency-check status access-list detail errors**. This command will show the details of all acl rules but only the error data and its details.
+```
+ACL consistency status for ipacl-test
+===================================================================================
+Seq     Binding    Data                 AppDB              ASICDB         HW
+===================================================================================
+10      Ethernet0  SrcIP=10.1.1.1/32   10.1.1.2/32*
+20      Ethernet0  SrcIP=10.1.1.1/32   SrcIP+
+30      Ethernet0                      SrcIP=10.1.1.1/32-
+40      Ethernet0                                                         Not Found
+
+Extra entries in ApplDB: 1
+  Entry 1 for port Ethernet0:
+    DstIP=200.1.1.0/24
+    Seq=15
+    Action=Deny
+
+Extra entries in ASIC DB: 1
+  Entry 1 for port Ethernet0:
+    DstIP=200.1.1.0/24
+    Protocol=TCP
+    Seq=50
+    Action=Permit
+
+(*)Inconsistent Value
+(+)Missing. Should be added
+(-)Extra. Should be deleted
+```
 
 # 4 Flow Diagrams
 
@@ -2637,31 +2740,31 @@ For Restconf, a RPC with name ```verify-policy-map-consistency``` will be implem
 
 ![Creating classifier](images/CreateClassifier.png "Create a Classifier")
 
-**Figure 10: Create a Classifier**
+**Figure 13: Create a Classifier**
 
 ## 4.2 Create a QoS Policy and Section
 
 ![Create a QoS Policy and Section](images/CreatePolicy.png "Create a QoS Policy and Section")
 
-**Figure 11: Create a QoS Policy and Section**
+**Figure 14: Create a QoS Policy and Section**
 
 ## 4.3 Bind QoS policy to an interface
 
 ![Bind QoS policy to an interface](images/ApplyPolicy.png "Bind QoS policy to an interface")
 
-**Figure 12: Bind QoS policy to an interface**
+**Figure 15: Bind QoS policy to an interface**
 
 ## 4.4 Creating ACL rules with policer
 
 ![Adding Rule with policer](images/RuleAddPolicer.png "Adding Rule with policer")
 
-**Figure 13: Adding Rule with policer**
+**Figure 16: Adding Rule with policer**
 
 ## 4.5 Deleting ACL Rules with policer
 
 ![Deleteing Rule with policer](images/RuleDelPolicer.png "Deleting Rule with policer")
 
-**Figure 14: Deleting Rule with policer**
+**Figure 17: Deleting Rule with policer**
 
 # 5 Error Handling
 
@@ -2818,6 +2921,49 @@ SONiC(conf-if-Ethernet8)# service-policy type forwarding in policy2
 
 SONiC(config)# interface CPU
 SONiC(conf-if-CPU)# service-policy type acl-copp in policy3
+```
+
+The following shows a sample configuration to match the IPv4 and IPv6 ICMP messages for FTB and replicate them to anycast servers with IP 100.100.1.1 and 1000:1000::1:1 respectively
+
+```
+#------------------------------------------------------------------------------
+# Configure the ACLs to match the traffic
+#------------------------------------------------------------------------------
+sonic(config)# ip access-list ipv4-ftb
+sonic(config-ipv4-acl)# seq 1 permit icmp any host 100.100.1.1 type 3 code 4
+sonic(config)# ipv6 access-list ipv6-ftb
+sonic(config-ipv6-acl)# seq 1 permit icmpv6 any host 1000:1000::1:1 type 2 code 0
+
+#------------------------------------------------------------------------------
+# Configure the class-maps using match as ACL
+#------------------------------------------------------------------------------
+sonic(config)# class-map cmap-ipv4-ftb match-type acl
+sonic(config-class-map)# match access-group ip ipv4-ftb
+sonic(config)# class-map cmap-ipv6-ftb match-type acl
+sonic(config-class-map)# match access-group ipv6 ipv6-ftb
+
+#------------------------------------------------------------------------------
+# Configure the Replication groups to replicate the traffic to anycast servers
+#------------------------------------------------------------------------------
+sonic(config)# pbf replication-group rg-ipv4-anycast-1 type ip
+sonic(config)# entry 1 next-hop 100.100.1.1
+sonic(config)# pbf replication-group rg-ipv6-anycast-1 type ip
+sonic(config)# entry 1 next-hop 1000:1000::1:1
+
+#------------------------------------------------------------------------------
+# Configure the forwarding policy
+#------------------------------------------------------------------------------
+sonic(config)# policy-map pmap-ftb-1 type forwarding
+sonic(config-policy-map)# class cmap-ipv4-ftb priority 100
+sonic(config-policy-map-flow)# set ip replication-group rg-ipv4-anycast-1
+sonic(config-policy-map)# class cmap-ipv6-ftb priority 90
+sonic(config-policy-map-flow)# set ipv6 replication-group rg-ipv6-anycast-1
+
+#------------------------------------------------------------------------------
+# Apply the policy to required interface
+#------------------------------------------------------------------------------
+sonic(config)# interface Ethernet0
+sonic(conf-if-Ethernet0)# service-policy type forwarding in pmap-ftb-1
 ```
 
 # 13 Internal Design Information
