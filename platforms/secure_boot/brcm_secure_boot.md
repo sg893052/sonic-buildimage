@@ -1,7 +1,7 @@
 # Secure Boot - Enterprise SONiC 
 
 ## High Level Design Document
-**Rev 1.1**
+**Rev 1.2**
 
 ## Table of Contents
 
@@ -45,6 +45,7 @@ Rev   |   Date   |    Author   | Change Description
 :---: | :-----:  | :---------: | :---------
 1.0   | 06/29/21 | Fuzail Khan | Initial version
 1.1 | 09/27/21 | Fuzail Khan/ Rajendra Dendukuri | Design updates 
+1.2 | 10/12/21 | Rajendra Dendukuri | Review comments 
 
 
 # About this Manual
@@ -954,6 +955,32 @@ installer            100% |*******************************| 17311k  0:00:00 ETA
 ONIE: Executing installer: http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/secureboot/kvm_onie_iso/onie-updater-x86_64-kvm_x86_64-r0.unsigned
 ONIE: Secure Boot mode is enabled
 Failure: Signature header not found in /var/tmp/installer. Please use a valid signed ONIE installer
+ONIE:/ #
+```
+
+
+
+*Upgrading ONIE using an invalid signed ONIE image*
+
+```
+ONIE:/ # onie-nos-install http://10.52.145.123:9009/wrong_image/sonic-broadcom-enterprise-advanced.bin.signed
+discover: Rescue mode detected. No discover stopped.
+Info: Attempting http://10.52.145.123:9009/wrong_image/sonic-broadcom-enterprise-advanced.bin.signed ...
+Connecting to 10.52.145.123:9009 (10.52.145.123:9009)
+installer            100% |*******************************|  2825M  0:00:00 ETA
+ONIE: Executing installer: http://10.52.145.123:9009/wrong_image/sonic-broadcom-enterprise-advanced.bin.signed
+ONIE: Secure Boot mode is enabled
+ONIE: Extracting the image signature ...
+ONIE: Removing the image signature and the information block from the installer image ...
+ONIE: A signed ONIE Installer Image detected. Installer: /var/tmp/installer, Signature: /var/tmp/installer.sign
+ONIE: Verifying the signature using EFI keys ...
+DB-0001.der
+DB-0002.der
+KEK-0001.der
+MOK-0001.der
+PK-0001.der
+Failure: Signed ONIE Installer image verification failed
+Failure: Signature verification of /var/tmp/installer failed
 ONIE:/ #
 ```
 
