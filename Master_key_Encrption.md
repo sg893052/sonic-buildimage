@@ -7,16 +7,17 @@
 | Rev | Date | Author | Change Description |
 |:---:|:-----------:|:------------------:|-----------------------------|
 | 0.1 | 9/25/2021 | Chandra Sekhar Reddy | Initial version |
+| 0.2 | 10/12/2021 | Chandra Sekhar Reddy | updated the review comments |
 
 # List of Reviewers
 |  Function | Name |
 |:---:|:-----------:|
-|  |   |
+| 1 |  Shirisha Dasari |
 
 # List of Approvers
 |  Function | Name | Date Approved|
 |:---:|:-----------:|:------------------:|
-|  |   |  |
+| 1 | Sachin Suman  |  |
 
 # Definition/Abbreviation
 | **Term** | **Meaning**                     |
@@ -69,12 +70,11 @@ The applications will communicate with the master key encryption infra over D-BU
 # 1 Test Focus Areas
 ## 1.1 Functional Testing 
   - Generation of Master key with default key of system MAC
-
   - Generation of Master key with with user configured key
-
   - Encryption and decryption of all protocol password with Master Key
-
   - Re Encryption and decryption of all protocol password with new configured Master key
+  - Fallback to default key from a user configured key and update of an existing master key to be covered as well.
+  - All protocols need to be verified here i.e protocol functionality needs to be verified. The protocol must work seamlessly while using the default master key and also when a user provided master key is updated.
 
 ## 1.2 Reboot
   -	Master key will persist during the warm Boot
@@ -87,7 +87,7 @@ The applications will communicate with the master key encryption infra over D-BU
 # 2 Topologies
 ## 2.1 Topology 1
 
-![LDAP Topology](LDAP_topology.png)
+![LDAP Topology](Master_key_encryption_topo.png)
 
 
 # 3 Test  Case and Objectives
@@ -146,48 +146,254 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/> |
 
-## 3.2 Config Reload/Cold Reboot Test Cases
-
-#### 3.2.1 Config Reload
-
-### 3.2.1.1 Verify the IPv4 SSH login from client after config reload with LDAP User with Authentication TACACS+, Name Service LDAP, sudo Authorization LDAP
+### 3.1.7 Verify that the system re-encrypts all existing protocol passwords with the new master key
 
 | **Test ID**    | **iTAS Test Case Manager ID**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify the IPv4 SSH login from client after config reload with LDAP User with Authentication TACACS+, Name Service LDAP, sudo Authorization LDAP** |
+| **Test Name**  | **Verify that the system re-encrypts all existing protocol passwords with the new master key** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**             | 1) After bringing the testbed as per the test case 3.1.17 <br/>2)  Save the config and reload<br/>3) Try to connect via ssh to device and provide the credentials whatever configured in LDAP server under sudoer group<br/>4) verify that user login and home directory created and check if any syslog messages for the login success
-5) verify that user can go to root by sudo -i and check gid,uid and groups should be root |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key<br/>5) Verify from show running config that password is re-encrypted<br/> |
 
-
-
-#### 3.2.2 Cold Reboot
-
-### 3.2.2.1 Verify the IPv4 SSH login from client after Cold Reboot with LDAP User with Authentication TACACS+, Name Service LDAP, sudo Authorization LDAP
+### 3.1.8 Verify that the user is prompted to provide the correct old passphrase while trying to update the new master key passphrase
 
 | **Test ID**    | **iTAS Test Case Manager ID**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify the IPv4 SSH login from client after Cold Reboot with LDAP User with Authentication TACACS+, Name Service LDAP, sudo Authorization LDAP** |
+| **Test Name**  | **Verify that the user is prompted to provide the correct old passphrase while trying to update the new master key passphrase** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) After bringing the testbed as per the test case 3.1.17 <br/>2) Save the config and cold reboot<br/>3) Try to connect via ssh to device and provide the credentials whatever configured in LDAP server under sudoer group<br/>4) verify that user login and home directory created and check if any syslog messages for the login success
-5) verify that user can go to root by sudo -i and check gid,uid and groups should be root |
+| **Steps**      | 1) Verify that system generates master key with the user configured key with passpharse<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key and prompt for passphrase<br/>5) verify that master key will not configured with wrong passphrase<br/>6) verify that master key will be configured with Correct passphrase<br/>7) Verify from show running config that password is re-encrypted<br/> |
 
+### 3.1.9 Verify that the user is not allowed to retry a master key update in the case of a failure of authentication w.r.t older master key
 
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the user is not allowed to retry a master key update in the case of a failure of authentication w.r.t older master key** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key <br/>5) verify that master key will not configured with wrong old key<br/>6) verify that master key will be configured with Correct old key<br/>7) Verify from show running config that password is re-encrypted<br/> |
 
+### 3.1.10 Verify that the deletion of the master key results in the system falling back to the default key
 
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the deletion of the master key results in the system falling back to the default key** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Delete the master key <br/>5)  Verify that system fallback to default system key<br/>6)  Verify that syslog generated that fallback to default system key<br/> |
+
+### 3.1.11 Verify that the configuration from one switch can be migrated to another provided that the master keys are the same
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the configuration from one switch can be migrated to another provided that the master keys are the same** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user Default key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Copy the config_db.json file and try to load in other device  with same master key<br/>5)  Verify that the config loaded properly<br/>6)  Verify the same with user configured key<br/> |
+
+### 3.1.12 Verify that the configuration from one switch cannot be migrated to another provided that the master keys are Different
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the configuration from one switch cannot be migrated to another provided that the master keys are Different** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Copy the config_db.json file and try to load in other device  with Different master key<br/>5)  Verify that the device throws warnings appropriately<br/>6)  Verify the same with User Configured key<br/> |
+
+### 3.1.13 Verify that ospf protocol functionality  with the Default Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that ospf protocol functionality  with the Default Configured Master key** |
+| **Test Setup** | **Topology as per the ospf functional suite**                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure ospf as per the ospf functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify ospf neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/> |
+
+### 3.1.14 Verify that ospf protocol functionality  with the user Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that ospf protocol functionality  with the user Configured Master key** |
+| **Test Setup** | **Topology as per the ospf functional suite**                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure ospf as per the ospf functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify ospf neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify ospf neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/> |
+
+### 3.1.15 Verify that ospf protocol functionality after system boot with the User Configured Master Key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that ospf protocol functionality after system boot with the User Configured Master Key** |
+| **Test Setup** | **Topology as per the ospf functional suite**                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure ospf as per the ospf functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify ospf neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify ospf neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/>11) Reboot the system and verify that master key intact<br/>12) Verify ospf neighbors are up<br/>13) Verify that route count as expected<br/>14) Verify that traffic as expected<br/> |
+
+### 3.1.16 Verify that BGP protocol functionality  with the Default Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that BGP protocol functionality  with the Default Configured Master key** |
+| **Test Setup** | **Topology as per the BGP functional suite**                 |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure BGP as per the BGP functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify BGP neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/> |
+
+### 3.1.17 Verify that BGP  protocol functionality  with the user Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that BGP protocol functionality  with the user Configured Master key** |
+| **Test Setup** | **Topology as per the BGP functional suite**                 |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure BGP as per the BGP functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify BGP neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify BGP neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/> |
+
+### 3.1.18 Verify that BGP  protocol functionality after system boot with the User Configured Master Key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that BGP protocol functionality after system boot with the User Configured Master Key** |
+| **Test Setup** | **Topology as per the BGP functional suite**                 |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure BGP as per the ospf functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify BGP neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify BGP neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/>11) Reboot the system and verify that master key intact<br/>12) Verify BGP neighbors are up<br/>13) Verify that route count as expected<br/>14) Verify that traffic as expected<br/> |
+
+### 3.1.19 Verify that RADIUS protocol functionality  with the Default Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that RADIUS protocol functionality  with the Default Configured Master key** |
+| **Test Setup** | **Topology as per the RADIUS functional suite**              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure the RADIUS server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the RADIUS as authentication<br/>5) Try to ssh to device with user which is configured in RADIUS<br/>6) Verify user is authenticated and allowed to login into device<br/> |
+
+### 3.1.20 Verify that RADIUS protocol functionality  with the User Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that RADIUS protocol functionality  with the User Configured Master key** |
+| **Test Setup** | **Topology as per the RADIUS functional suite**              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the RADIUS server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the RADIUS as authentication<br/>5) Try to ssh to device with user which is configured in RADIUS<br/>6) Verify user is authenticated and allowed to login into device<br/> |
+
+### 3.1.21 Verify that RADIUS protocol functionality  after system boot with the User Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that RADIUS protocol functionality  after system boot with the User Configured Master key** |
+| **Test Setup** | **Topology as per the RADIUS functional suite**              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the RADIUS server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the RADIUS as authentication<br/>5) Try to ssh to device with user which is configured in RADIUS<br/>6) Verify user is authenticated and allowed to login into device<br/>7) Reboot the device and verify that master key is intact<br/>8) Verify that user allowed to re-login via ssh<br/> |
+
+### 3.1.22 Verify that TACACS+ protocol functionality  with the Default Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that TACACS+ protocol functionality  with the Default Configured Master key** |
+| **Test Setup** | **Topology as per the TACACS+ functional suite**             |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure the TACACS+ server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the TACACS+ as authentication<br/>5) Try to ssh to device with user which is configured in TACACS+ <br/>6) Verify user is authenticated and allowed to login into device<br/> |
+
+### 3.1.23 Verify that TACACS+  protocol functionality  with the User Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that TACACS+ protocol functionality  with the User Configured Master key** |
+| **Test Setup** | **Topology as per the TACACS+ functional suite**             |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the TACACS+ server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the TACACS+ as authentication<br/>5) Try to ssh to device with user which is configured in TACACS+ <br/>6) Verify user is authenticated and allowed to login into device<br/> |
+
+### 3.1.25 Verify that LDAP protocol functionality  with the Default Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that LDAP protocol functionality  with the Default Configured Master key** |
+| **Test Setup** | **Topology as per the LDAP functional suite**                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure the LDAP server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the LDAP as authentication<br/>5) Try to ssh to device with user which is configured in LDAP <br/>6) Verify user is authenticated and allowed to login into device<br/> |
+
+### 3.1.26 Verify that LDAP  protocol functionality  with the User Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that LDAP protocol functionality  with the User Configured Master key** |
+| **Test Setup** | **Topology as per the LDAP functional suite**                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the LDAP server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the LDAP as authentication<br/>5) Try to ssh to device with user which is configured in LDAP<br/>6) Verify user is authenticated and allowed to login into device<br/> |
+
+### 3.1.27 Verify that LDAP protocol functionality  after system boot with the User Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that LDAP protocol functionality  after system boot with the User Configured Master key** |
+| **Test Setup** | **Topology as per the LDAP functional suite**                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the LDAP server credentials on device  <br/>3) Verify from show running config that password is encrypted<br/>4) Configure the LDAP as authentication<br/>5) Try to ssh to device with user which is configured in LDAP <br/>6) Verify user is authenticated and allowed to login into device<br/>7) Reboot the device and verify that master key is intact<br/>8) Verify that user allowed to re-login via ssh<br/> |
+
+### 3.1.28 Verify that SNMPv3  protocol functionality  with the User Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that SNMPv3  protocol functionality  with the User Configured Master key** |
+| **Test Setup** | **Topology as per the SNMPv3 functional suite**              |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the SNMPv3 on the device <br/>3) Verify from show running config that password is encrypted<br/>4) Configure some of the object using CLI<br/>5) Try to GET the data using netsnmp tool<br/>6) Verify the data is properly fetched |
+
+## 3.2 Config Reload/Cold boot/Warm boot/Fast boot tests
+
+#### 3.2.1 Verify that the new master key is persistent across Config Reload
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the new master key is persistent across Config Reload** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Do Config reload and verify the master key intact<br/> |
+
+#### 3.2.2 Verify that the new master key is persistent across Cold boot
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the new master key is persistent across Cold boot** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Do Cold boot and verify the master key intact<br/> |
+
+#### 3.2.3 Verify that the new master key is persistent across Warm boot
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the new master key is persistent across Warm boot** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Do Warm boot and verify the master key intact<br/> |
+
+#### 3.2.4 Verify that the new master key is persistent across Fast boot
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that the new master key is persistent across Fast boot** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Do Fast boot and verify the master key intact<br/> |
 
 ## 3.3 Scale Testing
-### 3.3.1 Verify the LDAP Scale testing with 8 IPv4 servers configured in the Device with SSH login from client with LDAP User with Authentication TACACS+, Authorization LDAP, Name Service LDAP
+
+### 3.3.1 Verify that ospf Scale functionality  with the user Configured Master key
+
 | **Test ID**    | **iTAS Test Case Manager ID**                                |
 | -------------- | :----------------------------------------------------------- |
-| **Test Name**  | **Verify the LDAP Scale testing with 8 IPv4 servers configured in the Device with SSH login from client with LDAP User with Authentication TACACS+, Authorization LDAP, Name Service LDAP** |
-| **Test Setup** | **Topology1**                                                |
+| **Test Name**  | **Verify that ospf Scale functionality  with the user Configured Master key** |
+| **Test Setup** | **Topology as per the L3 Scale and performance suite**       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure the IPv4 address between SSH client and DUT<br/>2) Configure the Base DN in the device<br/>3) Configure the 8 LDAP servers with priority 1 to 8 in the device make sure 8 one is reachable <br/>4) Create LDAP user in the LDAP server with which SSH client will login<br/>5) Configure aaa nss passwd ldap.<br/>6) Configure aaa nss shadow ldap.<br/>7) Configure aaa nss group ldap.<br/>8) Configure tacacs+ server and passkey.<br/>9) Configure aaa authentication ldap with failthrough disabled.<br/>10) Configure ldap pam group dn and pam memeber attribute as memberUID.<br/>11) Configure aaa authorization login as ldap.<br/>12) Try to connect via ssh to device and provide the credentials whatever configured in LDAP server<br/>13) verify that user login after geeting the details from 8th server and home directory created and check if any syslog messages for the login success<br/>14) Try to connect user which is not configured in LDAP server, it will throw the proper syslog message and will not connect.<br/> |
-### 
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure ospf as per the L3 Scale and performance suite functional suite  <br/>3) Scale the ospf routes as per the platform<br/>4) Verify ospf neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify ospf neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/> |
+
+### 3.3.2 Verify that BGP Scale functionality  with the user Configured Master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **Verify that BGP Scale functionality  with the user Configured Master key** |
+| **Test Setup** | **Topology as per the L3 Scale and performance suite**       |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure BGP as per the L3 Scale and performance suite functional suite  <br/>3) Scale the BGP routes as per the platform<br/>4) Verify BGP neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify BGP neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/> |
+
 # 4 Reference Links
 
-https://github.com/BRCM-SONIC/sonic_doc_private/blob/20384e58e8c528f72379818affe783a6c4d65afc/base/master_key_infra/Master%20key%20encryption%20feature%20HLD.md
+https://github.com/BRCM-SONIC/sonic_doc_private/pull/256
 
