@@ -10,7 +10,7 @@
 | 0.4 | 13/10/2021  | Santosh Votarikari      | Added new test cases        |
 
 # List of Reviewers
-|  Function           | Name  		     |
+|  Function           | Name  		           |
 |:-------------------:|:---------------------|
 |   Dev               |  Babu Rajaram 	     |
 |   Dev               |  Fuzail Khan         |
@@ -90,18 +90,12 @@ loaded via sonic_installer command as well, an infra similar to ONIE nos install
   - Verify that System boot up fails when load signed NOS image from sonic-installer which was stripped(--strip-sign option) and secure boot is enabled.
   - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while image was generated with other than DB/SHIM keys and secure boot is enabled.
   - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while image was generated with other than DB/SHIM keys and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS grub was generated with revoked key(proper) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS kernel was generated with revoked key(proper) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while overall-sonic was generated with revoked key(wrong) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS grub was generated with revoked key(wrong) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS kernel was generated with revoked key(wrong) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(proper) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(proper) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(wrong) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(wrong) and secure boot is enabled.
-  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(wrong) and secure boot is enabled.
+  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while overall-sonic was generated with revoked key and secure boot is enabled.
+  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS grub was generated with revoked key and secure boot is enabled.
+  - Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS kernel was generated with revoked key and secure boot is enabled.
+  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key and secure boot is enabled.
+  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key and secure boot is enabled.
+  - Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key and secure boot is enabled.
 
 # 2 Topologies
 ![Topology:](Secure_Boot_Topology.png)
@@ -417,33 +411,9 @@ Topology Description -
 | **Type**       | **Functional**                                              |
 | **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(proper) which was listed in dbx database of NOS kernel , proper keys of DB/SHIM database for NOS grub image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from onie-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
 
-### 3.1.39 Verify that System boot up fails when an signed NOS image is loaded from onie-installer while overall-sonic was generated with revoked key(wrong) and secure boot is enabled.
+
+### 3.1.39 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.
 | **Test ID**    | **SECURE_BOOT_FUNC_039**                                         |
-| -------------- | :-----------------------------------------------------------|
-| **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from onie-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.** |
-| **Test Setup** | **Topology-1**                                                |
-| **Type**       | **Functional**                                              |
-| **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(wrong) which was listed in dbx database of overall SONiC installer , proper keys of DB/SHIM database for NOS kernel image and NOS grub by using the SONiC signing utility .<br/>3.Load the signed NOS image from onie-installer .<br/>4.Verify that image is not installed.|
-
-
-### 3.1.40 Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS grub was generated with revoked key(wrong) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_040**                                         |
-| -------------- | :-----------------------------------------------------------|
-| **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS grub was generated with revoked key(wrong) and secure boot is enabled.** |
-| **Test Setup** | **Topology-1**                                                |
-| **Type**       | **Functional**                                              |
-| **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(wrong) which was listed in dbx database of NOS grub , proper keys of DB/SHIM database for NOS kernel image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from onie-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
-
-### 3.1.41 Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS kernel was generated with revoked key(wrong) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_041**                                         |
-| -------------- | :-----------------------------------------------------------|
-| **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from onie-installer while NOS kernel was generated with revoked key(wrong) and secure boot is enabled.** |
-| **Test Setup** | **Topology-1**                                                |
-| **Type**       | **Functional**                                              |
-| **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(wrong) which was listed in dbx database of NOS kernel , proper keys of DB/SHIM database for NOS grub image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from onie-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
-
-### 3.1.42 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_042**                                         |
 | -------------- | :-----------------------------------------------------------|
 | **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.** |
 | **Test Setup** | **Topology-1**                                                |
@@ -451,46 +421,22 @@ Topology Description -
 | **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(proper) which was listed in dbx database of overall SONiC installer , proper keys of DB/SHIM database for NOS kernel image and NOS grub by using the SONiC signing utility .<br/>3.Load the signed NOS image from sonic-installer .<br/>4.Verify that image is not installed.|
 
 
-### 3.1.43 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(proper) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_043**                                         |
+### 3.1.40 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(proper) and secure boot is enabled.
+| **Test ID**    | **SECURE_BOOT_FUNC_040**                                         |
 | -------------- | :-----------------------------------------------------------|
 | **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(proper) and secure boot is enabled.** |
 | **Test Setup** | **Topology-1**                                                |
 | **Type**       | **Functional**                                              |
 | **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(proper) which was listed in dbx database of NOS grub , proper keys of DB/SHIM database for NOS kernel image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from sonic-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
 
-### 3.1.44 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(proper) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_044**                                         |
+### 3.1.41 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(proper) and secure boot is enabled.
+| **Test ID**    | **SECURE_BOOT_FUNC_041**                                         |
 | -------------- | :-----------------------------------------------------------|
 | **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(proper) and secure boot is enabled.** |
 | **Test Setup** | **Topology-1**                                                |
 | **Type**       | **Functional**                                              |
 | **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(proper) which was listed in dbx database of NOS kernel , proper keys of DB/SHIM database for NOS grub image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from sonic-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
 
-### 3.1.45 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(wrong) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_045**                                         |
-| -------------- | :-----------------------------------------------------------|
-| **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while overall-sonic was generated with revoked key(proper) and secure boot is enabled.** |
-| **Test Setup** | **Topology-1**                                                |
-| **Type**       | **Functional**                                              |
-| **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(wrong) which was listed in dbx database of overall SONiC installer , proper keys of DB/SHIM database for NOS kernel image and NOS grub by using the SONiC signing utility .<br/>3.Load the signed NOS image from sonic-installer .<br/>4.Verify that image is not installed.|
-
-
-### 3.1.46 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(wrong) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_046**                                         |
-| -------------- | :-----------------------------------------------------------|
-| **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS grub was generated with revoked key(wrong) and secure boot is enabled.** |
-| **Test Setup** | **Topology-1**                                                |
-| **Type**       | **Functional**                                              |
-| **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(wrong) which was listed in dbx database of NOS grub , proper keys of DB/SHIM database for NOS kernel image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from sonic-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
-
-### 3.1.47 Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(wrong) and secure boot is enabled.
-| **Test ID**    | **SECURE_BOOT_FUNC_047**                                         |
-| -------------- | :-----------------------------------------------------------|
-| **Test Name**  | **Verify that System boot up fails when an signed NOS image is loaded from sonic-installer while NOS kernel was generated with revoked key(wrong) and secure boot is enabled.** |
-| **Test Setup** | **Topology-1**                                                |
-| **Type**       | **Functional**                                              |
-| **Steps**      | 1.Verify that Secure Boot is enabled .<br/>2. Generate the NOS image with revoked key(wrong) which was listed in dbx database of NOS kernel , proper keys of DB/SHIM database for NOS grub image and overall SONiC installer by using the SONiC signing utility .<br/>3.Load the signed NOS image from sonic-installer and reboot once it is installed.<br/>4.Verify that System should boot up fails and throw verification status as error.|
 
 ## 4 Reference Links
 https://github.com/BRCM-SONIC/sonic_doc_private/pull/285 <br/>
