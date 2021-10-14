@@ -440,6 +440,57 @@ Ethernet19          -                             down      down      off       
 Ethernet24          -                             down      down      off       25000          9100           Eth1/4/1
 ```
 
+**show interface link-training**
+
+Using this command to display the link-training status.  
+If this command is executed without the optional *Interface* parameter, then it displays
+the link-training status for all the ports.
+
+**Format**  show interface link-training [Interface]  
+**Mode**    EXEC Mode  
+
+Example:
+```
+sonic# show interface link-training Ethernet 0
+                                             Auto          Link-Training
+Interface       Type                      Negotiation  Standalone  Operational
+--------------  ------------------------  -----------  ----------  -----------
+Ethernet0       QSFP56-DD 400GBASE-DR4    off          off         off
+sonic# show interface link-training Ethernet 0-16
+                                             Auto          Link-Training
+Interface       Type                      Negotiation  Standalone  Operational
+--------------  ------------------------  -----------  ----------  -----------
+Ethernet0       QSFP56-DD 400GBASE-DR4    off          off         off
+Ethernet8                                 off          off         off
+Ethernet16                                off          off         off
+sonic# show interface link-training
+                                             Auto          Link-Training
+Interface       Type                      Negotiation  Standalone  Operational
+--------------  ------------------------  -----------  ----------  -----------
+Ethernet0       QSFP56-DD 400GBASE-DR4    off          off         off
+Ethernet8                                 off          off         off
+Ethernet16                                off          off         off
+Ethernet24                                off          off         off
+Ethernet32                                off          off         off
+Ethernet40                                off          off         off
+Ethernet48                                off          off         off
+Ethernet56                                off          off         off
+Ethernet64                                off          off         off
+Ethernet72                                off          off         off
+Ethernet80                                off          off         off
+Ethernet88                                off          off         off
+Ethernet96                                off          off         off
+Ethernet104                               off          off         off
+Ethernet112                               off          off         off
+Ethernet120                               off          off         off
+Ethernet128                               off          off         off
+Ethernet136                               off          off         off
+Ethernet144                               off          off         off
+Ethernet152                               off          off         off
+Ethernet160                               off          off         off
+sonic#
+```
+
 **show interface advertise**
 
 Using this command to display the local administrative link advertisement configuration,
