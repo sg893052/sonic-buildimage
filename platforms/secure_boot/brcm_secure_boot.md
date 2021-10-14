@@ -46,6 +46,7 @@ Rev   |   Date   |    Author   | Change Description
 1.0   | 06/29/21 | Fuzail Khan | Initial version
 1.1 | 09/27/21 | Fuzail Khan/ Rajendra Dendukuri | Design updates 
 1.2 | 10/12/21 | Rajendra Dendukuri | Review comments 
+1.3 | 10/14/21 | Fuzail Khan | Review comments 
 
 
 # About this Manual
@@ -881,7 +882,63 @@ Aborted!
 root@sonic:/home/admin#
 
 ```
+
 If a signed image without a valid signature is provided, the install process is aborted. The current images are left untouched.
+```
+root@sonic:/home/admin#
+root@sonic:/home/admin# sonic_installer install installer.test2-key
+Warning: 'sonic_installer' command is deprecated and will be removed in the future
+Please use 'sonic-installer' instead
+New image will be installed, continue? [y/N]: y
+ Image Install initiation
+Command: /usr/local/bin/secure-sonic --sb-state
+Secureboot active
+
+Secure boot is active, verifying image signature
+Command: /usr/local/bin/secure-sonic --verify --strip-sign --use-efi-certs --image ./installer.test2-key
+================================================================================
+Verifying signature of ./installer.test2-key
+================================================================================
+Image Information Block :
+ONIE-Image-Id : 216e9675-be17-46c7-aa71-e525eac83bd2
+Signature-Id : 4aafd29d-68df-49ee-8aa9-347d375665a7
+Signature-Offset : 2955378728
+Signature-Length : 733
+Image Digest : 0a17c7aedac93b852881811d44dcb012be9d7c6a
+Created files:
+./installer.test2-key.sig
+./installer.test2-key.iib
+./installer.test2-key.sha1sum
+./installer.test2-key
+================================================================================
+Exporting keys stored in EFI variables
+================================================================================
+Exporting EFI DB keys...
+Exporting platform key...
+Exporting key exchange key...
+Exporting Machine Owner DB keys...
+DB-0001.der
+DB-0002.der
+KEK-0001.der
+PK-0001.der
+Exporting EFI DB revoked keys...
+Testing if ./installer.test2-key is signed using a revoked key listed in the EFI dbx...
+Testing if ./installer.test2-key is signed using a key listed in the Machine Owner Key database...
+Using KEK-0001.der
+Using DB-0001.der
+Using DB-0002.der
+Using PK-0001.der
+Error: Failed to validate signature of ./installer.test2-key using the keys stored in the EFI database.
+
+Signature verification failed. Aborting...
+Command: rm -f ./installer.test2-key
+
+Aborted!
+root@sonic:/home/admin#
+```
+
+
+If a signed image with a revoked signature is provided, the install process is aborted. The current images are left untouched.
 
 ```
 root@sonic:/home/admin# sonic-installer install -y http://10.59.132.240:9009/projects/csg_sonic/rd925731/repo/dev/sonic-400-secure-boot/target/sonic-vs.bin.signed
@@ -1036,6 +1093,33 @@ Failure: Signature header not found in /var/tmp/installer. Please use a valid si
 ONIE:/ #
 ```
 
+
+
+*Installing an Enterprise SONiC image using an image signed with an invalid key*
+
+```
+ONIE:/ # onie-nos-install http://10.59.132.240:9009/projects/csg_sonic/sonic_bui
+lds/daily/4.0.0/broadcom/sonic_4.0.0_daily_211004_1430_313/sonic-broadcom-enterp
+rise-advanced.bin.signed
+discover: Rescue mode detected. No discover stopped.
+Info: Attempting http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_211004_1430_313/sonic-broadcom-enterprise-advanced.bin.signed ...
+Connecting to 10.59.132.240:9009 (10.59.132.240:9009)
+installer            100% |*******************************|  2825M  0:00:00 ETA
+ONIE: Executing installer: http://10.59.132.240:9009/projects/csg_sonic/sonic_builds/daily/4.0.0/broadcom/sonic_4.0.0_daily_211004_1430_313/sonic-broadcom-enterprise-advanced.bin.signed
+ONIE: Secure Boot mode is enabled
+ONIE: Extracting the image signature ...
+ONIE: Removing the image signature and the information block from the installer image ...
+ONIE: A signed ONIE Installer Image detected. Installer: /var/tmp/installer, Signature: /var/tmp/installer.sign
+ONIE: Verifying the signature using EFI keys ...
+DB-0001.der
+DB-0002.der
+KEK-0001.der
+MOK-0001.der
+PK-0001.der
+Failure: Signed ONIE Installer image verification failed
+Failure: Signature verification of /var/tmp/installer failed
+ONIE:/ #
+```
 
 
 *Installing an Enterprise SONiC image using an image signed with a revoked key*
