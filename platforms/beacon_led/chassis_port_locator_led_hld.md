@@ -43,6 +43,7 @@ Rev   |   Date     |  Author   | Change Description
 2.0   | 04/15/2021 | Dante Su  | added port_led
 2.0   | 05/15/2021 | Precy Lee | Added Chassis Locator LED timer support
 2.1   | 08/13/2021 | Dante Su  | Updated Port Locator for SAI, database, CLI, limitations and detailed supported platform list
+2.2   | 10/13/2021 | Dante Su  | Updated Port Locator LED behavior as per requests, add details of Broadcom port-locator firmware
 
 # About this Manual
 
@@ -257,17 +258,22 @@ new file, chassisutil.py, is created in the plugins. When a ChassisUtil class is
 
 - The normal port LED indication will be disabled if the port-locator is enabled on anyone of the interfaces.
 - The blink rate will be 1 second on followed by 1 second off.
-- The LED of interfaces that are linked up will have their LEDs solidly lit only if port-locator is not enabled on that interface.
-- The LED of interfaces that are linked down will have their LEDs solidly extinguished.
+- The interfaces that are linked up will have their LEDs solidly lit if port-locator is disabled on that interface.
+- The interfaces that are linked down will have their LEDs solidly extinguished if port-locator is disabled on that interface.
 - Traffic present on any interface will not blink the LED to indicate traffic.
-- A port-locator enabled interface will blink and not light solid if link is up.
-
-In the case that an interface has two LEDs, one for link and a second for activity,
+- A port-locator enabled interface will blink and not light solid regardless of the link state.
+- In the case that an interface has two LEDs, one for link and a second for activity,
 only the link LED is used for the port-locator function. The activity LED will be
-turned off while the port-locator feature is active.
+turned off while the port-locator firmware is active.
+- In the case that an interface has one LED for both link and activity, the LED will not
+blink if activity is present on the interface while the port-locator firmware is active.
 
-In the case that an interface has one LED for link and activity, the LED will not
-blink if activity is present on the interface while the port-locator feature is active.
+| **Port-Locator** | **Link Status** | **SOLID OFF** | **SOLID ON**  | **BLINKING** |
+|:----------------:|:---------------:|:-------------:|:-------------:|:------------:|
+| Disabled         | DOWN            | X             |               |              |
+| Disabled         | UP              |               | X             |              |
+| Enabled          | DOWN            |               |               | X            |
+| Enabled          | UP              |               |               | X            |
 
 Port Locator support can be divided into the following components:
 
@@ -901,3 +907,303 @@ As of now, only the Broadcom CMCIx platform (e.g.TH3/TD3/TD4) is supported, we'l
 | Quanta      | IX8-B          | Yes                       | No                  |              |
 | Quanta      | IX8A_BWDE      | Yes                       | No                  |              |
 | Quanta      | IX9            | Yes                       | No                  |              |
+
+## Port Locator LED - Custom Firmware Developer Guide
+
+While there is a generic port-locator firmware available in the Broadcom SAI, it only works if the
+platform-specific LED hardware design strictly maintain 1:1 mapping between physical ports and LED ports.
+This could be easily identified by the SAI built-in command, **xled plcfg**, that's to help users quickly
+generate the port-locator.soc for the generic firmware.
+
+### A platform that can be supported by the generic port-locator firmware    
+
+Here is a case that each physical ports could be mapped to different LED ports (Pattern RAM)
+
+Instructions to generate the port-locator.soc:
+
+- Disable all ports on the DUT
+- Issue **bcmsh** to break into Broadcom Debug Shell (DO NOT USE bcmcmd for this!!!)
+- Issue xled plcfg, and answer 'y' to start the testing.
+- Review the logs, manually update the generated script, and save it as a port-locator.soc in the platform folders
+
+```
+admin@sonic:~$ sudo config interface startup Ethernet0-999
+admin@sonic:~$ bcmsh
+drivshell>xled plcfg
+xled plcfg
+Is the custom_led.bin activated? [y/n]y
+y
+phys   1 --> patt   1 (0x3 -> 0x2)
+phys   5 --> patt   5 (0x3 -> 0x2)
+phys   9 --> patt   9 (0x3 -> 0x2)
+phys  13 --> patt  13 (0x3 -> 0x2)
+phys  17 --> patt  17 (0x3 -> 0x2)
+phys  21 --> patt  21 (0x3 -> 0x2)
+phys  25 --> patt  25 (0x3 -> 0x2)
+phys  29 --> patt  29 (0x3 -> 0x2)
+phys  33 --> patt  33 (0x3 -> 0x2)
+phys  37 --> patt  37 (0x3 -> 0x2)
+phys  41 --> patt  41 (0x3 -> 0x2)
+phys  45 --> patt  45 (0x3 -> 0x2)
+phys  49 --> patt  49 (0x3 -> 0x2)
+phys  53 --> patt  53 (0x3 -> 0x2)
+phys  57 --> patt  57 (0x3 -> 0x2)
+phys  61 --> patt  61 (0x3 -> 0x2)
+phys 129 --> patt 129 (0x3 -> 0x2)
+phys  65 --> patt  65 (0x3 -> 0x2)
+phys  69 --> patt  69 (0x3 -> 0x2)
+phys  73 --> patt  73 (0x3 -> 0x2)
+phys  77 --> patt  77 (0x3 -> 0x2)
+phys  81 --> patt  81 (0x3 -> 0x2)
+phys  85 --> patt  85 (0x3 -> 0x2)
+phys  89 --> patt  89 (0x3 -> 0x2)
+phys  93 --> patt  93 (0x3 -> 0x2)
+phys  97 --> patt  97 (0x3 -> 0x2)
+phys 101 --> patt 101 (0x3 -> 0x2)
+phys 105 --> patt 105 (0x3 -> 0x2)
+phys 109 --> patt 109 (0x3 -> 0x2)
+phys 113 --> patt 113 (0x3 -> 0x2)
+phys 117 --> patt 117 (0x3 -> 0x2)
+phys 121 --> patt 121 (0x3 -> 0x2)
+phys 125 --> patt 125 (0x3 -> 0x2)
+phys 128 --> patt 130 (0x3 -> 0x1)  <--- 2nd pattern observed on physical port 128
+
+
+ACCU_BASE: 0x00009000
+PATT_BASE: 0x0000a000
+
+
+rc.soc:
+
+# LED interface controls
+config add sai_led_intf_enable_0=1
+config add sai_led_intf_head_0=1
+config add sai_led_intf_tail_0=64
+config add sai_led_intf_bits_0=2
+
+config add sai_led_intf_enable_1=1
+config add sai_led_intf_head_1=65
+config add sai_led_intf_tail_1=130
+config add sai_led_intf_bits_1=2
+
+# LED data patterns for ON/OFF
+config add sai_led_patt_off_0=0x3
+config add sai_led_patt_on_0=0x2    <--- Only the 1st pattern is generated automatically, please have it updated manually
+
+# Physical Port --> LED Port (1-based indexing)
+# QSFP [1-4]
+config add sai_led_portmap_1=2
+config add sai_led_portmap_2=3
+config add sai_led_portmap_3=4
+config add sai_led_portmap_4=5
+# QSFP [5-8]
+config add sai_led_portmap_5=6
+config add sai_led_portmap_6=7
+config add sai_led_portmap_7=8
+config add sai_led_portmap_8=9
+...... omitted ......
+# QSFP [45-48]
+config add sai_led_portmap_45=46
+config add sai_led_portmap_46=47
+config add sai_led_portmap_47=48
+config add sai_led_portmap_48=49
+# QSFP [49-52]
+config add sai_led_portmap_49=50
+config add sai_led_portmap_50=51
+config add sai_led_portmap_51=52
+config add sai_led_portmap_52=53
+# QSFP [53-56]
+config add sai_led_portmap_53=54
+config add sai_led_portmap_54=55
+config add sai_led_portmap_55=56
+config add sai_led_portmap_56=57
+# QSFP [57-60]
+config add sai_led_portmap_57=58
+config add sai_led_portmap_58=59
+config add sai_led_portmap_59=60
+config add sai_led_portmap_60=61
+# QSFP [61-64]
+config add sai_led_portmap_61=62
+config add sai_led_portmap_62=63
+config add sai_led_portmap_63=64
+config add sai_led_portmap_64=65
+# 1-lane port [129-129]
+config add sai_led_portmap_129=130
+# QSFP [65-68]
+config add sai_led_portmap_65=66
+config add sai_led_portmap_66=67
+config add sai_led_portmap_67=68
+config add sai_led_portmap_68=69
+...... omitted ......
+NOTE: Please review the generated script and have it updated if necessary
+drivshell>
+```
+
+The port-locator.soc needs to be manually updated as below
+
+```
+# LED interface controls
+config add sai_led_intf_enable_0=1
+config add sai_led_intf_head_0=1
+config add sai_led_intf_tail_0=64
+config add sai_led_intf_bits_0=2
+
+config add sai_led_intf_enable_1=1
+config add sai_led_intf_head_1=65
+config add sai_led_intf_tail_1=130
+config add sai_led_intf_bits_1=2
+
+# LED data patterns for ON/OFF
+config add sai_led_patt_off_0=0x3
+config add sai_led_patt_on_0=0x2
+config add sai_led_patt_off_1=0x3     <-- This must be done manually!!
+config add sai_led_patt_on_1=0x1      <-- This must be done manually!!
+
+# Physical Port --> LED Port (1-based indexing)
+# QSFP [1-4]
+config add sai_led_portmap_1=2
+config add sai_led_portmap_2=3
+config add sai_led_portmap_3=4
+config add sai_led_portmap_4=5
+...... omitted ......
+# 1-lane port [128-128]
+config add sai_led_portmap_128=131
+config add sai_led_pattmap_128=1      <-- This must be done manually!!
+...... omitted ......
+```
+
+Properties of the port-locator.soc
+
+| Property | Description |
+|:---------|:------------|
+|sai_led_intf_enable_[led-interface-id]=[value] | 1 for enabled, otherwise disabled |
+|sai_led_intf_head_[led-interface-id]=[value]   | The 1st (inclusive) word index of PATTERN RAM |
+|sai_led_intf_tail_[led-interface-id]=[value]   | The last (inclusive) word index of PATTERN RAM |
+|sai_led_intf_bits_[led-interface-id]=[value]   | The number of bits will be shifted out (LSB) |
+|sai_led_patt_off_[pattern-id]=[value] | The id of the data pattern to turn OFF the LED |
+|sai_led_patt_on_[pattern-id]=[value]  | The id of the data pattern to turn ON the LED |
+|sai_led_portmap_[physical-port-id]=[led-port-id] | Mapping Broadcom Physical Port to LED Port |
+|sai_led_pattmap_[physical-port-id]=[led-port-id] | Selecting which data pattern should be adapted for the physical port|
+
+### A platform that's NOT compatible with the generic port-locator firmware    
+
+Here is a case that multiple physical ports share the same LED port (Pattern RAM) with different
+bitmask values for each port.
+
+```
+drivshell>xled plcfg
+xled plcfg
+Is the custom_led.bin activated? [y/n]y
+y
+phys   1 --> patt   0 (0xfff -> 0xffb)
+phys   2 --> patt   0 (0xfff -> 0xffe)
+phys   3 --> patt   0 (0xfff -> 0xfbf)
+phys   4 --> patt   0 (0xfff -> 0xfef)
+phys   5 --> patt   0 (0xfff -> 0xbff)
+phys   6 --> patt   0 (0xfff -> 0xeff)
+phys   7 --> patt   1 (0xfff -> 0xffb)
+phys   8 --> patt   1 (0xfff -> 0xffe)
+phys   9 --> patt   1 (0xfff -> 0xfbf)
+phys  10 --> patt   1 (0xfff -> 0xfef)
+phys  11 --> patt   1 (0xfff -> 0xbff)
+phys  12 --> patt   1 (0xfff -> 0xeff)
+phys  13 --> patt   2 (0xfff -> 0xffb)
+phys  14 --> patt   2 (0xfff -> 0xffe)
+phys  15 --> patt   2 (0xfff -> 0xfbf)
+phys  16 --> patt   2 (0xfff -> 0xfef)
+phys  17 --> patt   2 (0xfff -> 0xbff)
+phys  18 --> patt   2 (0xfff -> 0xeff)
+phys  19 --> patt   3 (0xfff -> 0xffb)
+phys  20 --> patt   3 (0xfff -> 0xffe)
+phys  21 --> patt   3 (0xfff -> 0xfbf)
+phys  22 --> patt   3 (0xfff -> 0xfef)
+phys  23 --> patt   3 (0xfff -> 0xbff)
+phys  24 --> patt   3 (0xfff -> 0xeff)
+phys  29 --> patt  70 (0xfff -> 0xffd)
+phys  33 --> patt  71 (0xfff -> 0xffd)
+phys  37 --> patt  69 (0xfff -> 0xffd)
+phys  38 --> patt  69 (0xfff -> 0xfef)
+phys  39 --> patt  69 (0xfff -> 0xf7f)
+phys  40 --> patt  69 (0xfff -> 0xbff)
+phys  41 --> patt  74 (0xfff -> 0xffd)
+phys  42 --> patt  74 (0xfff -> 0xfef)
+phys  43 --> patt  74 (0xfff -> 0xf7f)
+phys  44 --> patt  74 (0xfff -> 0xbff)
+phys  45 --> patt  73 (0xfff -> 0xffd)
+phys  49 --> patt  72 (0xfff -> 0xffd)
+phys  53 --> patt  64 (0xfff -> 0xffb)
+phys  54 --> patt  64 (0xfff -> 0xffe)
+phys  55 --> patt  64 (0xfff -> 0xfbf)
+phys  56 --> patt  64 (0xfff -> 0xfef)
+phys  57 --> patt  64 (0xfff -> 0xbff)
+phys  58 --> patt  64 (0xfff -> 0xeff)
+phys  59 --> patt  65 (0xfff -> 0xffb)
+phys  60 --> patt  65 (0xfff -> 0xffe)
+phys  61 --> patt  65 (0xfff -> 0xfbf)
+phys  62 --> patt  65 (0xfff -> 0xfef)
+phys  63 --> patt  65 (0xfff -> 0xbff)
+phys  64 --> patt  65 (0xfff -> 0xeff)
+phys  65 --> patt  66 (0xfff -> 0xffb)
+phys  66 --> patt  66 (0xfff -> 0xffe)
+phys  67 --> patt  66 (0xfff -> 0xfbf)
+phys  68 --> patt  66 (0xfff -> 0xfef)
+phys  69 --> patt  66 (0xfff -> 0xbff)
+phys  70 --> patt  66 (0xfff -> 0xeff)
+phys  71 --> patt  67 (0xfff -> 0xffb)
+phys  72 --> patt  67 (0xfff -> 0xffe)
+phys  73 --> patt  67 (0xfff -> 0xfbf)
+phys  74 --> patt  67 (0xfff -> 0xfef)
+phys  75 --> patt  67 (0xfff -> 0xbff)
+phys  76 --> patt  67 (0xfff -> 0xeff)
+
+...... omitted ......
+
+NOTE: Please review the generated script and have it updated if necessary
+drivshell>
+```
+
+In case that generic port-locator firmware is not suitable to the target platform,
+a custom port-locator firmware will be necessary, and it should be placed in the <platform> folder
+e.g.
+```
+ds952811@qemu:sonic-buildimage$ ls -l device/accton/x86_64-accton_as5835_54t-r0/port-locator.bin
+-rwxrwxr-x 1 ds952811 ds952811 608 Aug 16 12:26 device/accton/x86_64-accton_as5835_54t-r0/port-locator.bin
+```
+
+Here is an pseudo code for your reference
+
+```
+#include <shared/cmicfw/cmicx_led_public.h>
+ 
+/* Check for locator mode */
+#define LED_LOCATOR(ctrl, port) (*(uint16 *)((ctrl)->pat_ram_base + ((512 + (port) - 1) << 2)) & 0x8000)
+
+/* Fetch the port status from the ACCU_RAM */
+#define READ_LED_ACCU_DATA(base, port) (*((uint16 *)(base + (((port) - 1) * sizeof(uint32)))))
+
+void custom_led_handler(soc_led_custom_handler_ctrl_t *ctrl, uint32 activity_count)
+{
+    ......
+    accu_val = READ_LED_ACCU_DATA(ctrl->accu_ram_base, port);
+    if (LED_LOCATOR(ctrl, port))
+    {
+        if ((activity_count >> 5) & 1)
+        {
+            /* LED ON  */
+        }
+        else
+        {
+            /* LED OFF */
+        }
+    }
+    else if ((accu_val & LED_OUTPUT_LINK_UP) && (accu_val & LED_OUTPUT_LINK_ENABLE))
+    {
+        /* LED ON  */
+    }
+    else
+    {
+        /* LED OFF */
+    }
+    ......
+}
+```
