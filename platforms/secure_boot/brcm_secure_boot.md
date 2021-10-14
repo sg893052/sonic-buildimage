@@ -46,6 +46,7 @@ Rev   |   Date   |    Author   | Change Description
 1.0   | 06/29/21 | Fuzail Khan | Initial version
 1.1 | 09/27/21 | Fuzail Khan/ Rajendra Dendukuri | Design updates 
 1.2 | 10/12/21 | Rajendra Dendukuri | Review comments 
+1.3 | 10/14/21 | Fuzail Khan | Review comments 
 
 
 # About this Manual
@@ -1097,8 +1098,6 @@ ONIE:/ #
 *Installing an Enterprise SONiC image using an image signed with an invalid key*
 
 ```
-ONIE:/ # ip addr add 10.59.133.75/20 dev eth0; route add default gw 10.59.128.1
-eth0
 ONIE:/ # onie-nos-install http://10.59.132.240:9009/projects/csg_sonic/sonic_bui
 lds/daily/4.0.0/broadcom/sonic_4.0.0_daily_211004_1430_313/sonic-broadcom-enterp
 rise-advanced.bin.signed
