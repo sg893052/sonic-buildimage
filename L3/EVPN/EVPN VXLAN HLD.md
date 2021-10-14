@@ -1334,11 +1334,11 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    +---------+--------------+-------+
    Total count : 1
 
-7. show vxlan counters <remoteip/all>
-   - lists all the tunnel statistics
+7. show vxlan counters <remoteip>
+   - lists all or a specific remote's tunnel statistics
    - lists also the configured polling interval
 
-   Polling Interval : 3 seconds
+   Polling Interval : 5 seconds
    SIP     DIP        RX_OK    RX_BPS    RX_PPS    TX_OK    TX_BPS    TX_PPS    
   ------   ---       --------  --------  --------  -------  --------  --------  
  2.2.2.2   3.3.3.3     0         0         0         0        0         0  
@@ -1353,7 +1353,7 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    PORT_STAT                   default (1000)      enable
    PORT_BUFFER_DROP            default (60000)     enable
    RIF_STAT                    default (1000)      enable
-   TUNNEL_STAT                 default (3000)      enable
+   TUNNEL_STAT                 default (5000)      enable
    BUFFER_POOL_WATERMARK_STAT  default (10000)     enable
    PG_WATERMARK_STAT           default (10000)     disable
 
@@ -1396,7 +1396,7 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
    - switch(conf-if-vlanxxx)# [no] neigh-suppress
    - This command will suppress both ARP & ND flooding over the tunnel when Vlan is extended.
 6. VXLAN counter polling interval
-   - switch(config) counters vxlan interval <polling_interval>
+   - switch(config-if-vtep1) counters polling-interval <polling_interval>
    - polling_interval is in seconds from 3-30 sec.
 
 ```
@@ -1434,7 +1434,7 @@ Linux kernel version 4.9.x used in SONiC requires backport of a few patches to s
 #### 5.2.4 Clear commands 
 
 ```
-1. clear counters vxlan <remoteip/all>
+1. clear counters vxlan <remoteip>
    Clears counters for a specific or all tunnels.
 
 ```
@@ -1538,15 +1538,22 @@ VXLAN Counter commands
 
 Show Command
 
-        curl -v -X GET  -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-counters-ext:vxlan-tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:input\":{\"tunneliface\":\"all\"}}" -k
+curl -v -X POST -u admin:YourPaSsWoRd "https://10.59.132.165/restconf/operations/sonic-counters:vxlan_tunnel_counters" -H "Content-Type: application/yang-data+json" -d "{\"sonic-counters:vxlan_tunnel_counters:input\":{\"vxlan_tunnel_iface\":\"all\"}}" -k
+curl -v -X POST -u admin:YourPaSsWoRd "https://10.59.132.165/restconf/operations/sonic-counters:vxlan_tunnel_counters" -H "Content-Type: application/yang-data+json" -d "{\"sonic-counters:vxlan_tunnel_counters:input\":{\"vxlan_tunnel_iface\":\"4.4.4.4\"}}" -k
 
 Clear Command
 
-    curl -v -X POST -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/operations/openconfig-interfaces-ext:clear-vxlan-tunnel-counters" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-interfaces-ext:input\":{\"tunnel\":\"all\"}}" -k
+curl -v -X POST -u admin:YourPaSsWoRd "https://10.59.132.165/restconf/operations/sonic-counters:clear_vxlan_tunnel_counters" -H "Content-Type: application/yang-data+json" -d "{\"sonic-counters:vxlan_tunnel_counters:input\":{\"vxlan_tunnel_iface\":\"all\"}}" -k
+curl -v -X POST -u admin:YourPaSsWoRd "https://10.59.132.165/restconf/operations/sonic-counters:clear_vxlan_tunnel_counters" -H "Content-Type: application/yang-data+json" -d "{\"sonic-counters:vxlan_tunnel_counters:input\":{\"vxlan_tunnel_iface\":\"4.4.4.4\"}}" -k
 
-Config Command
+Config polling interval Command
 
-    curl -v -X PATCH -u admin:YourPaSsWoRd "https://x.x.x.x/restconf/data/openconfig-counters-ext:vxlan-tunnel-counters/vxlan-tunnel-counter=time_value/config" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-counters-ext:config\":{\"vxlan-tunnel-counter-interval\":time_value}}" -k
+curl -X PATCH -u admin:YourPaSsWoRd "https://10.59.143.28/restconf/data/sonic-counters:sonic-counters/FLEX_COUNTER_TABLE/FLEX_COUNTER_TABLE_LIST" -H "Content-Type: application/yang-data+json" -d "{\"sonic-counters:FLEX_COUNTER_TABLE_LIST\":[{\"id\":\"TUNNEL\",\"FLEX_COUNTER_STATUS\":\"enable\",\"POLL_INTERVAL\":12000}]}" -k
+
+Get polling interval 
+curl -X GET -u admin:YourPaSsWoRd "https://10.59.143.28/restconf/data/sonic-counters:sonic-counters/FLEX_COUNTER_TABLE/FLEX_COUNTER_TABLE_LIST=TUNNEL" -H "Content-Type: application/yang-data+json" -k
+
+
 
 ```
 
