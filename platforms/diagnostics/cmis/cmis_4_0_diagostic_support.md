@@ -297,7 +297,7 @@ The config commands uses Klish framework. It requires Klish to be in configurati
 [no] interface transceiver diagnostics loopback {media-side-input|media-side-output|host-side-input|host-side-output} {Interface}
 ```
 
-This command enables the the loopback test mode of the transceiver.
+This command enables the the loopback test mode of the transceiver.  
 If the **Interface** is not specified, this command will be applied to all the switch ports.
 
 |Loopback Type             |Illustraction                                 |
@@ -349,10 +349,11 @@ sonic-cli(config)# no interface transceiver diagnostics pattern checker-host Eth
 #### Show Loopback Capability
 
 ```
-show interface transceiver diagnostics capability Ethernet <1|2|..N>
+show interface transceiver diagnostics capability {Interface}
 ```
 
-This command shows diagnostics capability of the transceiver. If no specific transceiver is provided, all CMIS diagnostic supported transceivers are displayed with associated loopback capabilities.
+This command shows diagnostics capability of the transceiver.  
+If **Interface** is not specified, the information of all the switch ports will be displayed.
 
 Example output:
 
@@ -411,10 +412,11 @@ sonic#
 #### Show Diagnostics Control Status
 
 ```
-show interface transceiver diagnostics status Ethernet <1|2|..N>
+show interface transceiver diagnostics status {Interface}
 ```
 
-This command shows the loopback diagnostic controls of the transceiver. If no specific transceiver is provided, all CMIS diagnostic supported transceivers are displayed with associated control settings.
+This command shows the loopback diagnostic controls of the transceiver.  
+If **Interface** is not specified, the information of all the switch ports will be displayed.
 
 Example output:
 
