@@ -913,7 +913,7 @@ As of now, only the Broadcom CMCIx platform (e.g.TH3/TD3/TD4) is supported, we'l
 While there is a generic port-locator firmware available in the Broadcom SAI, it only works if the
 platform-specific LED hardware design strictly maintain 1:1 mapping between physical ports and LED ports.
 This could be easily identified by the SAI built-in command, **xled plcfg**, that's to help users quickly
-generate the port-locator.soc for the generic firmware.
+generate the **port-locator.soc** for the generic firmware.
 
 ### A platform that can be supported by the generic port-locator firmware    
 
@@ -922,9 +922,9 @@ Here is a case that each physical ports could be mapped to different LED ports (
 Instructions to generate the port-locator.soc:
 
 - Disable all ports on the DUT
-- Issue **bcmsh** to break into Broadcom Debug Shell (DO NOT USE bcmcmd for this!!!)
-- Issue xled plcfg, and answer 'y' to start the testing.
-- Review the logs, manually update the generated script, and save it as a port-locator.soc in the platform folders
+- Issue **bcmsh** to break into Broadcom Debug Shell (DO NOT USE **bcmcmd** for this!!!)
+- Issue **xled plcfg**, and answer 'y' to start the testing.
+- Review the logs, manually create the port-locator.soc in the platform folder
 
 ```
 admin@sonic:~$ sudo config interface startup Ethernet0-999
@@ -1163,7 +1163,8 @@ drivshell>
 ```
 
 In case that generic port-locator firmware is not suitable to the target platform,
-a custom port-locator firmware will be necessary, and it should be placed in the <platform> folder
+a custom port-locator firmware will be necessary, and it should be placed in the **platform** folder  
+
 e.g.
 ```
 ds952811@qemu:sonic-buildimage$ ls -l device/accton/x86_64-accton_as5835_54t-r0/port-locator.bin
