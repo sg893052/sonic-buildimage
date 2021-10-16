@@ -1,7 +1,7 @@
 # Feature Name
 GNMI Get Request Type Field
 # High Level Design Document
-#### Rev 0.3
+#### Rev 0.4
 
 # Scope
 This document describes the high level design of supporting the 'type' field in a gNMI [GNMI](#GNMI) GetRequest Message in the management framework.
@@ -31,11 +31,348 @@ CONFIG, and STATE are already described in the [Query Parameter Framework](#quer
 
 There is an expired draft that describes how OPERATIONAL data could be identified. Till a formal definition makes its way into the specification, we'll attempt to nail it down to mean any read-only data ("config false") that does not have a corresponding "config" path (i.e. "../../config/<data>" should not exist), excluding any data in "config" containers. Examples of this data are statistics, counters, and protocol negotiated values.
 
+## Examples
+
+### gNMI Get RPC for a RADIUS server with ALL type data
+
+Request all the data (including configuration, state, and operational data)
+
+```text
+
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' -insecure -logtostderr -target_addr localhost:8080
+== getRequest:
+prefix: <
+>
+path: <
+  elem: <
+    name: "openconfig-system:system"
+  >
+  elem: <
+    name: "aaa"
+  >
+  elem: <
+    name: "server-groups"
+  >
+  elem: <
+    name: "server-group"
+    key: <
+      key: "name"
+      value: "RADIUS"
+    >
+  >
+  elem: <
+    name: "servers"
+  >
+  elem: <
+    name: "server"
+    key: <
+      key: "address"
+      value: "10.10.10.10"
+    >
+  >
+>
+encoding: JSON_IETF
+
+== getResponse:
+notification: <
+  timestamp: 1634340866464546744
+  prefix: <
+  >
+  update: <
+    path: <
+      elem: <
+        name: "openconfig-system:system"
+      >
+      elem: <
+        name: "aaa"
+      >
+      elem: <
+        name: "server-groups"
+      >
+      elem: <
+        name: "server-group"
+        key: <
+          key: "name"
+          value: "RADIUS"
+        >
+      >
+      elem: <
+        name: "servers"
+      >
+      elem: <
+        name: "server"
+        key: <
+          key: "address"
+          value: "10.10.10.10"
+        >
+      >
+    >
+    val: <
+      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"config\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1},\"radius\":{\"config\":{\"openconfig-aaa-radius-ext:encrypted\":true,\"retransmit-attempts\":1,\"secret-key\":\"\"},\"state\":{\"counters\":{\"access-accepts\":\"2\",\"access-rejects\":\"1\",\"openconfig-aaa-radius-ext:access-requests\":\"3\"},\"retransmit-attempts\":1}},\"state\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1},\"tacacs\":{\"config\":{\"openconfig-aaa-tacacs-ext:encrypted\":true,\"secret-key\":\"\"}}}]}"
+    >
+  >
+>
+
+```
+
+### gNMI Get RPC for a RADIUS server with only CONFIG type data
+
+Request only configuration data
+
+```text
+
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type CONFIG -insecure -logtostderr -target_addr localhost:8080
+== getRequest:
+prefix: <
+>
+path: <
+  elem: <
+    name: "openconfig-system:system"
+  >
+  elem: <
+    name: "aaa"
+  >
+  elem: <
+    name: "server-groups"
+  >
+  elem: <
+    name: "server-group"
+    key: <
+      key: "name"
+      value: "RADIUS"
+    >
+  >
+  elem: <
+    name: "servers"
+  >
+  elem: <
+    name: "server"
+    key: <
+      key: "address"
+      value: "10.10.10.10"
+    >
+  >
+>
+type: CONFIG
+encoding: JSON_IETF
+
+== getResponse:
+notification: <
+  timestamp: 1634340926214511357
+  prefix: <
+  >
+  update: <
+    path: <
+      elem: <
+        name: "openconfig-system:system"
+      >
+      elem: <
+        name: "aaa"
+      >
+      elem: <
+        name: "server-groups"
+      >
+      elem: <
+        name: "server-group"
+        key: <
+          key: "name"
+          value: "RADIUS"
+        >
+      >
+      elem: <
+        name: "servers"
+      >
+      elem: <
+        name: "server"
+        key: <
+          key: "address"
+          value: "10.10.10.10"
+        >
+      >
+    >
+    val: <
+      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"config\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1},\"radius\":{\"config\":{\"openconfig-aaa-radius-ext:encrypted\":true,\"retransmit-attempts\":1,\"secret-key\":\"\"}},\"tacacs\":{\"config\":{\"openconfig-aaa-tacacs-ext:encrypted\":true,\"secret-key\":\"\"}}}]}"
+    >
+  >
+>
+
+```
+
+### gNMI Get RPC for a RADIUS server with only STATE type data
+
+Request only state data (which includes operational data)
+
+```text
+
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type STATE -insecure -logtostderr -target_addr localhost:8080
+== getRequest:
+prefix: <
+>
+path: <
+  elem: <
+    name: "openconfig-system:system"
+  >
+  elem: <
+    name: "aaa"
+  >
+  elem: <
+    name: "server-groups"
+  >
+  elem: <
+    name: "server-group"
+    key: <
+      key: "name"
+      value: "RADIUS"
+    >
+  >
+  elem: <
+    name: "servers"
+  >
+  elem: <
+    name: "server"
+    key: <
+      key: "address"
+      value: "10.10.10.10"
+    >
+  >
+>
+type: STATE
+encoding: JSON_IETF
+
+== getResponse:
+notification: <
+  timestamp: 1634340940535508475
+  prefix: <
+  >
+  update: <
+    path: <
+      elem: <
+        name: "openconfig-system:system"
+      >
+      elem: <
+        name: "aaa"
+      >
+      elem: <
+        name: "server-groups"
+      >
+      elem: <
+        name: "server-group"
+        key: <
+          key: "name"
+          value: "RADIUS"
+        >
+      >
+      elem: <
+        name: "servers"
+      >
+      elem: <
+        name: "server"
+        key: <
+          key: "address"
+          value: "10.10.10.10"
+        >
+      >
+    >
+    val: <
+      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"radius\":{\"state\":{\"counters\":{\"access-accepts\":\"2\",\"access-rejects\":\"1\",\"openconfig-aaa-radius-ext:access-requests\":\"3\"},\"retransmit-attempts\":1}},\"state\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1}}]}"
+    >
+  >
+>
+
+```
+
+### gNMI Get RPC for a RADIUS server with only OPERATIONAL type data
+
+Request only the operational data (Eg: counters)
+
+```text
+
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type OPERATIONAL -insecure -logtostderr -target_addr localhost:8080
+== getRequest:
+prefix: <
+>
+path: <
+  elem: <
+    name: "openconfig-system:system"
+  >
+  elem: <
+    name: "aaa"
+  >
+  elem: <
+    name: "server-groups"
+  >
+  elem: <
+    name: "server-group"
+    key: <
+      key: "name"
+      value: "RADIUS"
+    >
+  >
+  elem: <
+    name: "servers"
+  >
+  elem: <
+    name: "server"
+    key: <
+      key: "address"
+      value: "10.10.10.10"
+    >
+  >
+>
+type: OPERATIONAL
+encoding: JSON_IETF
+
+== getResponse:
+notification: <
+  timestamp: 1634340952348637025
+  prefix: <
+  >
+  update: <
+    path: <
+      elem: <
+        name: "openconfig-system:system"
+      >
+      elem: <
+        name: "aaa"
+      >
+      elem: <
+        name: "server-groups"
+      >
+      elem: <
+        name: "server-group"
+        key: <
+          key: "name"
+          value: "RADIUS"
+        >
+      >
+      elem: <
+        name: "servers"
+      >
+      elem: <
+        name: "server"
+        key: <
+          key: "address"
+          value: "10.10.10.10"
+        >
+      >
+    >
+    val: <
+      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"radius\":{\"state\":{\"counters\":{\"access-accepts\":\"2\",\"access-rejects\":\"1\",\"openconfig-aaa-radius-ext:access-requests\":\"3\"}}}}]}"
+    >
+  >
+>
+
+
+```
+
+
 # Limitations
 
 - The 'type' field of GetRequest message is supported only for the [transl clients](#translib). The "OTHERS"/Non-DB clients, and DB clients do not support this field, and will continue to return the unsupported request type error, if said 'type' field is included.
 
 - OPERATIONAL type is supported only for Openconfig Yang modeled data.
+
+- Similar to Query Parameter Framework limitations, empty containers, or lists will not be present in returned data
 
 # References
 
