@@ -30,7 +30,9 @@ SpyTest - Data Driven Test Development
     - [4.2 Subscription Support](#42-subscription-support)
       - [4.2.1 Connection Management](#421-connection-management)
       - [4.2.2 Creating Subscription](#422-creating-subscription)
-      - [4.2.3 Verifying Notifications](#423-verifying-notifications)
+      - [4.2.3 Subscribing to Multiple Message Paths](#423-subscribing-to-multiple-message-paths)
+      - [4.2.4 Verifying Notifications](#424-verifying-notifications)
+      - [4.2.5 Closing Subscription](#425-closing-subscription)
     - [4.3 GNOI Support](#43-gnoi-support)
     - [4.4 RPC Support](#44-rpc-support)
   - [5 Developer Steps](#5-developer-steps)
@@ -799,18 +801,16 @@ class Acl(AclBase):
 Message classes will support gNMI subscription test cases similar to the existing APIs provided by
 the `apis/yang/utils/gnmi` module.
 Existing APIs operate on path and JSON payload.
-Message classes will provide a thin wrapper around them so that developer can use only the
-message classes in his test code.
-This should cover simple one-path subscription cases.
-Developer should directly use APIs from `apis/yang/utils/gnmi` for multi-path subscriptions
-and other advanced test cases.
+New subscription related APIs provided by message classes will be wrappers for these existing APIs.
+Developer can avoid dealing with paths and payloads to start subscriptions and verify notifications.
+The message class instances used for configure/unconfigure steps can be reused in sunscription APIs.
 
 Note that all the APIs discussed in this section automatically use "gnmi" UI.
 
 ### 4.2.1 Connection Management
 
-Will be same as gNMI get/set operations.
-**TODO: revisit**
+The gNMI connection created by the spytest infra during init phase will be used for starting subscriptions.
+Test case should not create new connection or close the shared connection by itself.
 
 ### 4.2.2 Creating Subscription
 
@@ -849,13 +849,88 @@ def subscribe(self, dut, mode, target_attr=None, target_path=None, timeout=None,
 Testcase should create a message class, fill the key attributes and invoke its subscribe() method.
 Keys can be a wildcard character (`*`) too.
 The subscribe() method will return a `RpcContext` object, which can be used for verifying notification messages.
+`RpcContext` is a subclass of `Response` class.
+Can use used to check the status of subscribe as well to verify the notifications.
 
-### 4.2.3 Verifying Notifications
+Example usage:
 
-The RpcContext class will provide `verify_notifications` method to verify whether the notification
-messages contained expected values or not.
-They are wrappers for the existing `verify_notifications` function in `apis/yang/utils/gnmi` module.
-Refer to the `verify_notifications` documentation for more details on the verification logic.
+```python
+# Subscribe on_change with wildcard key
+ctx = Message1(Key1="*").subscribe(dut, mode="on_change")
+if not ctx.ok():
+    st.report_fail("Subscription failed: " + ctx.message)
+# Subscribe on_change with specific key
+ctx = Message1(Key1="ABC").subscribe(dut, mode="on_change")
+# Subscribe on_change for an attribute
+ctx = Message1(Key1="*").subscribe(dut, mode="on_change", target_attr="Attr1")
+# Subscribe on_change for a specific subpath
+ctx = Message1(Key1="*").subscribe(dut, mode="on_change", target_path="state/attr1")
+# Subscribe SAMPLE with 10s sample_interval and 1min timeout
+ctx = Message1(Key1="*").subscribe(dut, mode="sample", timeout=60, sample_interval=10)
+```
+
+### 4.2.3 Subscribing to Multiple Message Paths
+
+gNMI allows subscribing to multiple, unrelated paths in one rpc.
+Message class's `subscribe()` functions can be used to subscribe to single path or set of
+subpaths of single message object -- using `target_attr` and `target_path` options.
+The `start_subscribe()` API of `apis.yang.utils.subscribe` module can be used to subscribe to
+multiple unrelated paths (i.e, multiple message classes).
+API signature is as explained below.
+
+```python
+def start_subscribe(dut, mode, path_infos, timeout=30, target=None, origin=None, updates_only=False,
+              auto_close=True):
+    """Creates gNMI subscription for paths. Returns a RpcContext object which can be used for
+    validating the notification messages.
+
+    Parameters:
+    dut             DUT name
+    mode            Subscription mode -- should be one of "on_change", "sample", "target_defined",
+                    "poll" or "once". Values are case insensitive.
+    path_infos      A PathInfo object or list of PathInfo objects indicating paths to subscribe to.
+    timeout         Hard timeout for test case; in seconds.
+    target          A string value to be used as 'target' property of request path prefix.
+    origin          A string value to be used as 'origin' property of request path prefix.
+    updates_only    Boolean value for the 'updates_only' property in the request.
+    auto_close      Indicate if the rpc should be tracked for automatic cleanup via subscribe_cleanup
+                    fixture. Enabled by default.
+    """
+
+class PathInfo:
+    """PathInfo is a set of gNMI paths with its subscription options."""
+    def __init__(self, msg_obj, target_attr=None, target_path=None,
+                 sample_interval=None, suppress_redundant=False, heartbeat_interval=None):
+        """Constructs a PathInfo object from a message class instance. This can represent
+        one or multiple paths -- depending on the target_path, target_attr value.
+        Also accepts SAMPLE subscription options -- sample_interval and suppress_redundant.
+        """
+```
+
+**Note:** Message class's `subscribe()` API is sufficient for most of the functional tests.
+The `start_subscribe()` can be used for advanced/focussed tests of telemetry server.
+
+Example usage:
+
+```python
+from apis.yang.utils.subscribe import start_subscribe, PathInfo
+
+p1 = PathInfo(Message1())
+p2 = PathInfo(Message2(), target_attr="AttrX")
+p3 = PathInfo(Message3(), target_path="SubpathY")
+ctx = start_subscribe(dut, mode="on_change", path_infos=[p1, p2, p3])
+if not ctx.ok():
+    st.report_fail()
+```
+
+### 4.2.4 Verifying Notifications
+
+The `RpcContext.verify()` function can be used to receive and inspect the notification data.
+It accepts a single or a list of `Notification` objects indicating the expected data.
+`Notification` is an abstract class; developer needs to use one of its subclasses `UpdateNotification` or `DeleteNotification`.
+Both these notification objects are to be constructed using message class instances.
+Notification objects for multiple message classes can also be passed together to the verify function.
+API signatures are explained below.
 
 ```python
 class Notification(ABC):
@@ -888,20 +963,81 @@ class DeleteNotification(Notification):
                     Only one of target_attr or target_path can be specified.
         """
 
-def RpcContext:
-    def verify_notifications(data, sync=False):
+def RpcContext(Response):
+    def verify(notifications, sync=False):
         """Verify expected notification values are received. Blocks till expected values
         are received or the timeout (specified in the subscribe API) and returns True.
         Returns False as soon as it encounters an unexpected notification data.
 
         Parameters:
-        data        A Notification object or a list of Notification objects indicating the
+        notifications   A Notification object or a list of Notification objects indicating
                     expected notification data.
         sync        Indicates whether a sync message is expected. When True, this function
                     waits for a sync message after expected notification data is received.
                     It is an error if sync message is received when it is not expected or
                     all expected notification data are not received yet.
         """
+
+    def poll(self, notifications):
+        """Sends a gNMI poll message to the DUT and verifies the notifications.
+        Should be used only when the subscription is created with mode="poll".
+        Waits till all the expected notifications are received followed by a
+        sync message; or a timeout.
+
+        Parameters:
+        notifications   A Notification object or a list of Notification objects indicating
+                    expected notification data.
+        """
+
+    def close(self):
+        """Close the subscribe rpc."""
+```
+
+The `RpcContext.verify()` function is a wrapper for the existing `verify_notifications` function
+in `apis/yang/utils/gnmi` module.
+Refer to the `verify_notifications` documentation for more details on the verification logic.
+
+The `RpcContext.poll()` function sends a gNMI poll message on current subscribe rpc and verifies
+the received notifications against specified `Notification` objects.
+
+Example usage:
+
+```python
+from apis.yang.utils.subscribe import UpdateNotification, DeleteNotification
+
+# Verify initial sync notifications with no data
+if not ctx.verify(None, sync=True):
+    st.report_fail()
+# Verify notifications with one update
+if not ctx.verify(UpdateNotification(msg1)):
+    st.report_fail()
+# Verify notifications with multiple updates and deletes
+u1 = UpdateNotification(msg1)
+u2 = UpdateNotification(msg2, target_attr="AttrX")
+u3 = UpdateNotification(msg3, target_path="state/foo")
+d1 = DeleteNotification(msg4)
+d2 = DeleteNotification(msg5, target_attr="AttrY")
+if not ctx.verify(notifications=[u1, u2, u3, d1, d2]):
+    st.report_fail()
+```
+
+### 4.2.5 Closing Subscription
+
+Subscription rpc can be closed using `RpcContext.close()` function.
+But it is recommended use the common `subscribe_cleanup` fixture to automatically close the
+subscription at the end of the test case.
+It will track the `RpcContext` objects created in the test case closes them on exit.
+
+Example usage:
+
+```python
+from apis.yang.utils.subscribe import subscribe_cleanup
+
+def test_subscribe_example(subscribe_cleanup):
+    ctx = SomeMessage().subscribe(dut, mode="on_change")
+    if not ctx.ok():
+        st.report_fail("msg", "Subscription failed: " + ctx.message)
+    ....
 ```
 
 ## 4.3 GNOI Support
@@ -1015,28 +1151,38 @@ TBD
 
 ## 5.7 Testcase Sample For Subscription
 
-Following is a sample test case to subscribe for ACL changes and verify the notifications
+Following is an example test case to subscribe for ACL changes and verify the notifications
 for ACL create and delete cases.
 
 ```python
-def test_onchange_acl_description():
-    # Subscribe ON_CHANGE of ACL description
-    aclPattern = AclSet(Name="*", Type="*")
-    rpc = aclPattern.subscribe(dut, mode="on_change", timeout=10)
+from apis.yang.utils.subscribe import UpdateNotification, DeleteNotification, subscribe_cleanup
+
+def test_onchange_acl_example(subscribe_cleanup):
+    # Subscribe ON_CHANGE of ACL
+    rpc = AclSet(Name="*", Type="*").subscribe(dut, mode="on_change")
+    if not rpc.ok():
+        st.report_fail("msg", "Subscribe failed: " + rpc.message)
     # There should not be any sync updates -- ACL is not configured yet
-    if not rpc.verify_notifications(None, sync=True):
+    if not rpc.verify(None, sync=True):
          st.report_fail("msg", "Not expecting any sync update")
     # Create an ACL
     acl1 = AclSet(Name="ONE", Type="ACL_IPV4", Description="Hello, world!")
-    acl1.configure(dut)
+    acl1.configure(dut, operation=Operation.CREATE)
     # Look for the update notification...
-    if not rpc.verify_notifications(UpdateNotification(acl1)):
+    if not rpc.verify(UpdateNotification(acl1)):
+        st.report_fail("msg", "Invalid notification after ACL creation")
+    # Change description
+    acl1.Description = "Foo/bar"
+    acl1.configure(dut)
+    # Look for update notification for description leaf nodes only..
+    if not rpc.verify(UpdateNotification(acl1, target_attr="Description")):
         st.report_fail("msg", "Invalid notification after ACL description change")
     # Delete the ACL
     acl1.unconfigure(dut)
     # Look for the delete notification...
-    if not rpc.verify_notifications(DeleteNotification(acl1)):
+    if not rpc.verify(DeleteNotification(acl1)):
         st.report_fail("msg", "Invalid notification after ACL delete")
+    st.report_pass("test_case_passed")
 ```
 
 ## 5.8 Testcase Sample For GNOI
