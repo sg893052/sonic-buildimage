@@ -61,6 +61,7 @@
 | 0.2 | 05/17/2021  | Madhukar K         | Modified portchannel content      |
 | 0.3 | 06/22/2021  | Prasanth K V       | Added REST details and DB schema  |
 | 0.4 | 06/28/2021  | Madhukar K         | Added portchannel details         |
+| 0.5 | 10/18/2021  | Prasanth K V       | Updates to REST and CLI output    |
 
 # About this Manual
 This document provides comprehensive functional and design information about the *Interface Down Reason* feature implementation in SONiC.
@@ -102,6 +103,7 @@ So an interface flap affects the system in general and hence it is important to 
 - Incompatible transceiver  
 - Transceiver not present  
 - Port breakout in-progress  
+- Port breakout completed  
 - High BER  
 - PMD-CDR-lock  
 - PMD-signal-detected  
@@ -195,19 +197,15 @@ For portchannels, a new field, reason, is been added to LAG_TABLE:
 }
 ```
 
-A new table is added for keeping track of the events IF_REASON_EVENT:  
+A new table IF_REASON_EVENT is added for keeping track of the events IF_REASON_EVENT:  
 ```
-"IF_REASON_EVENT": {
-    "Ethernet40": {
-        "reason": "OPER_UP",
-        "event": "PHY_link_up",
-        "timestamp": "2021-06-06 09:29:55.639018"
-    }
-    "PortChannel20": {
-        "reason": "OPER_UP",
-        "event": "Portchannel_up",
-        "timestamp": "2021-06-20 15:39:45.439412"
-    }
+"IF_REASON_EVENT:Ethernet64:xcvr-status-up": {
+    "timestamp":"2021-06-18.10:08:13.948691",
+    "reason":"ERR_DISABLED"
+}
+"IF_REASON_EVENT:PortChannel20:portchannel-up": {
+    "timestamp":"2021-06-20 15:39:45.439412",
+    "reason":"OPER_UP"
 }
 ```  
 ### 3.2.3 STATE DB
@@ -242,19 +240,19 @@ Only existing show command outputs are updated.
 #### Physical interface  
 - *show interface status*  
 A new column, "Reason", is been added in this command output. The high level reasons are  
-Admin-down  
-Err-disabled  
-Phy-link-down  
-Link-up  
+admin-down  
+err-disabled  
+phy-link-down  
+oper-up  
 ```
 sonic# show interface status
 ----------------------------------------------------------------------------------
-Name      Description     Oper  Reason        Speed     MTU    Alternate Name
+Name      Description     Oper  Reason        AutoNeg  Speed     MTU    Alternate Name
 ----------------------------------------------------------------------------------
-Eth1/1     -         	  Down	Admin-down    100000    9100   Ethernet0
-Eth1/2/1   -              Down	Err-disabled  10000     9100   Ethernet4
-Eth1/2/2   -              Down	PHY-link-down 10000     9100   Ethernet5
-Eth1/2/3   -              Up	Link-up       10000     9100   Ethernet6
+Eth1/1     -         	  down	admin-down    off      100000    9100   Ethernet0
+Eth1/2/1   -              down	err-disabled  off      10000     9100   Ethernet4
+Eth1/2/2   -              down	phy-link-down off      10000     9100   Ethernet5
+Eth1/2/3   -              up	oper-up       off      10000     9100   Ethernet6
 ```
 - *show interface status <reason>*  
 There is an option to list the interfaces with the specified reason. The output will have more details like related events with timestamp of occurrence.  
@@ -264,21 +262,25 @@ sonic# show interface status err-disabled
 ----------------------------------------------------------------------------------
 Name   		Event        		Timestamp
 ----------------------------------------------------------------------------------
-Eth1/2/1  	STP-err-disabled     	2021-04-16 10:23:29
+Eth1/2/1  	stp-status-up     	2021-04-16 10:23:29
 ```
 - *show interface <interface>*
 show interface command to display the down reasons as shown in the below example:
 ```
 sonic# show interface Eth 1/2/2
-Eth1/2/2 is up, line protocol is down, reason PHY-link-down
-Remote-fault at 2021-01-06 07:49:45.737024
-Local-fault at 2021-01-06 07:49:45.737024
+Eth1/2/2 is up, line protocol is down, reason phy-link-down
 Hardware is Eth
 Mode of IPV4 address assignment: not-set
 Mode of IPV6 address assignment: not-set
 Interface IPv6 oper status: Disabled
 IP MTU 9100 bytes
 LineSpeed 100GB, Auto-negotiation off
+Events:
+  port-breakout-inprogress at 2021-06-19.06:56:47.199816
+  admin-down at 2021-06-19.06:56:47.269480
+  initialized at 2021-06-19.06:56:48.730481
+  port-breakout-completed at 2021-06-19.06:56:50.871198
+  xcvr-status-up at 2021-06-19.06:56:59.084914
 Last clearing of "show interface" counters: never
 10 seconds input rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
 10 seconds output rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
@@ -293,26 +295,29 @@ Output statistics:
 ``` 
 
 The list of events:  
- Admin-down  
- Remote-fault  
- Local-fault  
- Link-training-failed  
- Link-training-not-completed  
- Link-training-not-started  
- Link-tuning-failed  
- Link-tuning-not-started  
- Link-tuning-not-completed  
- Incompatible-transceiver  
- Transceiver-not-present  
- Port-breakout-in-progress  
- High-BER  
- PMD-CDR-lock  
- PMD-signal-detected    
- STP-err-disabled  
- Transceiver-err-disabled  
- UDLD-err-disabled  
- Link-flap-err-disabled  
- PHY-link-up  
+ admin-down  
+ remote-fault  
+ local-fault  
+ link-training-failed  
+ link-training-not-completed  
+ link-training-not-started  
+ link-tuning-failed  
+ link-tuning-not-started  
+ link-tuning-not-completed  
+ incompatible-transceiver  
+ transceiver-not-present  
+ port-breakout-in-progress  
+ port-breakout-completed  
+ high-ber  
+ pmd-cdr-lock  
+ pmd-signal-detected    
+ stp-status-down  
+ stp-status-up  
+ xcvr-status-down  
+ xcvr-status-up  
+ udld-status-down  
+ udld-status-up  
+ phy-link-up  
 
 
 #### Port channel interface
@@ -326,18 +331,18 @@ LACP-fail
 
 ```
 sonic# show interface status
-Name          Description     Oper  Reason          Speed     MTU    Alternate Name
+Name          Description     Oper  Reason          AutoNeg Speed     MTU    Alternate Name
 ----------------------------------------------------------------------------------
-Eth1/1         -              Down  Admin-down      100000    9100   Ethernet0
-Eth1/2/1       -              Down  Err-disabled    10000     9100   Ethernet4
-Eth1/2/2       -              Down  Phy-link-down   10000     9100   Ethernet5
-Eth1/2/3       -              Up    Link-up         10000     9100   Ethernet6
-PortChannel1   -              Down  Admin-down      20000     9100   -
-PortChannel3   -              Down  Min-links       30000     9100   -
-PortChannel5   -              Down  Err-disabled    30000     9100   -
-PortChannel7   -              Down  All-links-down  40000     9100   -
-PortChannel8   -              Down  LACP-fail       40000     9100   -
-PortChannel9   -              Up    Up              10000     9100   -
+Eth1/1         -              down  admin-down      off     100000    9100   Ethernet0
+Eth1/2/1       -              down  err-disabled    off     10000     9100   Ethernet4
+Eth1/2/2       -              down  phy-link-down   off     10000     9100   Ethernet5
+Eth1/2/3       -              up    oper-up         off     10000     9100   Ethernet6
+PortChannel1   -              down  admin-down      -       20000     9100   -
+PortChannel3   -              down  min-links       -       30000     9100   -
+PortChannel5   -              down  err-disabled    -       30000     9100   -
+PortChannel7   -              down  all-links-down  -       40000     9100   -
+PortChannel8   -              down  lacp-fail       -       40000     9100   -
+PortChannel9   -              up    oper-up         -       10000     9100   -
 ```
 
 - *show interface PortChannel [id]*  
@@ -384,17 +389,17 @@ Example response data:
 }
 
 
-GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-ethernet:ethernet/state/openconfig-interfaces-ext:reason-events
+GET /restconf/data/openconfig-interfaces:interfaces/interface={name}/openconfig-if-ethernet:ethernet/openconfig-interfaces-ext:reason-events
 
 Example response data:
 ```
 {
   "openconfig-interfaces-ext:reason-events": {
-    "down-reason-event": [
+    "reason-event": [
       {
         "reason-event": {
           "reason": "OPER_UP",
-          "event": "PHY-link-up",
+          "event": "phy-link-up",
           "timestamp": "2021-06-06 09:29:55.639018"
         }
       }
@@ -407,11 +412,11 @@ Example response data for link down scenario:
 ```
 {
   "openconfig-interfaces-ext:reason-events": {
-    "down-reason-event": [
+    "reason-event": [
       {
         "reason-event": {
           "reason": "PHY_LINK_DOWN",
-          "event": "Remote-fault",
+          "event": "remote-fault",
           "timestamp": "2021-06-07 04:17:13.456626"
         }
       }
