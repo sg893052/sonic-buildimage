@@ -62,6 +62,7 @@
 | 0.3 | 06/22/2021  | Prasanth K V       | Added REST details and DB schema  |
 | 0.4 | 06/28/2021  | Madhukar K         | Added portchannel details         |
 | 0.5 | 10/18/2021  | Prasanth K V       | Updates to REST and CLI output    |
+| 0.6 | 10/21/2021  | Madhukar K         | Updates to CLI output             |
 
 # About this Manual
 This document provides comprehensive functional and design information about the *Interface Down Reason* feature implementation in SONiC.
@@ -119,6 +120,7 @@ So an interface flap affects the system in general and hence it is important to 
 - Error disabled
 - All the member ports are link down
 - LACP convergence failed for member ports
+- Portchannel up
 
 2 Functionality
 
@@ -323,11 +325,12 @@ The list of events:
 #### Port channel interface
 - *show interface status*  
 Along with the physical interfaces, configured portchannel interfaces are displayed in this command output. The new column, "Reason" displays the high level reason for portchannel down. The reasons are  
-Admin-down  
-Min-links  
-Err-disabled  
-All-links-down  
-LACP-fail  
+admin-down  
+min-links  
+err-disabled  
+all-links-down  
+lacp-fail  
+oper-up  
 
 ```
 sonic# show interface status
@@ -350,30 +353,36 @@ PortChannel9   -              up    oper-up         -       10000     9100   -
 show interface PortChannel command to display the reason with timestamp:  
 ```
 sonic# show interface PortChannel 1
-PortChannel1 is up, line protocol down, reason ERR-DISABLED, mode LACP
-delay_restore_status_down at 2021-01-06 07:49:45.737024
-stp_status_down at 2021-01-06 11:54:15.137023
+PortChannel1 is up, line protocol is up, reason oper-up, mode LACP
+Hardware is PortChannel, address is 90:3c:b3:c5:bd:95
 Minimum number of links to bring PortChannel up is 1
 Mode of IPV4 address assignment: not-set
 Mode of IPV6 address assignment: not-set
 Fallback: Disabled
-Graceful shutdown: Enabled
+Graceful shutdown: Disabled
 MTU 9100
-LineSpeed 10.0GB
-LACP mode ACTIVE interval SLOW priority 65535 address 90:3c:b3:34:25:60
-Members in this channel: Ethernet48
-LACP Actor port 49  address 90:3c:b3:34:25:60 key 1
-LACP Partner port 0  address 00:00:00:00:00:00 key 0
+LineSpeed 20.0GB
+Events:
+ all-links-down at 2021-10-21.02:53:15.567432
+ lacp-fail at 2021-10-21.02:53:15.614807
+ portchannel-up at 2021-10-21.02:53:19.077914
+LACP mode ACTIVE interval SLOW priority 65535 address 90:3c:b3:c5:bd:95
+Members in this channel: Ethernet0(Selected)
+LACP Actor port 1  address 90:3c:b3:c5:bd:95 key 1
+LACP Partner port 1  address 90:3c:b3:c5:95:bd key 1
+Members in this channel: Ethernet1(Selected)
+LACP Actor port 2  address 90:3c:b3:c5:bd:95 key 1
+LACP Partner port 2  address 90:3c:b3:c5:95:bd key 1
 Last clearing of "show interface" counters: never
 10 seconds input rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
 10 seconds output rate 0 packets/sec, 0 bits/sec, 0 Bytes/sec
 Input statistics:
-          18378 packets, 4042580 octets
-          18378 Multicasts, 0 Broadcasts, 0 Unicasts
-          0 error, 18378 discarded
+          30 packets, 5594 octets
+          16 Multicasts, 0 Broadcasts, 0 Unicasts
+          0 error, 0 discarded
 Output statistics:
-          90435 packets, 13274184 octets
-          90435 Multicasts, 0 Broadcasts, 0 Unicasts
+          42 packets, 6563 octets
+          28 Multicasts, 0 Broadcasts, 0 Unicasts
           0 error, 0 discarded
 
 ```
@@ -475,7 +484,8 @@ Example response data for link down scenario:
 }
 ```
 
-The values for reason can be OPER_UP, ALL_LINKS_DOWN, ERR_DISABLED, LACP_FAIL, MIN_LINKS_NOT_MET or ADMIN_DOWN.  
+The values for reason can be OPER_UP, ALL_LINKS_DOWN, ERR_DISABLED, LACP_FAIL, MIN_LINKS or ADMIN_DOWN.
+
 
 ### 3.6.4 gNMI Support
 *Generally this is covered by the YANG specification. This section should also cover objects where on-change and interval based telemetry subscriptions can be configured.*
