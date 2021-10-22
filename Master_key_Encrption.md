@@ -135,7 +135,7 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Name**  | **Verify that the master key is in-accessible to the user via UI** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2)  Please check the master key in system files with non root user not able to access<br/> |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2)  Please check the master key should not be displayed via show running config<br/> |
 
 ### 3.1.6 Verify that system is able to encrypt the protocol passwords with user configured Master Key
 
@@ -153,7 +153,7 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Name**  | **Verify that the system re-encrypts all existing protocol passwords with the new master key** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key<br/>5) Verify from show running config that password is re-encrypted<br/> |
+| **Steps**      | 1) Verify that system generates master key with the user configured key<br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key<br/>5) Verify from show running config that password is re-encrypted with different encrypted string compared to previous one<br/> |
 
 ### 3.1.8 Verify that the user is prompted to provide the correct old passphrase while trying to update the new master key passphrase
 
@@ -171,7 +171,7 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Name**  | **Verify that the user is not allowed to retry a master key update in the case of a failure of authentication w.r.t older master key** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Verify that system generates master key with the user configured key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key <br/>5) verify that master key will not configured with wrong old key<br/>6) verify that master key will be configured with Correct old key<br/>7) Verify from show running config that password is re-encrypted<br/> |
+| **Steps**      | 1) Verify that system generates master key with the user configured key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Configure new master key <br/>5) verify that master key will not configured with wrong old key<br/>6) verify that master key will not be configured with Correct old key before 1 Sec retry<br/>7) verify that master key will  be configured with Correct old key After 1 Sec retry<br/>7) Verify from show running config that password is re-encrypted and check that different from previous one<br/> |
 
 ### 3.1.10 Verify that the deletion of the master key results in the system falling back to the default key
 
@@ -189,7 +189,7 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Name**  | **Verify that the configuration from one switch can be migrated to another provided that the master keys are the same** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Verify that system generates master key with the user Default key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Copy the config_db.json file and try to load in other device  with same master key<br/>5)  Verify that the config loaded properly<br/>6)  Verify the same with user configured key<br/> |
+| **Steps**      | 1) Verify that system generates master key with the user Default key <br/>2) Configure any protocol password ( ospf) between two switches and verify that ospf neighbors are up <br/>3) Verify from show running config that password is encrypted<br/>4) Copy the config_db.json file from switch 1 and load the same file again<br/>5)  Verify that the config loaded properly<br/>6)  Verify the same with user configured key and check ospf should be intact<br/> |
 
 ### 3.1.12 Verify that the configuration from one switch cannot be migrated to another provided that the master keys are Different
 
@@ -198,7 +198,7 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Name**  | **Verify that the configuration from one switch cannot be migrated to another provided that the master keys are Different** |
 | **Test Setup** | **Topology1**                                                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Verify that system generates master key with the Default key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Copy the config_db.json file and try to load in other device  with Different master key<br/>5)  Verify that the device throws warnings appropriately<br/>6)  Verify the same with User Configured key<br/> |
+| **Steps**      | 1) Verify that system generates master key with the Default key <br/>2) Configure any protocol password ( ospf) between two switches and verify that ospf neighbors are up <br/>3) Verify from show running config that password is encrypted<br/>4) Copy the config_db.json file from switch 1 and try to change the master key<br/>5)  Try to load the same config on switch 1<br/>6)  Verify that the ospf not comes up as mater key is diff and protocl password encryption/decryption to diff value <br/> |
 
 ### 3.1.13 Verify that ospf protocol functionality  with the Default Configured Master key
 
@@ -225,7 +225,7 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Name**  | **Verify that ospf protocol functionality after system boot with the User Configured Master Key** |
 | **Test Setup** | **Topology as per the ospf functional suite**                |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure ospf as per the ospf functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify ospf neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify ospf neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/>11) Reboot the system and verify that master key intact<br/>12) Verify ospf neighbors are up<br/>13) Verify that route count as expected<br/>14) Verify that traffic as expected<br/> |
+| **Steps**      | 1) Verify that system generates master key with the Default system MAC key <br/>2) Configure ospf as per the ospf functional suite  <br/>3) Verify from show running config that password is encrypted<br/>4) Verify ospf neighbors are up<br/>5) Verify that route count as expected<br/>6) Verify that traffic as expected<br/>7) Configured the new key and verify that passwords are re-encrypted<br/>8) Verify ospf neighbors are up<br/>9) Verify that route count as expected<br/>10) Verify that traffic as expected<br/>11) Reboot the system and verify that master key intact<br/>12) Verify ospf neighbors are up<br/>13) Verify that route count as expected<br/>14) Verify that traffic as expected<br/>15) Verify that there should not be any encryption/decryption errors in syslog<br/> |
 
 ### 3.1.16 Verify that BGP protocol functionality  with the Default Configured Master key
 
@@ -334,6 +334,24 @@ The applications will communicate with the master key encryption infra over D-BU
 | **Test Setup** | **Topology as per the SNMPv3 functional suite**              |
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1) Verify that system generates master key with the User Configured key <br/>2) Configure the SNMPv3 on the device <br/>3) Verify from show running config that password is encrypted<br/>4) Configure some of the object using CLI<br/>5) Try to GET the data using netsnmp tool<br/>6) Verify the data is properly fetched |
+
+### 3.1.29 verify that system throws syslog errors when delete the key file
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify that system throws syslog errors when delete the key file** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Delete the key file at /etc/<>xxx.txt <br/>5)  Verify that system throws proper syslog message that kei file is not there to decrypt/encrypt passwords<br/> |
+
+### 3.1.30 verify that system recovers, fallback to default key after deleting the configured master key
+
+| **Test ID**    | **iTAS Test Case Manager ID**                                |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **verify that system recovers, fallback to default key after deleting the configured master key** |
+| **Test Setup** | **Topology1**                                                |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1) Verify that system generates master key with the user configured key <br/>2) Configure any protocol password ( ospf/BGP/LDAP etc) <br/>3) Verify from show running config that password is encrypted<br/>4) Delete the key file at /etc/<>xxx.txt <br/>5)  Verify that system throws proper syslog message that key file is not there to decrypt/encrypt passwords<br/>6)  Try to delete the configured master key <br/>7)  Verify that syslog generated that fallback to default system key and all passwords re-encrypted with default key<br/> |
 
 ## 3.2 Config Reload/Cold boot/Warm boot/Fast boot tests
 
