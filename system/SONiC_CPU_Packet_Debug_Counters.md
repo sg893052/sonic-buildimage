@@ -18,6 +18,9 @@ SONiC CPU Packet Debug Counters
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 04/13/2021  |   Michael Li       | Initial version                   |
 | 0.2 | 08/16/2021  |   Michael Li       | Design detail updates             |
+| 0.3 | 08/30/2021  |   Michael Li       | Added guidance for testing pkt drops
+| 0.4 | 10/20/2021  |   Michael Li       | Pkt classification corrections and CLI output updates
+
 
 # About this Manual
 This document provides general information about the SONiC CPU Packet Debug Counters feature implementation in SONiC.
@@ -94,7 +97,7 @@ References:
 | PTP                  | 19    | (EType==0x88F7)  
 | LLDP                 | 18    | (EType==0x88CC) && (MAC DA == {01:80:C2:00:00:00} or {01:80:C2:00:00:03} or {01:80:C2:00:00:0e})
 | VRRP                 | 17    | (EType==0x800) && (IpProtocol == 112)
-| ICCP                 | 16    | (IpProtocol == 6) && (IpProtocol == 8888)
+| ICCP                 | 16    | (IpProtocol == 6) && (L4DstPort == 8888)
 | OSPFv4               | 15    | (EType==0x800) && (IpProtocol == 89)
 | BGPv4                | 14    | (EType==0x800) && (IpProtocol == 6) && (L4Port == 179)
 | BGPv6                | 14    | (EType==0x86DD) && (IpProtocol == 6) && (L4Port == 179)
@@ -111,7 +114,7 @@ References:
 | ICMP                 | 8     | (IpProtocol == 1)
 | SSH                  | 7     | (IpProtocol == 6)  && ((L4Port == 22))|
 | INET                 | 7     | (Etype==0x800) 
-| INETv6               | 7     | (Etype==0x88DD)
+| INETv6               | 7     | (Etype==0x86DD)
 | Subnet               | 6     | Not classified (Rx queue counters only)
 | NAT                  | 5     | Not classified (Rx queue counters only)
 | MTU                  | 4     | Not classified (Rx queue counters only)
@@ -119,7 +122,7 @@ References:
 | TTL                  | 0     | TTL == 0 or TTL == 1
 
 ### 3.1.4 Packet Drop Error types
-Errors in KNET (and in Rx kernel path) which result in packet drops are counted per protocol/queue on each interface.  Some common errors are listed below.
+Errors in KNET (and in Rx kernel path) which result in packet drops are counted per pkt_type/queue on each interface.  Some common errors are listed below.
 ### **Table 2: Packet Drop Errors**
 | Error                | Description
 |----------------------|----------------------------------- 
@@ -144,161 +147,166 @@ There are no new changes to SyncD.
 There are no new changes to manageability infrastructure
 
 ## 3.6 CLI
-KNET Packet stats at switch and interface levels can be shown through click commands or by dumping KNET pkt_stats procfs file.  Rx and Tx error counter details are available for protocol and rx queue counters at switch and interface levels.
+KNET Packet stats at switch and interface levels can be shown through click commands or by dumping KNET pkt_stats procfs file.  Rx and Tx error counter details are available for pkt_type and rx queue counters at switch and interface levels.
 
-### 3.6.1 Protocol Stats
-* Show protocol stats (real output will not show entries with zero counts)
+### 3.6.1 Packet Type Stats
+* Show pkt_type stats (real output will not show entries with zero counts)
+
 ```
-DUT# show knet stats protocol
+DUT# show knet stats pkt-type      // show totals from all interfaces
+DUT# show knet stats pkt-type -a   // show all individual interfaces
 or
-DUT# cat /proc/bcm/knet/stats/protocol
+DUT# cat /proc/bcm/knet-cb/stats/pkt_type
 
-Total rx = 101127
-Total tx = 235644
-protocol                 rx     rx_err         tx     tx_err
-------------------------------------------------------------
-LACP                      0          0          0          0
-UDLD                      0          0          0          0
-STP                       0          0          0          0
-PVRSTP                    0          0          0          0
-BFDv4                     0          0          0          0
-BFDv6                     0          0          0          0
-PTP                       0          0          0          0
-LLDP                  24291          0         54          0
-VRRP                      0          0          0          0
-ICCP                      0          0          0          0
-OSPF                      0          0          0          0
-BGPv4                     0          0          0          0
-BGPv6                     0          0          0          0
-PIM                       0          0          0          0
-IGMP                      0          0          0          0
-ARP Req                4428          0       4428          0
-ARP Rply               4428          0       4428          0
-ARP                    8856          0       8856          0
-NDP                       0          0          0          0
-DHCPv4                    0          0          0          0
-DHCPv6                    0          0          0          0
-ICMP EchoReq              0          0          0          0
-ICMP EchoRply             0          0          0          0
-ICMP                      0          0          0          0
-SSH                       0          0          0          0
-SFLOW                     0          0          0          0
-TTL                       0          0          0          0
-INETv4                    0          0          0          0
-INETv6                    0          0          0          0
-UNKNOWN                   0          0          0          0
+admin@sonic:~$ show knet stats pkt-type
+KNET Pkt Type Stats
+Pkt Type                   Rx Pkts   Rx errors     Tx Pkts   Tx errors
+----------------------  ----------  ----------  ----------  ----------
+PKT_TYPE_UNKNOWN                 0           0           0           0
+PKT_TYPE_LACP                  466        4310         468           0
+PKT_TYPE_UDLD                    0           0           0           0
+PKT_TYPE_STP                     0           0           0           0
+PKT_TYPE_PVRSTP                  0           0           0           0
+PKT_TYPE_BFDV4                   0           0           0           0
+PKT_TYPE_BFDV6                   0           0           0           0
+PKT_TYPE_PTP                     0           0           0           0
+PKT_TYPE_LLDP                  720           0        1297           0
+PKT_TYPE_VRRP                    0           0           0           0
+PKT_TYPE_ICCP                    0           0        4314           0
+PKT_TYPE_OSPF                    0           0           0           0
+PKT_TYPE_BGPV4                   0           0           0           0
+PKT_TYPE_BGPV6                   0           0           0           0
+PKT_TYPE_PIM                     0           0           0           0
+PKT_TYPE_IGMP                    0           0           0           0
+PKT_TYPE_ARPREQ                 13           0          14           0
+PKT_TYPE_ARPRPLY                14           0          13           0
+PKT_TYPE_ARP                     0           0           0           0
+PKT_TYPE_NDP                     0           0           0           0
+PKT_TYPE_DHCPV4                  0           0           0           0
+PKT_TYPE_DHCPV6                  0           0           0           0
+PKT_TYPE_ICMP_ECHOREQ            0           0           0           0
+PKT_TYPE_ICMP_ECHORPLY           0           0           0           0
+PKT_TYPE_ICMP                    0           0           0           0
+PKT_TYPE_SSH                     0           0           0           0
+PKT_TYPE_INETV4               4313           0           0           0
+PKT_TYPE_INETV6                  0           0           0           0
+PKT_TYPE_SFLOW                   0           0           0           0
+PKT_TYPE_TTL                     0           0           0           0
+Total                         5526        4310        6106           0
 ```
-* Show interface level protocol stats
+* Show interface level pkt type stats
+
 ```
-DUT# show knet Ethernet0 stats protocol
+DUT# show knet stats pkt-type Ethernet0
 or
-DUT# cat /proc/bcm/knet/Ethernet0/stats/protocol
+DUT# cat /proc/bcm/knet-cb/stats/Ethernet0/pkt_type
 
-Total Ethernet0 rx = 101127
-Total Ethernet0 tx = 235644
-protocol                 rx     rx_err         tx     tx_err
-------------------------------------------------------------
-LACP                      0          0          0          0
-UDLD                      0          0          0          0
-STP                       0          0          0          0
-PVRSTP                    0          0          0          0
-BFDv4                     0          0          0          0
+Ethernet0 Pkt Type Stats
+Pkt Type                   Rx Pkts   Rx errors     Tx Pkts   Tx errors
+----------------------  ----------  ----------  ----------  ----------
+PKT_TYPE_LLDP                   30           0          30           0
+PKT_TYPE_ICCP                    0           0         875           0
+PKT_TYPE_ARPREQ                  3           0           3           0
+PKT_TYPE_ARPRPLY                 3           0           3           0
+PKT_TYPE_INETV4                871           0           0           0
+Total                          907           0         911           0
 ...
 ```
-* Show interface level protocol stats with error details
+* Show interface level pkt type stats with error details
 ```
-DUT# show knet Ethernet0 stats protocol details
+DUT# show knet stats pkt-type Ethernet0 -v
 or
-DUT# echo "detail=1" > /proc/bcm/knet/Ethernet0/stats/protocol
-DUT# cat /proc/bcm/knet/Ethernet0/stats/protocol
-DUT# echo "detail=0" > /proc/bcm/knet/Ethernet0/stats/protocol
+DUT# echo "detail=1" > /proc/bcm/knet-cb/stats/debug
+DUT# cat /proc/bcm/knet-cb/Ethernet0/stats/pkt_type
+DUT# echo "detail=0" > /proc/bcm/knet-cb/stats/debug
 
-Total Ethernet0 rx = 101127
-Total Ethernet0 tx = 235644
-protocol                 rx     rx_err         tx     tx_err
-------------------------------------------------------------
-LACP                      0          0          0          0
-UDLD                      0          0          0          0
-STP                       0          0          0          0
-PVRSTP                  685        222          0        193
-   LINK_DOWN                       208                   168
-   NO_SKB                            2                     5
-   NO_BUFFER                         0                    20
-   KERNEL_DROP                      12                     0
-BFDv4                     0          0          0          0
+Ethernet0 Pkt Type Stats
+Pkt Type                   Rx Pkts   Rx errors     Tx Pkts   Tx errors
+----------------------  ----------  ----------  ----------  ----------
+PKT_TYPE_LACP                  127         934         126           0
+  Kernel netstack drop                     934                       0
+PKT_TYPE_LLDP                  157           1         283           0
+  Link down                                  1                       0
+PKT_TYPE_ICCP                    0           0         933           0
+PKT_TYPE_ARPREQ                  3           0           3           0
+PKT_TYPE_ARPRPLY                 3           0           3           0
+PKT_TYPE_INETV4                929           0           0           0
+Total                         1219         935        1348           0
 ...
 ```
 
-
-* Clear protocol pkt statistics 
+* Clear all KNET pkt statistics
 ```
-DUT# sonic-clear knet stats protocol
-DUT# sonic-clear knet Ethernet0 stats protocol
+DUT# sonic-clear knet stats
+```
+
+* Clear specific pkt type statistics 
+```
+DUT# show knet stats pkt-type -c
+DUT# show knet stats pkt-type -c Ethernet0
 or
-DUT# echo "clear" > /proc/bcm/knet/stats/protocol
-DUT# echo "clear" > /proc/bcm/knet/Ethernet0/stats/protocol
+DUT# echo "clear" > /proc/bcm/knet-cb/stats/pkt_type
+DUT# echo "clear" > /proc/bcm/knet-cb/stats/Ethernet0/pkt_type
 ```
 ### 3.6.2 Rx Queue Stats
 ```
-DUT# show knet stats rx_queue
+DUT# show knet stats rx-queue     // show totals from all interfaces
+DUR# show knet stats rx-queue -a  // show all individual interfaces
 or
-DUT# cat /proc/bcm/knet/stats/rx_queue
+DUT# cat /proc/bcm/knet-cb/stats/rx_queue
 
-Total rx = 24918
-name               queue         rx     rx_err
-----------------------------------------------
-SFLOW                  3          0          0
-ARP                   10        238          0
-LLDP                  18      24291          0
-LACP                  23        389          0
+KNET Rx Queue Stats
+Queue          Rx Pkts   Rx errors  Description
+----------  ----------  ----------  --------------------------------
+  10                10           0  arp_req,arp_resp,neigh_discovery
+  16              1465           0  iccp
+  18               243           1  lldp
+  23               179        1471  lacp
+Total             1897        1472
 ```
 
 * Show interface level rx queue stats
 ```
-DUT# show knet Ethernet0 stats rx_queue
+DUT# show knet stats rx-queue Ethernet0
 or
-DUT# cat /proc/bcm/knet/Ethernet0/stats/rx_queue
+DUT# cat /proc/bcm/knet-cb/Ethernet0/stats/rx_queue
 
-Total Ethernet0 rx = 24918
-name               queue         rx     rx_err
-----------------------------------------------
-SFLOW                  3          0          0
-ARP                   10        238          0
-LLDP                  18      24291          0
-LACP                  23        389          0
+Ethernet0 Rx Queue Stats
+Queue          Rx Pkts   Rx errors  Description
+----------  ----------  ----------  --------------------------------
+  10                10           0  arp_req,arp_resp,neigh_discovery
+  16              1465           0  iccp
+  18               243           1  lldp
+  23               179        1471  lacp
+Total             1897        1472
 ```
 
 * Show interface level rx queue stats with error details
 ```
-DUT# show knet Ethernet0 stats rx_queue details
+DUT# show knet stats rx_queue Ethernet0 -v
 or
-DUT# echo "detail=1" > /proc/bcm/knet/Ethernet0/stats/rx_queue
-DUT# cat /proc/bcm/knet/Ethernet0/stats/rx_queue
-DUT# echo "detail=0" > /proc/bcm/knet/Ethernet0/stats/rx_queue
+DUT# echo "detail=1" > /proc/bcm/knet-cb/stats/debug
+DUT# cat /proc/bcm/knet-cb/stats/Ethernet0/rx_queue
+DUT# echo "detail=1" > /proc/bcm/knet-cb/stats/debug
 
-Total Ethernet0 rx = 24918
-name               queue         rx     rx_err
-----------------------------------------------
-SFLOW                  3          0          0
-ARP                   10        238        220
-   LINK_DOWN                               208
-   KERNEL_DROP                              12 
-LLDP                  18      24291         15
-   KERNEL_DROP                              15
-LACP                  23        389          0
-DEFAULT                0          0          7
-   NO_FILTER_MATCH                           2
-   UNKN_NETIF                                2
-   UNKN_DEST_TYPE                            3
+Queue          Rx Pkts   Rx errors  Description
+----------  ----------  ----------  --------------------------------
+  10                11           0  arp_req,arp_resp,neigh_discovery
+  16              1591           0  iccp
+  18               267           1  lldp
+                                 1    Link down
+  23               193        1597  lacp
+                              1597    Kernel netstack drop
+Total             2062        1598
 ```
 
 * Clear Rx Queue stats
 ```
-DUT# sonic-clear knet stats rx_queue
-DUT# sonic-clear knet Ethernet0 stats rx_queue
+DUT# show knet stats rx-queue -c
+DUT# show knet stats rx-queue Ethernet0 -c
 or
-DUT# echo "clear" > /proc/bcm/knet/stats/rx_queue
-DUT# echo "clear" > /proc/bcm/knet/Ethernet0/stats/rx_queue
+DUT# echo "clear" > /proc/bcm/knet-cb/stats/rx_queue
+DUT# echo "clear" > /proc/bcm/knet-cb/stats/Ethernet0/rx_queue
 ```
 
 # 4 Flow Diagrams
@@ -360,4 +368,16 @@ echo "max_tx_dcbs=4" > /proc/bcm/knet/dma
 ```
 DUT# cat /proc/bcm/knet/dstats  | grep "Tx used DCBs hi wm"
   Tx used DCBs hi wm           4
+```
+## 10.2 Disabling CPU Pkt KNET debug stats
+Add "enable_stats=0" kernel parameter when inserting the knetcb kernel module to completely disable KNET debug stats logic.  Modify the following file on the target and reboot.
+
+```
+vi /etc/init.d/opennsl-modules 
+
+// on TD4 (ngknet modules)
+insmod /lib/modules/4.19.0-9-2-amd64/extra/linux_ngknetcb.ko enable_stats=0
+
+// on legacy devices
+insmod /lib/modules/4.19.0-9-2-amd64/extra/linux-knet-cb.ko enable_stats=0
 ```
