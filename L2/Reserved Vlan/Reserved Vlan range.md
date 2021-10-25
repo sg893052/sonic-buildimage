@@ -69,8 +69,8 @@ This document describes the high level design of the Reserved Vlans feature.
 | PAC          | Port Access Control         |
 
 ## 1 Overview
-The main goal of this feature is to provide a set of Vlans that are reserved for use by various protocols. 
-- A set of Vlans will be reserved by default. Default reserved VLAN range would be <3967-4094>.
+The main goal of this feature is to provide a set of configurable Vlans that are reserved for use by various protocols. 
+- A set of Vlans will be reserved by default.
 - A config CLI command will be provided to change the reserved Vlan range.
 
 ## 1.1 Use Cases
@@ -81,16 +81,18 @@ The main goal of this feature is to provide a set of Vlans that are reserved for
 
 ## 2.1 Functional Requirements
 
-- When a feature needing reserved- lan is enabled, it will try and pickup a not-in-use vlan from the default range. If not available user must
+- When a feature needing reserved-vlan is enabled, it will try and pickup a not-in-use vlan from the default range. If not available user must
 	- Free up a vlan from that range OR
 	- Change the reserved vlan range 
 	- Until either of the above is setup, the feature will not function.
 
 - When a feature needing reserved vlan is enabled and it finds a vlan in the range, it is responsible for creating that vlan using the internal VLAN manager provided interface. The feature is responsible for create/delete/modifies port-membership for that vlan. 
 
+- Default reserved VLAN range would be <3967-4094>.
+
 - All show commands will necessarily inform the user of any vlan usage within the current reserved vlan range and urge to move the use to a different vlan.
 
-- There will also be be warnings and syslog message (if a vlan in reserved range is in use) that indicate that upon a migration to a future release, all user created config within the reserved vlan range will be deleted as part of migration. 
+- There will also be be warnings and syslog message (if a vlan in the reserved range is in use) that indicate that upon a migration to a future release, all user created config within the reserved vlan range will be deleted as part of migration. 
 
 - User creation of vlans in reserved range will be blocked. But if a vlan is in use already (as part of migrated config), additional config on that vlan will be allowed.
 
