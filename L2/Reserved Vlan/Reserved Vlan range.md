@@ -150,7 +150,9 @@ Notification will be sent from Vlanmgr to the consumers (Ex. PAC)cindicating a c
 
 During boot up, VLAN Manager will update STATE_DB with default (or configured) reserved VLAN range. Default reserved VLAN range would be <3967-4094>. It will also update the 'in use' flag for each VLAN if the VLAN ID in reserved-vlan range is configured by the user.
 
-When the Rerserved Vlan range is changed from config, Vlan manager will be notified through config db. Vlan manager will then change the Resreved Vlan range in state db with 'in use' flag set for the Vlans already in use. Vlan manager will also notify the consumers (Ex. PAC) indicating that there is a change in Reserved Vlan range so that the consumers can re-allocate a new Vlan for its use.
+When the Rerserved Vlan range is changed from config, Vlan manager will be notified through config db. Vlan manager will then change the Resreved Vlan range in state db with 'in use' flag set for the Vlans already in use. 
+
+Vlan manager will also notify the consumers (Ex. PAC) indicating that there is a change in Reserved Vlan range so that the consumers can re-allocate a new Vlan for its use.
 
 It is the responsibility of the consumer to set the 'in use' flag for the the Vlan that it chooses to use.
 
