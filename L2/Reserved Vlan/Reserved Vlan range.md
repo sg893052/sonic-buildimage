@@ -81,16 +81,16 @@ The main goal of this feature is to provide a set of Vlans that are reserved for
 
 ## 2.1 Functional Requirements
 
-- When a feature-needing-reserved-vlan is enabled, it will try and pickup a not-in-use vlan from the default range. If not available user must
+- When a feature needing reserved- lan is enabled, it will try and pickup a not-in-use vlan from the default range. If not available user must
 	- Free up a vlan from that range OR
 	- Change the reserved vlan range 
 	- Until either of the above is setup, the feature will not function.
 
-- When a feature-needing-reserved-vlan is enabled and it finds a vlan in the range, it is responsible for creating that vlan using the internal VLAN manager-provided interface. The feature is responsible for create/delete/modifies port-membership for that vlan. 
+- When a feature needing reserved vlan is enabled and it finds a vlan in the range, it is responsible for creating that vlan using the internal VLAN manager provided interface. The feature is responsible for create/delete/modifies port-membership for that vlan. 
 
 - All show commands will necessarily inform the user of any vlan usage within the current reserved vlan range and urge to move the use to a different vlan.
 
-- There will also be be warnings and syslog message (if a vlan in reserved range is in use) that indicate that upon a migration to a Cyrus+ image, all user-created-config within the reserved vlan range will be deleted as part of migration. This will be also be documented. 
+- There will also be be warnings and syslog message (if a vlan in reserved range is in use) that indicate that upon a migration to a future release, all user created config within the reserved vlan range will be deleted as part of migration. 
 
 - User creation of vlans in reserved range will be blocked. But if a vlan is in use already (as part of migrated config), additional config on that vlan will be allowed.
 
@@ -134,7 +134,7 @@ State DB will store information about:
 
 
 ## 3.4 Notifications
-Notification will be sent from Vlanmgr to PAC indicating a change in rserved vlan range
+Notification will be sent from Vlanmgr to the consumers (Ex. PAC)cindicating a change in rserved vlan range.
 
 
 ### 3.4.1 RESERVEDVLANCHANGED
@@ -148,9 +148,9 @@ Notification will be sent from Vlanmgr to PAC indicating a change in rserved vla
 
 ### 3.5.1 Vlan Manager
 
-During boot-up, VLAN Manager will update STATE_DB with default (or configured) reserved VLAN range. Default reserved VLAN range would be <3967-4094>. It will also update the in-use flag for each VLAN if the VLAN ID in reserved-vlan range is configured by the user.
+During boot up, VLAN Manager will update STATE_DB with default (or configured) reserved VLAN range. Default reserved VLAN range would be <3967-4094>. It will also update the 'in use' flag for each VLAN if the VLAN ID in reserved-vlan range is configured by the user.
 
-VLANmgr to have a thread running to log messages on syslog periodically if there is a VLAN configured by the user from the reserved VLAN range.
+VLAN manager to have a thread running to log messages on syslog periodically if there is a VLAN configured by the user from the reserved VLAN range.
 
 <img src="images/reserved-vlan.jpg" width="800" height="500">
 
