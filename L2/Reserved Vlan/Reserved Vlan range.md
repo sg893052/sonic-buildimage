@@ -78,6 +78,9 @@ The main goal of this feature is to provide a set of Vlans that are reserved for
 
 # 2 Requirements
 
+
+## 2.1 Functional Requirements
+
 - When a feature-needing-reserved-vlan is enabled, it will try and pickup a not-in-use vlan from the default range. If not available user must
 	- Free up a vlan from that range OR
 	- Change the reserved vlan range 
@@ -90,9 +93,6 @@ The main goal of this feature is to provide a set of Vlans that are reserved for
 - There will also be be warnings and syslog message (if a vlan in reserved range is in use) that indicate that upon a migration to a Cyrus+ image, all user-created-config within the reserved vlan range will be deleted as part of migration. This will be also be documented. 
 
 - User creation of vlans in reserved range will be blocked. But if a vlan is in use already (as part of migrated config), additional config on that vlan will be allowed.
-
-
-## 2.1 Functional Requirements
 
 
 ## 2.2 Configuration and Management Requirements
@@ -112,7 +112,7 @@ The main goal of this feature is to provide a set of Vlans that are reserved for
 
 ## 3.2 Config DB
 
-One new tables will be added to Config DB:
+One new table will be added to Config DB:
 * RESERVED_VLAN_TABLE to store configured rserved vlan range
 
 ### 3.2.1 RESERVED_VLAN_TABLE Table
