@@ -50,7 +50,6 @@
 * [Table 1: Abbreviations](#definitionsabbreviation)
 
 # List of Figures
-* [Figure 1: General Flow](#41-general-flow)
 
 # Revision
 | Rev | Date     | Author      | Change Description        |
