@@ -136,7 +136,7 @@ State DB will store information about:
 
 
 ## 3.4 Notifications
-Notification will be sent from Vlanmgr to the consumers (Ex. PAC)cindicating a change in rserved vlan range.
+Notification will be sent from Vlanmgr to the consumers (Ex. PAC), indicating a change in reserved vlan range.
 
 
 ### 3.4.1 RESERVEDVLANCHANGED
@@ -154,11 +154,11 @@ During boot up, VLAN Manager will update STATE_DB with default (or configured) r
 
 When the Rerserved Vlan range is changed from config, Vlan manager will be notified through config db. Vlan manager will then change the Resreved Vlan range in state db with 'in use' flag set for the Vlans already in use. 
 
-Vlan manager will also notify the consumers (Ex. PAC) indicating that there is a change in Reserved Vlan range so that the consumers can re-allocate a new Vlan for its use.
+Vlan manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range so that the consumers can re-allocate a new Vlan for its use.
 
 It is the responsibility of the consumer to set the 'in use' flag for the the Vlan that it chooses to use.
 
-VLAN manager to have a thread running to log messages on syslog periodically if there is a VLAN configured by the user from the reserved VLAN range.
+VLAN manager will have a thread running to log messages on syslog periodically if there is a VLAN configured by the user from the reserved VLAN range.
 
 <img src="images/reserved-vlan.jpg" width="800" height="500">
 
