@@ -322,8 +322,17 @@ module: openconfig-interfaces
 **Format**  [no] standalone-link-training  
 **Mode**    Interface Config Mode  
 
-Using this command to enable or disable standalone-link-training and set the mode for the port.
-This command is only applicable to physical ports, as it's to tune the hardware signal.
+Using this command to enable or disable **standalone-link-training** for the port.
+
+Link-training is an automatic tuning of the SerDes transmit and receive parameters
+to ensure an optimal connection over copper links. It is normally run as part of
+the auto negotiation sequence as specified in IEEE 802.3 Clause 73.
+
+**Standalone-link-training** is used when full auto negotiation is not desired on
+an Ethernet link but link training is needed.
+
+This command is only applicable to physical SFP ports, and its value will be ignored
+when auto-negotiation is enabled.
 
 Example:
 
