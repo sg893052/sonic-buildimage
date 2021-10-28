@@ -36,6 +36,7 @@ This document describes the high level design of Master key based encryption fea
 | RPC            | Remote procedure call.                               |
 | Encryption key | Derived key used for encryption/decryption services. |
 | Master key     | Plaintext key provided by user.                      |
+| MKI            | Master key infrastructure                            |
 | Default key    | Key derived from unique system MAC.                  |
 
 # 1 Feature Overview
@@ -203,75 +204,91 @@ If the user decides to reset the key to factory default, the system falls back t
 
 The master key infrastructure supports key management and encryption/decryption APIs over D-BUS. The key management APIs will be restricted to UMF only (i.e they can be invoked by UMF only) while encryption/decryption services are open to all clients.
 
-##### 2.2.5.1 **masterKeySet**
+##### 2.2.5.1 **startUpdateTx**
 
-UMF uses this API to set a new master key. In the case of a master key update, the API expects both the old key(configured by the user) and the new key provided by the user.   
+The configuration of a new master key involves multiple steps at UMF and MKI. UMF uses this API to indicate the start of a master key update transaction to MKI (new master key config/update of an existing master key config/fall back to default master key).  The API expects UMF to provide the old key(configured by the user) and the new key in the case of an update.   
 
-The old key(if it exists) is validated prior to deriving the new encryption key. The master key infra follows the below mentioned flow:
+The old key(if it exists) is validated prior to deriving the new encryption key.   The master key infra follows the below mentioned flow:
 
-a) Master key infra derives the encryption key from old master key via PBKDF2 and compares it with the stored encryption key. If they do not match, a failure is returned to the caller. 
+a) Master key infra derives the encryption key from old master key via PBKDF2 and compares it with the stored encryption key. If they do not match, a failure is returned to the caller. In case old master key validation fails, UMF additionally throttles the user to slow down brute-force attacks.
 
 b) If keys match, the operation is permitted and the infra moves on-to derive the new encryption key.
 
-c) At this step, the old master key is replaced with the new derived encryption key in the key file.
+c) At this step, the old master key is replaced with the new derived encryption key in the key file. The old key is saved as well until the master key update transaction is completed. The update is marked as in-progress and success returned to the caller.
 
-d) Any protocol passwords already encrypted on the system via the old key are re-encrypted with the new key. Refer Section 2.2.6 for more details.
+**d)** **All encryption/decryption requests received henceforth are rejected until the master key update transaction is marked as completed.**
 
-In case old master key validation fails, UMF additionally throttles the user to slow down brute-force attacks. 
+##### 2.2.5.2 **commitUpdateTx**
 
-##### 2.2.5.2 **masterKeyDel**
+The commitUpdateTx API is used to complete the master key update transaction. Once the transaction is indicated as completed by UMF, MKI updates the context, discards the old key and finalizes the new master encryption key. All encryption/decryption requests are henceforth accepted and serviced via the new master encryption key.
 
-A reset of the configured master key to factory default causes the system to fallback to the default key. The flow remains similar to that outlined in Section 2.2.5.1. All the configured passwords on the system are re-encrypted with the default key.
+##### 2.2.5.3 **revertUpdateTx**
 
-#####  2.2.5.3 **pwEncrypt**
+The revertUpdateTx D-BUS API is used by UMF to indicate to the MKI to abort the master key update transaction. This is typically used if the password re-encryption of protocol passwords failed and the master key update operation must be rolled back.
+
+MKI reverts to the old encryption key and discards the new encryption key and returns success to the caller.
+
+#####  2.2.5.4 **pwEncrypt**
 
 **pwEncrypt** is used to encrypt a plaintext using AES 128 CBC. The API uses the encryption key (saved in key file) to encrypt the incoming plaintext data and return the encrypted string.
 
 Note that this API will not validate the plaintext semantics. It is up to the application to validate the semantics of the data being encrypted. The primary user of this API would be UMF (to encrypt protocol passwords configured by user). 
 
-#####  2.2.5.4 **pwDecrypt**
+#####  2.2.5.5 **pwDecrypt**
 
-**pwDecrypt** is used to decrypt ciphertext and is primarily used by the protocol dockers. Note that the input to **pwDecrypt** would be the REDIS key associated with the ciphertext. In the context of password re-encryption on a master key update, this helps to always pick the latest ciphertext for decryption from the DB rather than having to rely upon protocols/consumers to always provide the latest ciphertext read from the DB. 
+**pwDecrypt** is used to decrypt ciphertext and is primarily used by the protocol dockers. 
 
-The key format is **"passphrase key:passphrase field"**. 
+#####  2.2.5.6 **pwReencrypt**
 
-For example, to decrypt a RADIUS global password , the API must send the following key format in the API request:
-
-**"RADIUS|global:passkey"**
-
-Additionally, a decrypt API that takes the encrypted string(to be decrypted) as an input vs the REDIS key will also be provided. The specific use-case for this API is in the UMF where a user provided encrypted password can be decrypted and validated prior to saving it into the DB.
+**pwReencrypt** is used to decrypt ciphertext using the old master key and re-encrypt it using the newly configured master key. UMF uses this D-BUS API during the master key update operation.
 
 ### 2.2.6 Password re-encryption - Registration framework
 
-The UMF framework today accepts user configured protocol  passwords from CLI, encrypts them and saves them into CONFIG_DB. The protocol dockers decrypt the ciphertext from CONFIG_DB and use it as appropriate. On an update of the master key, these protocol passwords saved in CONFIG_DB must be decrypted using the old encryption key and re-encrypted using the new encryption key. The infra provides this service of re-encrypting existing protocol passwords via a registration mechanism.
+The UMF framework today accepts user configured protocol  passwords from CLI, encrypts them and saves them into CONFIG_DB. The protocol dockers decrypt the ciphertext from CONFIG_DB and use it as appropriate. On an update of the master key, these protocol passwords saved in CONFIG_DB must be decrypted using the old encryption key and re-encrypted using the new encryption key. This re-encryption of protocol passwords is implemented in the UMF with the aid of a registration mechanism. 
 
-Components are required to register with the infra to get their keys re-encrypted automatically on a master key update. The registration happens within mgmt-framework. Individual component xfmr functions can call the registration API that takes the following parameters:
+Individual protocol components are required to register with the MKI infra in UMF to get their keys re-encrypted automatically on a master key update. The registration happens within mgmt-framework. Individual component xfmr functions can call the registration API in the init() routine. It takes the following parameters:
 
-a) Component name - Protocol requesting to be registered.
+a) Table in **CONFIG_DB** which stores the protocol passwords.
+b) Field of table in **CONFIG_DB** to access configured protocol passwords.
 
-b)  Table and field in **CONFIG_DB** to access configured protocol passwords for keys in the table.
+The API to be called to register with the infra is:
 
-The API writes all the registration data to CONFIG_DB, the master key infra will use the same for re-encryption(schema can be found in section 3.2.1). The API to be called to register with the infra is:
+**func MkiRegister(keyTbl string, keyField string) error **
 
-**func keyInfraRegister(comp string, table string, field string) **
+**keyTbl** contains the table whose keys are used to access the protocol password in CONFIG_DB. **keyField** is the field to be read within the table per key in CONFIG_DB to access the protocol password.
 
- **comp** is the component registering with the infra while **table** contains the table whose keys are used to access the protocol password in CONFIG_DB. **field** is the field to be read within the table per key in CONFIG_DB to access the protocol password.
+For example, to register RADIUS tables with MKI, the following code could be used:
 
-For example, user could have configured the RADIUS global and per server key. The registration API must enlist both the keys separately:
+```
+func init() {
+        var err error
+        // Register RADIUS tables with MKI for
+        // key re-encryption on master key update.
+        tblName1 := "RADIUS"
+        fieldName := "passphrase"
+        err = MkiRegister(tblName1, fieldName)
+        if err != nil {
+                log.Infof("Failed to register table RADIUS")
+        }
 
-**keyInfraRegister("radius", RADIUS|global", "passkey")**
+        tblName2 := "RADIUS_SERVER"
+        err = MkiRegister(tblName2, fieldName)
 
-**keyInfraRegister("radius, "RADIUS_SERVER", "passkey")**
+        if err != nil {
+                log.Infof("Failed to register RADIUS_SERVER")
+        }
+}
+```
 
-The component xfmrs can choose to de-register with the infra when the user deletes the protocol passwords. A de-register API will be provided on the lines of the register API for the same. 
+**func MkiUnregister(keyTbl string) error**  can be used to un-register with the MKI.
 
-A master key update(masterKeySet, Section 2.2.5.1) consists of 2 steps:
+A master key update consists of 2 steps:
 
 - Accept new key from user once the old key is authorized and derive the new encryption key.
 - Re-encrypt registered passwords with the new key and write them back into respective tables in CONFIG_DB. 
   - This will trigger a change notification to the respective protocol code that listens to these CONFIG_DB tables. The handlers can process the notification as required. For example, protocol code could decide to determine if the change is master key update related(notification provided by infra) or password change and choose the behavior. This however would need additional handling in the protocol code. Please do note that an update of a master key is a major event that is expected to happen sparingly. Hence, the benefits of any such additional handling must be weighed against complexity. 
 
-Note that any decrypt/encrypt operations requested for while the master key is being updated(masterKeySet, section 2.2.5.1), will be serviced only after the key has been updated successfully.
+Note that any decrypt/encrypt operations requested for while the master key is being updated, will not be serviced and failure returned with an appropriate error. The components must handle this failure gracefully by er-trying the operation.
 
 ### 2.2.7 Config Migration
 
@@ -335,32 +352,6 @@ key                    = MASTER_KEY|key                         ; Fixed key "key
 configured             = "yes"                                  ; Boolean indicating if master key is                                                                                           ; configured or not.
 ```
 
-
-
-### MASTER_KEY_COMP_TABLE
-
-```
-;Stores information about components registered with master key encryption infra.
-key                    = MASTER_KEY|comp_name                   ; comp_name is the name of the component 
-                                                                ; that has registered with Master key infra. 1*64VCHAR
-                                                                ; 
-passkey                = LIST(protocol_key)                     ; List of component passwords registered with infra.
-
-;value annotations
-protocol_key =    passphrase_key:passphrase_field
-passphrase_key = 1*64VCHAR                                      ; Key of table that contains the protocol passphrase.
-passphrase_field = 1*64VCHAR                                    ; Protocol passphrase field of the table to be read.
-
-Example:
-key = MASTER_KEY | RADIUS
-passkey = "RADIUS|global:passkey"
-
-key = MASTER_KEY | NTP
-passkey = "NTP_AUTHENTICATION_KEY|1:value"
-```
-
-
-
 ### 3.2.2 APP DB
 
 No changes.
@@ -401,15 +392,9 @@ TBD
 
 The configuration commands use the KLISH framework and require KLISH CLI to be in configuration mode (configure terminal);.
 
-##### 3.6.2.1.1 key config-key password-encrypt <master-key>
+##### 3.6.2.1.1 key config-key password-encrypt 
 
 This config command configures the master key to be used for encrypting protocol passwords on the system. 
-
-```
-sonic# key config-key password-encrypt test123
-```
-
-To configure the master-key interactively, the user can execute **key config-key password-encrypt**.
 
 ```
 sonic# key config-key password-encrypt 
@@ -456,7 +441,7 @@ sonic#
 #### 3.6.2.4 IS-CLI Compliance
 |CLI Command|Compliance|IS-CLI Command (if applicable)| Link to the web site identifying the IS-CLI command (if applicable)|
 |:---:|:-----------:|:------------------:|-----------------------------------|
-| **key config-key password-encryption \*[master key]\*** | Compliant | **key config-key password-encryption \*[master key]\*** | https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/46420-pre-sh-keys-ios-rtr-cfg.html https://www.juniper.net/documentation/us/en/software/junos/user-access/topics/topic-map/master-password-configuration-encryption.html|
+| **key config-key password-encrypt ** | Compliant | **key config-key password-encryption \*[master key]\*** | https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/46420-pre-sh-keys-ios-rtr-cfg.html https://www.juniper.net/documentation/us/en/software/junos/user-access/topics/topic-map/master-password-configuration-encryption.html|
 
 ### 3.6.3 REST API Support
 
@@ -475,20 +460,29 @@ NA
 ![Flow diagram](Flow_diagram.jpg)
 
 
-
 # 5 Error Handling
 
 Any errors encountered during the execution of any D-BUS APIs will be logged appropriately to syslog. In addition,  log messages are logged for the following events:
 
 1) New master key configured by user.
 
+"A new master key has been configured on the system."
+
 2) Master key deleted by the user.
+
+"System using unique system default master key."
 
 3) Incorrect old key provided by the user.
 
+"Master key update failed, incorrect old key provided."
+
 4) Encryption/decryption operation failed.
 
+"Encryption operation failed."
+
 5)  In the absence of a configured master key, a message is logged to indicate to the user that the system is working with the default master key. 
+
+"System using a unique default master key. Please configure a master key using "key config-key password-encrypt" command."
 
 # 6 Serviceability and Debug
 
@@ -557,5 +551,6 @@ Customer networks may require multiple/all switches in the network to be configu
 
 
 # 10 Internal Design Information
-Internal BRCM information to be removed before sharing with the community.
+
+The master key is saved on the flash at **/etc/masterkey/masterk**.
 
