@@ -417,8 +417,7 @@ The "no"version of the command can be used to reset the master key to factory de
 
 ```
 sonic# no key config-key password-encrypt 
-WARNING: System will default to the device specific master key.
-Continue with master key deletion ? [yes/no]: yes
+WARNING:System will default to device specific master key.  [confirm Y/N]: Y
 sonic#
 ```
 
