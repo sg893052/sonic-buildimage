@@ -172,13 +172,89 @@ VLAN manager will have a thread running to log messages on syslog periodically i
 
 
 ### 3.8.1 Show Commands
+switch(config)# show system vlan reserved
 
+  system vlan reservation: 400-527
+        
 
 ### 3.8.3 Config Commands
+switch(config)# system vlan 400 reserve 
+ 
+  Reserves 128 continguous vlans
+  
+switch(config)# no system vlan 400 reserve
 
+  This command would change the reserved vlan range to default.
 
 ## 3.9 SONIC Yang model
 
+  grouping reserve-vlan-config {
+  
+    description
+    
+      "Grouping for reserved Vlans";
+      
+    leaf vlan-name {
+    
+      type string;
+      
+      description
+      
+        "Vlan name";
+	
+    }
+    
+  }
+
+  grouping reserve-vlan-top {
+  
+    description
+    
+      "This group contains information about all the reserved vlans";
+
+    container reserve-vlans {
+    
+      description
+      
+        "Enclosure for list of Vlans";
+
+    container reserve-vlan {
+
+        description
+	
+           "List of reserved Vlans";
+
+        container config {
+	
+          description
+	  
+            "Reserve Vlan Config data";
+
+          uses reserve-vlan-config;
+	  
+        }
+
+        container state {
+	
+          config false;
+	  
+          description
+	  
+            "Vlan state";
+	    
+          uses reserve-vlan-config;
+	  
+        }
+	
+      }
+      
+    }
+    
+  }
+  
+  uses reserve-vlan-top;
+  
+}
 
 # 4 Flows
 
