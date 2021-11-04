@@ -25,6 +25,9 @@
         - [3.3.1 RESERVED_VLAN_STATE_TABLE Table](#331-reserved-vlan-state-table)
     - [3.4 Notification](#34-notifications)
         - [3.4.1 RESERVEDVLANCHANGED](#341-reservedvlanchange)
+        - [3.4.2 RESERVEDVLANALLOCATE](#341-reservedvlanallocate)
+        - [3.4.3 RESERVEDVLANALLOCATED](#341-reservedvlanallocated)
+        - [3.4.4 RESERVEDVLANDEALLOCATE](#341-reservedvlandeallocate)
     - [3.5 SWSS](#35-swss)
         - [3.5.1 Vlan Manager](#351-vlan-manager)
         - [3.5.2 SAI APIs](#352-sai-apis)
@@ -139,11 +142,32 @@ Notification will be sent from Vlanmgr to the consumers (Ex. PAC), indicating a 
 
 
 ### 3.4.1 RESERVEDVLANCHANGED
+Sent from Vlan Manager to indicate a chaneg in Rserved Vlan Range.
 
     OP: ""
     DATA: ""
     VALUES: ""
 
+### 3.4.2 RESERVEDVLANALLOCATE
+Sent from consumers to Vlan Manager to request for a new Rserved Vlan
+
+    OP: "SET"
+    DATA: consumer_name
+    VALUES: ""
+
+### 3.4.3 RESERVEDVLANALLOCATED
+Sent from Vlan Manager to cosumer with a new rserved Vlan allocated
+
+    OP: "SET"
+    DATA: consumer_name
+    VALUES: ""
+
+### 3.4.4 RESERVEDVLANDEALLOCATE
+Sent from cosumer to Vlan Manager to de-allocate a rserved Vlan.
+
+    OP: "DEL"
+    DATA: vlan_name
+    VALUES: comsumer_name
 
 ## 3.5 SWSS
 
@@ -151,11 +175,13 @@ Notification will be sent from Vlanmgr to the consumers (Ex. PAC), indicating a 
 
 During boot up, VLAN Manager will update STATE_DB with default (or configured) reserved VLAN range. It will also update the 'in use' flag for each VLAN if the VLAN ID in reserved-vlan range is configured by the user.
 
-When the Rerserved Vlan range is changed from config, Vlan manager will be notified through config db. Vlan manager will then change the Resreved Vlan range in state db and also update the 'in use' flag for the Vlans already in use. 
+When the Rerserved Vlan range is changed from config, Vlan Manager will be notified through config db. Vlan Manager will then change the Resreved Vlan range in state db and also update the 'in use' flag for the Vlans already in use. 
 
-Vlan manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range so that the consumers can re-allocate a new Vlan for its use.
+Vlan Manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range. The consumers will then send request to Vlan Manager to allocate a new Vlan for its use. The cosumer will need to send the request to Vlan Manager and then wait for the response with new allocated reserved Vlan.
 
-It is the responsibility of the consumer to set the 'in use' flag for the the Vlan that it chooses to use.
+The cosumers will send a request to Vlan Manager to de-allocate a reserved Vlan that it no longer needs.
+
+Vlan Manager will set the 'in use' flag for the the Vlan that it chooses to allocate for the consumer.
 
 VLAN manager will have a thread running to log messages on syslog periodically if there is a VLAN configured by the user from the reserved VLAN range.
 
