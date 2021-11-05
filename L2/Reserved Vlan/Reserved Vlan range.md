@@ -27,7 +27,6 @@
         - [3.4.1 RESERVEDVLANCHANGED](#341-reservedvlanchange)
         - [3.4.2 RESERVEDVLANALLOCATE](#341-reservedvlanallocate)
         - [3.4.3 RESERVEDVLANALLOCATED](#341-reservedvlanallocated)
-        - [3.4.4 RESERVEDVLANDEALLOCATE](#341-reservedvlandeallocate)
     - [3.5 SWSS](#35-swss)
         - [3.5.1 Vlan Manager](#351-vlan-manager)
         - [3.5.2 SAI APIs](#352-sai-apis)
@@ -151,9 +150,9 @@ Sent from Vlan Manager to indicate a chaneg in Rserved Vlan Range.
 ### 3.4.2 RESERVEDVLANALLOCATE
 Sent from consumers to Vlan Manager to request for a new Rserved Vlan
 
-    OP: "SET"
-    DATA: consumer_name
-    VALUES: ""
+    OP: "SET/DEL"
+    DATA: vlan_name
+    VALUES: comsumer_name
 
 ### 3.4.3 RESERVEDVLANALLOCATED
 Sent from Vlan Manager to cosumer with a new rserved Vlan allocated
@@ -162,12 +161,6 @@ Sent from Vlan Manager to cosumer with a new rserved Vlan allocated
     DATA: consumer_name
     VALUES: ""
 
-### 3.4.4 RESERVEDVLANDEALLOCATE
-Sent from cosumer to Vlan Manager to de-allocate a rserved Vlan.
-
-    OP: "DEL"
-    DATA: vlan_name
-    VALUES: comsumer_name
 
 ## 3.5 SWSS
 
