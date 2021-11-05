@@ -33,8 +33,8 @@ SpyTest - Data Driven Test Development
       - [4.2.3 Subscribing to Multiple Message Paths](#423-subscribing-to-multiple-message-paths)
       - [4.2.4 Verifying Notifications](#424-verifying-notifications)
       - [4.2.5 Closing Subscription](#425-closing-subscription)
-    - [4.3 GNOI Support](#43-gnoi-support)
-    - [4.4 RPC Support](#44-rpc-support)
+    - [4.3 RPC Support](#43-rpc-support)
+    - [4.4 GNOI Support](#44-gnoi-support)
   - [5 Developer Steps](#5-developer-steps)
     - [5.1 Copying Relevant YANGs](#51-copying-relevant-yangs)
     - [5.2 Message Generation](#52-message-generation) 
@@ -43,8 +43,10 @@ SpyTest - Data Driven Test Development
     - [5.5 Testcase Sample For Verification](#55-testcase-sample-for-verification)
     - [5.6 Testcase Sample For RPC](#56-testcase-sample-for-rpc)
     - [5.7 Testcase Sample For Subscription](#57-testcase-sample-for-subscription)
-    - [5.7 Testcase Sample For GNOI](#58-testcase-sample-for-gnoi)
-  
+    - [5.8 Copying Relevant Proto Definition Files](#58-copying-relevant-proto-definition-files)
+    - [5.9 Proto Binding Generation](#59-proto-binding-generation)
+    - [5.10 Testcase Sample For gNOI](#510-testcase-sample-for-gnoi)
+
 # Revision
 
 | Rev |     Date    |       Author       | Change Description                |
@@ -98,6 +100,8 @@ The message class can be imagined as a feature representation containing knobs(f
 Once the YANG model are parsed, it uses a custom built pyang plugin to generate a message class.
 
 - Along with Message classes. The YANG bindings are also generated from YANG using a pyangbind plugin.
+
+- For gNOI, the protobuf message python bindings are generated from the .proto service definition file using the protoc compiler.
 
 ## 3.1.2 Message
 
@@ -163,21 +167,32 @@ in `apis/yang/utils/gnmi` module.
 
 ### 3.1.3.4 RPC API
 
-This is a generic method which will be invoked by the Action API inside the message class. It is part of the spytest infra, and does the following:
+Yang Rpcs define a data-model-specific operation which is invoked with the POST method. These are a collection of classes and a generic method to execute the Yang Rpc. It is part of the spytest infra, and does the following:
 
-- Generates payload from the input field of the message object
-- Builds the URI from the message object
-- Executes the RPC
+- The Rpc message class allows the Test Case (TC) writer to specify the input argument to the Rpc, and the expected output.
+- The YangRpcService class provides the execute() method.
+
+The execute() method:
+
+- Generates payload from the input field of the Rpc message object
+- Builds the URI from the Rpc message object
+- Executes the Rpc
 - If the verify option is given, it compares the returned payload from the DUT with the (generated) payload from the output in the message object
+- Note: Message Classes and python bindings are generated from the corresponding Yang files.
 
-### 3.1.3.4 GNOI API
+### 3.1.3.4 gNOI API
 
-GNOI does not have a corresponding Yang model. Thus, there is no corresponding message It It is part of the spytest infra, and does the following:
+gRPC Network Operations Interface (gNOI) defines a set of gRPC-based microservices for executing operational commands on network devices. These are a collection of classes and a generic method to execute the gNOI Rpc.
+It is part of the spytest infra, and does the following:
 
-- Generates payload from the user supplied input
-- Generates a command to execute the gnoi_client in the telemetry docker
-- Executes the command on the DUT
-- If the verify option is given, it compares the returned payload with the user supplied expected output
+- The GnoiService class provides an interface to the protobuf messages, services, and the execute() method.
+- The GnoiRpc message class allows the TC writer to encapsulate the request message and the expected response message.
+
+The execute() method.
+- Invokes the protobuf service stub to execute the Rpc.
+- If the verify option is given, it compares the message returned from the DUT with the user supplied expected response message
+- Note: gNOI does not have a corresponding Yang model. Message python bindings are generated from the corresponding .proto service interface definition files(IDL).
+- Note: gNOI RPC with stream message are not supported currently in the telemetry repo, hence no spytest support is provided.
 
 ### 3.1.3.5 get_ietf_json
 
@@ -772,28 +787,56 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
 Below class is generated for XPATH ***/openconfig-acl:acl***
 
 ```python
+##############################################################
+##############################################################
+##### THIS IS AN AUTO-GENERATED FILE PLEASE DO NOT EDIT ######
+##############################################################
+##############################################################
+
+from apis.yang.codegen.response import Response
+from apis.yang.utils.common import NorthBoundApi
+from apis.yang.codegen.error_constants import *
+
 from apis.yang.codegen.messages.acl.Base.Acl import AclBase
+try:
+    from apis.yang.codegen.messages.acl import Acl_klish
+except ImportError:
+    pass
 
 class Acl(AclBase):
+    """/openconfig-acl:acl
+    Top level enclosing container for ACL model config
+and operational state data
+    """
     def __init__(self,  CounterCapability=None):
-        super(Acl, self).__init__(ConfigCounterCapability)
+        super(Acl, self).__init__( CounterCapability)
 
-    def configure_klish(self, dut, target_attr=None, operation="update", success=True, ignore_error=False, **kwargs):
+    def configure_klish(self, dut, operation="update", target_attr=None, target_path=None, success=True, ignore_error=False, **kwargs):
         ''' Developers will implement this '''
-        print("I am Klish Configure")
-        status = False
-        return status
+        if 'Acl_klish' in globals():
+            try:
+                return Acl_klish.configure_klish(self, dut, operation=operation, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, **kwargs)
+            except AttributeError:
+                pass
+        return Response(NorthBoundApi.KLISH, status_code=UNIMPLEMENTED)
 
-    def unConfigure_klish(self, dut, target=None, success=True, ignore_error=False, **kwargs):
+    def unConfigure_klish(self, dut, target_attr=None, target_path=None, success=True, ignore_error=False, **kwargs):
         ''' Developers will implement this '''
-        print("I am Klish unConfigure")
-        status = False
-        return status
+        if 'Acl_klish' in globals():
+            try:
+                return Acl_klish.unConfigure_klish(self, dut, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, **kwargs)
+            except AttributeError:
+                pass
+        return Response(NorthBoundApi.KLISH, status_code=UNIMPLEMENTED)
 
-    def verify_klish(self, dut, target=None, success=True, ignore_error=False, **kwargs):
+    def verify_klish(self, dut, target_attr=None, target_path=None, success=True, ignore_error=False, error_response=None, **kwargs):
         ''' Users required to write code for klish '''
-        status = False
-        return status
+        if 'Acl_klish' in globals():
+            try:
+                return Acl_klish.verify_klish(self, dut, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, error_response=None, **kwargs)
+            except AttributeError:
+                pass
+        return Response(NorthBoundApi.KLISH, status_code=UNIMPLEMENTED)
 ```
 
 ## 4.2 Subscription Support
@@ -1040,13 +1083,33 @@ def test_subscribe_example(subscribe_cleanup):
     ....
 ```
 
-## 4.3 GNOI Support
+## 4.3 RPC Support
 
-TBD
+The generated message classes for Yang RPC support are placed in the following directory structure for the openconfig-tam yang module. These classes should not be edited.
 
-## 4.4 RPC Support
+```text
+    apis/yang/codegen/messages/
+    |
+    |_<module> Example:tam, contains all Derived classes
+        |_TamRpc.py
+        |_Base (directory containing Base classes)
+          |_TamRpc.py
+```
 
-TBD
+
+## 4.4 GNOI Support
+
+The generated gNOI python binding message and stub classes are placed in the following directory.
+
+```text
+    apis/yang/codegen/gnoi_bindings/
+    |
+    |_<proto>_pb2.py Example:sonic_gnoi_pb2.py
+    |_<proto>_pb2_rpc.py
+```
+
+Developers should not need to refer these. The .proto service interface definition files (IDL) should contain the information needed for writing Test Cases.
+
 
 # 5 Developer Steps
 
@@ -1147,7 +1210,41 @@ acl.verify_rest(dut, ui="rest")
 
 ## 5.6 Testcase Sample For RPC
 
-TBD
+Following is an example test case to execute and verify Yang RPC for clearing a Flowgroup Counter.
+
+```python
+from apis.yang.codegen.messages.tam.TamRpc import ClearFlowgroupCountersRpc
+from apis.yang.codegen.yang_rpc_service import YangRpcService
+
+def test_tam_rpc_example():
+    """Demonstrate TAM Yang RPC"""
+
+    st.log("[Step-1] Create Yang RPC Service .......")
+
+    service = YangRpcService()
+
+    st.log("[Step-2] Create TAM RPC .......")
+
+    # Input
+    rpc = ClearFlowgroupCountersRpc()
+    rpc.Input.name = "TestCounter"
+
+    # Expected Output
+    rpc.Output.status = 0
+    rpc.Output.status_detail = [""]
+
+    st.log("[Step-3] Execute TAM Yang RPC .......")
+
+    result = service.execute(data.D1, rpc, verify=True)
+    if not result.ok():
+        st.report_fail("msg", "ClearFlowgroupCounter RPC: Failed: " \
+            + result.message)
+
+    st.log("[Step-4] RPC Executed .......")
+    st.log("result: {}".format(result.data))
+
+    st.report_pass("test_case_passed")
+```
 
 ## 5.7 Testcase Sample For Subscription
 
@@ -1185,8 +1282,99 @@ def test_onchange_acl_example(subscribe_cleanup):
     st.report_pass("test_case_passed")
 ```
 
-## 5.8 Testcase Sample For GNOI
+## 5.8 Copying Relevant Proto Definition Files
 
-TBD
+Proto definition files will be placed under **brcm-spytest/apis/yang/proto/gnoi**
 
+Developers should be copying relevant *literal asterisks*.proto from sonic-telemetry/proto/gnoi to brcm-spytest/apis/yang/proto/gnoi directory.
 
+When developer modifies the .proto contents **brcm-spytest/apis/yang/proto/gnoi** or rebases with newer versions from **sonic-telemetry/proto/gnoi**, they are required to regenerate gNOI message bindings using below steps.
+
+Once the gNOI message bindings are regenerated, they need to be committed along with the YANG changes.
+
+Note: Due to some issues with importing module names with "." in them (Eg: "github.com"), please replace imports in the .proto IDL files which contain them. For example,
+
+** replace **
+
+```
+import "github.com/gogo/protobuf/gogoproto/gogo.proto"
+```
+
+** with **
+
+```
+import "gogoproto/gogo.proto"
+```
+
+## 5.9 Proto Binding Generation
+
+Script **brcm-spytest/apis/yang/codegen/tools/generate_gnoimsgs.sh** will generate the proto bindings for the required .proto files. It downloads some dependencies, performs a few sanity checks and runs the protoc compiler which generates the message bindings, and gRPC service stubs.
+
+All generated artifacts will be placed under **brcm-spytest/apis/yang/codegen/gnoi_bindings** directory. Developer must commit these generated files to the spytest repo as-is.
+
+Usage:
+
+```text
+generate_gnoimsgs.sh <PROTO-1> ... <PROTO-N>
+```
+
+## 5.10 Testcase Sample For GNOI
+
+Following is an example test case to execute and verify gNOI RPCs for Audit Log clearing and retrieval.
+
+```python
+
+from apis.yang.codegen.gnoi_service import GnoiService
+from apis.yang.codegen.gnoi_rpc import GnoiRpc
+
+def test_audit_log_gnoi_example():
+    """Demonstrate Clear, and Get Audit Log GNOI RPC"""
+
+    st.log("[Step-1] Create GNOI RPC Service .......")
+
+    service = GnoiService(proto="sonic_gnoi", name="SonicService")
+    pb2 = service.pb2_module()
+
+    st.log("[Step-2] Create Clear Audit Log RPC .......")
+
+    # Input
+    rpc = GnoiRpc(name="ClearAuditLog")
+    rpc.request=pb2.ClearAuditLogRequest()
+
+    # Expected Output
+    rpc.response=pb2.ClearAuditLogResponse(output=pb2.SonicOutput())
+
+    st.log("[Step-3] Execute Clear Audit Log GNOI RPC .......")
+
+    result = service.execute(data.D1, rpc, verify=True)
+    if not result.ok():
+        st.report_fail("msg", "Clear Audit Log GNOI RPC: Failed: " \
+            + result.message)
+
+    st.log("[Step-4] RPC Executed .......")
+    st.log("result: {}".format(result.data))
+
+    st.log("[Step-5] Create Get Audit Log RPC .......")
+
+    # Input
+    rpc = GnoiRpc(name="GetAuditLog")
+    rpc.request=pb2.GetAuditLogRequest(
+        input=pb2.GetAuditLogRequest.Input(content_type='all'))
+
+    # Expected Output
+    rpc.response=pb2.GetAuditLogResponse(
+        output=pb2.GetAuditLogResponse.AuditOutput(audit_content=[""]))
+
+    st.log("[Step-6] Execute Get Audit Log GNOI RPC .......")
+
+    result = service.execute(data.D1, rpc, verify=False)
+    if not result.ok():
+        st.report_fail("msg", "Get Audit Log GNOI RPC: Failed: " \
+            + result.message)
+
+    st.log("[Step-7] RPC Executed .......")
+    st.log("result: {}".format(result.data))
+
+    st.report_pass("test_case_passed")
+
+```
