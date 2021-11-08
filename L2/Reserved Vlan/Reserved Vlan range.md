@@ -57,6 +57,7 @@
 | Rev | Date     | Author      | Change Description        |
 |:---:|:--------:|:-----------:|---------------------------|
 | 0.1 | 10/20/21 | Anil Pandey | Initial version           |
+| 0.2 | 11/08/21 | Priyanka Gupta | Updated KLISH UI, yang models and UT section |
 
 # About this Manual
 This document provides an overview of the implementation of Reserved Vlans in SONiC.
@@ -205,7 +206,8 @@ switch(config)# no system vlan 400 reserve
 
   This command would change the reserved vlan range to default.
 
-## 3.9 SONIC Yang model
+## 3.9 YANG model
+## 3.9.1 Openconfig Yang model
 
   grouping reserve-vlan-config {
   
@@ -275,12 +277,30 @@ switch(config)# no system vlan 400 reserve
   
 }
 
+## 3.9.2 Sonic Yang model
+    container RESERVED_VLAN {
+            list RESERVED_VLAN_LIST {
+                key "vlan-name";
+
+                leaf vlan-name {
+                    type string;
+
+                }
+             }
+        }
+
+
 # 4 Flows
 
 # 5 Warm Reboot Support
 
 
 # 6 Unit Tests
+  1) Configure reserved vlan range using "system vlan <vlan-id> reserve" command and check if RESERVED_VLAN table got updated with contiguous 128 vlans.
+  2) Configure reserved vlan range using "system vlan <vlan-id> reserve" command and check the o/p for "show system vlan reserved".
+  3) Unconfigure the reserved vlan using "no system vlan <vlan-id> reserve" command and check if default reserved vlans are being used using show command.
+  4) Configure reserved vlan range using "system vlan <vlan-id> reserve" command. Try to configure vlan/change vlan membership from reserved vlan range and check if proper error messages are being displayed.
+	
 
 # 7 Platform Support
 
