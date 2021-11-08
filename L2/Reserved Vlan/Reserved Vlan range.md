@@ -1,7 +1,7 @@
 # Reserved VLAN range in SONiC
 
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 # Table of Contents
 * [List of Tables](#list-of-tables)
 * [List of Figures](#list-of-figures)
@@ -14,8 +14,6 @@
 * [2 Requirements](#2-requirements)
     - [2.1 Functional Requirements](#21-functional-requirements)
     - [2.2 Configuration and Management Requirements](#22-configuration-and-management-requirements)
-    - [2.3 Scalability Requirements](#23-scalability-requirements)
-    - [2.4 Supported Debug Counters](#24-supported-debug-counters)
 * [3 Design](#3-design)
     - [3.1 CLI (and usage example)](#31-cli-and-usage-example)
         - [3.1.1 Configure Reserved Vlan range](#311-configure-reserved-vlan-range)
@@ -29,25 +27,13 @@
         - [3.4.3 RESERVEDVLANALLOCATED](#341-reservedvlanallocated)
     - [3.5 SWSS](#35-swss)
         - [3.5.1 Vlan Manager](#351-vlan-manager)
-        - [3.5.2 SAI APIs](#352-sai-apis)
-    - [3.6 syncd](#36-syncd)
-    - [3.7 SAI](#37-sai)
-    - [3.8 KLISH CLI](#38-klish-cli)
-        - [3.8.1 Show Commands](#381-show-commands)
-        - [3.8.2 Clear Commands](#382-clear-commands)
-        - [3.8.3 Config Commands](#383-config-commands)
-    - [3.9 SONIC Yang model](#39-sonic-yang-model)
-* [4 Flows](#4-flows)
-    - [4.1 General Flow](#41-general-flow)
-* [5 Warm Reboot Support](#5-warm-reboot-support)
-* [6 Unit Tests](#6-unit-tests)
-* [7 Platform Support](#7-platform-support)
-    - [7.1 Known Limitations](#7.1-known-limitations)
-* [8 Open Questions](#8-open-questions)
-* [9 Acknowledgements](#9-acknowledgements)
-* [10 References](#10-references)
-* [11 Sample Configuration](#11-sample-configuration)
-- [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information---to-be-removed-before-publishing-externally)
+    - [3.6 KLISH CLI](#36-klish-cli)
+        - [3.6.1 Show Commands](#361-show-commands)
+        - [3.6.2 Config Commands](#362-config-commands)
+    - [3.7 YANG model](#37-sonic-yang-model)
+        - [3.7.1 Openconfig Yang model ](#371-openconfig-yang-model)
+        - [3.7.2 Sonic Yang model ](#372-sonic-yang-model)
+* [4 Unit Tests](#4-unit-tests)
 # List of Tables
 * [Table 1: Abbreviations](#definitionsabbreviation)
 
@@ -100,12 +86,11 @@ The main goal of this feature is to provide a set of configurable Vlans that are
 
 
 ## 2.2 Configuration and Management Requirements
+This feature shall support CLI REST and GNMI based configurations.
 
+List of configuration shall include the following:
+- VLAN Id from where to start reserving VLANs
 
-## 2.3 Scalability Requirements
-
-
-## 2.4 Supported Debug Counters
 
 
 # 3 Design
@@ -181,23 +166,17 @@ VLAN manager will have a thread running to log messages on syslog periodically i
 
 <img src="images/reserved-vlan.jpg" width="800" height="500">
 
-### 3.5.2 SAI APIs
+
+## 3.6 KLISH CLI
 
 
-## 3.6 syncd
-
-## 3.7 SAI
-
-## 3.8 KLISH CLI
-
-
-### 3.8.1 Show Commands
+### 3.6.1 Show Commands
 switch(config)# show system vlan reserved
 
   system vlan reservation: 400-527
         
 
-### 3.8.3 Config Commands
+### 3.6.2 Config Commands
 switch(config)# system vlan 400 reserve 
  
   Reserves 128 continguous vlans
@@ -206,8 +185,8 @@ switch(config)# no system vlan 400 reserve
 
   This command would change the reserved vlan range to default.
 
-## 3.9 YANG model
-## 3.9.1 Openconfig Yang model
+## 3.7 YANG model
+## 3.7.1 Openconfig Yang model
 
   grouping reserve-vlan-config {
   
@@ -277,7 +256,7 @@ switch(config)# no system vlan 400 reserve
   
 }
 
-## 3.9.2 Sonic Yang model
+## 3.7.2 Sonic Yang model
     container RESERVED_VLAN {
             list RESERVED_VLAN_LIST {
                 key "vlan-name";
@@ -290,27 +269,10 @@ switch(config)# no system vlan 400 reserve
         }
 
 
-# 4 Flows
-
-# 5 Warm Reboot Support
-
-
-# 6 Unit Tests
+# 4 Unit Tests
   1) Configure reserved vlan range using "system vlan <vlan-id> reserve" command and check if RESERVED_VLAN table got updated with contiguous 128 vlans.
   2) Configure reserved vlan range using "system vlan <vlan-id> reserve" command and check the o/p for "show system vlan reserved".
   3) Unconfigure the reserved vlan using "no system vlan <vlan-id> reserve" command and check if default reserved vlans are being used using show command.
   4) Configure reserved vlan range using "system vlan <vlan-id> reserve" command. Try to configure vlan/change vlan membership from reserved vlan range and check if proper error messages are being displayed.
 	
-
-# 7 Platform Support
-
-# 7.1 Known Limitations
-
-# 8 Open Questions
-
-# 9 Acknowledgements
-
-# 10 References
-
-# 11 Sample Configuration
 
