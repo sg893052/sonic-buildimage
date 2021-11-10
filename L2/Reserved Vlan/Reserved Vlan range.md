@@ -153,14 +153,14 @@ Sent from consumers to Vlan Manager to request for a new Rserved Vlan
 
     OP: "SET/DEL"
     DATA: vlan_name
-    VALUES: comsumer_name
+    VALUES: "consumer", consumer_name
 
 ### 3.4.3 RESERVEDVLANALLOCATED
 Sent from Vlan Manager to cosumer with a new rserved Vlan allocated
 
     OP: "SET"
-    DATA: consumer_name
-    VALUES: ""
+    DATA: vlan_name
+    VALUES: "consumer", consumer_name
 
 
 ## 3.5 SWSS
@@ -171,7 +171,7 @@ During boot up, VLAN Manager will update STATE_DB with default (or configured) r
 
 When the Rerserved Vlan range is changed from config, Vlan Manager will be notified through config db. Vlan Manager will then change the Resreved Vlan range in state db and also update the 'in use' flag for the Vlans already in use. 
 
-Vlan Manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range. The consumers will then send request to Vlan Manager to allocate a new Vlan for its use. The cosumer will need to send the request to Vlan Manager and then wait for the response with new allocated reserved Vlan.
+Vlan Manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range. The consumers will then send request to Vlan Manager to allocate a new Vlan for its use. The cosumer will need to send the request to Vlan Manager and then wait for the response with new allocated reserved Vlan. The response from Vlan Manager will contain the consumer name and consumers should process response with their own consumer name and discard if otherwise.
 
 The cosumers will send a request to Vlan Manager to de-allocate a reserved Vlan that it no longer needs.
 
