@@ -362,7 +362,7 @@ configured             = "true"/"false"                         ; Boolean indica
 ### MASTER_KEY_UPDATE
 ```
 ;Stores information about master key update operation.
-key                 = MASTER_KEY|key                      ; Fixed key "key"
+key                 = MASTER_KEY_UPDATE|key                    ; Fixed key "key"
                                                           ;    
 update_key          = "true"/"false"                      ; Boolean indicating if master key infra must 
                                                           ; now move to new master key or not.
