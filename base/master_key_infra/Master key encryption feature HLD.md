@@ -566,7 +566,7 @@ The master key is saved on the flash at **/etc/masterkey/masterk**.
 The python library is sonic_hostcomm-1.0-py3-none-any.whl. To selectively compile it, execute ‘make target/python-wheels/sonic_hostcomm-1.0-py3-none-any.whl'.
 The following steps are to be followed to link and use the library.
  
-
+```
 In the rules/<app>.mk, add dependency on SONIC_HOSTCOMM_PY3
 
 $(SONIC_HOST_SERVICES_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3) \
@@ -595,6 +595,7 @@ To use the API in source, import the API from hostcomm and use as instructed bel
 + print("error code {}".format(r[0]))
 
 + print("message {}".format(r[1]))
+ ```
  
  
 **Integrating and using C/C++ MKI library** 
