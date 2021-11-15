@@ -439,7 +439,7 @@ This command indicates if a master key has been configured.
 
 ```
 sonic#show config-key password-encrypt
-Master key configured: Yes
+Master key configured: False
 sonic#
 ```
 
