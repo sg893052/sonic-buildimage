@@ -781,6 +781,8 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
 ### 4.1.1.2 Derived class Rules
 - Derived classes will be generated for all base classes. The derived class is an editable class, this is the class the test case needs to be imported and used. 
 - Constructor will be generated with all leafs initialized to None (only for non-key leafs). This will invoke base class constructor.
+- If the user has created a <derived_class>_klish.py file, by default, that implementation will be used by the derived class.
+- The user may implement the KLISH stubs using existing spytest library functions, *or they may write their own functions for new features*.
 
 ### 4.1.1.2.1 Sample Derived Class
 
@@ -789,15 +791,16 @@ Below class is generated for XPATH ***/openconfig-acl:acl***
 ```python
 ##############################################################
 ##############################################################
-##### THIS IS AN AUTO-GENERATED FILE PLEASE DO NOT EDIT ######
-##############################################################
+##### THIS IS AN AUTO-GENERATED FILE. TO REGENERATE USE ######
+##### SPYTEST_PLUGIN_OVER_WRITE_DERIVED_CLASS=Y ENV. VAR. ####
+##### EDIT WITH CARE.                                     ####
 ##############################################################
 
 from apis.yang.codegen.response import Response
 from apis.yang.utils.common import NorthBoundApi
 from apis.yang.codegen.error_constants import *
 
-from apis.yang.codegen.messages.acl.Base.Acl import AclBase
+from apis.yang.codegen.messages.acl.Base import AclBase
 try:
     from apis.yang.codegen.messages.acl import Acl_klish
 except ImportError:
@@ -809,34 +812,32 @@ class Acl(AclBase):
 and operational state data
     """
     def __init__(self,  CounterCapability=None):
-        super(Acl, self).__init__( CounterCapability)
+        AclBase.__init__(self,  CounterCapability)
 
     def configure_klish(self, dut, operation="update", target_attr=None, target_path=None, success=True, ignore_error=False, **kwargs):
-        ''' Developers will implement this '''
+        ''' ######## DEVELOPERS WILL IMPLEMENT THIS ########'''
         if 'Acl_klish' in globals():
-            try:
-                return Acl_klish.configure_klish(self, dut, operation=operation, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, **kwargs)
-            except AttributeError:
-                pass
+            return Acl_klish.configure_klish(self, dut, operation=operation, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, **kwargs)
         return Response(NorthBoundApi.KLISH, status_code=UNIMPLEMENTED)
 
     def unConfigure_klish(self, dut, target_attr=None, target_path=None, success=True, ignore_error=False, **kwargs):
-        ''' Developers will implement this '''
+        ''' ######## DEVELOPERS WILL IMPLEMENT THIS ########'''
         if 'Acl_klish' in globals():
-            try:
-                return Acl_klish.unConfigure_klish(self, dut, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, **kwargs)
-            except AttributeError:
-                pass
+            return Acl_klish.unConfigure_klish(self, dut, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, **kwargs)
         return Response(NorthBoundApi.KLISH, status_code=UNIMPLEMENTED)
 
     def verify_klish(self, dut, target_attr=None, target_path=None, success=True, ignore_error=False, error_response=None, **kwargs):
-        ''' Users required to write code for klish '''
+        ''' ######## DEVELOPERS WILL IMPLEMENT THIS ########'''
         if 'Acl_klish' in globals():
-            try:
-                return Acl_klish.verify_klish(self, dut, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, error_response=None, **kwargs)
-            except AttributeError:
-                pass
+            return Acl_klish.verify_klish(self, dut, target_attr=target_attr, target_path=target_path, success=success, ignore_error=ignore_error, error_response=None, **kwargs)
         return Response(NorthBoundApi.KLISH, status_code=UNIMPLEMENTED)
+
+from apis.yang.codegen.messages.acl.Base import AclSetBase
+try:
+    from apis.yang.codegen.messages.acl import AclSet_klish
+except ImportError:
+    pass
+
 ```
 
 ## 4.2 Subscription Support
