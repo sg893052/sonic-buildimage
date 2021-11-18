@@ -21,6 +21,7 @@ Port Link Flap Error Disable
 | 0.3 | 05/11/2021  |   Steven Lu             | Add design details                                   | 
 | 0.4 | 05/24/2021  | Prasanth Kunjum Veettil | Add CLI and RESTCONF details                         |
 | 0.5 | 09/16/2021  | Steven Lu               | Removed "Not-err-disabled" state                     |
+| 0.5 | 11/18/2021  | Prasanth Kunjum Veettil | Minor updates in CLI and REST sections               |
 
 # About this Manual
 This document provides general information about the Port Link Flap Error Disable feature implementation in SONiC.
@@ -32,7 +33,8 @@ This document describes the high level design of Port Link Flap Error Disable fe
 ### Table 1: Abbreviations
 | **Term**                 | **Meaning**                         |
 |--------------------------|-------------------------------------|
-| xcvrd                    | Transceiver Daemon                  |
+| BPDU                     | Bridge Protocl Data Unit            |
+| UDLD                     | Unidirectional Link Detection       |
 
 # 1 Feature Overview
 The Port Link Flap Error Disable feature uses an exponential decay mechanism to prevent excessive interface flapping events from adversely affecting routing protocols and routing tables in the network. Suppressing port state change events to protect the system resources.
@@ -161,17 +163,13 @@ This command displays the err-disable recovery features. Link-flap is one among 
 Example:
 ```
 sonic#show errdisable recovery
-Err-Disable Reason    Timer Status
------------------------------------
-udld                  Disabled
-bpduguard             Disabled
-xcvrd                 Disabled
-link-flap             Enabled
 
-Interfaces that will be enabled at the next timeout:
-Interface      Errdisable reason      Time left(sec)
------------------------------------------------------
-Ethernet0      link-flap              24
+Errdisable Cause    Status
+------------------  --------
+udld                disabled
+bpduguard           disabled
+link-flap           enabled
+Timeout for Auto-recovery:  300 seconds
 ```
 - *show errdisable link-flap*
 Status and configuration details of link-flap error-disable is shown with this command.
@@ -180,11 +178,11 @@ The ports which does not have non-default error disable configurations will not 
 Example:
 ```
 sonic#show errdisable link-flap
-Interface  Flap-threshold  Sampling-interval   Recovery-interval Status
----------------------------------------------------------------------------
-Ethernet0  10              3                   30                Errdisabled
-Ethernet4  10              3                   60                On
-Ethernet8  5               10                  300               Off
+Interface   Flap-threshold Sampling-interval Recovery-interval Time-left Status
+-------------------------------------------------------------------------------
+Ethernet0  10              3                 30                18        Errdisabled
+Ethernet4  10              3                 60                N/A       On
+Ethernet8  5               10                300               N/A       Off
 ```
 
 The possible status values are  
@@ -266,20 +264,20 @@ Can be reference to YANG if applicable. Also cover gNMI here.
 Refer to Functionality
 
 ### 3.6.3 REST API Support
-POST "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=<ifname>/link-flap"
+POST "< REST-SERVER:PORT >/restconf/data/openconfig-errdisable-ext:errdisable-port/port=< ifname >/link-flap"
 Request body:
 {
   "openconfig-errdisable-ext:link-flap": {
     "config": {
-      "error-disable": <string>,
-      "flap-threshold": <number>,
-      "sampling-interval": <number>,
-      "recovery-interval": <number>
+      "error-disable": < string >,
+      "flap-threshold": < number >,
+      "sampling-interval": < number >,
+      "recovery-interval": < number >
     }
   }
 }
 
-Example:
+Example for configuring and enabling link flap error disable:
 ```
 POST "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=Ethernet24/link-flap"
 {
@@ -293,8 +291,20 @@ POST "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port
   }
 }
 ```
+Example for disabling link flap error disable:
+```
+POST "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=Ethernet24/link-flap"
+{
+  "openconfig-errdisable-ext:link-flap": {
+    "config": {
+      "error-disable": "off"
+    }
+  }
+}
+```
+DELETE operation will not disable the link-flap err-disable on a port.
 
-GET "<REST-SERVER:PORT>/restconf/data/openconfig-errdisable-ext:errdisable-port/port=<ifname>/link-flap/state"
+GET "< REST-SERVER:PORT >/restconf/data/openconfig-errdisable-ext:errdisable-port/port=< ifname >/link-flap/state"
 
 Example:
 ```
