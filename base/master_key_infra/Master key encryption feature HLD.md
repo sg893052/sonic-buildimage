@@ -343,14 +343,7 @@ From early profiling data, the time required to encrypt data from a docker by in
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
 
-### MASTER_KEY_TABLE
-
-```
-;Stores information about master key configuration.
-key                    = MASTER_KEY|key                         ; Fixed key "key"
-                                                                ; 
-configured             = "yes"                                  ; Boolean indicating if master key is                                                                                           ; configured or not.
-```
+No changes
 
 ### 3.2.2 APP DB
 
@@ -358,7 +351,22 @@ No changes.
 
 ### 3.2.3 STATE DB
 
-No changes.
+### MASTER_KEY
+```
+;Stores information about master key configuration.
+key                   = MASTER_KEY|config                      ; Fixed key "config"
+                                                                ; 
+configured             = "true"/"false"                         ; Boolean indicating if master key is                                                                                           ; configured or not.
+```
+
+### MASTER_KEY_UPDATE
+```
+;Stores information about master key update operation.
+key                 = MASTER_KEY_UPDATE|key                    ; Fixed key "key"
+                                                          ;    
+update_key          = "true"/"false"                      ; Boolean indicating if master key infra must 
+                                                          ; now move to new master key or not.
+```
 
 ### 3.2.4 ASIC DB
 
@@ -431,7 +439,7 @@ This command indicates if a master key has been configured.
 
 ```
 sonic#show config-key password-encrypt
-Master key configured: Yes
+Master key configured: False
 sonic#
 ```
 
@@ -552,4 +560,160 @@ Customer networks may require multiple/all switches in the network to be configu
 # 10 Internal Design Information
 
 The master key is saved on the flash at **/etc/masterkey/masterk**.
+
+**Integrating and using python MKI library**
+
+The python library is sonic_hostcomm-1.0-py3-none-any.whl. To selectively compile it, execute ‘make target/python-wheels/sonic_hostcomm-1.0-py3-none-any.whl'.
+The following steps are to be followed to link and use the library.
+ 
+```
+In the rules/<app>.mk, add dependency on SONIC_HOSTCOMM_PY3
+
+$(SONIC_HOST_SERVICES_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3) \
+                                      $(SWSSSDK_PY3) \
+
++                                     $(SONIC_HOSTCOMM_PY3)                                
+
+
+To use the API in source, import the API from hostcomm and use as instructed below:
+
++ from hostcomm import *
+
+
+
++ ut = HostQuery()
+
++ r = (ut.keyctl("pwEncrypt", "temp"))
+
++ print("error code {}".format(r[0]))
+
++ print("message {}".format(r[1]))
+
+
++ r = (ut.keyctl("pwDecrypt", "U2FsdGVkX1/ol76JDX18qnN4IibUhpazL6Ou0z6Si3c="))
+
++ print("error code {}".format(r[0]))
+
++ print("message {}".format(r[1]))
+ ```
+ 
+ 
+**Integrating and using C/C++ MKI library** 
+
+To compile the C/C++ library selectively, execute ‘make target/debs/buster/libhostcomm_1.0.0_amd64.deb’. Following is an example(sonic-eventd) of what changes are required to the application build environment to integrate and use this library:
+
+```
+diff --git a/dockers/docker-eventd/Dockerfile.j2 b/dockers/docker-eventd/Dockerfile.j2
+
+index 02316b1..34a185c 100644
+
+--- a/dockers/docker-eventd/Dockerfile.j2
+
++++ b/dockers/docker-eventd/Dockerfile.j2
+
+@@ -10,7 +10,7 @@ RUN apt-get update
+
+
+ ## Install redis-tools dependencies
+
+## TODO: implicitly install dependencies
+
+-RUN apt-get -y install libjemalloc2
+
++RUN apt-get -y install libjemalloc2 libdbus-1-3 libdbus-c++-1-0v5
+
+
+ # Add support for supervisord to handle startup dependencies
+
+RUN pip3 install supervisord-dependent-startup==1.4.0
+
+diff --git a/rules/docker-eventd.mk b/rules/docker-eventd.mk
+
+index 078c5ee..e8117f8 100644
+
+--- a/rules/docker-eventd.mk
+
++++ b/rules/docker-eventd.mk
+
+@@ -26,5 +26,6 @@ $(DOCKER_EVENTD)_RUN_OPT += --privileged -t
+
+$(DOCKER_EVENTD)_RUN_OPT += -v /etc/sonic/:/etc/sonic/:ro
+
+$(DOCKER_EVENTD)_RUN_OPT += -v /etc/evprofile:/etc/evprofile:rw
+
+$(DOCKER_EVENTD)_RUN_OPT += -v /host/warmboot:/var/warmboot
+
++$(DOCKER_EVENTD)_RUN_OPT += -v /var/run/dbus:/var/run/dbus:rw
+
+
+ $(DOCKER_EVENTD)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
+
+diff --git a/rules/eventd.mk b/rules/eventd.mk
+
+index 52d3bae..21a5c88 100644
+
+--- a/rules/eventd.mk
+
++++ b/rules/eventd.mk
+
+@@ -5,8 +5,8 @@ export EVENTD_VERSION
+
+
+ EVENTD = eventd_$(EVENTD_VERSION)_amd64.deb
+
+$(EVENTD)_SRC_PATH = $(SRC_PATH)/sonic-eventd
+
+-$(EVENTD)_DEPENDS += $(LIBSWSSCOMMON_DEV) $(LIBEVENTNOTIFY_DEV)
+
+-$(EVENTD)_RDEPENDS += $(LIBSWSSCOMMON) $(LIBEVENTNOTIFY)
+
++$(EVENTD)_DEPENDS += $(LIBSWSSCOMMON_DEV) $(LIBEVENTNOTIFY_DEV) $(LIBHOSTCOMM_DEV)
+
++$(EVENTD)_RDEPENDS += $(LIBSWSSCOMMON) $(LIBEVENTNOTIFY) $(LIBHOSTCOMM)
+
+SONIC_DPKG_DEBS += $(EVENTD)
+
+
+ EVENTD_DBG = eventd-dbg_1.0.0_amd64.deb
+
+diff --git a/src/sonic-eventd/src/Makefile.am b/src/sonic-eventd/src/Makefile.am
+
+index 8826afc..c251a30 100644
+
+--- a/src/sonic-eventd/src/Makefile.am
+
++++ b/src/sonic-eventd/src/Makefile.am
+
+@@ -21,5 +21,5 @@ eventd_SOURCES = eventd.cpp eventutils.cpp eventconsume.cpp
+
+#CXXFLAGS += -ffunction-sections -fdata-sections
+
+#eventd_CPPFLAGS = $(DBGFLAGS) $(AM_CFLAGS) $(CFLAGS_COMMON) $(COV_CFLAGS) $(ASAN_CFLAGS) $(CXXFLAGS)
+
+eventd_CPPFLAGS = $(DBGFLAGS) $(AM_CFLAGS) $(CFLAGS_COMMON) $(COV_CFLAGS) $(ASAN_CFLAGS)
+
+-eventd_LDADD = -lnl-3 -lhiredis -lswsscommon -leventnotify $(LIB_LOG_HANDLER) $(COV_LDFLAGS) $(ASAN_LDFLAGS)
+
++eventd_LDADD = -lnl-3 -lhiredis -lswsscommon -leventnotify $(LIB_LOG_HANDLER) $(COV_LDFLAGS) $(ASAN_LDFLAGS) -lhostcomm
+
+ 
+
+Include hostcomm header in source file and use MKI APIs as below:
++#include "hostcomm.h"
+
+
++    DBus::Struct<int, std::__cxx11::basic_string<char> > ret;
+
++    ret = HostQuery_keyctl("pwEncrypt", "eventd");
+
++    SWSS_LOG_NOTICE("HostQuery returned %d (%s )", ret._1, ret._2.c_str());
+
+
++    DBus::Struct<int, std::__cxx11::basic_string<char> > ret;
+
++    ret = HostQuery_keyctl("pwDecrypt", "U2FsdGVkX19CvRks21CSFJboTNw0NO04kcMcna3ROaI=");
+
++    SWSS_LOG_NOTICE("HostQuery returned %d (%s )", ret._1, ret._2.c_str());
+```
+ 
 
