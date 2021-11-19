@@ -178,6 +178,8 @@ switch(config)# show system vlan reserved
 
 ### 3.6.2 Config Commands
 switch(config)# system vlan 400 reserve 
+"Previous reserve vlan range 100-228. 
+ Continue anyway? (y/n) [no] y
  
   Reserves 128 continguous vlans
   
@@ -273,6 +275,7 @@ switch(config)# no system vlan 400 reserve
   1) Configure reserved vlan range using "system vlan <vlan-id> reserve" command and check if RESERVED_VLAN table got updated with contiguous 128 vlans.
   2) Configure reserved vlan range using "system vlan <vlan-id> reserve" command and check the o/p for "show system vlan reserved".
   3) Unconfigure the reserved vlan using "no system vlan <vlan-id> reserve" command and check if default reserved vlans are being used using show command.
-  4) Configure reserved vlan range using "system vlan <vlan-id> reserve" command. Try to configure vlan/change vlan membership from reserved vlan range and check if proper error messages are being displayed.
-	
+  4) Configure reserved vlan range using "system vlan <vlan-id> reserve" command. Try to configure vlan/change vlan membership from reserved vlan range and check if proper error      messages are being displayed.
+  5) Migration/upgrade from feature unsupported release to feature supported release, having user vlans in default vlan range.
+  6) Try no system vlan reserve with the vlan-id not matching the start of the range. 
 
