@@ -178,6 +178,7 @@ switch(config)# show system vlan reserved
 
 ### 3.6.2 Config Commands
 switch(config)# system vlan 400 reserve 
+
 "Previous reserve vlan range 100-228. 
  Continue anyway? (y/n) [no] y
  
