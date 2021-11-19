@@ -1,7 +1,7 @@
 # Reserved VLAN range in SONiC
 
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 # Table of Contents
 * [List of Tables](#list-of-tables)
 * [List of Figures](#list-of-figures)
@@ -34,6 +34,7 @@
         - [3.7.1 Openconfig Yang model ](#371-openconfig-yang-model)
         - [3.7.2 Sonic Yang model ](#372-sonic-yang-model)
 * [4 Unit Tests](#4-unit-tests)
+* [5 Upgrade Scenario](#5-upgrade-scenario)
 # List of Tables
 * [Table 1: Abbreviations](#definitionsabbreviation)
 
@@ -44,6 +45,7 @@
 |:---:|:--------:|:-----------:|---------------------------|
 | 0.1 | 10/20/21 | Anil Pandey | Initial version           |
 | 0.2 | 11/08/21 | Priyanka Gupta | Updated KLISH UI, yang models and UT section |
+| 0.3 | 11/19/21 | Priyanka Gupta, Kamlesh Agrawal | Incorporated Review comments |
 
 # About this Manual
 This document provides an overview of the implementation of Reserved Vlans in SONiC.
@@ -80,7 +82,7 @@ The main goal of this feature is to provide a set of configurable Vlans that are
 
 - All show commands will necessarily inform the user of any vlan usage within the current reserved vlan range and urge to move the use to a different vlan.
 
-- There will also be be warnings and syslog message (if a vlan in the reserved range is in use) that indicate that upon a migration to a future release, all user created config within the reserved vlan range will be deleted as part of migration. 
+- There will also be warnings and syslog message (if a vlan in the reserved range is in use) that indicate that upon a migration to a future release, all user created config within the reserved vlan range will be deleted as part of migration. 
 
 - User creation of vlans in reserved range will be blocked. But if a vlan is in use already (as part of migrated config), additional config on that vlan will be allowed.
 
@@ -102,7 +104,7 @@ List of configuration shall include the following:
 ## 3.2 Config DB
 
 One new table will be added to Config DB:
-* RESERVED_VLAN_TABLE to store configured rserved vlan range
+* RESERVED_VLAN_TABLE to store configured reserved vlan range
 
 ### 3.2.1 RESERVED_VLAN_TABLE Table
 
@@ -154,7 +156,7 @@ Sent from Vlan Manager to cosumer with a new rserved Vlan allocated
 
 During boot up, VLAN Manager will update STATE_DB with default (or configured) reserved VLAN range. It will also update the 'in use' flag for each VLAN if the VLAN ID in reserved-vlan range is configured by the user.
 
-When the Rerserved Vlan range is changed from config, Vlan Manager will be notified through config db. Vlan Manager will then change the Resreved Vlan range in state db and also update the 'in use' flag for the Vlans already in use. 
+When the Reserved Vlan range is changed from config, Vlan Manager will be notified through config db. Vlan Manager will then change the Reserved Vlan range in state db and also update the 'in use' flag for the Vlans already in use. 
 
 Vlan Manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range. The consumers will then send request to Vlan Manager to allocate a new Vlan for its use. The cosumer will need to send the request to Vlan Manager and then wait for the response with new allocated reserved Vlan.
 
@@ -280,3 +282,10 @@ switch(config)# no system vlan 400 reserve
   5) Migration/upgrade from feature unsupported release to feature supported release, having user vlans in default vlan range.
   6) Try no system vlan reserve with the vlan-id not matching the start of the range. 
 
+# 5 Upgrade Scenario
+System upgrades from a release which does not have "Reserved VLAN" feature to a release with "Reserved VLAN" feature:
+- There is no user config in the default Reserved VLAN range.
+	- No action here. Also, the user will not be able to create any new VLAN's from the Reserved VLAN range
+- There is user config conflicting with default Reserved VLAN range.
+	- There will be warnings and syslog message that indicate that upon a migration to a future release, all user created config within the Reserved VLAN range will be deleted as part of migration. Also, all show commands will inform the user of any vlan usage within the current reserved vlan range and urge the user to move the use to a different vlan.
+	
