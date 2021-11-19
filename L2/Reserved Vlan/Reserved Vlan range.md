@@ -8,7 +8,7 @@
 * [Revision](#revision)
 * [About this Manual](#about-this-manual)
 * [Scope](#scope)
-* [Defintions/Abbreviation](#definitionsabbreviation)
+* [Definitions/Abbreviation](#definitionsabbreviation)
 * [1 Overview](#1-overview)
     - [1.1 Use Cases](#11-use-cases)
 * [2 Requirements](#2-requirements)
@@ -48,10 +48,10 @@
 | 0.3 | 11/19/21 | Priyanka Gupta, Kamlesh Agrawal | Incorporated Review comments |
 
 # About this Manual
-This document provides an overview of the implementation of Reserved Vlans in SONiC.
+This document provides an overview of the implementation of Reserved VLAN's in SONiC.
 
 # Scope
-This document describes the high level design of the Reserved Vlans feature.
+This document describes the high level design of the Reserved VLAN's feature.
 
 # Definitions/Abbreviation
 | Abbreviation | Description                 |
@@ -59,7 +59,7 @@ This document describes the high level design of the Reserved Vlans feature.
 | PAC          | Port Access Control         |
 
 ## 1 Overview
-The main goal of this feature is to provide a set of configurable Vlans that are reserved for use by various protocols. 
+The main goal of this feature is to provide a set of configurable VLAN's that are reserved for use by various protocols. 
 - A set of Vlans will be reserved by default.
 - A config CLI command will be provided to change the reserved Vlan range.
 
@@ -71,7 +71,7 @@ The main goal of this feature is to provide a set of configurable Vlans that are
 
 ## 2.1 Functional Requirements
 
-- When a feature needing reserved-vlan is enabled, it will try and pickup a not-in-use vlan from the default range. If not available user must
+- When a feature needing reserved-vlan is enabled, it will try and pick up a not-in-use vlan from the default range. If not available user must
 	- Free up a vlan from that range OR
 	- Change the reserved vlan range 
 	- Until either of the above is setup, the feature will not function.
@@ -129,21 +129,21 @@ Notification will be sent from Vlanmgr to the consumers (Ex. PAC), indicating a 
 
 
 ### 3.4.1 RESERVEDVLANCHANGED
-Sent from Vlan Manager to indicate a chaneg in Rserved Vlan Range.
+Sent from Vlan Manager to indicate a change in Reserved Vlan Range.
 
     OP: ""
     DATA: ""
     VALUES: ""
 
 ### 3.4.2 RESERVEDVLANALLOCATE
-Sent from consumers to Vlan Manager to request for a new Rserved Vlan
+Sent from consumers to Vlan Manager to request for a new Reserved Vlan
 
     OP: "SET/DEL"
     DATA: vlan_name
     VALUES: comsumer_name
 
 ### 3.4.3 RESERVEDVLANALLOCATED
-Sent from Vlan Manager to cosumer with a new rserved Vlan allocated
+Sent from Vlan Manager to consumer with a new reserved Vlan allocated
 
     OP: "SET"
     DATA: consumer_name
@@ -158,11 +158,11 @@ During boot up, VLAN Manager will update STATE_DB with default (or configured) r
 
 When the Reserved Vlan range is changed from config, Vlan Manager will be notified through config db. Vlan Manager will then change the Reserved Vlan range in state db and also update the 'in use' flag for the Vlans already in use. 
 
-Vlan Manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range. The consumers will then send request to Vlan Manager to allocate a new Vlan for its use. The cosumer will need to send the request to Vlan Manager and then wait for the response with new allocated reserved Vlan.
+Vlan Manager will also notify the consumers (Ex. PAC), indicating that there is a change in Reserved Vlan range. The consumers will then send request to Vlan Manager to allocate a new Vlan for its use. The consumer will need to send the request to Vlan Manager and then wait for the response with new allocated reserved Vlan.
 
-The cosumers will send a request to Vlan Manager to de-allocate a reserved Vlan that it no longer needs.
+The consumers will send a request to Vlan Manager to de-allocate a reserved Vlan that it no longer needs.
 
-Vlan Manager will set the 'in use' flag for the the Vlan that it chooses to allocate for the consumer.
+Vlan Manager will set the 'in use' flag for the Vlan that it chooses to allocate for the consumer.
 
 VLAN manager will have a thread running to log messages on syslog periodically if there is a VLAN configured by the user from the reserved VLAN range.
 
@@ -184,7 +184,7 @@ switch(config)# system vlan 400 reserve
 "Previous reserve vlan range 100-228. 
  Continue anyway? (y/n) [no] y
  
-  Reserves 128 continguous vlans
+  Reserves 128 contiguous vlans
   
 switch(config)# no system vlan 400 reserve
 
