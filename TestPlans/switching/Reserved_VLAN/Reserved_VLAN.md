@@ -81,7 +81,7 @@ D1
 | **Test Name**  | reserved_vlan_range_func_002                                 |
 | **Test Setup** | **reserved_vlan_topo**                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure a Vlan which is in the Reserved Vlan Range. <br/>2) Verify it using show CLI.<br/> |
+| **Steps**      | 1) Configure a Vlan which is in the Reserved Vlan Range. <br/>2) Verify reserved VLAN is Updated using show CLI.<br/>|
 
 ### 3.1.3 Verifying Non-Default Reserved VLAN by changing the default range.
 
@@ -90,7 +90,7 @@ D1
 | **Test Name**  | reserved_vlan_range_func_003                                 |
 | **Test Setup** | **reserved_vlan_topo**                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Change the Non-Default Vlan range and Verify it gets updated.<br/>2. Try to configure a reserve VLAN which was is in the default reserved VLAN range and System should throws a error message.<br/>3. Again Change the range to some new Value and verfiy Range gets reflected using the show command.<br/>4. Try to Configure the previously configured reserved VLAN and System should throws a error message.<br/>5. Unconfig Non-default range and verify default range gets reverted back.<br/> |
+| **Steps**      | 1. Change the Default Vlan range to Non-Default Range(1000-1128) and Verify it gets updated.<br/>2. Configure a reserve VLAN which was is in the default reserved VLAN range(3967-4094) and System should throws a error message.<br/>3. Again Change the range to some new Value(3000-3128) and verfiy Range gets reflected using the show command.<br/>4. Try to Configure the previous reserved vlan range and System should throws a error message.<br/>5. Unconfig Non-default range and verify default range gets reverted back.<br/> |
 
 ### 3.1.4 Verify that Default and Non-default Reserved VLAN are retained across Config reload, cold reboot, fast reboot and Warm reboot.
 
