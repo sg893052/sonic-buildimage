@@ -63,6 +63,12 @@ D1
 
 ## 3 Test Case and objectives
 
+1. Verify the Default Reserved VLAN is 3967-4094.
+2. Change the Default Reserved VLAN range and Verify it's updated.
+3. Revert the Non-Default Reserved VLAN range and Verify Default Range is Reverted Back.
+4. Verify Running Config is reflecting the Default reserved VLAN range.
+5. Migration test from 3.x.x release to Cyrus.
+
 ### **3.1 Functional**
 
 ### 3.1.1 Verifying CLI works fine.
@@ -81,7 +87,7 @@ D1
 | **Test Name**  | reserved_vlan_range_func_002                                 |
 | **Test Setup** | **reserved_vlan_topo**                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1) Configure a Vlan which is in the Reserved Vlan Range. <br/>2) Verify reserved VLAN is Updated using show CLI.<br/>|
+| **Steps**      | 1) Configure a Vlan which is in the Reserved Vlan Range. <br/>2) Verify System throws an error and verify that VLAN isn't configured.<br/> |
 
 ### 3.1.3 Verifying Non-Default Reserved VLAN by changing the default range.
 
@@ -90,7 +96,7 @@ D1
 | **Test Name**  | reserved_vlan_range_func_003                                 |
 | **Test Setup** | **reserved_vlan_topo**                                       |
 | **Type**       | **Functional**                                               |
-| **Steps**      | 1. Change the Default Vlan range to Non-Default Range(1000-1128) and Verify it gets updated.<br/>2. Configure a reserve VLAN which was is in the default reserved VLAN range(3967-4094) and System should throws a error message.<br/>3. Again Change the range to some new Value(3000-3128) and verfiy Range gets reflected using the show command.<br/>4. Try to Configure the previous reserved vlan range and System should throws a error message.<br/>5. Unconfig Non-default range and verify default range gets reverted back.<br/> |
+| **Steps**      | 1. Change the Non-Default Vlan range and Verify it gets updated.<br/>2. Try to configure a VLAN which was is in the default reserved VLAN range and System should throws a error message.<br/>3. Again Change the range to some new value and Verify Range gets reflected using the show command.<br/>4. Try to Configure a VLAN which was in the previously configured reserved VLAN range and System should throws a error message.<br/>5. Unconfig Non-default range and verify default range gets reverted back.<br/> |
 
 ### 3.1.4 Verify that Default and Non-default Reserved VLAN are retained across Config reload, cold reboot, fast reboot and Warm reboot.
 
@@ -103,12 +109,12 @@ D1
 
 ### 3.1.5 Verify reserved VLAN is retained across migration.
 
-| **Test ID**    | reserved_vlan_upgrade_downgrade  |
-| -------------- | :------------------------------- |
-| **Test Name**  | **reserved_vlan_range_func_005** |
-| **Test Setup** | **reserved_vlan_topo**           |
-| **Type**       | **Functional**                   |
-| **Steps**      | #**TBD**                         |
+| **Test ID**    | reserved_vlan_upgrade_downgrade                              |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | **reserved_vlan_range_func_005**                             |
+| **Test Setup** | **reserved_vlan_topo**                                       |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Configure a range on VLANs from 4100-4150.<br />2. Add couple of Members to Each VLAN.<br />3. Upgrade to Cyrus Image and post Upgrade verify user is able to delete , add the members to those VLAN. |
 
 Reference: https://github.com/BRCM-SONIC/sonic_doc_private/pull/305/files#
 
