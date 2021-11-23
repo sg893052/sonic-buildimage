@@ -21,6 +21,7 @@ Port Link Flap Error Disable
 | 0.3 | 05/11/2021  |   Steven Lu             | Add design details                                   | 
 | 0.4 | 05/24/2021  | Prasanth Kunjum Veettil | Add CLI and RESTCONF details                         |
 | 0.5 | 09/16/2021  | Steven Lu               | Removed "Not-err-disabled" state                     |
+| 0.6 | 11/23/2021  | Steven Lu               | Adjust default sampling-interval to 30 from 10       |
 
 # About this Manual
 This document provides general information about the Port Link Flap Error Disable feature implementation in SONiC.
@@ -67,7 +68,7 @@ Specifies the amount of time in seconds, for which the port remains disabled (do
 - Port Link Flap Error Disable feature default is OFF on all physical interfaces and port-channels
 - When Port Link Flap Error Disable is enabled, use below default values:
   flap-threshold: 3
-  sampling-interval: 10
+  sampling-interval: 30
   recovery-interval: 300
 - User shall be able to specify different sampling-interval, flap-threshold and recovery-interval on a physical interface
 - User shall be able to display current Port Link Flap Error Disable confiuration values.
@@ -102,14 +103,14 @@ The Interface Error Disable feature exist in below modules and containers:
 - *link-error-disable flap-threshold <flap count> sampling-interval <interval in sec>  recovery-interval <recovery interval in sec>*
 Example:
 ```
-sonic(conf-if-Ethernet0)# link-error-disable flap-threshold 10 sampling-interval 3 recovery-interval 10
+sonic(conf-if-Ethernet0)# link-error-disable flap-threshold 3 sampling-interval 30 recovery-interval 100
 ```
 In this example, the values for the parameters are as follows:
 
 The flap-threshold is set at 10 times. This interval is the number of times that the port's link state goes from up to down and down to up before the recovery-interval is activated. Enter a valid value range from 1-50. Default is 3.
 
 
-The sampling-interval is set to 3 seconds. This time period is the amount of time during which the specified flap-threshold can be crossed. If the flap-threshold is crossed during this sampling-interval, port will be error-disabled. Enter a value between 1 and 65535 seconds. Default is 10.
+The sampling-interval is set to 30 seconds. This time period is the amount of time during which the specified flap-threshold can be crossed. If the flap-threshold is crossed during this sampling-interval, port will be error-disabled. Enter a value between 1 and 65535 seconds. Default is 30.
 
 
 The recovery-interval is set to 10 seconds. This period of time is the amount of time the port remains disabled (down) before it becomes enabled. Entering 0 indicates that the port will stay down until an administrative override occurs. Enter a value between 0 and 65534 seconds. Default is 300.
@@ -182,7 +183,7 @@ Example:
 sonic#show errdisable link-flap
 Interface  Flap-threshold  Sampling-interval   Recovery-interval Status
 ---------------------------------------------------------------------------
-Ethernet0  10              3                   30                Errdisabled
+Ethernet0  3               30                  30                Errdisabled
 Ethernet4  10              3                   60                On
 Ethernet8  5               10                  300               Off
 ```
