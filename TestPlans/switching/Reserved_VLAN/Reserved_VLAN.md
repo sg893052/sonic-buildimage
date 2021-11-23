@@ -101,7 +101,16 @@ D1
 | **Type**       | **Functional**                                               |
 | **Steps**      | 1. Configure reserved VLAN and verify prior and post to config reload, cold reboot, fast reboot and Warm Reboot.<br/>2. Configure Non-default reserved VLAN and verify prior and post to config reload, cold reboot, fast reboot and Warm Reboot.<br/> |
 
-### 3.1.5 Verify reserved VLAN is retained across migration.
+### 3.1.5 Verifying Boundary VLAN by changing the default range.
+
+| **Test ID**    | reserved_vlan_range_003                                      |
+| -------------- | :----------------------------------------------------------- |
+| **Test Name**  | reserved_vlan_range_func_005                                 |
+| **Test Setup** | **reserved_vlan_topo**                                       |
+| **Type**       | **Functional**                                               |
+| **Steps**      | 1. Change the Default Vlan range to Non-Default Range(2000-2127) and Verify it gets updated.<br/>2. Configure a 1999, 2000, 2127 and 2128 VLAN. 1999 and 2128 should be successful..<br/> |
+
+### 3.1.6 Verify reserved VLAN is retained across migration.
 
 | **Test ID**    | reserved_vlan_upgrade_downgrade  |
 | -------------- | :------------------------------- |
