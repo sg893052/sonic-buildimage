@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.2
+### Rev 0.3
 
 ## Table of Contents
 
@@ -87,8 +87,9 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
-| 0.1 | 07/10/2020  | Sharad Agrawal  | New draft for Broadcom SONiC            |
-| 0.2 | 07/27/2020  | Sharad Agrawal  | Address review comments            |
+| 0.1 | 07/10/2021  | Sharad Agrawal  | New draft for Broadcom SONiC            |
+| 0.2 | 07/27/2021  | Sharad Agrawal  | Address review comments            |
+| 0.3 | 09/13/2021  | Bandaru Viswanath  | 1. Added L2/IPv6 support for command outputs  <br/> 2. Added additional debug commands <br/>3. Adjusted default values for the intervals <br/>4. Added start/stop commands for explicit interaction.           |
 
 
 ## About This Manual
@@ -304,8 +305,8 @@ Two tuning parameters are supported by BDBG for controlling data collection as w
 
 | **Parameter**                 | **Description**                         |
 |--------------------------|-------------------------------------|
-| `collection-interval`    | The data collection periodicity in seconds Range 0 - 3600. 0 indicates disabling periodic collection. Default : 0 |
-| `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. Range 0 - 3600. 0, indicates no historical data retention, Default : 0|
+| `collection-interval`    | The data collection periodicity in seconds Range 0 - 3600. 0 indicates disabling periodic collection. Default : 15 |
+| `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. Range 0 - 3600. 0, indicates no historical data retention, Default : 300|
 
 Atleast one parameter must be provided in any invocation. Any unsupplied parameter will continue to have the previously configured value. 
 
@@ -327,6 +328,26 @@ The command syntax for setting up the parameter is as follows:
 
 ```
 shell # bdbg config congestion congestion-threshold <buffer-utilization> 
+```
+
+#### 3.7.2.3 Starting Monitoring
+
+This command starts the data collection and monitoring. User may start one or more tools with this command.
+
+The command syntax is as follows:
+
+```
+shell # bdbg start { all | congestion | drops } 
+```
+
+#### 3.7.2.4 Stopping Monitoring
+
+This command stops the data collection and monitoring. User may stop one or more tools with this command.
+
+The command syntax is as follows:
+
+```
+shell # bdbg stop { all | congestion | drops } 
 ```
 
 
@@ -529,6 +550,9 @@ Dst-Ip    :   10.10.2.2
 Src-Port  :   5656
 Dst-Port  :   80
 protocol  :   6
+Src-Mac   :   00:22:44:33:55:00
+Dst-Mac   :   00:22:44:33:55:01
+Vlan-Id   :   2043
 
 Ingress Port  : Ethernet24
 
@@ -737,7 +761,7 @@ shell # bdbg export { all | congestion | drops }
 The following command dumps the bdbg internal logs on to the console, useful for debugging.
 
 ```
-shell # bdbg logs 
+shell # bdbg logs [all | congestion | drops]
 ```
 
 #### 3.7.5.3 Displaying support on actual platform
@@ -748,6 +772,22 @@ The following command prints information on specific support available on the un
 shell # bdbg support 
 ```
 
+#### 3.7.5.4 Set log-level for internal logs
+
+The following command sets a log level for the bdbg internal logs, useful for debugging.
+`log-level` is an integer in the range 1 to 10, where higher the number more the logs. The default value is 1 which logs only errors.
+
+```
+shell # bdbg debug { all | congestion | drops } <log-level>
+```
+
+#### 3.7.5.5 Dump internal parameters
+
+The following command dumps current internal parameters for bdbg internal tools, useful for debugging. The specific parameters dumped depend on the tool. This is meant to be useful for developers.
+
+```
+shell # bdbg dump { all | congestion | drops }
+```
 
 ### 3.7.6 REST API Support
 
