@@ -308,12 +308,12 @@ Two tuning parameters are supported by BDBG for controlling data collection as w
 | `collection-interval`    | The data collection periodicity in seconds Range 0 - 3600. 0 indicates disabling periodic collection. Default : 15 |
 | `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. Range 0 - 3600. 0, indicates no historical data retention, Default : 300|
 
-Atleast one parameter must be provided in any invocation. Any unsupplied parameter will continue to have the previously configured value. 
 
 The command syntax for setting up the tuning parameters is as follows:
 
 ```
-shell # bdbg config collection-interval <cinterval> max-retention-interval <rinterval>
+shell # bdbg config collection-interval <cinterval> 
+shell # bdbg config max-retention-interval <rinterval>
 ```
 
 #### 3.7.2.2 Setting up a congestion definition
@@ -322,7 +322,7 @@ The `congestion` tool allows user to configure a value for buffer utilization be
 
 | **Parameter**                 | **Description**                         |
 |--------------------------|-------------------------------------|
-| `congestion-threshold`    | Value for buffer utilization in percentage, beyond which the buffer is considered as undergoing congestion Range 0 - 100. Default : 0 |
+| `congestion-threshold`    | Value for buffer utilization in percentage, beyond which the buffer is considered as undergoing congestion Range 0 - 100. Default : 100 |
 
 The command syntax for setting up the parameter is as follows:
 
@@ -415,7 +415,7 @@ Drop Events last cleared at           :   30th Jun 2021, 10:11AM
 
 #### 3.7.3.4 Show active congestion
 
-This command shows the congestion events recorded in the current data collection interval.
+This command shows the congestion events recorded in the current data collection interval. For instance, if the data collection interval is set to 20 (sec), this command displays the congestion events recorded in the last 20 seconds.
 
 ```
 shell # bdbg show congestion active
@@ -471,6 +471,8 @@ This command shows the congestion events recorded for a specified observation po
 shell # bdbg show congestion history { buffer <buffer-name> | interface <if-name> queue <queue-number> } [limit <num-events>] [around <time>]
 ```
 
+The `buffer` parameter takes buffer name as the value to display the congestion history for that buffer. These names are assigned as part of the switch buffer configuration by the administrator. A predefined name `device` can be used to display the congestion in the Switch level shared buffer.
+
 The optional parameter `num-events` can be used to limit the output to a preferred number of congestion events.
 
 The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
@@ -506,7 +508,7 @@ Id      Timestamp                   Utilization     Drops
 ```
 #### 3.7.3.7 Show active drops
 
-This command shows the drops events recorded in the current data collection interval.
+This command shows the drops events recorded in the current data collection interval. For instance, if the data collection interval is set to 20 (sec), this command displays the drop events recorded in the last 20 seconds.
 
 ```
 shell # bdbg show drops active {flows | reasons | locations | interface <interface-name>} { detail <drop-id> }
