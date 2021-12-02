@@ -387,6 +387,7 @@ show consistency-check status route
 #### Example2: Display status of consistency-check for all VRFs
 sonic# show consistency-check status route
 ```
+```
 Last Route consistency check ran at 12/02/2021, 20:13:11(UTC) took 3.01 seconds
 Final Route consistency check status: Consistent
   Route check for vrf default and address-family ipv4:
