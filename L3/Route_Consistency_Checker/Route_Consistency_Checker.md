@@ -416,7 +416,7 @@ Final Route consistency check status: Consistent
 ```
 #### Example3: Display status of consistency-check in detail
 ```
-		      		       
+```		      		       
 sonic# show consistency-check status route
  Last Route consistency check ran at 12/02/2021, 05:13:14(UTC) took 39.09 seconds
  Final Route consistency check status: Inconsistent
@@ -446,6 +446,7 @@ sonic# show consistency-check status route
 
 ```
  #### Example4: Display status of consistency-check in detail
+```
 ```
 sonic# show consistency-check status route
 Last Route consistency check ran at 12/02/2021, 20:13:11(UTC) took 3.01 seconds
@@ -485,7 +486,8 @@ Final Route consistency check status: Inconsistent
 ```
  
 ```
-#### Example6: Display status of consistency-check in detail
+#### Example5: Display status of consistency-check in detail
+```
 ```
 		      		       
 sonic# show consistency-check status route
