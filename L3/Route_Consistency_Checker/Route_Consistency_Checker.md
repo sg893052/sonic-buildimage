@@ -75,12 +75,12 @@ The RCC is designed to detect in-consistency of the routes & nexthop from Zebra 
 - Kernel
 - APP_DB
 - ASIC_DB
-- H/W
+- SAI
 
 
 # 2 Feature Requirements
 
-The Route Consistency Checker feature enables the user to check the consistency of routes & nexthop. It checks whether the route & nexthop in Zebra is consistent with route & nexthop Kernel, APP_DB, ASIC_DB & Hardware. Any discrepancy in the routes & nexthop will be detected and displayed to user. User will be given option to start & stop the route consistency checker. 
+The Route Consistency Checker feature enables the user to check the consistency of routes & nexthop. It checks whether the route & nexthop in Zebra is consistent with route & nexthop Kernel, APP_DB, ASIC_DB & SAI. Any discrepancy in the routes & nexthop will be detected and displayed to user. User will be given option to start & stop the route consistency checker. 
 
 For Route Consistency Checker the source of truth will be Zebra routing table. 
 
@@ -94,8 +94,7 @@ Route Consistency Checker will,
 - Route consistency will validate ECMP NextHops. It will check the associated egress interface and ARP/neighbor entries
 - Route consistency will validate Tunnel NextHops. It will check the associated egress interface and ARP/neighbor entries for only the overlay nexthops
 - Route consistency checker can be started by user and it will run in background
-- Route consistency checker will dump inconsistent routes into a file that can be viewed by an user CLI.
-- Route consistency checker will store all the previous outputs of inconsistency run in a file
+- Route consistency checker will dump inconsistent routes that can be viewed by an user CLI.
 - As the route consistency checker is a CPU intensive operation, only one instance of checker can be active at any moment
 
 ## 2.2 Configuration and Management Requirements
@@ -136,7 +135,7 @@ The following are the types of consistency checking run
 - **Source/Destination: Zebra/Hardware**
 
 - **Detection:**
-  - Scan the routes in hardware by redirecting "l3 defip show"
+  - Scan the routes in SAI route table
   - Scan the routes in FRR by redirecting the output of "show ip route"
   - Compare the files generated to see any discrepancy in routes alone
 
@@ -144,14 +143,13 @@ The following are the types of consistency checking run
   - **Zebra has more routes** 
   - **Action:**
     - The inconsistency is logged into a file/database.
-  - **Hardware has more routes**
+  - **SAI has more routes**
   - **Action:**
     - The inconsistency is logged into a file/database.
 
 
 Note:
 
-- Routes missing from hardware in hardware route limit hit case will be considered as discrepancy.
 - Newly added routes will be skipped from scanned output and it is determined from the 'uptime' of routes in zebra.
 - Newly deleted routes will be skipped from scanned output. To determine that the route is newly deleted, either the deleted routes could be temporarily stored in a DB by module like RouteSyncd or the snapshot of software routes could be taken prior to snapshot of hardware routes with delay added that could account for route propagation from software to hardware. In addition to delay in taking the snapshot of routes, a watch list with multiple checkings could be carried out in RCC. To reduce the memory consumed, the latter approach where the delayed snapshots & repeated checking will be employed.
 
@@ -208,15 +206,11 @@ Routes or number of nexthops hitting the limit in hardware/kernel will be treate
 
 - **Data: Routes and Nexthops**''
 
-- **Source/Destination: Zebra, ASIC-DB, Hardware**
+- **Source/Destination: Zebra, ASIC-DB, SAI**
 
 - **Detection:**
   - Scan the routes and nexthops in FRR by redirecting the output of "show ip route" and "show ip arp/nd", by doing so for each Route: <RIF, Nexthop IP, Dest MAC> could be mapped. 
-  - Scan the routes in hardware by redirecting below output to file, by doing so for each route Route: <RIF, Nexthop IP, Dest MAC> could be mapped.
-    - "l3 defip show" - (Route: NexthopGroupID)
-    - "l3 egress show" - (NexthopId: RIF, Dest Mac)
-    - "l3 l3table show" - (NexthopId: NexthopIP)
-    - "l3 ecmp egress show" - (NexthopGroupId: NexthopId)
+  - Scan the routes in SAI by fetching SAI tables for Route, Nexthop, Nexthop Group, RIF, Neighbor etc.
   - Scan the below table in ASIC-DB, by doing so for each routeRoute: <RIF, Nexthop IP, Dest MAC> could be mapped, scanning ASIC-DB gives the interface-name for the nexthops.
     - Route Table
     - Nexthop Table 
@@ -229,7 +223,7 @@ Note:
 
 - This handles the case of inconsistent reachability information for both ECMP and non-ECMP case between S/W & H/W  and missing reachability information in H/W.
 
-- **Source/Destination: Zebra,ASIC-DB/Hardware**
+- **Source/Destination: Zebra,ASIC-DB/SAI**
 
 - **Detection:**
   - Scan the routes and nexthops in FRR by redirecting the output of "show ip route" and "show ip arp/nd", by doing so for each Route: <RIF, Nexthop IP, Dest MAC> could be mapped. 
@@ -260,7 +254,7 @@ As depicted in the non-ecmp nexthops consists of below types of nexthops,
 
   
 
-The software non-aware tunnel underlay nexthops and internal nexthops will not have reference count associated with it. So it is not feasible to detect and remove the additional nexthop entries in H/W.
+The software non-aware tunnel underlay nexthops and internal nexthops will not have reference count associated with it. So it is not feasible to detect and remove the additional nexthop entries in H/W (SAI).
 
 The case of nexthop present in orch agent but nexthop not present in H/W will be handled in Route's nexthop discrepancy sec.
 
@@ -290,13 +284,13 @@ Below table describes the summary of discrepancy and its action
 | Src                              | Dst                               | Action                                                       |
 | -------------------------------- | --------------------------------- | ------------------------------------------------------------ |
 | Route in s/w                     | Route **not** in h/w              | Discrepancy is logged to a file                                |
-| Route **not** in s/w             | Route in h/w                      | Discrepancy is logged to a file                           |
+| Route **not** in s/w             | Route in SAI                      | Discrepancy is logged to a file                           |
 | Route & nexthop in s/w           | Route & nexthop **not** in kernel | Discrepancy is logged to a file                                                |
 | Route & nexthop **not** in s/w   | Route & nexthop in kernel         | Discrepancy is logged to a file                                           |
-| Nexthop in s/w                   | Nexthop **not** in h/w            | Discrepancy is logged to a file                                      |
-| Nexthop **not** in s/w           | Nexthop in h/w                    | Discrepancy is logged to a file   |
-| ECMP in s/w                      | ECMP **not** in h/w               | Discrepancy is logged to a file                                        |
-| ECMP **not** in s/w              | ECMP in h/w                       | Discrepancy is logged to a file   |
+| Nexthop in s/w                   | Nexthop **not** in SAI            | Discrepancy is logged to a file                                      |
+| Nexthop **not** in s/w           | Nexthop in SAI                    | Discrepancy is logged to a file   |
+| ECMP in s/w                      | ECMP **not** in SAI               | Discrepancy is logged to a file                                        |
+| ECMP **not** in s/w              | ECMP in SAI                       | Discrepancy is logged to a file   |
 | Routes nexthop is not consistent | Routes nexthop is not consistent  | Discrepancy is logged to a file                                  |
 
 
@@ -334,7 +328,7 @@ There are no configuration command for this feature
 
 ```
 
-Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] [detail]
+Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] 
 Command to abort: consistency-check stop route
 
 ```
@@ -689,13 +683,39 @@ The existing logging mechanisms shall be used. Proposed debug framework shall be
 
 
 ## 7 Unit Test cases
-
-|      |      |      |
-| ---- | ---- | ---- |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
+- IPv4 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv6 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv4 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv4 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv6 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv6 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv4 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv6 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv4 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv4 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv6 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv6 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv4 static routes in default VRF, check consistency - Pass
+- IPv6 static routes in default VRF, check consistency - Pass
+- IPv4 static routes in non-default VRF, check consistency - Pass
+- IPv6 static routes in non-default VRF, check consistency - Pass
+- Learnt IPv4 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv4 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv4 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv4 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv4 routes in default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv4 routes in non-default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv6 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv6 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv6 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv6 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv6 routes in default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv6 routes in non-default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Scale IPv4 routes to 128k, check consistency - Pass
+- Scale IPv4 routes to 128k, create inconsistency and detect inconsistency - Pass
+- Scale IPv6 routes to 64k, check consistency - Pass
+- Scale IPv6 routes to 64k, create inconsistency and detect inconsistency - Pass
+- Scale IPv4 routes with 64 ECMP path, check consistency - Pass
+- Scale IPv4 routes with 64 ECMP path, create and detect inconsistency - Pass
+- Scale IPv6 routes with 64 ECMP path, check consistency - Pass
+- Scale IPv6 routes with 64 ECMP path, create and detect inconsistency - Pass
