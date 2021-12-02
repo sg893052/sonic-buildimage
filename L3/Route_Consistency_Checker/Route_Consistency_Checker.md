@@ -509,6 +509,7 @@ sonic# show consistency-check status route
      rib_vs_sai: Inconsistent
        Prefixes in sai not available in rib:
         200::1/128
+```
 
 ## 6 Serviceability and Debug
 
