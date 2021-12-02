@@ -1,7 +1,7 @@
 # Feature Name
 GNMI Get Request Type Field
 # High Level Design Document
-#### Rev 0.4
+#### Rev 0.5
 
 # Scope
 This document describes the high level design of supporting the 'type' field in a gNMI [GNMI](#GNMI) GetRequest Message in the management framework.
@@ -33,13 +33,15 @@ There is an expired draft that describes how OPERATIONAL data could be identifie
 
 ## Examples
 
+Note: In the examples below some of the text has been edited for clarity. 
+
 ### gNMI Get RPC for a RADIUS server with ALL type data
 
 Request all the data (including configuration, state, and operational data)
 
 ```text
 
-gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' -insecure -logtostderr -target_addr localhost:8080
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' -logtostderr -target_addr localhost:8080
 == getRequest:
 prefix: <
 >
@@ -108,7 +110,46 @@ notification: <
       >
     >
     val: <
-      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"config\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1},\"radius\":{\"config\":{\"openconfig-aaa-radius-ext:encrypted\":true,\"retransmit-attempts\":1,\"secret-key\":\"\"},\"state\":{\"counters\":{\"access-accepts\":\"2\",\"access-rejects\":\"1\",\"openconfig-aaa-radius-ext:access-requests\":\"3\"},\"retransmit-attempts\":1}},\"state\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1},\"tacacs\":{\"config\":{\"openconfig-aaa-tacacs-ext:encrypted\":true,\"secret-key\":\"\"}}}]}"
+      json_ietf_val: "
+{
+    \"openconfig-system:server\": [
+        {
+            \"address\": \"10.10.10.10\",
+            \"config\": {
+                \"address\": \"10.10.10.10\",
+                \"openconfig-system-ext:auth-type\": \"chap\",
+                \"openconfig-system-ext:priority\": 1
+            },
+            \"radius\": {
+                \"config\": {
+                    \"openconfig-aaa-radius-ext:encrypted\": true,
+                    \"retransmit-attempts\": 1,
+                    \"secret-key\": \"\"
+                },
+                \"state\": {
+                    \"counters\": {
+                        \"access-accepts\": \"2\",
+                        \"access-rejects\": \"1\",
+                        \"openconfig-aaa-radius-ext:access-requests\": \"3\"
+                    },
+                    \"retransmit-attempts\": 1
+                }
+            },
+            \"state\": {
+                \"address\": \"10.10.10.10\",
+                \"openconfig-system-ext:auth-type\": \"chap\",
+                \"openconfig-system-ext:priority\": 1
+            },
+            \"tacacs\": {
+                \"config\": {
+                    \"openconfig-aaa-tacacs-ext:encrypted\": true,
+                    \"secret-key\": \"\"
+                }
+            }
+        }
+    ]
+}
+"
     >
   >
 >
@@ -121,7 +162,7 @@ Request only configuration data
 
 ```text
 
-gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type CONFIG -insecure -logtostderr -target_addr localhost:8080
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type CONFIG -logtostderr -target_addr localhost:8080
 == getRequest:
 prefix: <
 >
@@ -191,7 +232,33 @@ notification: <
       >
     >
     val: <
-      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"config\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1},\"radius\":{\"config\":{\"openconfig-aaa-radius-ext:encrypted\":true,\"retransmit-attempts\":1,\"secret-key\":\"\"}},\"tacacs\":{\"config\":{\"openconfig-aaa-tacacs-ext:encrypted\":true,\"secret-key\":\"\"}}}]}"
+      json_ietf_val: "
+{
+    \"openconfig-system:server\": [
+        {
+            \"address\": \"10.10.10.10\",
+            \"config\": {
+                \"address\": \"10.10.10.10\",
+                \"openconfig-system-ext:auth-type\": \"chap\",
+                \"openconfig-system-ext:priority\": 1
+            },
+            \"radius\": {
+                \"config\": {
+                    \"openconfig-aaa-radius-ext:encrypted\": true,
+                    \"retransmit-attempts\": 1,
+                    \"secret-key\": \"\"
+                }
+            },
+            \"tacacs\": {
+                \"config\": {
+                    \"openconfig-aaa-tacacs-ext:encrypted\": true,
+                    \"secret-key\": \"\"
+                }
+            }
+        }
+    ]
+}
+"
     >
   >
 >
@@ -204,7 +271,7 @@ Request only state data (which includes operational data)
 
 ```text
 
-gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type STATE -insecure -logtostderr -target_addr localhost:8080
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type STATE -logtostderr -target_addr localhost:8080
 == getRequest:
 prefix: <
 >
@@ -274,7 +341,30 @@ notification: <
       >
     >
     val: <
-      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"radius\":{\"state\":{\"counters\":{\"access-accepts\":\"2\",\"access-rejects\":\"1\",\"openconfig-aaa-radius-ext:access-requests\":\"3\"},\"retransmit-attempts\":1}},\"state\":{\"address\":\"10.10.10.10\",\"openconfig-system-ext:auth-type\":\"chap\",\"openconfig-system-ext:priority\":1}}]}"
+      json_ietf_val: "
+{
+    \"openconfig-system:server\": [
+        {
+            \"address\": \"10.10.10.10\",
+            \"radius\": {
+                \"state\": {
+                    \"counters\": {
+                        \"access-accepts\": \"2\",
+                        \"access-rejects\": \"1\",
+                        \"openconfig-aaa-radius-ext:access-requests\": \"3\"
+                    },
+                    \"retransmit-attempts\": 1
+                }
+            },
+            \"state\": {
+                \"address\": \"10.10.10.10\",
+                \"openconfig-system-ext:auth-type\": \"chap\",
+                \"openconfig-system-ext:priority\": 1
+            }
+        }
+    ]
+}
+"
     >
   >
 >
@@ -287,7 +377,7 @@ Request only the operational data (Eg: counters)
 
 ```text
 
-gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type OPERATIONAL -insecure -logtostderr -target_addr localhost:8080
+gnmi_get -xpath '/openconfig-system:system/aaa/server-groups/server-group[name=RADIUS]/servers/server[address=10.10.10.10]' --data_type OPERATIONAL -logtostderr -target_addr localhost:8080
 == getRequest:
 prefix: <
 >
@@ -357,7 +447,24 @@ notification: <
       >
     >
     val: <
-      json_ietf_val: "{\"openconfig-system:server\":[{\"address\":\"10.10.10.10\",\"radius\":{\"state\":{\"counters\":{\"access-accepts\":\"2\",\"access-rejects\":\"1\",\"openconfig-aaa-radius-ext:access-requests\":\"3\"}}}}]}"
+      json_ietf_val: "
+{
+    \"openconfig-system:server\": [
+        {
+            \"address\": \"10.10.10.10\",
+            \"radius\": {
+                \"state\": {
+                    \"counters\": {
+                        \"access-accepts\": \"2\",
+                        \"access-rejects\": \"1\",
+                        \"openconfig-aaa-radius-ext:access-requests\": \"3\"
+                    }
+                }
+            }
+        }
+    ]
+}
+"
     >
   >
 >
