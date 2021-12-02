@@ -410,6 +410,7 @@ Final Route consistency check status: Consistent
     rib_vs_fib: Consistent
     rib_vs_sai: Consistent    
   
+```
 
 ```
 #### Example3: Display status of consistency-check in detail
@@ -439,10 +440,12 @@ sonic# show consistency-check status route
      rib_vs_fib: Consistent
      rib_vs_sai: Inconsistent
         Prefixes in rib not available in appdb:
-         121::0/64    
- ```
+         121::0/64 
+```
+
+```
  #### Example4: Display status of consistency-check in detail
- ```
+```
 sonic# show consistency-check status route
 Last Route consistency check ran at 12/02/2021, 20:13:11(UTC) took 3.01 seconds
 Final Route consistency check status: Inconsistent
@@ -478,7 +481,7 @@ Final Route consistency check status: Inconsistent
             (Ethernet64, 64::2, 80:a2:35:26:45:61)
           sai:1
             (Ethernet68, 68::2, 80:a2:35:26:45:61)    
- ```
+```
  
 ```
 #### Example6: Display status of consistency-check in detail
