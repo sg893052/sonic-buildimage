@@ -779,9 +779,9 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
 ```
 
 ### 4.1.1.2 Derived class Rules
-- Derived classes will be generated for all base classes. The derived class is an editable class, this is the class the test case needs to be imported and used. 
+- Derived classes will be generated for all base classes. The derived class is an editable class. This is the class the test case needs to be import and use. Note: To regenerate the file containing this class, set the SPYTEST_PLUGIN_OVER_WRITE_DERIVED_CLASS=1 environment variable while generating the classes.
 - Constructor will be generated with all leafs initialized to None (only for non-key leafs). This will invoke base class constructor.
-- If the user has created a <derived_class>_klish.py file, by default, that implementation will be used by the derived class.
+- For KLISH stubs, if the user wishes to use a separate file for each class, they may create a <derived_class>_klish.py file and set the SPYTEST_PLUGIN_USE_DELEGATION_FUNC=1 environment variable while generating the classes, to have the generated derived class implementation use the delegation functions written in <derived_class>_klish.py.
 - The user may implement the KLISH stubs using existing spytest library functions, *or they may write their own functions for new features*.
 
 ### 4.1.1.2.1 Sample Derived Class
@@ -792,7 +792,9 @@ Below class is generated for XPATH ***/openconfig-acl:acl***
 ##############################################################
 ##############################################################
 ##### THIS IS AN AUTO-GENERATED FILE. TO REGENERATE USE ######
-##### SPYTEST_PLUGIN_OVER_WRITE_DERIVED_CLASS=Y ENV. VAR. ####
+##### SPYTEST_PLUGIN_OVER_WRITE_DERIVED_CLASS=1 ENV. VAR. ####
+##### TO ENABLE THE DELEGATION FUNCTIONS (*_klish.py), USE ###
+##### SPYTEST_PLUGIN_USE_DELEGATION_FUNC=1 ENV. VAR. #########
 ##### EDIT WITH CARE.                                     ####
 ##############################################################
 
