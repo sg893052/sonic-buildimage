@@ -488,11 +488,9 @@ Configuration of a new primary encryption key is supported via an RPC. The RPC t
 2) new-primary-encryption-key - Used in when configuring or updating a primary encryption key. 
 3) override - Used when user wants to override and fallback to the default key unconditionally. Note that no passwords are re-encrypted and this is generally used as a fallback/recovery mechanism when the PEKI is in a un-recoverable state. Use this with caution as the application passwords configured earlier will be rendered useless post an override. They must be reconfigured post the override operation.
 
-**Configure a primary encryption key: **
+**Configure a primary encryption key:**
 
-current-primary-encryption-key = null
-new-primary-encryption-key = New passphrase
-override = false
+current-primary-encryption-key = null, new-primary-encryption-key = New passphrase, override = false
 
 **REQUEST:**
 
@@ -512,11 +510,9 @@ curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryp
 }
 ```
 
-**Update a primary encryption key: **
+**Update a primary encryption key:**
 
-current-primary-encryption-key = Previously configured passphrase
-new-primary-encryption-key = New passphrase
-override = false
+current-primary-encryption-key = Previously configured passphrase, new-primary-encryption-key = New passphrase, override = false
 
 **REQUEST:**
 
@@ -538,9 +534,7 @@ curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryp
 
 **Fallback to default encryption key:**
 
-current-primary-encryption-key = null
-new-primary-encryption-key = null
-override = false
+current-primary-encryption-key = null, new-primary-encryption-key = null. override = false
 
 **REQUEST**
 
@@ -561,9 +555,7 @@ curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryp
 
 **Override unconditionally to default key**
 
-current-primary-encryption-key = null
-new-primary-encryption-key = null
-override = true
+current-primary-encryption-key = null, new-primary-encryption-key = null, override = true
 
 **REQUEST:**
 
