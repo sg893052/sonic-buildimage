@@ -239,6 +239,10 @@ Note that this API will not validate the plaintext semantics. It is up to the ap
 
 **pwReencrypt** is used to decrypt ciphertext using the old Primary encryption key and re-encrypt it using the newly configured primary encryption key. UMF uses this D-BUS API during the key update operation.
 
+#####  2.2.5.6 **commitUpdateTx**
+
+UMF uses this API to commit a primary encryption key update transaction. This D-BUS API is executed post invoking **startUpdateTx** D-BUS API and re-encrypting protocol passwords. Commit API commits the transaction and unblocks the PEKI to start servicing encryption/decryption requests.
+
 ### 2.2.6 Password re-encryption - Registration framework
 
 The UMF framework today accepts user configured protocol  passwords from CLI, encrypts them and saves them into CONFIG_DB. The protocol dockers decrypt the ciphertext from CONFIG_DB and use it as appropriate. On an update of the primary encryption key, these protocol passwords saved in CONFIG_DB must be decrypted using the old encryption key and re-encrypted using the new encryption key. This re-encryption of protocol passwords is implemented in the UMF with the aid of a registration mechanism. 
