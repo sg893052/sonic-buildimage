@@ -2,7 +2,7 @@
 
 ## Highlevel Design Document
 
-### Rev 0.3
+### Rev 0.4
 
 ## Table of Contents
 
@@ -96,7 +96,7 @@
 | 0.1 | 07/10/2021  | Sharad Agrawal  | New draft for Broadcom SONiC            |
 | 0.2 | 07/27/2021  | Sharad Agrawal  | Address review comments            |
 | 0.3 | 09/13/2021  | Bandaru Viswanath  | 1. Added L2/IPv6 support for command outputs  <br/> 2. Added additional debug commands <br/>3. Adjusted default values for the intervals <br/>4. Added start/stop commands for explicit interaction.           |
-| 0.4 | 12/06/2021  | Bandaru Viswanath  | 1. Clarification on 'active' collection interval </br> 2. Correction of default value for congestion threshold </br> 3. Clarification of the predefined 'device' buffer name. </br> 4. Split the bdbg config command into individual parameter commands. </br> 5. Provisioning details for TAM collector for Drop Monitor Configuration. |
+| 0.4 | 12/08/2021  | Bandaru Viswanath  | 1. Clarification on 'active' collection interval </br> 2. Correction of default value for congestion threshold </br> 3. Clarification of the predefined 'device' buffer name. </br> 4. Split the bdbg config command into individual parameter commands. </br> 5. Provisioning details for TAM collector for Drop Monitor Configuration. </br> 6. Correction for the default value for max-retention interval </br> 7. Updated outputs for Congestion tool </br> 8. Added a new flow-type column for flow-based drop monitoring </br> 9. Added a Range and Defaults column for configuration parameters </br> 10. Added clarification for various buffer types. </br> 11. Added `drop-type` column in drops active and history sections and `IngressIntf` column in the historical drops section. |
 
 
 ## About This Manual
@@ -314,10 +314,10 @@ NA
 
 Two tuning parameters are supported by BDBG for controlling data collection as well as for historical data retention.
 
-| **Parameter**                 | **Description**                         |
-|--------------------------|-------------------------------------|
-| `collection-interval`    | The data collection periodicity in seconds Range 0 - 3600. 0 indicates disabling periodic collection. Default : 15 |
-| `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. Range 0 - 3600. 0, indicates no historical data retention, Default : 300|
+| **Parameter**                 | **Description**           | **Range & Defaults** | 
+|--------------------------|-------------------------------| --------------| 
+| `collection-interval`    | The data collection periodicity in seconds | Range 0 - 3600. 0 indicates disabling periodic collection. Default : 15 | 
+| `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. | Range 0 - 5400. 0, indicates no historical data retention, Default : 5400 (1.5hr) | 
 
 
 The command syntax for setting up the tuning parameters is as follows:
@@ -331,9 +331,9 @@ shell # bdbg config max-retention-interval <rinterval>
 
 The `congestion` tool allows user to configure a value for buffer utilization beyond which the buffer is considered as undergoing congestion. 
 
-| **Parameter**                 | **Description**                         |
-|--------------------------|-------------------------------------|
-| `congestion-threshold`    | Value for buffer utilization in percentage, beyond which the buffer is considered as undergoing congestion Range 0 - 100. Default : 100 |
+| **Parameter**                 | **Description**           | **Range & Defaults** | 
+|--------------------------|-------------------------------| --------------| 
+| `congestion-threshold`    | Value for buffer utilization in percentage, beyond which the buffer is considered as undergoing congestion. |  Range 0 - 100. Default : 100 |
 
 The command syntax for setting up the parameter is as follows:
 
@@ -410,9 +410,7 @@ An example invocation is as below
 shell # bdbg show congestion
 
 Number of Congestion Events             :   360
-Switch Latency  - Minimum               :   less than 1.2us (70%) 
-Switch Latency - Median                 :   10us - 20us (10%) 
-Switch Latency - Maximum                :   above 120us (1%) 
+Congestion Threshold                    :   100
 Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
 
 ```
@@ -451,14 +449,39 @@ shell # bdbg show congestion active
 
 Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
-Buffer             Interface        Direction    Utilization    Drops 
-----------------   --------------   ---------    -------------  -----
-pfc0               -                Ingress      50%            -
-sp1                Ethernet0        Ingress      50%            -          
-queue 0            Ethernet24       Egress       40%            -
-queue 7 [ARP]      CPU              Egress       40%            2048
+
+                                                     Utilization %
+Buffer                  Interface     Direction    SH   HR   UC   MC    Drops
+---------------------   -----------   ---------    ------------------    -----
+device                                Egress       38   0    0    0     0
+queue 0                 Ethernet64    Egress       38   0    0    0     32750
+PG 7                    Ethernet46    Egress       19   0    0    0     0
+PG 7                    Ethernet47    Egress       19   0    0    0     0
+PG 0                    Ethernet65    Egress       39   100  0    0     0
+PG 1                    Ethernet65    Egress       39   100  0    0     0
+PG 2                    Ethernet65    Egress       39   100  0    0     0
+PG 3                    Ethernet65    Egress       39   100  0    0     0
+PG 4                    Ethernet65    Egress       39   100  0    0     0
+PG 5                    Ethernet65    Egress       39   100  0    0     0
+PG 6                    Ethernet65    Egress       39   100  0    0     0
+ingress_lossless_pool   Ethernet46    Egress       19   0    0    0     0
+ingress_lossless_pool   Ethernet47    Egress       19   0    0    0     0
+egress_lossless_pool    Ethernet64    Egress       0    0    4    0     0
+egress_lossy_pool       Ethernet64    Egress       4    0    4    0     0
+egress_lossless_pool                  Egress       38   0    0    0     0
+ingress_lossless_pool                 Egress       100  0    0    0     0
 
 ```
+The `Utilization` column displays the buffer consumption under various categories, as follows:
+
+| **Name**                 | **Meaning**                         |
+|--------------------------|-------------------------------------|
+| HR                       | Headroom Buffer type | 
+| UC                       | Unicast Buffer type  | 
+| MC                       | Multicast Buffer type| 
+| SH                       | Shared (UC+MC) Buffer type    |
+
+Not all types are supported for every Buffer. Silicon documentation needs to be consulted for more details on specific types supported for each Buffer.
 
 #### 3.7.3.5 Show top congestion sources 
 
@@ -478,14 +501,23 @@ shell # bdbg show congestion top
 Number of Congestion Events             :   360
 Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
 
-Buffer             Interface        Direction    Utilization    Drops      Events
-----------------   --------------   ---------    -----------    -----      ------
-Sp0                Ethernet0        Ingress      50%            -          200
-queue 0            Ethernet24       Egress       40%            -          125
-queue 7 [ARP]      CPU              Egress       40%            2048       25
-queue 24 [BFD]     CPU              Egress       10%            4096       10
+                                                        Utilization %
+Buffer                  Interface     Direction    SH   HR   UC   MC    Drops      Events
+---------------------   -----------   ---------    ------------------   -----      ------
+device                                Egress       38   0    0    0     0          17
+PG 7                    Ethernet47    Egress       19   0    0    0     0          17
+PG 0                    Ethernet65    Egress       39   100  0    0     0          17
+PG 1                    Ethernet65    Egress       39   100  0    0     0          17
+PG 2                    Ethernet65    Egress       39   100  0    0     0          17
+PG 3                    Ethernet65    Egress       39   100  0    0     0          17
+PG 4                    Ethernet65    Egress       39   100  0    0     0          17
+PG 5                    Ethernet65    Egress       39   100  0    0     0          17
+PG 6                    Ethernet65    Egress       39   100  0    0     0          17
+queue 0                 Ethernet64    Egress       38   0    0    0     21875      17
 
 ```
+
+The `Utilization` column displays the buffer consumption under various categories as described earlier. 
 
 #### 3.7.3.6 Show congestion history for a specific source 
 
@@ -556,13 +588,15 @@ shell # bdbg show drops active flows
 Number of Dropping Flows          :   3
 Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
-drop-id    src-ip         dst-ip            drop-reason     Ingress Intf     timestamp
---------   -----------    --------------    ------------    -----------      ----------
-2022       10.10.1.1      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:16AM
-2023       10.10.1.2      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:17AM
-2024       10.10.1.3      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:17AM
+drop-id    src-ip         dst-ip            drop-reason     drop-type     Ingress Intf     timestamp
+--------   -----------    --------------    ------------    ----------    -----------      ----------
+2022       10.10.1.1      10.10.2.2         L3_DEST_MISS    Active        Ethernet24       2021-06-11 10:16AM
+2023       10.10.1.2      10.10.2.2         L3_DEST_MISS    Stopped       Ethernet24       2021-06-11 10:17AM
+2024       10.10.1.3      10.10.2.2         L3_DEST_MISS    Active        Ethernet24       2021-06-11 10:17AM
 
 ```
+
+In the output, the `drop-type` column indicates the type of the Flow Drop Event. An `Active` drop event indicates an on-going drops for the specific flow. A `Stopped` drop event indicates that the flow is no longer experiencing any packet drops. It may be noted that not all platforms support both types of events. Certain platforms report only `Active` drop events.
 
 ```
 shell # bdbg show drops active flows detail 2022
@@ -582,9 +616,10 @@ Vlan-Id   :   2043
 
 Ingress Port  : Ethernet24
 
-Drop Reason   : L3_DEST_MISS
-Drop Location : Ingress Pipeline
-Drop Timestamp: 30th Jun 2021, 10:16AM
+Drop Reason     : L3_DEST_MISS
+Drop Event Type : Active
+Drop Location   : Ingress Pipeline
+Drop Timestamp  : 30th Jun 2021, 10:16AM
 
 ```
 
@@ -669,13 +704,14 @@ shell # bdbg show drops history flows
 Number of Dropping Flows          :   3
 Drop Events last cleared at       :   30th Jun 2021, 10:11AM
 
-src-id         dst-ip            src-port     dst-port     protocol     drop-reason     location     timestamp
------------    --------------    --------     --------     --------     ------------    -----------  ----------
-10.10.1.1      10.10.2.2         5656         80           6            L3_DEST_MISS    data-plane   2021-06-11 11:22AM
-10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    cpu-queue    2021-06-11 11:20AM
-10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    kernel       2021-06-11 11:20AM
+src-id         dst-ip            src-port     dst-port     protocol     drop-reason     location     drop-type     Ingress Intf     timestamp
+-----------    --------------    --------     --------     --------     ------------    -----------  ----------    -----------      ----------
+10.10.1.1      10.10.2.2         5656         80           6            L3_DEST_MISS    data-plane   Active        Ethernet24       2021-06-11 11:22AM
+10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    cpu-queue    Active        Ethernet24       2021-06-11 11:20AM
+10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    kernel       Active        Ethernet24       2021-06-11 11:20AM
 
 ```
+In the output, the `drop-type` column indicates the type of the Flow Drop Event. An `Active` drop event indicates an on-going drops for the specific flow. A `Stopped` drop event indicates that the flow is no longer experiencing any packet drops. It may be noted that not all platforms support both types of events. Certain platforms report only `Active` drop events.
 
 ```
 shell # bdbg show drops history reasons
