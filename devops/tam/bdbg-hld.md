@@ -453,23 +453,16 @@ Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21A
                                                      Utilization %
 Buffer                  Interface     Direction    SH   HR   UC   MC    Drops
 ---------------------   -----------   ---------    ------------------    -----
-device                                Egress       38   0    0    0     0
+device                                             38   0    0    0     0
 queue 0                 Ethernet64    Egress       38   0    0    0     32750
-PG 7                    Ethernet46    Egress       19   0    0    0     0
-PG 7                    Ethernet47    Egress       19   0    0    0     0
-PG 0                    Ethernet65    Egress       39   100  0    0     0
-PG 1                    Ethernet65    Egress       39   100  0    0     0
-PG 2                    Ethernet65    Egress       39   100  0    0     0
-PG 3                    Ethernet65    Egress       39   100  0    0     0
-PG 4                    Ethernet65    Egress       39   100  0    0     0
-PG 5                    Ethernet65    Egress       39   100  0    0     0
-PG 6                    Ethernet65    Egress       39   100  0    0     0
-ingress_lossless_pool   Ethernet46    Egress       19   0    0    0     0
-ingress_lossless_pool   Ethernet47    Egress       19   0    0    0     0
+PG 7                    Ethernet46    Ingress      19   0    0    0     0
+PG 7                    Ethernet47    Ingress      19   0    0    0     0
+ingress_lossless_pool   Ethernet46    Ingress      19   0    0    0     0
+ingress_lossless_pool   Ethernet47    Ingress      19   0    0    0     0
 egress_lossless_pool    Ethernet64    Egress       0    0    4    0     0
 egress_lossy_pool       Ethernet64    Egress       4    0    4    0     0
 egress_lossless_pool                  Egress       38   0    0    0     0
-ingress_lossless_pool                 Egress       100  0    0    0     0
+ingress_lossless_pool                 Ingress      100  0    0    0     0
 
 ```
 The `Utilization` column displays the buffer consumption under various categories, as follows:
@@ -504,15 +497,8 @@ Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
                                                         Utilization %
 Buffer                  Interface     Direction    SH   HR   UC   MC    Drops      Events
 ---------------------   -----------   ---------    ------------------   -----      ------
-device                                Egress       38   0    0    0     0          17
-PG 7                    Ethernet47    Egress       19   0    0    0     0          17
-PG 0                    Ethernet65    Egress       39   100  0    0     0          17
-PG 1                    Ethernet65    Egress       39   100  0    0     0          17
-PG 2                    Ethernet65    Egress       39   100  0    0     0          17
-PG 3                    Ethernet65    Egress       39   100  0    0     0          17
-PG 4                    Ethernet65    Egress       39   100  0    0     0          17
-PG 5                    Ethernet65    Egress       39   100  0    0     0          17
-PG 6                    Ethernet65    Egress       39   100  0    0     0          17
+device                                             38   0    0    0     0          17
+PG 7                    Ethernet47    Ingress      19   0    0    0     0          17
 queue 0                 Ethernet64    Egress       38   0    0    0     21875      17
 
 ```
