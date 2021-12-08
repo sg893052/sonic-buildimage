@@ -452,16 +452,25 @@ sonic#
 Primary encryption key feature exposes REST APIs to get the state of primary encryption key configuration and configure a new primary encryption key. Note that there is no config container defined for primary encryption key, only state container is supported. Configuration of a new primary encryption key happens via RPCs.
 
 #### 3.6.3.1 GET requests
+
 The GET requests get the state of primary encryption key configuration. If a primary encryption key is configured by the user, it returns a boolean set to "true". However, if the system is running with a default encryption key, it does not return any data.
 
-**REQUEST:** curl -X GET "https://10.59.139.64/restconf/data/openconfig-primary-encryption-key:primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+**REQUEST:** 
+
+```
+curl -X GET "https://10.59.139.64/restconf/data/openconfig-primary-encryption-key:primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+```
 
 **RESPONSE:**
+
+```
 200
 {}
+```
 
 If a primary encryption key exists, following data is returned:
 
+```
 200
 {
   "openconfig-primary-encryption-key:primary-encryption-key": {
@@ -470,6 +479,7 @@ If a primary encryption key exists, following data is returned:
     }
   }
 }
+```
 
 #### 3.6.3.2 RPC
 
@@ -485,9 +495,14 @@ new-primary-encryption-key = New passphrase
 override = false
 
 **REQUEST:**
+
+```
 curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":null,\"new-primary-encryption-key\":\"Broadcom@123\",\"override\":false}}"
+```
 
 **RESPONSE:**
+
+```
 200
 {
   "openconfig-primary-encryption-key-rpc:output": {
@@ -495,6 +510,7 @@ curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryp
     "status-detail": "Successfully updated the primary encryption key."
   }
 }
+```
 
 **Update a primary encryption key: **
 
@@ -504,9 +520,13 @@ override = false
 
 **REQUEST:**
 
+```
 curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":\"Broadcom@123\",\"new-primary-encryption-key\":\"Sonic@123\",\"override\":false}}"
+```
 
 **RESPONSE:**
+
+```
 200
 {
   "openconfig-primary-encryption-key-rpc:output": {
@@ -514,6 +534,7 @@ curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryp
     "status-detail": "Successfully updated the primary encryption key."
   }
 }
+```
 
 **Fallback to default encryption key:**
 
@@ -522,11 +543,13 @@ new-primary-encryption-key = null
 override = false
 
 **REQUEST**
+
 ```
 curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":null,\"new-primary-encryption-key\":null,\"override\":false}}"
 ```
 
 **RESPONSE**
+
 ```
 {
   "openconfig-primary-encryption-key-rpc:output": {
