@@ -596,7 +596,7 @@ drop-id    src-ip         dst-ip            drop-reason     drop-type     Ingres
 
 ```
 
-In the output, the `drop-type` column indicates the type of the Flow Drop Event. An `Active` drop event indicates an on-going drops for the specific flow. A `Stopped` drop event indicates that the flow is no longer experiencing any packet drops. It may be noted that not all platforms support both types of events. Certain platforms report only `Active` drop events.
+In the output, the `drop-type` column indicates the type of the Flow Drop Event. An `Active` drop event indicates on-going drops for the specific flow. A `Stopped` drop event indicates that the flow is no longer experiencing any packet drops. It may be noted that not all platforms support both types of events. Certain platforms report only `Active` drop events.
 
 ```
 shell # bdbg show drops active flows detail 2022
@@ -711,7 +711,7 @@ src-id         dst-ip            src-port     dst-port     protocol     drop-rea
 10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    kernel       Active        Ethernet24       2021-06-11 11:20AM
 
 ```
-In the output, the `drop-type` column indicates the type of the Flow Drop Event. An `Active` drop event indicates an on-going drops for the specific flow. A `Stopped` drop event indicates that the flow is no longer experiencing any packet drops. It may be noted that not all platforms support both types of events. Certain platforms report only `Active` drop events.
+In the output, the `drop-type` column is as described earlier.
 
 ```
 shell # bdbg show drops history reasons
