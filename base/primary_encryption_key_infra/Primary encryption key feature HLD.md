@@ -428,6 +428,18 @@ sonic#
 
 Note that this action will re-encrypt the protocol passwords with the default key (device specific key).
 
+##### 3.6.2.1.1 no key config-key password-encrypt override
+
+This config command is a hidden command that can be used to reset the primary encryption key to the default key unconditionally. Note that any application passwords encrypted via the previous primary encryption key are rendered useless post executing this command. The user **MUST** reconfigure all application passwords so they can be encrypted via the new primary encryption key.
+
+This command is used to recover the PEKI infra from situations where the key file is corrupted or missing.
+
+```
+sonic(config)# no key config-key password-encrypt override
+**** Primary encryption key is reset to factory default. Please re-configure all application keys.
+sonic(config)# 
+```
+
 #### 3.6.2.2 Show Commands
 
 ##### 3.6.2.1.1 show config-key password-encrypt
@@ -559,9 +571,13 @@ current-primary-encryption-key = null, new-primary-encryption-key = null, overri
 
 **REQUEST:**
 
+```
 curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":null,\"new-primary-encryption-key\":null,\"override\":true}}"
+```
 
 **RESPONSE:**
+
+```
 200
 {
   "openconfig-primary-encryption-key-rpc:output": {
@@ -569,6 +585,7 @@ curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryp
     "status-detail": "**** Primary encryption key is reset to factory default. Please re-configure all application keys."
   }
 }
+```
 
 
 ### 3.6.4 Service and Docker Management
