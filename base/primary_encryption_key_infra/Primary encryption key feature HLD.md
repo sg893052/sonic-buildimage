@@ -449,7 +449,112 @@ sonic#
 
 ### 3.6.3 REST API Support
 
-TBD
+Primary encryption key feature exposes REST APIs to get the state of primary encryption key configuration and configure a new primary encryption key. Note that there is no config container defined for primary encryption key, only state container is supported. Configuration of a new primary encryption key happens via RPCs.
+
+#### 3.6.3.1 GET requests
+The GET requests get the state of primary encryption key configuration. If a primary encryption key is configured by the user, it returns a boolean set to "true". However, if the system is running with a default encryption key, it does not return any data.
+
+**REQUEST:** curl -X GET "https://10.59.139.64/restconf/data/openconfig-primary-encryption-key:primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+
+**RESPONSE:**
+200
+{}
+
+If a primary encryption key exists, following data is returned:
+
+200
+{
+  "openconfig-primary-encryption-key:primary-encryption-key": {
+    "state": {
+      "configured": true
+    }
+  }
+}
+
+#### 3.6.3.2 RPC
+
+Configuration of a new primary encryption key is supported via an RPC. The RPC takes 3 arguments:
+1) current-primary-encryption-key - Used when trying to update an already configured primary encryption key. This field must carry the previously configured primary encryption key. Note that this field MUST be "null" when configuring the primary encryption key first time (moving from default key to user configured key).
+2) new-primary-encryption-key - Used in when configuring or updating a primary encryption key. 
+3) override - Used when user wants to override and fallback to the default key unconditionally. Note that no passwords are re-encrypted and this is generally used as a fallback/recovery mechanism when the PEKI is in a un-recoverable state. Use this with caution as the application passwords configured earlier will be rendered useless post an override. They must be reconfigured post the override operation.
+
+**Configure a primary encryption key: **
+
+current-primary-encryption-key = null
+new-primary-encryption-key = New passphrase
+override = false
+
+**REQUEST:**
+curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":null,\"new-primary-encryption-key\":\"Broadcom@123\",\"override\":false}}"
+
+**RESPONSE:**
+200
+{
+  "openconfig-primary-encryption-key-rpc:output": {
+    "status": "PRIMARY_ENCRYPTION_KEY_SUCCESS",
+    "status-detail": "Successfully updated the primary encryption key."
+  }
+}
+
+**Update a primary encryption key: **
+
+current-primary-encryption-key = Previously configured passphrase
+new-primary-encryption-key = New passphrase
+override = false
+
+**REQUEST:**
+
+curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":\"Broadcom@123\",\"new-primary-encryption-key\":\"Sonic@123\",\"override\":false}}"
+
+**RESPONSE:**
+200
+{
+  "openconfig-primary-encryption-key-rpc:output": {
+    "status": "PRIMARY_ENCRYPTION_KEY_SUCCESS",
+    "status-detail": "Successfully updated the primary encryption key."
+  }
+}
+
+**Fallback to default encryption key:**
+
+current-primary-encryption-key = null
+new-primary-encryption-key = null
+override = false
+
+**REQUEST**
+```
+curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":null,\"new-primary-encryption-key\":null,\"override\":false}}"
+```
+
+**RESPONSE**
+```
+{
+  "openconfig-primary-encryption-key-rpc:output": {
+    "status": "PRIMARY_ENCRYPTION_KEY_SUCCESS",
+    "status-detail": "Successfully updated the primary encryption key."
+  }
+}
+```
+
+**Override unconditionally to default key**
+
+current-primary-encryption-key = null
+new-primary-encryption-key = null
+override = true
+
+**REQUEST:**
+
+curl -X POST "https://10.59.139.64/restconf/operations/openconfig-primary-encryption-key-rpc:update-primary-encryption-key" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"openconfig-primary-encryption-key-rpc:input\":{\"current-primary-encryption-key\":null,\"new-primary-encryption-key\":null,\"override\":true}}"
+
+**RESPONSE:**
+200
+{
+  "openconfig-primary-encryption-key-rpc:output": {
+    "status": "PRIMARY_ENCRYPTION_KEY_UPDATE_FAILED",
+    "status-detail": "**** Primary encryption key is reset to factory default. Please re-configure all application keys."
+  }
+}
+
 
 ### 3.6.4 Service and Docker Management
 
@@ -712,5 +817,17 @@ Include hostcomm header in source file and use PEKI APIs as below:
 
 +    SWSS_LOG_NOTICE("HostQuery returned %d (%s )", ret._1, ret._2.c_str());
 ```
+ 
+ **Integration with Primary encryption key feature - Important points to note** 
+ 
+The primary encryption key functionality is available as an infra on the host via D-BUS and hence applications wanting to use this functionality must consider the following:
+
+1) The application must register with PEKI at UMF/mgmt-framework layer to have their passwords re-encrypted by default on a primary encryption key update.
+2) The application must execute D-BUS routines to encrypt/decrypt data from dockers as a "root" user. PEKI is available via SYSTEM D-BUS which is available for root users due to security issues (sensitive information like passwords). 
+3) Encryption/decryption requests are rejected by PEKI for the duration of "primary encryption key" update operation. PEKI would send an error code UPDATE_PEK_IN_PROGRESS(4) to indicate that an update is in progress. Applications must handle the error code as required by retrying for a couple of iterations. Typically, an update operation is expected to be a rare event that is executed in a maintenance window. An update operation will typically finish even before applications are notified of a change in the application password encrypted strings but the applications must neverthless handle the error code by retyring a couple of time before bailing out.
+4) Any other encryption/decryption errors must be logged to syslog to indicate that the primary encryption key may be compromised.
+
+
+
  
 
