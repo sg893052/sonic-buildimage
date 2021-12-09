@@ -650,7 +650,7 @@ This command is used to configure a threshold for a specific unicast/multicast q
 
 This command is used to configure a threshold for a specific multicast queue of a CPU port. The threshold value is provided in %. Valid values are 1-100.
 
-4) threshold buffer-pool \<bufferpoolname\> {shared\|unicast} \<threshold_value\>
+4) threshold buffer-pool \<bufferpoolname\> {shared\|multicast} \<threshold_value\>
 
    Example : 
 
@@ -658,7 +658,7 @@ This command is used to configure a threshold for a specific multicast queue of 
 
 This command is used to configure buffer-pool threshold on global ingress and egress buffers. The threshold value is provided in %. Valid values are 1-100.
 
-5) threshold buffer-pool \<bufferpoolname\> {shared\|multicast} \<threshold_value\>
+5) threshold buffer-pool \<bufferpoolname\> {shared\|unicast} \<threshold_value\>
 
    Example : 
 
