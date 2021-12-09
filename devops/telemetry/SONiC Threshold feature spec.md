@@ -64,6 +64,7 @@ Threshold feature.
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 06/12/2019  |   Shirisha Dasari  | Initial version                   |
 | 0.2 | 07/12/2021  |   Sharad Agrawal   | Additional buffer counter support |
+| 0.3 | 11/20/2021  |   Sharad Agrawal   | Updated CLI command output and DB |
 
 # About this Manual
 This document provides general information about the threshold feature implementation in SONiC.
@@ -274,16 +275,19 @@ Once the dynamic port breakout feature is available, ThresholdMgr needs to be en
     ; New table
     ; Defines buffer pool threshold configuration.
 
-    key                      = pool_name; pool_name can be buffer pool profiles configured in the system.
+    key                      = pool_name|type          ; pool_name can be buffer pool profiles configured in the system.
+                                                       ; type (buffer type) can be 
+                                                       ; "shared"
+                                                       ; "multicast"
     threshold                = 1*3DIGIT                ; Threshold in % (1-100)
 
     Example:
 
     Buffer pool threshold configuration:
     127.0.0.1:6379[4]> keys *THRESHOLD_BUFFERPOOL_TABLE*
-    1) "THRESHOLD_BUFFERPOOL_TABLE|ingress_lossless_pool"
+    1) "THRESHOLD_BUFFERPOOL_TABLE|egress_lossless_pool|shared"
 
-	127.0.0.1:6379[4]> HGETALL "THRESHOLD_BUFFERPOOL_TABLE|ingress_lossless_pool"
+	127.0.0.1:6379[4]> HGETALL "THRESHOLD_BUFFERPOOL_TABLE|egress_lossless_pool|shared"
 	1) "threshold"
 	2) "80"
 	
@@ -292,18 +296,20 @@ Once the dynamic port breakout feature is available, ThresholdMgr needs to be en
     ; New table
     ; Defines buffer pool threshold configuration on an interface.
 
-    key                      = pool_name|alias|index   ; pool_name can be buffer pool profiles configured in the system.
+    key                      = pool_name|alias|type    ; pool_name can be buffer pool profiles configured in the system.
                                                        ; alias is unique across all DBs
-                                                       ; index (buffer index per port)
+                                                       ; type (buffer type) can be 
+                                                       ; "shared"
+                                                       ; "unicast"
     threshold                = 1*3DIGIT                ; Threshold in % (1-100)
 
     Example:
 
     Buffer pool threshold per interface configuration:
     127.0.0.1:6379[4]> keys *THRESHOLD_BUFFERPOOL_INTERFACE_TABLE*
-    1) "THRESHOLD_BUFFERPOOL_INTERFACE_TABLE|ingress_lossless_pool|Ethernet40|6"
+    1) "THRESHOLD_BUFFERPOOL_INTERFACE_TABLE|egress_lossless_pool|Ethernet46|shared"
 
-	127.0.0.1:6379[4]> HGETALL "THRESHOLD_BUFFERPOOL_INTERFACE_TABLE|ingress_lossless_pool|Ethernet40|6"
+	127.0.0.1:6379[4]> HGETALL "THRESHOLD_BUFFERPOOL_INTERFACE_TABLE|egress_lossless_pool|Ethernet46|shared"
 	1) "threshold"
 	2) "80"
 
@@ -312,16 +318,16 @@ Once the dynamic port breakout feature is available, ThresholdMgr needs to be en
     ; New table
     ; Defines buffer pool threshold configuration.
 
-    key                      = type; type can be device.
+    key                      = global; device buffer is global.
     threshold                = 1*3DIGIT ; Threshold in % (1-100)
 
     Example:
 
     Device threshold configuration:
     127.0.0.1:6379[4]> keys *THRESHOLD_DEVICE_TABLE*
-    1) "THRESHOLD_DEVICE_TABLE|device"
+    1) "THRESHOLD_DEVICE_TABLE|global"
 
-	127.0.0.1:6379[4]> HGETALL "THRESHOLD_DEVICE_TABLE|device"
+	127.0.0.1:6379[4]> HGETALL "THRESHOLD_DEVICE_TABLE|global"
 	1) "threshold"
 	2) "80"
 
@@ -413,14 +419,14 @@ Following is an example of the ASIC\_DB configuration on applying a configuratio
 
     key                     =  breach-report:index     ; Breach report index.
                                                         
-    buffer                  = 1*255VCHAR               ; Buffer - "priority-group" or "queue" or "buffer-pool" or "device".
+    buffer                  = 1*255VCHAR               ; Buffer - "priority-group" or "queue" or "buffer pool name" or "device".
     type                    = 1*255VCHAR               ; Buffer type -
                                                        ; "shared"
                                                        ; "headroom"
                                                        ; "unicast"
                                                        ; "multicast"
-                                                       ; "ingress-shared"
-                                                       ; "egress-shared"
+                                                       ; "ingress"
+                                                       ; "egress"
                                                        ; "egress-unicast"
                                                        ; "egress-multicast"
     port                    = 1*64VCHAR                ; Port on which breach occurred. Unique across all DBs.
@@ -477,17 +483,17 @@ Following is an example of the ASIC\_DB configuration on applying a configuratio
 	1) "THRESHOLD_BREACH_TABLE:breach-report:4"
 	127.0.0.1:6379[2]> HGETALL THRESHOLD_BREACH_TABLE:breach-report:4
 	1) "buffer"
-	2) "buffer-pool"
+	2) "egress_lossless_pool"
     3) "type"
-    4) "egress-shared"
+    4) "egress"
 	5) "port"
     6) ""
     7) "index"
-	8) ""
+	8) "0"
     9) "breach_value"
     10) "71"
     11) "SAI_BUFFER_POOL_STAT_WATERMARK_BYTES"
-    12) "8100"
+    12) "12764672"
     13) "time-stamp"
 	14) "2019-06-14 - 11:29:33"
 
@@ -497,19 +503,35 @@ Following is an example of the ASIC\_DB configuration on applying a configuratio
 	1) "THRESHOLD_BREACH_TABLE:breach-report:5"
 	127.0.0.1:6379[2]> HGETALL THRESHOLD_BREACH_TABLE:breach-report:5
 	1) "buffer"
-	2) "buffer-pool"
+	2) "egress_lossless_pool"
     3) "type"
     4) "egress-unicast"
 	5) "port"
     6) "Ethernet32"
     7) "index"
-	8) ""
+	8) "0"
     9) "breach_value"
     10) "71"
-    11) "SAI_BUFFER_POOL_STAT_WATERMARK_BYTES"
-    12) "8100"
+    11) "SAI_PORT_POOL_STAT_UNICAST_WATERMARK_BYTES"
+    12) "12764672"
     13) "time-stamp"
 	14) "2019-06-14 - 11:29:33"
+    
+    127.0.0.1:6379[2]> hgetall THRESHOLD_BREACH_TABLE:breach-report:77
+    1) "buffer"
+    2) "device"
+    3) "type"
+    4) "device"
+    5) "port"
+    6) ""
+    7) "index"
+    8) "0"
+    9) "breach_value"
+   10) "38"
+   11) "SAI_SWITCH_STAT_DEVICE_WATERMARK_BYTES"
+   12) "12766720"
+   13) "time-stamp"
+   14) "2021-11-21.09:03:42"
 
 
 ## 3.3 Switch State Service Design
@@ -628,17 +650,23 @@ This command is used to configure a threshold for a specific unicast/multicast q
 
 This command is used to configure a threshold for a specific multicast queue of a CPU port. The threshold value is provided in %. Valid values are 1-100.
 
-4) buffer-pool threshold {bufferpoolname} {threshold_value}
+4) threshold buffer-pool \<bufferpoolname\> {shared\|multicast} \<threshold_value\>
 
    Example : 
 
-   sonic(config)# buffer-pool threshold ingress_lossless_pool 77
+   sonic(config)# threshold buffer-pool egress_lossless_pool shared 77
 
-   sonic(config-if-Ethernet0)# buffer-pool threshold ingress_port0_lossless_pool 77
+This command is used to configure buffer-pool threshold on global ingress and egress buffers. The threshold value is provided in %. Valid values are 1-100.
 
-This command is used to configure buffer-pool threshold on ingress and egress buffers globally or an interface. The threshold value is provided in %. Valid values are 1-100.
+5) threshold buffer-pool \<bufferpoolname\> {shared\|unicast} \<threshold_value\>
 
-5) threshold device {threshold_value}
+   Example : 
+
+   sonic(config-if-Ethernet0)# threshold buffer-pool egress_lossless_pool unicast 77
+
+This command is used to configure buffer-pool threshold on ingress and egress per-port buffers. The threshold value is provided in %. Valid values are 1-100.
+
+6) threshold device {threshold_value}
 
    Example : sonic(config)# threshold device 65
 
@@ -690,19 +718,25 @@ This command can be used to clear a previously configured threshold on unicast/m
 
 This command can be used to clear previously configured threshold on multicast queue buffer of a CPU port.
 
-4) no buffer-pool threshold
+4) no threshold buffer-pool \<bufferpoolname\> {shared\|multicast}
 
-  Example : sonic(config)# no buffer-pool threshold
+  Example : sonic(config)# no threshold buffer-pool egress_lossless_pool shared
 
-This command can be used to remove buffer-pool threshold configured on ingress and egress buffers.
+This command can be used to remove buffer-pool threshold configured on ingress and egress global buffers.
 
-5) no threshold device
+5) no threshold buffer-pool \<bufferpoolname\> {shared\|unicast}
+
+  Example : sonic(conf-if-Ethernet46)# no threshold buffer-pool egress_lossless_pool unicast
+
+This command can be used to remove buffer-pool threshold configured on ingress and egress per-port buffers.
+
+6) no threshold device
 
   Example : sonic(config)# no threshold device
 
 This command can be used to remove device threshold configured.
 
-6) clear threshold breach {all/eventid}
+7) clear threshold breach {all/eventid}
 
   Example : clear threshold breach all/evendid
 
