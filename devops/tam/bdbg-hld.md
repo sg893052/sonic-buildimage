@@ -7,49 +7,49 @@
 ## Table of Contents
 
 - [Broadcom Debug Application](#broadcom-debug-application)
-  * [Highlevel Design Document](#highlevel-design-document)
-    + [Rev 0.3](#rev-03)
-  * [Table of Contents](#table-of-contents)
-  * [List of Tables](#list-of-tables)
-  * [Revision](#revision)
-  * [About This Manual](#about-this-manual)
-  * [Scope](#scope)
-  * [Definition/Abbreviation](#definition-abbreviation)
-    + [Table 1: Abbreviations](#table-1--abbreviations)
+  - [Highlevel Design Document](#highlevel-design-document)
+    - [Rev 0.4](#rev-04)
+  - [Table of Contents](#table-of-contents)
+  - [List of Tables](#list-of-tables)
+  - [Revision](#revision)
+  - [About This Manual](#about-this-manual)
+  - [Scope](#scope)
+  - [Definition/Abbreviation](#definitionabbreviation)
+    - [Table 1: Abbreviations](#table-1-abbreviations)
 - [1 Feature Overview](#1-feature-overview)
-  * [1.1 Requirements](#11-requirements)
-    + [1.1.1 Design Requirements](#111-design-requirements)
-    + [1.1.2 Functional Requirements](#112-functional-requirements)
-    + [1.1.3 User Interface Requirements](#113-user-interface-requirements)
-    + [1.1.4 Configuration and Management Requirements](#114-configuration-and-management-requirements)
-    + [1.1.5 Maintenance Requirements](#115-maintenance-requirements)
-    + [1.1.6 Scale Requirements](#116-scale-requirements)
-  * [1.2 Design Overview](#12-design-overview)
-    + [1.2.1 Basic Approach](#121-basic-approach)
-    + [1.2.2 SAI Overview](#122-sai-overview)
+  - [1.1 Requirements](#11-requirements)
+    - [1.1.1 Design Requirements](#111-design-requirements)
+    - [1.1.2 Functional Requirements](#112-functional-requirements)
+    - [1.1.3 User Interface Requirements](#113-user-interface-requirements)
+    - [1.1.4 Configuration and Management Requirements](#114-configuration-and-management-requirements)
+    - [1.1.5 Maintenance Requirements](#115-maintenance-requirements)
+    - [1.1.6 Scale Requirements](#116-scale-requirements)
+  - [1.2 Design Overview](#12-design-overview)
+    - [1.2.1 Basic Approach](#121-basic-approach)
+    - [1.2.2 SAI Overview](#122-sai-overview)
 - [2 Functionality](#2-functionality)
-  * [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
-  * [2.2 Functional Description](#22-functional-description)
-  * [2.3 Data sources for the **congestion** tool](#23-data-sources-for-the---congestion---tool)
-  * [2.3 Data sources for the **drops** tool](#23-data-sources-for-the---drops---tool)
-  * [2.4 Interaction with Data Sources](#24-interaction-with-data-sources)
+  - [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
+  - [2.2 Functional Description](#22-functional-description)
+  - [2.3 Data sources for the **congestion** tool](#23-data-sources-for-the-congestion-tool)
+  - [2.3 Data sources for the **drops** tool](#23-data-sources-for-the-drops-tool)
+  - [2.4 Interaction with Data Sources](#24-interaction-with-data-sources)
 - [3 Design](#3-design)
-  * [3.1 Overview](#31-overview)
-  * [3.2 DB Changes](#32-db-changes)
-  * [3.3 Daemons](#33-daemons)
-  * [3.4 Switch State Service Design](#34-switch-state-service-design)
-    + [3.4.1 Orchestration Agent](#341-orchestration-agent)
-    + [3.4.2 Other Process](#342-other-process)
-  * [3.5 SyncD](#35-syncd)
-  * [3.6 SAI](#36-sai)
-  * [3.7 CLI](#37-cli)
-    + [3.7.1 Data Models](#371-data-models)
-    + [3.7.2 Configuration Commands](#372-configuration-commands)
+  - [3.1 Overview](#31-overview)
+  - [3.2 DB Changes](#32-db-changes)
+  - [3.3 Daemons](#33-daemons)
+  - [3.4 Switch State Service Design](#34-switch-state-service-design)
+    - [3.4.1 Orchestration Agent](#341-orchestration-agent)
+    - [3.4.2 Other Process](#342-other-process)
+  - [3.5 SyncD](#35-syncd)
+  - [3.6 SAI](#36-sai)
+  - [3.7 CLI](#37-cli)
+    - [3.7.1 Data Models](#371-data-models)
+    - [3.7.2 Configuration Commands](#372-configuration-commands)
       - [3.7.2.1 Setting up tuning parameters for BDBG](#3721-setting-up-tuning-parameters-for-bdbg)
       - [3.7.2.2 Setting up a congestion definition](#3722-setting-up-a-congestion-definition)
       - [3.7.2.3 Starting Monitoring](#3723-starting-monitoring)
       - [3.7.2.4 Stopping Monitoring](#3724-stopping-monitoring)
-    + [3.7.3 Show Commands](#373-show-commands)
+    - [3.7.3 Show Commands](#373-show-commands)
       - [3.7.3.1 Listing the Global parameters](#3731-listing-the-global-parameters)
       - [3.7.3.2 Listing the Congestion tool parameters](#3732-listing-the-congestion-tool-parameters)
       - [3.7.3.3 Listing the drops tool parameters](#3733-listing-the-drops-tool-parameters)
@@ -58,31 +58,31 @@
       - [3.7.3.6 Show congestion history for a specific source](#3736-show-congestion-history-for-a-specific-source)
       - [3.7.3.7 Show active drops](#3737-show-active-drops)
       - [3.7.3.8 Show historical drops](#3738-show-historical-drops)
-    + [3.7.4 Clear commands](#374-clear-commands)
+    - [3.7.4 Clear commands](#374-clear-commands)
       - [3.7.4.1 Resetting glocal tuning parameters](#3741-resetting-glocal-tuning-parameters)
       - [3.7.4.2 Clearing all histories](#3742-clearing-all-histories)
       - [3.7.4.3 Resetting congestion tool tuning parameters](#3743-resetting-congestion-tool-tuning-parameters)
       - [3.7.4.4 Clearing congestion history](#3744-clearing-congestion-history)
       - [3.7.4.4 Clearing drop history](#3744-clearing-drop-history)
-    + [3.7.5 Debug Commands](#375-debug-commands)
+    - [3.7.5 Debug Commands](#375-debug-commands)
       - [3.7.5.1 Exporting history](#3751-exporting-history)
       - [3.7.5.2 Dumping internal logs](#3752-dumping-internal-logs)
       - [3.7.5.3 Displaying support on actual platform](#3753-displaying-support-on-actual-platform)
       - [3.7.5.4 Set log-level for internal logs](#3754-set-log-level-for-internal-logs)
       - [3.7.5.5 Dump internal parameters](#3755-dump-internal-parameters)
-    + [3.7.6 REST API Support](#376-rest-api-support)
+    - [3.7.6 REST API Support](#376-rest-api-support)
 - [4 Flow Diagrams](#4-flow-diagrams)
 - [5 Error Handling](#5-error-handling)
 - [6 Serviceability and Debug](#6-serviceability-and-debug)
 - [7 Warm Boot Support](#7-warm-boot-support)
 - [8 Scalability](#8-scalability)
 - [9 Unit Test](#9-unit-test)
-  * [CLI](#cli)
-  * [Functional Unit Tests](#functional-unit-tests)
-- [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information---to-be-removed-before-publishing-externally)
-  * [Revision History](#revision-history)
-  * [Key notes](#key-notes)
-  * [Specific Limitations](#specific-limitations)
+  - [CLI](#cli)
+  - [Functional Unit Tests](#functional-unit-tests)
+- [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information--to-be-removed-before-publishing-externally)
+  - [Revision History](#revision-history)
+  - [Key notes](#key-notes)
+  - [Specific Limitations](#specific-limitations)
 
 
 ## List of Tables
@@ -871,24 +871,33 @@ Initial measurements will be made to ascertain the ammount of memory needed at a
 The CLI testcases are included as part of individual feature testcases.
 
 ## Functional Unit Tests
-1. Verify that once ‘collection-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
-2. Verify that once ‘max-retention-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
-3. Verify that once ‘congestion-threshold’ configuration is successful, the configuration can be retrieved via the show command properly.
-4. Verify that ‘collection-interval’ configuration can be cleared.
-5. Verify that ‘max-retention-interval’ configuration can be cleared.
-6. Verify that ‘congestion-threshold’ configuration can be cleared.
-7. Verify that congestion on ‘Ingress shared/headroom pool occupancy per PG’ can be retrieved via show commands.
-8. Verify that congestion on ‘Egress shared pool occupancy per queue’ can be retrieved via show commands.
-9. Verify that congestion on ‘CPU Queue’ can be retrieved via show commands.
-10. Verify that congestion on ‘Device buffer’ can be retrieved via show commands.
-11. Verify that congestion on ‘Ingress service pool’ can be retrieved via show commands.
-12. Verify that congestion on ‘Egress service pool’ can be retrieved via show commands.
-13. Verify that packet drop at data-plane (e.g. Unknown Vlan, TTL0) can be retrieved via show commands.
-14. Verify that packet drop at CPU queue (e.g. Unknown Vlan) can be retrieved via show commands.
-15. Verify that packet drop at Kernel (e.g. Unknown Vlan) can be retrieved via show commands.
-16. Verify that count of dropped packets at cpu-queue can be retrieved via show commands.
-17. Verify that count of dropped packets at physical interface (e.g. Ethernet0) can be retrieved via show commands.
-18. Verify that the input parameters provided to CLI are validated for ranges and validity.
+1. Verify that starting of bdbg tool is successful.
+2. Verify that stopping of bdbg tool is successful.
+3. Verify that once ‘collection-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
+4. Verify that once ‘max-retention-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
+5. Verify that once ‘congestion-threshold’ configuration is successful, the configuration can be retrieved via the show command properly.
+6. Verify that ‘collection-interval’ configuration can be cleared.
+7. Verify that ‘max-retention-interval’ configuration can be cleared.
+8. Verify that ‘congestion-threshold’ configuration can be cleared.
+9. Verify that congestion on ‘Ingress shared/headroom pool occupancy per PG’ can be retrieved via show commands.
+10. Verify that congestion on ‘Egress shared pool occupancy per queue’ can be retrieved via show commands.
+11. Verify that congestion on ‘Device buffer’ can be retrieved via show commands.
+12. Verify that congestion on ‘global service pool’ can be retrieved via show commands.
+13. Verify that congestion on 'per port service pool’ can be retrieved via show commands.
+14. Verify that 'congestion top' options shows the data since last cleared.
+15. Verify that 'congestion top limit' shows the data per the specified number.
+16. Verify that per buffer congestion history can be retrieved via show commands.
+17. Verify that per interface per queue congestion history can be retrieved via show commands.
+18. Verify that congestion history 'limit' command shows the data per specified number.
+19. Verify that congestion history 'around' command shows the data per specified number.
+20. Verify that COPP Policer Packet Drops  can be can be retrieved via show commands.
+21. Verify that watermark queue drop counters can be retrieved via show commands.
+22. Verify that /proc/bcm/knet/rx_drop counters can be retrieved via show commands.
+23. Verify that /proc/bcm/knet/dstats counters can be retrieved via show commands.
+24. Verify that packet drops at /proc/net (ifconfig ) can be retrieved via show commands.
+25. Verify that packet drops at DROPMONITOR_FLOW_TABLE can be retrieved via show commands.
+26. Verify that forwarding drop counters can be retrieved via show commands.
+27. Verify that clear history command clears the history data.
 
 # Broadcom Internal Information : To be removed before publishing externally.
 
