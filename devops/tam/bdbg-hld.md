@@ -895,9 +895,10 @@ The CLI testcases are included as part of individual feature testcases.
 22. Verify that /proc/bcm/knet/rx_drop counters can be retrieved via show commands.
 23. Verify that /proc/bcm/knet/dstats counters can be retrieved via show commands.
 24. Verify that packet drops at /proc/net (ifconfig ) can be retrieved via show commands.
-25. Verify that packet drops at DROPMONITOR_FLOW_TABLE can be retrieved via show commands.
-26. Verify that forwarding drop counters can be retrieved via show commands.
-27. Verify that clear history command clears the history data.
+25. Verify that Drop Monitor reported drops are retrieved via show commands
+26. Verify that Forwarding Plane Drop Counters can be retrieved via show commands.
+27. Verify that Forwarding Plane Drop Counters reported dropped flows can be retrieved via show commands.
+28. Verify that clear history command clears the history data.
 
 # Broadcom Internal Information : To be removed before publishing externally.
 
