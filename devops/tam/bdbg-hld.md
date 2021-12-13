@@ -517,7 +517,7 @@ The `buffer` parameter takes buffer name as the value to display the congestion 
 
 The optional parameter `num-events` can be used to limit the output to a preferred number of congestion events.
 
-The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
+The optional parameter `time` specified in the `DD:MMM:YYYY-HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
 
 An example invocation is as below.
 
@@ -680,7 +680,7 @@ shell # bdbg show drops history {flows | reasons | locations | interface <interf
 
 - The optional parameter `num-events` can be used to limit the output to a preferred number of drop events.
 
-- The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
+- The optional parameter `time` specified in the `DD:MMM:YYYY-HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
 
 Example invocations are as below:
 
