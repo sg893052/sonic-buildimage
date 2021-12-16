@@ -723,16 +723,8 @@ To use the API in source, import the API from hostcomm and use as instructed bel
 
 + r = (ut.keyctl("pwEncrypt", "temp"))
 
-+ print("error code {}".format(r[0]))
-
-+ print("message {}".format(r[1]))
-
-
 + r = (ut.keyctl("pwDecrypt", "U2FsdGVkX1/ol76JDX18qnN4IibUhpazL6Ou0z6Si3c="))
 
-+ print("error code {}".format(r[0]))
-
-+ print("message {}".format(r[1]))
  ```
  
  
@@ -844,14 +836,10 @@ Include hostcomm header in source file and use PEKI APIs as below:
 
 +    ret = HostQuery_keyctl("pwEncrypt", "eventd");
 
-+    SWSS_LOG_NOTICE("HostQuery returned %d (%s )", ret._1, ret._2.c_str());
-
-
 +    DBus::Struct<int, std::__cxx11::basic_string<char> > ret;
 
 +    ret = HostQuery_keyctl("pwDecrypt", "U2FsdGVkX19CvRks21CSFJboTNw0NO04kcMcna3ROaI=");
 
-+    SWSS_LOG_NOTICE("HostQuery returned %d (%s )", ret._1, ret._2.c_str());
 ```
  
  **Integration with Primary encryption key feature - Important points to note** 
