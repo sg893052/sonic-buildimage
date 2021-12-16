@@ -733,7 +733,6 @@ By default, the DHCP Relay agent encodes Option 82 Circuit-Id suboption based on
 The following format types are supported for Circuit-Id:
 
 * `%p` - name of the interface on which request was received, for example: Vlan100. 
-* `%h` - hostname of the switch.
 * `%h:%p` - hostname of the switch followed by interface name.
 
 The default format type is `%p`. The format types can be configured per-client interface. 
@@ -743,10 +742,6 @@ The default format type is `%p`. The format types can be configured per-client i
 
 Agent-Information Option 82, length 28: 
   Circuit-ID SubOption 1, length 7: "Vlan100"
-  Remote-ID SubOption 2, length 17: 52:54:00:c1:65:6b
-
-Agent-Information Option 82, length 36: 
-  Circuit-ID SubOption 1, length 15: "sonic-acc-sw-01"
   Remote-ID SubOption 2, length 17: 52:54:00:c1:65:6b
 
 Agent-Information Option 82, length 43: 
@@ -1102,12 +1097,12 @@ Options:
 ```
 
 
-**config interface ip dhcp-relay circuit-id <interface_name> [%h|%p|%h:%p]**
+**config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p]**
 
 - The above command defines the encoding of relay agent option 82 circuit-id sub-option on the given interface. The default is "%p". This command is applicable for DHCPv4 packets only.
 
 ```
-Usage: config interface ip dhcp-relay circuit-id <interface_name> [%h|%p|%h:%p]                                                    
+Usage: config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p]                                                    
 
   Configure the circuit-id format of DHCPv4 relay option 802
 
@@ -1550,7 +1545,7 @@ The below command configures circuit-id format of relay agent options on the giv
 
 ```
 # Set the circuit-id format in option 82 
-sonic(conf-if-Vlan100)# ip dhcp-relay circuit-id [%p|%h|%p:%h]
+sonic(conf-if-Vlan100)# ip dhcp-relay circuit-id [%p|%p:%h]
 ```
 
 **IPv6 commands:**
