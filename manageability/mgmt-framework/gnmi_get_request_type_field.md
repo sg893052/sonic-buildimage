@@ -1,7 +1,7 @@
 # Feature Name
 GNMI Get Request Type Field
 # High Level Design Document
-#### Rev 0.5
+#### Rev 0.6
 
 # Scope
 This document describes the high level design of supporting the 'type' field in a gNMI [GNMI](#GNMI) GetRequest Message in the management framework.
@@ -480,6 +480,21 @@ notification: <
 - OPERATIONAL type is supported only for Openconfig Yang modeled data.
 
 - Similar to Query Parameter Framework limitations, empty containers, or lists will not be present in returned data
+
+# Unit Test
+
+| **Test**                       | **Description**                             |
+| ------------------------------ | ------------------------------------------- |
+|                                |                                             |
+| gNMI GetRequest RPC            | gNMI GetRequest with default(ALL) type data |
+|                                |                                             |
+| gNMI GetRequest RPC ALL        | gNMI GetRequest with ALL type data          |
+|                                |                                             |
+| gNMI GetRequest RPC CONFIG     | gNMI GetRequest with CONFIG type data       |
+|                                |                                             |
+| gNMI GetRequest RPC STATE      | gNMI GetRequest with STATE type data        |
+|                                |                                             |
+| gNMI GetRequest RPC OPERATIONAL| gNMI GetRequest with OPERATIONAL type data  |
 
 # References
 
