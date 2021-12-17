@@ -1,10 +1,10 @@
 # Feature Name
 
-SpyTest - Data Driven Test Development
+SpyTest - Message driven Test Development
 
 # High Level Design Document
 
-#### Rev 0.4
+#### Rev 0.5
 
 # Table of Contents
   - [Revision](#revision)
@@ -22,8 +22,6 @@ SpyTest - Data Driven Test Development
       - [3.1.3.3 Subscription API](#3133-subscription-class)
       - [3.1.3.4 RPC API](#3134-rpc-api)
       - [3.1.3.5 GNOI API](#3135-gnoi-api)
-      - [3.1.3.6 get_ietf_json](#3136-get_ietf_json)
-      - [3.1.3.7 get_bind](#3137-get_bind)
      - [3.1.4 SpyTest Utils](#314-spytest-utils)
   - [4 Functionality](#4-functionality)
     - [4.1 Code Generation](#41-code-generation)
@@ -39,13 +37,15 @@ SpyTest - Data Driven Test Development
     - [5.1 Copying Relevant YANGs](#51-copying-relevant-yangs)
     - [5.2 Message Generation](#52-message-generation) 
     - [5.3 Yang Binding Generation](#53-yang-binding-generation) 
-    - [5.4 Testcase Sample For Configuration](#54-testcase-sample-for-configuration)
-    - [5.5 Testcase Sample For Verification](#55-testcase-sample-for-verification)
-    - [5.6 Testcase Sample For RPC](#56-testcase-sample-for-rpc)
-    - [5.7 Testcase Sample For Subscription](#57-testcase-sample-for-subscription)
-    - [5.8 Copying Relevant Proto Definition Files](#58-copying-relevant-proto-definition-files)
-    - [5.9 Proto Binding Generation](#59-proto-binding-generation)
-    - [5.10 Testcase Sample For gNOI](#510-testcase-sample-for-gnoi)
+    - [5.4 Name Customization](#54-name-customization)
+    - [5.5 Error Reporting](#55-error-reporting)
+    - [5.6 Testcase Sample For Configuration](#56-testcase-sample-for-configuration)
+    - [5.7 Testcase Sample For Verification](#57-testcase-sample-for-verification)
+    - [5.8 Testcase Sample For RPC](#58-testcase-sample-for-rpc)
+    - [5.9 Testcase Sample For Subscription](#59-testcase-sample-for-subscription)
+    - [5.10 Copying Relevant Proto Definition Files](#510-copying-relevant-proto-definition-files)
+    - [5.11 Proto Binding Generation](#511-proto-binding-generation)
+    - [5.12 Testcase Sample For gNOI](#512-testcase-sample-for-gnoi)
 
 # Revision
 
@@ -55,19 +55,19 @@ SpyTest - Data Driven Test Development
 | 0.2 | 09/30/2021  |   Sachin Holla     | Add subscription test details     |
 | 0.3 | 09/30/2021  |   Balachandar Mani | Add verification test details     |
 | 0.4 | 09/30/2021  |   Arun Barboza     | Add RPC and GNOI test details     |
-
+| 0.5 | 12/16/2021  |   Mohammed Faraaz     | Added details related to Name customization and Error reporting    |
 # About this Manual
 
-This document provides general information about the data driven testing mechanism using the generated message classes.
+This document provides general information about the message driven testing mechanism using the generated message classes.
 
 # Scope
 
-This document only describes the high level design of data driven testing mechanism using the message classes.
-Describing the Spytest and the topics related to the data driven testing in general are beyond the scope of this document.
+This document only describes the high level design of message driven testing mechanism using the message classes.
+Describing the Spytest and the topics related to the message driven testing in general are beyond the scope of this document.
 
 # 1 Feature Overview
 
-The data driven testing mechanism can be achieved in SpyTest using the message classes. Developer will write the test cases in terms of message classes and operate on these classes. Test UI is chosen at runtime. 
+The message driven testing mechanism can be achieved in SpyTest using the message classes. Developer will write the test cases in terms of message classes and operate on these classes. Test UI is chosen at runtime. 
 The message classes are generated from the YANG models.
 The message class can be imagined as a feature representation containing knobs(fields) and the APIs to configure, deconfigure and verify these knobs.
 
@@ -96,7 +96,7 @@ The message class can be imagined as a feature representation containing knobs(f
 
 ## 3.1.1 Code Generator
 
-- At the heart of automation is the code generator which generates the message class from the YANG model. The featue uses an open source YANG Parser called Pyang for parsing YANG model.
+- At the heart of automation is the code generator, which generates the message class from the YANG model. The featue uses an open source YANG Parser called Pyang for parsing YANG model.
 Once the YANG model are parsed, it uses a custom built pyang plugin to generate a message class.
 
 - Along with Message classes. The YANG bindings are also generated from YANG using a pyangbind plugin.
@@ -194,29 +194,9 @@ The execute() method.
 - Note: gNOI does not have a corresponding Yang model. Message python bindings are generated from the corresponding .proto service interface definition files(IDL).
 - Note: gNOI RPC with stream message are not supported currently in the telemetry repo, hence no spytest support is provided.
 
-### 3.1.3.5 get_ietf_json
-
-Generates the IETF JSON for a specific class, attribute or a path.
-
-```python
-    def get_ietf_json(self, content="all", target_attr=None, target_path=None, indent=2):
-        """ Generates the IETF JSON for a specific class, attribute or a path.
-        """
-```
-
-### 3.1.3.6 get_bind
-
-Generates the Pyangbind Object for a specific class, attribute or a path.
-
-```python
-    def get_bind(self,content="all", target_attr=None, target_path=None):
-        """ Generates the Pyangbind Object for a specific class, attribute or a path.
-        """
-```
-
 ## 3.1.4 SpyTest Utils
 
-These are existing SpyTest utilties such rest_get, rest_put, compare_payloads, etc which Generic APIs will use to service the message.
+These are existing SpyTest utilties such **rest_get()**, **rest_put()**, **compare_payloads()**, etc which Generic APIs will use to service the message.
 
 # 4 Functionality
 
@@ -230,13 +210,12 @@ Two sets of classes are generated for each data node
 
 The default location to place the messages is shown below
 ```text
-    apis/yang/autogen/messages
+    apis/yang/codegen/messages
     |
-    |_<module> Example:acl, contains all Derived classes
-        |_Acl.py
-        |_AclSet.py    
-        |_Base (directory containing Base classes)
-          |_Acl.py
+    |_<module> Example:acl
+        |_Acl.py (Contains Derived classes)
+        |_Base
+          |_Acl.py (Contains Base classes)
 ```
 
 ### 4.1.1 Rules
@@ -246,7 +225,34 @@ The default location to place the messages is shown below
 - Only YANG models which have data nodes will be considered for auto-generation. YANG with submodules are ignored as the nodes under them will be considered as part of the main module’s generation. This is in line with other YANG tools such as the OpenAPI spec generator.
 - Subtree which has no lists in it will be converted into one class. The name of the class will be the container name. If the name is not unique it will be the parent container + container name. Example for acl/.../acl-sets/acl-set/.../acl-entries/acl-entry. AclEntry will be the first choice for the class name but if it is not unique its parent container i.e. acl-set can be used to generate the name as AclSetAclEntry.  The same logic will be used for naming leafs and leaf-lists.
 - Leafs with python keywords as names will be converted to a special name. For example, if the leaf name is type then it can be converted to type_ in message classes.
-- Class, modules, and attributes can have custom names. Codegen will provide a JSON file under apis/yang/codegen/config.json to accept such customization.
+- Class, modules, and attributes can have [custom names](#54-name-customization).
+- A common special property will be generated for leafs which are common in config and state hierarchies. Common property can be used as **target_attr** in all [Generic APIs](#313-generic-apis).
+
+**Sample YANG Snippet**
+```text
+    List Acl-entry {
+    Key sequence-id;
+    Container config {
+        Leaf sequence-id;
+    }
+    Container state {
+        Leaf sequence-id;
+        Leaf description
+    }
+    }
+```
+**Common Property**
+```python
+@property
+def SequenceId(self):
+  return self.ConfigSequenceId
+
+@SequenceId.setter
+def SequenceId(self, SequenceId):
+  self.ConfigSequenceId = SequenceId
+  self.stateSequenceId = SequenceId
+  self.AclEntrySequenceId = SequenceId
+```
 
 Lets see an example of the simplified version of ACL yang with subtrees
 
@@ -303,40 +309,38 @@ module: ietf-ptp
 - Each class will have a generate_bind method to generate Pyang bind object. This method will be invoked by Action APIs (REST/GNMI’s configure(), etc).
 - get_bind() will be generated, which will return the binding specifically to the class instance.
 ```python
-  get_bind(target_attr=None,
-    target_path=None,
-   content=["config","nonconfig","all"]
+def get_bind(self,content=["all", "config", "state"], target_attr=None, target_path=None, non_keys=True):
 )
 ```
 
 **target_path** and **target_attr** are mutually exclusive
  
 If target_attr and target_path are None(default) - Full binding obj for the class is returned. 
-If target_attr is an attribute name, then the object-specific to that class will be returned. for the attributes mapped to leaf/leaf-list, their corresponding value will be returned.
+If target_attr is a message attribute, then the pyangbind object-specific to that attribute will be returned (The attributes are mapped to leaf/leaf-list).
 If target_path contains the path to leaf, the value will be returned. If it contains the path to a container like 'config', the binding for config Is returned. The Path needs to be a relative path i.e. specific to the class instance.
  
 **Example**
 ```text
  aclSet.get_bind() => Full binding for the class aclSet
- aclSet.get_bind(target_attr="configDescription") ==> return binding specific to the attribute configDescription (/acl/acl-sets/acl-set/config/description)
+ aclSet.get_bind(target_attr=aclSet.configDescription) ==> return binding specific to the attribute configDescription (/acl/acl-sets/acl-set/config/description)
 ```
 
-- get_path(ui=”rest”) will be generated, which will return a Paths in a specified UI format. 
+- get_path(ui=NorthBoundApi.REST) will be generated, which will return a Paths in a specified UI format. 
 
 The Path will only be returned if all parent hierarchies are established, otherwise, None will be returned. Using one of the following ways
  
 **Using constructor**
 
 ```python
-x = acl_entry(acl_set=acl_set(name="ONE"), seq_id=10)
-x.unconfigure(targetAttr=x.name)
+x = AclEntry(AclSet=AclSet(Name="ONE"), SequenceId=10)
+x.unconfigure(target_attr=x.name)
 ```
 
 **Using add_* method**
 
 ```python
-y = acl_set(name="ONE")
-x = acl_entry(seq_id=10)
+y = AclSet(Name="ONE")
+x = AclEntry(SequenceId=10)
 y.add(x)
 x.unconfigure()
 ```
@@ -347,68 +351,64 @@ Below is a sample generated class for XPATH ***/openconfig-acl:acl***
 **note** It is not full class only partial code is shown here for the purpose of demonstration.
 
 ```python
-##############################################################
-##############################################################
-##### THIS IS AN AUTO-GENERATED FILE PLEASE DO NOT EDIT ######
-##############################################################
-##############################################################
-
 from apis.yang.codegen.base import Base
+from apis.yang.utils.common import NorthBoundApi, get_custom_prop
 from collections import OrderedDict
-from apis.yang.codegen.bindings import openconfig_acl
-
+from urllib.parse import quote_plus
 class AclBase(Base):
-    """
+    """/openconfig-acl:acl
     Top level enclosing container for ACL model config
 and operational state data
     """
     def __init__(self,  CounterCapability):
         super(AclBase, self).__init__()
-        
-        # Corresponding YANG Path
-        self.__yang_path = "/openconfig-acl:acl"
-        
+
         # Corresponding YANG Path in RESTCONF format
         self.__yang_path_rest = "/openconfig-acl:acl"
-        self.__yang_path_rest_dict = OrderedDict()
-        
+
         # Corresponding YANG Path in GNMI format
         self.__yang_path_gnmi = "/openconfig-acl:acl"
-        self.__yang_path_gnmi_dict = OrderedDict()
+
+        self.common_attr_dict = OrderedDict()
+        self.attr_prop_dict = OrderedDict()
+
+        self.CounterCapability = CounterCapability
+        self.common_attr_dict["/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability"] = ["/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability", "/openconfig-acl:acl/state/counter-capability"]
+
 
         # Invokes setter for leafs/leaf-lists
-        self.CounterCapability = CounterCapability
-
-        # ConfigCounterCapability
-        self.__yang_path_rest_dict["ConfigCounterCapability"] = "/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability"
-        self.__yang_path_gnmi_dict["ConfigCounterCapability"] = "/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability"
-
-        # StateCounterCapability
-        self.__yang_path_rest_dict["StateCounterCapability"] = "/openconfig-acl:acl/state/counter-capability"
-        self.__yang_path_gnmi_dict["StateCounterCapability"] = "/openconfig-acl:acl/state/counter-capability"
 
         # Dict for child lists
         self.AclSet_dict = OrderedDict()
+        self.Interface_dict = OrderedDict()
+        self.ObjectGroup_dict = OrderedDict()
+        self.GlobalIngressAclSet_dict = OrderedDict()
+        self.GlobalEgressAclSet_dict = OrderedDict()
+        self.ControlPlaneIngressAclSet_dict = OrderedDict()
 
-    # Getters/Setters for attributes
 
+
+    # Getters/Setters for common attributes
+
+    # CounterCapability
     @property
     def CounterCapability(self):
-        """ Common getter for /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability and /openconfig-acl:acl/state/counter-capability.
-        System reported indication of how ACL counters are reported by the target
+        """Common Getter for below attributes
+        /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability
+        /openconfig-acl:acl/state/counter-capability
         """
-        return {
-            "ConfigCounterCapability": self.__ConfigCounterCapability,
-            "StateCounterCapability":  self.__StateCounterCapability
-        }
+        return self.ConfigCounterCapability
     
     @CounterCapability.setter
     def CounterCapability(self, CounterCapability=None):
-        """ Common setter for /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability and /openconfig-acl:acl/state/counter-capability.
-        System reported indication of how ACL counters are reported by the target
-        """        
+        """Common Setter for below attributes
+        /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability
+        /openconfig-acl:acl/state/counter-capability
+        """
         self.ConfigCounterCapability = CounterCapability
         self.StateCounterCapability = CounterCapability
+
+    # Getters/Setters for attributes
 
     # ConfigCounterCapability
     @property
@@ -416,14 +416,17 @@ and operational state data
         """ /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability
         System reported indication of how ACL counters are reported by the target
         """
+        if not hasattr(self, "_AclBase__ConfigCounterCapability"):
+            return None
         return self.__ConfigCounterCapability
     
     @ConfigCounterCapability.setter
     def ConfigCounterCapability(self, ConfigCounterCapability=None):
         """ /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability
         System reported indication of how ACL counters are reported by the target
-        """        
-        self.__ConfigCounterCapability = ConfigCounterCapability   
+        """
+        self.__ConfigCounterCapability = get_custom_prop(str, ConfigCounterCapability, "/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability", "/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability", "/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability")
+        self.attr_prop_dict["/openconfig-acl:acl/config/openconfig-acl-ext:counter-capability"] = self.__ConfigCounterCapability
 
     # StateCounterCapability
     @property
@@ -432,6 +435,8 @@ and operational state data
         System reported indication of how ACL counters are reported
 by the target
         """
+        if not hasattr(self, "_AclBase__StateCounterCapability"):
+            return None
         return self.__StateCounterCapability
     
     @StateCounterCapability.setter
@@ -439,59 +444,136 @@ by the target
         """ /openconfig-acl:acl/state/counter-capability
         System reported indication of how ACL counters are reported
 by the target
-        """        
-        self.__StateCounterCapability = StateCounterCapability        
+        """
+        self.__StateCounterCapability = get_custom_prop(str, StateCounterCapability, "/openconfig-acl:acl/state/counter-capability", "/openconfig-acl:acl/state/counter-capability", "/openconfig-acl:acl/state/counter-capability")
+        self.attr_prop_dict["/openconfig-acl:acl/state/counter-capability"] = self.__StateCounterCapability
 
 
     def add_AclSet(self, AclSet):
         """ Adds AclSet(/openconfig-acl:acl/acl-sets/acl-set) instance inside AclBase (/openconfig-acl:acl)"""
-        self.AclSet_dict[(AclSet.AclSetName, AclSet.AclSetType)] = AclSet
+        self.AclSet_dict[(AclSet.AclSetName._val, AclSet.AclSetType._val)] = AclSet
         AclSet.Acl = self
     
     def del_AclSet(self, AclSet):
         """ Deletes AclSet(/openconfig-acl:acl/acl-sets/acl-set) instance from AclBase (/openconfig-acl:acl)"""
-        del(self.AclSet_dict[(AclSet.AclSetName, AclSet.AclSetType)])
+        del(self.AclSet_dict[(AclSet.AclSetName._val, AclSet.AclSetType._val)])
         AclSet.Acl = None
 
-    def _generate_bind(self, content="all", target_attr=None, parent=None):
+    def add_Interface(self, Interface):
+        """ Adds Interface(/openconfig-acl:acl/interfaces/interface) instance inside AclBase (/openconfig-acl:acl)"""
+        self.Interface_dict[(Interface.InterfaceId._val)] = Interface
+        Interface.Acl = self
+    
+    def del_Interface(self, Interface):
+        """ Deletes Interface(/openconfig-acl:acl/interfaces/interface) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.Interface_dict[(Interface.InterfaceId._val)])
+        Interface.Acl = None
+
+    def add_ObjectGroup(self, ObjectGroup):
+        """ Adds ObjectGroup(/openconfig-acl:acl/openconfig-acl-ext:object-groups/object-group) instance inside AclBase (/openconfig-acl:acl)"""
+        self.ObjectGroup_dict[(ObjectGroup.ObjectGroupName._val)] = ObjectGroup
+        ObjectGroup.Acl = self
+    
+    def del_ObjectGroup(self, ObjectGroup):
+        """ Deletes ObjectGroup(/openconfig-acl:acl/openconfig-acl-ext:object-groups/object-group) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.ObjectGroup_dict[(ObjectGroup.ObjectGroupName._val)])
+        ObjectGroup.Acl = None
+
+    def add_GlobalIngressAclSet(self, GlobalIngressAclSet):
+        """ Adds GlobalIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/ingress-acl-sets/ingress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
+        self.GlobalIngressAclSet_dict[(GlobalIngressAclSet.IngressAclSetSetName._val, GlobalIngressAclSet.IngressAclSetType._val)] = GlobalIngressAclSet
+        GlobalIngressAclSet.Acl = self
+    
+    def del_GlobalIngressAclSet(self, GlobalIngressAclSet):
+        """ Deletes GlobalIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/ingress-acl-sets/ingress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.GlobalIngressAclSet_dict[(GlobalIngressAclSet.IngressAclSetSetName._val, GlobalIngressAclSet.IngressAclSetType._val)])
+        GlobalIngressAclSet.Acl = None
+
+    def add_GlobalEgressAclSet(self, GlobalEgressAclSet):
+        """ Adds GlobalEgressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/egress-acl-sets/egress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
+        self.GlobalEgressAclSet_dict[(GlobalEgressAclSet.EgressAclSetSetName._val, GlobalEgressAclSet.EgressAclSetType._val)] = GlobalEgressAclSet
+        GlobalEgressAclSet.Acl = self
+    
+    def del_GlobalEgressAclSet(self, GlobalEgressAclSet):
+        """ Deletes GlobalEgressAclSet(/openconfig-acl:acl/openconfig-acl-ext:global/egress-acl-sets/egress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.GlobalEgressAclSet_dict[(GlobalEgressAclSet.EgressAclSetSetName._val, GlobalEgressAclSet.EgressAclSetType._val)])
+        GlobalEgressAclSet.Acl = None
+
+    def add_ControlPlaneIngressAclSet(self, ControlPlaneIngressAclSet):
+        """ Adds ControlPlaneIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:control-plane/ingress-acl-sets/ingress-acl-set) instance inside AclBase (/openconfig-acl:acl)"""
+        self.ControlPlaneIngressAclSet_dict[(ControlPlaneIngressAclSet.IngressAclSetSetName._val, ControlPlaneIngressAclSet.IngressAclSetType._val)] = ControlPlaneIngressAclSet
+        ControlPlaneIngressAclSet.Acl = self
+    
+    def del_ControlPlaneIngressAclSet(self, ControlPlaneIngressAclSet):
+        """ Deletes ControlPlaneIngressAclSet(/openconfig-acl:acl/openconfig-acl-ext:control-plane/ingress-acl-sets/ingress-acl-set) instance from AclBase (/openconfig-acl:acl)"""
+        del(self.ControlPlaneIngressAclSet_dict[(ControlPlaneIngressAclSet.IngressAclSetSetName._val, ControlPlaneIngressAclSet.IngressAclSetType._val)])
+        ControlPlaneIngressAclSet.Acl = None
+
+    def _generate_bind(self, content="all", target_attr=None, parent=None, non_keys=True):
         """
         Generate pyangbindings for the spytest message
         """
         if content not in ["all", "config", "state"]:
             raise ValueError("Invalid content type - {}".format(content))
+        from apis.yang.codegen.bindings import openconfig_acl
         acl = openconfig_acl().acl
-        
-        # ConfigCounterCapability
-        if self.ConfigCounterCapability is not None:
-            if content == "config" or content == "all":
-                acl.config.counter_capability = self.ConfigCounterCapability
-        if target_attr == "ConfigCounterCapability":
-            return acl.config.counter_capability
-        # StateCounterCapability
-        if self.StateCounterCapability is not None:
-            if content == "state" or content == "all":
-                acl.state._set_counter_capability(self.StateCounterCapability)
-        if target_attr == "StateCounterCapability":
-            return acl.state.counter_capability
+
+        if non_keys:
+            # ConfigCounterCapability
+            if self.ConfigCounterCapability._val is not None:
+                if content == "config" or content == "all":
+                    acl.config.counter_capability = self.ConfigCounterCapability._val
+            if target_attr is not None and target_attr is self.ConfigCounterCapability:
+                return acl.config.counter_capability
+            # StateCounterCapability
+            if self.StateCounterCapability._val is not None:
+                if content == "state" or content == "all":
+                    acl.state._set_counter_capability(self.StateCounterCapability._val)
+            if target_attr is not None and target_attr is self.StateCounterCapability:
+                return acl.state.counter_capability
+
+        if non_keys:
+            if target_attr is not None and target_attr is self.CounterCapability:
+                if content == "config" or content == "all":
+                    return acl.config.counter_capability
+                if content == "state":
+                    return acl.state.counter_capability
 
         if content == "all" or content == "config":
             for key in self.AclSet_dict:
-                self.AclSet_dict[key]._generate_bind(content=content, parent=acl)
-        
+                self.AclSet_dict[key]._generate_bind(content=content, parent=acl, non_keys=non_keys)
+        if content == "all" or content == "config":
+            for key in self.Interface_dict:
+                self.Interface_dict[key]._generate_bind(content=content, parent=acl, non_keys=non_keys)
+        if content == "all" or content == "state":
+            for key in self.ObjectGroup_dict:
+                self.ObjectGroup_dict[key]._generate_bind(content=content, parent=acl, non_keys=non_keys)
+        if content == "all" or content == "config":
+            for key in self.GlobalIngressAclSet_dict:
+                self.GlobalIngressAclSet_dict[key]._generate_bind(content=content, parent=acl, non_keys=non_keys)
+        if content == "all" or content == "config":
+            for key in self.GlobalEgressAclSet_dict:
+                self.GlobalEgressAclSet_dict[key]._generate_bind(content=content, parent=acl, non_keys=non_keys)
+        if content == "all" or content == "config":
+            for key in self.ControlPlaneIngressAclSet_dict:
+                self.ControlPlaneIngressAclSet_dict[key]._generate_bind(content=content, parent=acl, non_keys=non_keys)
+
         if target_attr is not None:
             return None
         return acl
-    
 
-    def get_path(self, ui, target_attr=None):
+
+    def get_base_path(self, ui, target_attr=None):
+        if ui not in [NorthBoundApi.REST, NorthBoundApi.GNMI]:
+            raise ValueError("Unsupported UI: " + str(ui))
         if target_attr is None:
             rest_template = self.__yang_path_rest
             gnmi_template = self.__yang_path_gnmi
         else:
-            rest_template = self.__yang_path_rest_dict[target_attr]
-            gnmi_template = self.__yang_path_gnmi_dict[target_attr]
+            rest_template = target_attr.rest_path
+            gnmi_template = target_attr.gnmi_path
 
-        if ui == "rest":
+        if ui == NorthBoundApi.REST:
             return rest_template
         else:
             return gnmi_template
@@ -502,65 +584,41 @@ by the target
 Below class is generated for XPATH ***/openconfig-acl:acl/acl-sets/acl-set***
 
 ```python
-##############################################################
-##############################################################
-##### THIS IS AN AUTO-GENERATED FILE PLEASE DO NOT EDIT ######
-##############################################################
-##############################################################
-
 from apis.yang.codegen.base import Base
+from apis.yang.utils.common import NorthBoundApi, get_custom_prop
 from collections import OrderedDict
-from apis.yang.codegen.bindings.acl.acl_sets import acl_sets
+from urllib.parse import quote_plus
 
 class AclSetBase(Base):
-    """
+    """/openconfig-acl:acl/acl-sets/acl-set
     List of ACL sets, each comprising of a list of ACL
 entries
     """
-    def __init__(self, Name, Type, Acl):
+    def __init__(self,  Name, Type, Description, Source, Acl):
         super(AclSetBase, self).__init__()
-        
-        # Corresponding YANG Path
-        self.__yang_path = "/openconfig-acl:acl/acl-sets/acl-set"
-        
+
         # Corresponding YANG Path in RESTCONF format
         self.__yang_path_rest = "/openconfig-acl:acl/acl-sets/acl-set={},{}"
-        self.__yang_path_rest_dict = OrderedDict()
-        
+
         # Corresponding YANG Path in GNMI format
         self.__yang_path_gnmi = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]"
-        self.__yang_path_gnmi_dict = OrderedDict()
+
+        self.common_attr_dict = OrderedDict()
+        self.attr_prop_dict = OrderedDict()
+
+        self.Name = Name
+        self.common_attr_dict["/openconfig-acl:acl/acl-sets/acl-set/config/name"] = ["/openconfig-acl:acl/acl-sets/acl-set/config/name", "/openconfig-acl:acl/acl-sets/acl-set/state/name"]
+        self.Type = Type
+        self.common_attr_dict["/openconfig-acl:acl/acl-sets/acl-set/config/type"] = ["/openconfig-acl:acl/acl-sets/acl-set/config/type", "/openconfig-acl:acl/acl-sets/acl-set/state/type"]
+        self.Description = Description
+        self.common_attr_dict["/openconfig-acl:acl/acl-sets/acl-set/config/description"] = ["/openconfig-acl:acl/acl-sets/acl-set/config/description", "/openconfig-acl:acl/acl-sets/acl-set/state/description"]
+
+        self.Source = Source
 
         # Invokes setter for leafs/leaf-lists
-        self.Name = Name
-        self.Type = Type
-
-        # AclSetName
-        self.__yang_path_rest_dict["AclSetName"] = "/openconfig-acl:acl/acl-sets/acl-set={},{}/name"
-        self.__yang_path_gnmi_dict["AclSetName"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/name"
-
-        # AclSetType
-        self.__yang_path_rest_dict["AclSetType"] = "/openconfig-acl:acl/acl-sets/acl-set={},{}/type"
-        self.__yang_path_gnmi_dict["AclSetType"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/type"
-
-        # ConfigName
-        self.__yang_path_rest_dict["ConfigName"] = "/openconfig-acl:acl/acl-sets/acl-set={},{}/config/name"
-        self.__yang_path_gnmi_dict["ConfigName"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/config/name"
-
-        # ConfigType
-        self.__yang_path_rest_dict["ConfigType"] = "/openconfig-acl:acl/acl-sets/acl-set={},{}/config/type"
-        self.__yang_path_gnmi_dict["ConfigType"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/config/type"
-
-        # StateName
-        self.__yang_path_rest_dict["StateName"] = "/openconfig-acl:acl/acl-sets/acl-set={},{}/state/name"
-        self.__yang_path_gnmi_dict["StateName"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/name"
-
-        # StateType
-        self.__yang_path_rest_dict["StateType"] = "/openconfig-acl:acl/acl-sets/acl-set={},{}/state/type"
-        self.__yang_path_gnmi_dict["StateType"] = "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/type"
 
         # Dict for child lists
-        self.AclSetAclEntriesAclEntry_dict = OrderedDict()
+        self.AclSetAclEntry_dict = OrderedDict()
 
         # Parent's ref
         self.Acl = Acl
@@ -568,49 +626,69 @@ entries
     def __hash__(self):
         return hash((self.AclSetName, self.AclSetType))
 
-    # Getters/Setters for attributes
+    # Getters/Setters for common attributes
 
     # Name
     @property
     def Name(self):
-        """ Common Getter for __AclSetName, __ConfigName and __StateName
-        Reference to the name list key
+        """Common Getter for below attributes
+        /openconfig-acl:acl/acl-sets/acl-set/name
+        /openconfig-acl:acl/acl-sets/acl-set/config/name
+        /openconfig-acl:acl/acl-sets/acl-set/state/name
         """
-        return {
-            "AclSetName": self.AclSetName,
-            "ConfigName": self.ConfigName,
-            "StateName": self.StateName
-        }
+        return self.ConfigName
     
     @Name.setter
     def Name(self, Name=None):
-        """ Common Setter for __AclSetName, __ConfigName and __StateName
-        Reference to the name list key
-        """        
-        self.AclSetName = Name 
+        """Common Setter for below attributes
+        /openconfig-acl:acl/acl-sets/acl-set/name
+        /openconfig-acl:acl/acl-sets/acl-set/config/name
+        /openconfig-acl:acl/acl-sets/acl-set/state/name
+        """
+        self.AclSetName = Name
         self.ConfigName = Name
-        self.StateName = Name 
+        self.StateName = Name
 
     # Type
     @property
     def Type(self):
-        """ Common Getter for __AclSetType, __ConfigType and __StateType
-        Reference to the name list key
+        """Common Getter for below attributes
+        /openconfig-acl:acl/acl-sets/acl-set/type
+        /openconfig-acl:acl/acl-sets/acl-set/config/type
+        /openconfig-acl:acl/acl-sets/acl-set/state/type
         """
-        return {
-            "AclSetType": self.AclSetType,
-            "ConfigType": self.ConfigType,
-            "StateType": self.StateType
-        }
+        return self.ConfigType
     
     @Type.setter
     def Type(self, Type=None):
-        """ Common Setter for __AclSetType, __ConfigType and __StateType
-        Reference to the name list key
-        """        
-        self.AclSetType = Type 
+        """Common Setter for below attributes
+        /openconfig-acl:acl/acl-sets/acl-set/type
+        /openconfig-acl:acl/acl-sets/acl-set/config/type
+        /openconfig-acl:acl/acl-sets/acl-set/state/type
+        """
+        self.AclSetType = Type
         self.ConfigType = Type
-        self.StateType = Type 
+        self.StateType = Type
+
+    # Description
+    @property
+    def Description(self):
+        """Common Getter for below attributes
+        /openconfig-acl:acl/acl-sets/acl-set/config/description
+        /openconfig-acl:acl/acl-sets/acl-set/state/description
+        """
+        return self.ConfigDescription
+    
+    @Description.setter
+    def Description(self, Description=None):
+        """Common Setter for below attributes
+        /openconfig-acl:acl/acl-sets/acl-set/config/description
+        /openconfig-acl:acl/acl-sets/acl-set/state/description
+        """
+        self.ConfigDescription = Description
+        self.StateDescription = Description
+
+    # Getters/Setters for attributes
 
     # AclSetName
     @property
@@ -618,14 +696,17 @@ entries
         """ /openconfig-acl:acl/acl-sets/acl-set/name
         Reference to the name list key
         """
+        if not hasattr(self, "_AclSetBase__AclSetName"):
+            return None
         return self.__AclSetName
     
     @AclSetName.setter
     def AclSetName(self, AclSetName=None):
         """ /openconfig-acl:acl/acl-sets/acl-set/name
         Reference to the name list key
-        """        
-        self.__AclSetName = AclSetName        
+        """
+        self.__AclSetName = get_custom_prop(str, AclSetName, "/openconfig-acl:acl/acl-sets/acl-set/name", "/openconfig-acl:acl/acl-sets/acl-set={},{}/name", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/name")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/name"] = self.__AclSetName
 
     # AclSetType
     @property
@@ -633,14 +714,17 @@ entries
         """ /openconfig-acl:acl/acl-sets/acl-set/type
         Reference to the type list key
         """
+        if not hasattr(self, "_AclSetBase__AclSetType"):
+            return None
         return self.__AclSetType
     
     @AclSetType.setter
     def AclSetType(self, AclSetType=None):
         """ /openconfig-acl:acl/acl-sets/acl-set/type
         Reference to the type list key
-        """        
-        self.__AclSetType = AclSetType        
+        """
+        self.__AclSetType = get_custom_prop(str, AclSetType, "/openconfig-acl:acl/acl-sets/acl-set/type", "/openconfig-acl:acl/acl-sets/acl-set={},{}/type", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/type")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/type"] = self.__AclSetType
 
     # ConfigName
     @property
@@ -648,14 +732,17 @@ entries
         """ /openconfig-acl:acl/acl-sets/acl-set/config/name
         The name of the access-list set
         """
+        if not hasattr(self, "_AclSetBase__ConfigName"):
+            return None
         return self.__ConfigName
     
     @ConfigName.setter
     def ConfigName(self, ConfigName=None):
         """ /openconfig-acl:acl/acl-sets/acl-set/config/name
         The name of the access-list set
-        """        
-        self.__ConfigName = ConfigName        
+        """
+        self.__ConfigName = get_custom_prop(str, ConfigName, "/openconfig-acl:acl/acl-sets/acl-set/config/name", "/openconfig-acl:acl/acl-sets/acl-set={},{}/config/name", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/config/name")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/config/name"] = self.__ConfigName
 
     # ConfigType
     @property
@@ -664,6 +751,8 @@ entries
         The type determines the fields allowed in the ACL entries
 belonging to the ACL set (e.g., IPv4, IPv6, etc.)
         """
+        if not hasattr(self, "_AclSetBase__ConfigType"):
+            return None
         return self.__ConfigType
     
     @ConfigType.setter
@@ -671,8 +760,27 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
         """ /openconfig-acl:acl/acl-sets/acl-set/config/type
         The type determines the fields allowed in the ACL entries
 belonging to the ACL set (e.g., IPv4, IPv6, etc.)
-        """        
-        self.__ConfigType = ConfigType      
+        """
+        self.__ConfigType = get_custom_prop(str, ConfigType, "/openconfig-acl:acl/acl-sets/acl-set/config/type", "/openconfig-acl:acl/acl-sets/acl-set={},{}/config/type", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/config/type")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/config/type"] = self.__ConfigType
+
+    # ConfigDescription
+    @property
+    def ConfigDescription(self):
+        """ /openconfig-acl:acl/acl-sets/acl-set/config/description
+        Description, or comment, for the ACL set
+        """
+        if not hasattr(self, "_AclSetBase__ConfigDescription"):
+            return None
+        return self.__ConfigDescription
+    
+    @ConfigDescription.setter
+    def ConfigDescription(self, ConfigDescription=None):
+        """ /openconfig-acl:acl/acl-sets/acl-set/config/description
+        Description, or comment, for the ACL set
+        """
+        self.__ConfigDescription = get_custom_prop(str, ConfigDescription, "/openconfig-acl:acl/acl-sets/acl-set/config/description", "/openconfig-acl:acl/acl-sets/acl-set={},{}/config/description", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/config/description")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/config/description"] = self.__ConfigDescription
 
     # StateName
     @property
@@ -680,14 +788,17 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
         """ /openconfig-acl:acl/acl-sets/acl-set/state/name
         The name of the access-list set
         """
+        if not hasattr(self, "_AclSetBase__StateName"):
+            return None
         return self.__StateName
     
     @StateName.setter
     def StateName(self, StateName=None):
         """ /openconfig-acl:acl/acl-sets/acl-set/state/name
         The name of the access-list set
-        """        
-        self.__StateName = StateName        
+        """
+        self.__StateName = get_custom_prop(str, StateName, "/openconfig-acl:acl/acl-sets/acl-set/state/name", "/openconfig-acl:acl/acl-sets/acl-set={},{}/state/name", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/name")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/state/name"] = self.__StateName
 
     # StateType
     @property
@@ -696,6 +807,8 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
         The type determines the fields allowed in the ACL entries
 belonging to the ACL set (e.g., IPv4, IPv6, etc.)
         """
+        if not hasattr(self, "_AclSetBase__StateType"):
+            return None
         return self.__StateType
     
     @StateType.setter
@@ -703,79 +816,166 @@ belonging to the ACL set (e.g., IPv4, IPv6, etc.)
         """ /openconfig-acl:acl/acl-sets/acl-set/state/type
         The type determines the fields allowed in the ACL entries
 belonging to the ACL set (e.g., IPv4, IPv6, etc.)
-        """        
-        self.__StateType = StateType        
+        """
+        self.__StateType = get_custom_prop(str, StateType, "/openconfig-acl:acl/acl-sets/acl-set/state/type", "/openconfig-acl:acl/acl-sets/acl-set={},{}/state/type", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/type")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/state/type"] = self.__StateType
 
-    def add_AclSetAclEntriesAclEntry(self, AclSetAclEntriesAclEntry):
-        """ Adds AclSetAclEntriesAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance inside AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
-        self.AclSetAclEntriesAclEntry_dict[(AclSetAclEntriesAclEntry.AclEntrySequenceId)] = AclSetAclEntriesAclEntry
-        AclSetAclEntriesAclEntry.AclSet = self
+    # StateDescription
+    @property
+    def StateDescription(self):
+        """ /openconfig-acl:acl/acl-sets/acl-set/state/description
+        Description, or comment, for the ACL set
+        """
+        if not hasattr(self, "_AclSetBase__StateDescription"):
+            return None
+        return self.__StateDescription
     
-    def del_AclSetAclEntriesAclEntry(self, AclSetAclEntriesAclEntry):
-        """ Deletes AclSetAclEntriesAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance from AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
-        del(self.AclSetAclEntriesAclEntry_dict[(AclSetAclEntriesAclEntry.AclEntrySequenceId)])
-        AclSetAclEntriesAclEntry.AclSet = None
+    @StateDescription.setter
+    def StateDescription(self, StateDescription=None):
+        """ /openconfig-acl:acl/acl-sets/acl-set/state/description
+        Description, or comment, for the ACL set
+        """
+        self.__StateDescription = get_custom_prop(str, StateDescription, "/openconfig-acl:acl/acl-sets/acl-set/state/description", "/openconfig-acl:acl/acl-sets/acl-set={},{}/state/description", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/description")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/state/description"] = self.__StateDescription
 
-    def _generate_bind(self, content="all", target_attr=None, parent=None):
+    # Source
+    @property
+    def Source(self):
+        """ /openconfig-acl:acl/acl-sets/acl-set/state/openconfig-acl-ext:source
+        Source of the ACL mentions whether it is created by user
+or port-authentication control(PAC).
+        """
+        if not hasattr(self, "_AclSetBase__Source"):
+            return None
+        return self.__Source
+    
+    @Source.setter
+    def Source(self, Source=None):
+        """ /openconfig-acl:acl/acl-sets/acl-set/state/openconfig-acl-ext:source
+        Source of the ACL mentions whether it is created by user
+or port-authentication control(PAC).
+        """
+        self.__Source = get_custom_prop(str, Source, "/openconfig-acl:acl/acl-sets/acl-set/state/openconfig-acl-ext:source", "/openconfig-acl:acl/acl-sets/acl-set={},{}/state/openconfig-acl-ext:source", "/openconfig-acl:acl/acl-sets/acl-set[name={}][type={}]/state/openconfig-acl-ext:source")
+        self.attr_prop_dict["/openconfig-acl:acl/acl-sets/acl-set/state/openconfig-acl-ext:source"] = self.__Source
+
+
+    def add_AclSetAclEntry(self, AclSetAclEntry):
+        """ Adds AclSetAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance inside AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
+        self.AclSetAclEntry_dict[(AclSetAclEntry.AclEntrySequenceId._val)] = AclSetAclEntry
+        AclSetAclEntry.AclSet = self
+    
+    def del_AclSetAclEntry(self, AclSetAclEntry):
+        """ Deletes AclSetAclEntry(/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry) instance from AclSetBase (/openconfig-acl:acl/acl-sets/acl-set)"""
+        del(self.AclSetAclEntry_dict[(AclSetAclEntry.AclEntrySequenceId._val)])
+        AclSetAclEntry.AclSet = None
+
+    def _generate_bind(self, content="all", target_attr=None, parent=None, non_keys=True):
         """
         Generate pyangbindings for the spytest message
         """
         if content not in ["all", "config", "state"]:
             raise ValueError("Invalid content type - {}".format(content))
+        from apis.yang.codegen.bindings.acl.acl_sets import acl_sets
         if parent is None:
-            acl_set = acl_sets().acl_set.add("{} {}".format(self.AclSetName, self.AclSetType))
+            acl_set = acl_sets().acl_set.add(name=self.AclSetName._val, type=self.AclSetType._val)
         else:
-            acl_set = parent.acl_sets.acl_set.add("{} {}".format(self.AclSetName, self.AclSetType))
-        
-        # ConfigName
-        if self.ConfigName is not None:
-            if content == "config" or content == "all":
-                acl_set.config.name = self.ConfigName
-        if target_attr == "ConfigName":
-            return acl_set.config.name
-        # ConfigType
-        if self.ConfigType is not None:
-            if content == "config" or content == "all":
-                acl_set.config.type = self.ConfigType
-        if target_attr == "ConfigType":
-            return acl_set.config.type
+            acl_set = parent.acl_sets.acl_set.add(name=self.AclSetName._val, type=self.AclSetType._val)
+        if acl_set._defining_module is None:
+            acl_set._defining_module = acl_sets().acl_set._defining_module
+        if acl_set._yang_type is None:
+            acl_set._yang_type = acl_sets().acl_set._yang_type
 
-        # StateName
-        if self.StateName is not None:
-            if content == "state" or content == "all":
-                acl_set.state._set_name(self.StateName)
-        if target_attr == "StateName":
-            return acl_set.state.name
-        # StateType
-        if self.StateType is not None:
-            if content == "state" or content == "all":
-                acl_set.state._set_type(self.StateType)
-        if target_attr == "StateType":
-            return acl_set.state.type
+        if non_keys:
+            # ConfigName
+            if self.ConfigName._val is not None:
+                if content == "config" or content == "all":
+                    acl_set.config.name = self.ConfigName._val
+            if target_attr is not None and target_attr is self.ConfigName:
+                return acl_set.config.name
+            # ConfigType
+            if self.ConfigType._val is not None:
+                if content == "config" or content == "all":
+                    acl_set.config.type = self.ConfigType._val
+            if target_attr is not None and target_attr is self.ConfigType:
+                return acl_set.config.type
+            # ConfigDescription
+            if self.ConfigDescription._val is not None:
+                if content == "config" or content == "all":
+                    acl_set.config.description = self.ConfigDescription._val
+            if target_attr is not None and target_attr is self.ConfigDescription:
+                return acl_set.config.description
+            # StateName
+            if self.StateName._val is not None:
+                if content == "state" or content == "all":
+                    acl_set.state._set_name(self.StateName._val)
+            if target_attr is not None and target_attr is self.StateName:
+                return acl_set.state.name
+            # StateType
+            if self.StateType._val is not None:
+                if content == "state" or content == "all":
+                    acl_set.state._set_type(self.StateType._val)
+            if target_attr is not None and target_attr is self.StateType:
+                return acl_set.state.type
+            # StateDescription
+            if self.StateDescription._val is not None:
+                if content == "state" or content == "all":
+                    acl_set.state._set_description(self.StateDescription._val)
+            if target_attr is not None and target_attr is self.StateDescription:
+                return acl_set.state.description
+            # Source
+            if self.Source._val is not None:
+                if content == "state" or content == "all":
+                    acl_set.state._set_source(self.Source._val)
+            if target_attr is not None and target_attr is self.Source:
+                return acl_set.state.source
+
+        if non_keys:
+            if target_attr is not None and target_attr is self.Name:
+                if content == "config" or content == "all":
+                    return acl_set.config.name
+                if content == "state":
+                    return acl_set.state.name
+            if target_attr is not None and target_attr is self.Type:
+                if content == "config" or content == "all":
+                    return acl_set.config.type
+                if content == "state":
+                    return acl_set.state.type
+            if target_attr is not None and target_attr is self.Description:
+                if content == "config" or content == "all":
+                    return acl_set.config.description
+                if content == "state":
+                    return acl_set.state.description
 
         if content == "all" or content == "config":
-            for key in self.AclSetAclEntriesAclEntry_dict:
-                self.AclSetAclEntriesAclEntry_dict[key]._generate_bind(content=content, parent=acl_set)
-        
+            for key in self.AclSetAclEntry_dict:
+                self.AclSetAclEntry_dict[key]._generate_bind(content=content, parent=acl_set, non_keys=non_keys)
+
         if target_attr is not None:
             return None
         return acl_set
-    
-    def get_keys(self):
-        return (str(self.AclSetName), str(self.AclSetType))
 
-    def get_path(self, ui, target_attr=None):
+    def get_keys(self, ui):
+        if ui not in [NorthBoundApi.REST, NorthBoundApi.GNMI]:
+            raise ValueError("Unsupported UI: " + str(ui))
+        if ui == NorthBoundApi.REST:
+            return (quote_plus(str(self.AclSetName._val)), quote_plus(str(self.AclSetType._val)), )
+        else:
+            return (str(self.AclSetName._val), str(self.AclSetType._val), )
+
+    def get_base_path(self, ui, target_attr=None):
+        if ui not in [NorthBoundApi.REST, NorthBoundApi.GNMI]:
+            raise ValueError("Unsupported UI: " + str(ui))
         if target_attr is None:
             rest_template = self.__yang_path_rest
             gnmi_template = self.__yang_path_gnmi
         else:
-            rest_template = self.__yang_path_rest_dict[target_attr]
-            gnmi_template = self.__yang_path_gnmi_dict[target_attr]
+            rest_template = target_attr.rest_path
+            gnmi_template = target_attr.gnmi_path
 
-        if ui == "rest":
-            return rest_template.format(*self.get_keys())
+        if ui == NorthBoundApi.REST:
+            return rest_template.format(*self.get_keys(ui=ui))
         else:
-            return gnmi_template.format(*self.get_keys())
+            return gnmi_template.format(*self.get_keys(ui=ui))
 ```
 
 ### 4.1.1.2 Derived class Rules
@@ -1128,18 +1328,18 @@ Once the Messages and Bindings are regenerated, they need to be committed along 
 
 ## 5.2 Message Generation
 
-- Use **brcm-spytest/apis/yang/codegen/tools/generate_msg_class.sh** script to generate the message class
+- Use **brcm-spytest/apis/yang/codegen/tools/generate_messages.sh** script to generate the message class
 
 **Usage**
 
 ```text
-generate_msg_class.sh [--over-write-derived-class] <YANG-1> ... <YANG-N>               
+generate_messages.sh [--over-write-derived-class --no-bindings] <YANG-1> ... <YANG-N>               
 ```
 
 **Example**
 
 ```text
-brcm-spytest/apis/yang/codegen/tools/generate_msg_class.sh openconfig-acl.yang extensions/openconfig-acl-ext.yang
+brcm-spytest/apis/yang/codegen/tools/generate_messages.sh openconfig-acl.yang extensions/openconfig-acl-ext.yang
 ```
 
 ***NOTE:*** Messages will be generated under brcm-spytest/apis/yang/codegen/messages
@@ -1148,7 +1348,7 @@ brcm-spytest/apis/yang/codegen/tools/generate_msg_class.sh openconfig-acl.yang e
 
 Script **brcm-spytest/apis/yang/codegen/tools/generate_bindings.sh** will generate the pyangbind
 bindings for the required YANG files.
-It will be automatically triggered by the *generate_msg_class.sh* script.
+It will be automatically triggered by the *generate_messages.sh* script.
 Runs the pyangbind generator in "split-class-dir" mode, which generates a separate python module
 directory for every container and list nodes.
 All binding artifacts will be generated under **brcm-spytest/apis/yang/codegen/bindings** directory.
@@ -1160,7 +1360,116 @@ Usage:
 generate_bindings.sh <YANG-1> ... <YANG-N>
 ```
 
-## 5.4 Testcase Sample For Configuration
+## 5.4 Name Customization
+Message's name(class name), attribute's(leafs) names are auto-generated from YANG Path. The auto-generated name can be modified to a custom name using name_map (a configuration file in YAML format).
+
+The code generator will pick the name_maps from **brcm-spytest/apis/yang/codegen/name_maps**
+The **name_map** is a YAML file. Ideally there should be one name_map file per YANG module, but the Developers have a flexibility, there can be more than one name_map file per YANG module.
+
+The name_map provides below two directives
+
+- **url_name_map:** This expects a Xpath as key and a custom name. This is used to customize class and attribute names.
+- **module_name_map:** This expects a YANG module name and a custom name. This can be used to customize the module name (A file under which all classes are present).
+
+**Sample name_map is shown below**
+```text
+name_mapping:
+  url_name_map:
+    /openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry: 
+      name: AclSetRule
+    /openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry/config/sequence-id: 
+      name: AclSetRuleId
+
+  module_name_map:
+    openconfig-acl:
+      name: ACL
+```
+[**Common(special) propery**]()'s name can also be customized
+
+**Sample name_map to customize common property name**
+```text
+name_mapping:
+  url_name_map:
+    /openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry/config/sequence-id: 
+      common_name: AclSetRuleId
+```
+Common property's name derived from the leaf present in config hierarchy. Therefore the XPath should point to config hierarchy's leaf node. If only **custom_name** attribute is provided as shown in the above sample, the config and state leaf names are auto-generated from **custom_name**.
+Based on the above sample below are the names generated.
+
+- **common property's** name - **AclSetRuleId**
+
+- **/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry/config/sequence-id's** name - **ConfigAclSetRuleId**
+
+- **/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry/state/sequence-id's** name - **StateAclSetRuleId**
+
+**Note:** Auto-generated name from **custom_name** directive can be overriden by providing **name** for a a specific leaf using leaf's Xpath.
+
+## 5.5 Error Reporting
+
+All Generic APIs such as **configure()**, **Unconfigure()**, **verify()**, and **subscribe()** have the capability to auto-validate the result of execution. By default this behavior is **disabled**. This can be enabled using a below fixture
+defined in **apis.yang.common**
+
+```python
+pytest.fixture
+def report_error()
+""" This will enable response validation"
+```
+
+Full flexibility is given to the test developers, the fixture will
+accept below data
+
+**stop_on_error=True**
+
+**collect_support=False**
+
+**Example to enable fixture**
+
+```python
+def test_<>(report_error):
+  """ Here report_error=True,stop_on_error=True, collect_support=False
+  """
+  pass
+```
+
+**Example to enable fixture with options**
+
+```python
+@pytest.mark.report_opts(stop_on_error=True, collect_support=True)
+def test_<>(report_error):
+    """ Here report_error=True, stop_on_error=True,
+    collect_support=True
+    """
+    pass
+```
+
+**Example where report_error is disabled**
+
+```python
+def test_<>():
+    """ report_error=False
+    """
+    pass
+```
+
+All Generic APIs also accept below keyword arguments, they will
+overrride the default and the behavior defined by fixture.
+
+**report_error=False**
+
+**stop_on_error=False**
+
+**collect_support=False**
+
+**Example**
+
+```python
+obj.Configure(..., report_error=True)
+obj.Configure(..., report_error=True, stop_on_error=True)
+obj.Configure(..., report_error=True, stop_on_error=True,
+	collect_support=True)
+```
+
+## 5.6 Testcase Sample For Configuration
 
 Sample test logic which Adds ACL and Rule
 
@@ -1188,7 +1497,7 @@ acl.unconfigure(dut)
 
 ```
 
-## 5.5 Testcase Sample For Verification
+## 5.7 Testcase Sample For Verification
 
 ```python
 
@@ -1211,7 +1520,7 @@ acl.verify_rest(dut, ui="rest")
 
 ```
 
-## 5.6 Testcase Sample For RPC
+## 5.8 Testcase Sample For RPC
 
 Following is an example test case to execute and verify Yang RPC for clearing a Flowgroup Counter.
 
@@ -1249,7 +1558,7 @@ def test_tam_rpc_example():
     st.report_pass("test_case_passed")
 ```
 
-## 5.7 Testcase Sample For Subscription
+## 5.9 Testcase Sample For Subscription
 
 Following is an example test case to subscribe for ACL changes and verify the notifications
 for ACL create and delete cases.
@@ -1285,7 +1594,7 @@ def test_onchange_acl_example(subscribe_cleanup):
     st.report_pass("test_case_passed")
 ```
 
-## 5.8 Copying Relevant Proto Definition Files
+## 5.10 Copying Relevant Proto Definition Files
 
 Proto definition files will be placed under **brcm-spytest/apis/yang/proto/gnoi**
 
@@ -1309,7 +1618,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto"
 import "gogoproto/gogo.proto"
 ```
 
-## 5.9 Proto Binding Generation
+## 5.11 Proto Binding Generation
 
 Script **brcm-spytest/apis/yang/codegen/tools/generate_gnoimsgs.sh** will generate the proto bindings for the required .proto files. It downloads some dependencies, performs a few sanity checks and runs the protoc compiler which generates the message bindings, and gRPC service stubs.
 
@@ -1321,7 +1630,7 @@ Usage:
 generate_gnoimsgs.sh <PROTO-1> ... <PROTO-N>
 ```
 
-## 5.10 Testcase Sample For GNOI
+## 5.12 Testcase Sample For GNOI
 
 Following is an example test case to execute and verify gNOI RPCs for Audit Log clearing and retrieval.
 
