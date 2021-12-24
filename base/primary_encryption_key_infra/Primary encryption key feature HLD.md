@@ -712,6 +712,8 @@ $(SONIC_HOST_SERVICES_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3) \
 
 +                                     $(SONIC_HOSTCOMM_PY3)                                
 
+Update the docker mk file to add DBUS option:
++$(DOCKER_EVENTD)_RUN_OPT += -v /var/run/dbus:/var/run/dbus:rw
 
 To use the API in source, import the API from hostcomm and use as instructed below:
 
