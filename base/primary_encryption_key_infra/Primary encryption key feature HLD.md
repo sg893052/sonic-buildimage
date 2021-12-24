@@ -705,14 +705,14 @@ The python library is sonic_hostcomm-1.0-py3-none-any.whl. To selectively compil
 The following steps are to be followed to link and use the library.
  
 ```
-In the rules/<app>.mk, add dependency on SONIC_HOSTCOMM_PY3
+In the rules/<app>.mk or rules/<docker>.mk, add dependency on SONIC_HOSTCOMM_PY3
 
 $(SONIC_HOST_SERVICES_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3) \
                                       $(SWSSSDK_PY3) \
 
 +                                     $(SONIC_HOSTCOMM_PY3)                                
 
-Update the docker mk file to add DBUS option:
+Update the rules/<docker>.mk file to add DBUS option:
 
 +$(DOCKER_EVENTD)_RUN_OPT += -v /var/run/dbus:/var/run/dbus:rw
 
