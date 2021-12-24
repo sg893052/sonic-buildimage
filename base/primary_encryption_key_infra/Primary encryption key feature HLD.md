@@ -713,7 +713,31 @@ $(SONIC_HOST_SERVICES_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3) \
 +                                     $(SONIC_HOSTCOMM_PY3)                                
 
 Update the docker mk file to add DBUS option:
+
 +$(DOCKER_EVENTD)_RUN_OPT += -v /var/run/dbus:/var/run/dbus:rw
+
+Update Dockerfile.j2 of the docker to install required DBUS packages (example from frr Dockerfile.j2 provided below):
+
++++ b/dockers/docker-fpm-frr/Dockerfile.j2
+@@ -25,11 +25,19 @@ RUN apt-get update   && \
+         logrotate       \
+         libunwind8      \
+         traceroute      \
+-        net-tools
++        net-tools       \
++        python3-dev      \
++        build-essential \
++        pkg-config      \
++        libdbus-1-dev   \
++        libdbus-glib-1-2 \
++        libdbus-glib-1-dev
+ 
+ RUN groupadd -g ${frr_user_gid} frr \
+  && useradd -u ${frr_user_uid} -g ${frr_user_gid} -M -s /bin/false frr
+ 
++RUN pip3 install dbus-python
++
+
 
 To use the API in source, import the API from hostcomm and use as instructed below:
 
