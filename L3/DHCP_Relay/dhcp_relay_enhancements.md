@@ -144,7 +144,7 @@ DHCP relay is used to forward DHCP packets between client and server when they a
 8. Provide configuration option to specify forwarding behavior  of DHCPv4 packets that already contain relay agent options.
 9. All configuration changes must be applied with out restarting the DHCP relay docker.
 10. Extend Click/KLISH configuration and show commands to support DHCPv4/DHCPv6 relay on L3 subinterfaces.
-11. Provide per interface configuration option to include hostname/interface name/interface MAC address in DHCP relay option 82 circuit-id.
+11. Provide per interface configuration option to include hostname/interface name in DHCP relay option 82 circuit-id.
 
 ### 1.1.3 Scalability Requirements
 #### 1.1.3.1 New Scalability Requirements
@@ -735,7 +735,7 @@ The following format types are supported for Circuit-Id:
 * `%p` - name of the interface on which request was received, for example: Vlan100. 
 * `%h:%p` - hostname of the switch followed by interface name.
 
-The default format type is `%p`. The format types can be configured per-client interface. 
+The default format type is `%p`. The format types can be configured per-client interface. The option 82 is applicable to DHCPv4 packets only.
 
 ```
 # DHCP Option 82 - circuit id format examples
@@ -1317,12 +1317,27 @@ Get DHCP relay statistics on the given interface:
 # curl -X GET "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcpv6/interfaces/interface=Ethernet0/state/counters" -H "accept: application/yang-data+json"
 ```
 
+Configure DHCP relay Option 82 CircuitId format on the given interface:
+```
+#curl -X PUT "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcp/interfaces/interface=Ethernet0/agent-information-option/config/circuit-id" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"circuit-id\":\"%h:%p\"}"
+```
+
+Reset DHCP relay Option 82 CircuitId format on the given interface:
+```
+#curl -X DELETE "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcp/interfaces/interface=Ethernet0/agent-information-option/config/circuit-id" -H "accept: */*" -H "Content-Type: application/yang-data+json"
+```
+
+Get DHCP relay Option 82 CircuitId format on the given interface:
+```
+#curl -X GET "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcp/interfaces/interface=Ethernet0/agent-information-option/config/circuit-id" -H "accept: */*" -H "Content-Type: application/yang-data+json"
+```
+
 For list of all REST APIS, go to "https://<switch_ip>/ui". The webserver provides information about all the REST URLs, REST Data, return codes and interactive support to execute REST queries.
 
 The following REST APIs are not supported.  For the detailed list of deviations and unsupported objects, refer to extensions YANG model for DHCP relay. 
 
   * Enabling/Disabling relay agent globally for all interfaces
-  * Configuration of Circuit ID and Remote ID
+  * Configuration of Remote ID
 
 ```
 
@@ -1356,7 +1371,6 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 +    |        |  +--rw oc-relay-ext:vrf?             string
 +    |        |  +--rw oc-relay-ext:max-hop-count?   uint32
 +    |        |  +--rw oc-relay-ext:policy-action?   enumeration
-+    |        |  +--rw oc-relay-ext:circuit-id?      string
 -    |        |  +--rw enable?                       boolean
      |        +--ro state
      |        |  +--ro id?                           oc-if:interface-id
@@ -1380,7 +1394,6 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 +    |        |  +--ro oc-relay-ext:vrf?             string
 +    |        |  +--ro oc-relay-ext:max-hop-count?   uint32
 +    |        |  +--ro oc-relay-ext:policy-action?   enumeration
-+    |        |  +--ro oc-relay-ext:circuit-id?      string
 -    |        |  +--ro enable?                       boolean
      |        +--rw interface-ref
      |        |  +--rw config
@@ -1395,14 +1408,14 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 +    |           |  +--rw oc-relay-ext:link-select?   mode
 -    |           |  +--rw remote-id?                  string
 -    |           |  +--rw enable?                     boolean
--    |           |  +--rw circuit-id?                 string
+     |           |  +--rw circuit-id?                 string
      |           +--ro state
 +    |              +--ro oc-relay-ext:vrf-select?    mode
 +    |              +--ro oc-relay-ext:link-select?   mode
 -    |              +--ro enable?                     boolean
--    |              +--ro circuit-id?                 string
+     |              +--ro circuit-id?                 string
 -    |              +--ro remote-id?                  string
--    |              +--ro sent-circuit-id?            string
+     |              +--ro sent-circuit-id?            string
 -    |              +--ro sent-remote-id?             string
      +--rw dhcpv6
         +--rw config
@@ -1546,6 +1559,9 @@ The below command configures circuit-id format of relay agent options on the giv
 ```
 # Set the circuit-id format in option 82 
 sonic(conf-if-Vlan100)# ip dhcp-relay circuit-id [%p|%p:%h]
+
+# Reset the circuit-id format in option 82 to default
+sonic(conf-if-Vlan100)# no ip dhcp-relay circuit-id
 ```
 
 **IPv6 commands:**
