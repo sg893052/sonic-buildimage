@@ -1404,6 +1404,30 @@ Based on the above sample below are the names generated.
 
 **Note:** Auto-generated name from **custom_name** directive can be overriden by providing **name** for a a specific leaf using leaf's Xpath.
 
+**Enum and Identity string customization**
+
+`Enums/Identities` are associated with leaf. Existing name mapping yaml is extended to support the Enum/Identity maps.
+
+`Usage in testcase`
+
+```text
+class_obj>.<prop> => Custom string
+```
+
+```text
+<class_obj>.<prop>.value => This will yield YANG_ENUM. This will be used YANG APIs such as REST and GNMI. CLI and test code can use custom string.
+```
+
+**YAML schema below:**
+```text
+name_mapping:
+  url_name_map:
+    /openconfig-acl:acl/config/openconfig-acl-ext:counter-capability:
+      enum_names:
+        - <YANG_ENUM/Identity>: <custom string>
+        - <ENUM>: <Custom string>
+```
+
 ## 5.5 Error Reporting
 
 All Generic APIs such as **configure()**, **Unconfigure()**, **verify()**, and **subscribe()** have the capability to auto-validate the result of execution. By default this behavior is **disabled**. This can be enabled using a below fixture
