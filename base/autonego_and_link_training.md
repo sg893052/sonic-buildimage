@@ -23,8 +23,9 @@
 
 # List of Tables
 
-[Table 1: References](#table-1-references)<br>
-[Table 2: Abbreviations](#table-2-abbreviations)
+[Table 1: References](#table-1-references)  
+[Table 2: Abbreviations](#table-2-abbreviations)  
+[Table 3: Supported platform list](#table-3-supported-platform-list)  
 
 # Revision
 
@@ -32,6 +33,7 @@
 |:---:|:-----------:|:-------------------:|:-----------------------------------|
 | 0.1 | 04/15/2021  | Dante (Kuo-Jung) Su | Initial version                    |
 | 0.2 | 08/24/2021  | Dante (Kuo-Jung) Su | Merge the YANG leaf from Google and the relevant logic |
+| 0.3 | 09/22/2021  | Dante (Kuo-Jung) Su | Update the implementation details |
 
 # About this Manual
 
@@ -43,11 +45,14 @@ This document provides functional requirements and high-level design for providi
 
 |       **Document**                                       | **Location**   |
 | -------------------------------------------------------- | -------------- |
-| Auto-Negotiation (AN) Overview                           | https://www.ieee802.org/3/by/public/Mar15/booth_3by_01_0315.pdf |
+| Auto-Negotiation (AN) Overview | https://www.ieee802.org/3/by/public/Mar15/booth_3by_01_0315.pdf |
 | Auto-Negotiation - What is it and how it fits into 1TPCE | https://www.ieee802.org/3/1TPCESG/public/Lo_02_0514.pdf |
-| O’Reilly Ethernet: The Definitive Guide, 2nd Edition     | https://www.oreilly.com/library/view/ethernet-the-definitive/9781449362980/ch05.html |
-| PAM-4 Auto-Negotiation & Link Training White Paper       | https://xenanetworks.com/whitepaper/autoneg-link-training/ |
-| 100GBASE-KP4 Link Training                               | https://www.ieee802.org/3/bj/public/sep12/lusted_3bj_01_0912.pdf |
+| O.Reilly Ethernet: The Definitive Guide, 2nd Edition | https://www.oreilly.com/library/view/ethernet-the-definitive/9781449362980/ch05.html |
+| PAM-4 Auto-Negotiation & Link Training White Paper | https://xenanetworks.com/whitepaper/autoneg-link-training/ |
+| 100GBASE-KP4 Link Training | https://www.ieee802.org/3/bj/public/sep12/lusted_3bj_01_0912.pdf |
+| PAM4 transmitter training protocol | https://www.ieee802.org/3/cd/public/July16/healey_3cd_01a_0716.pdf |
+| 25G & 50G Specification | https://ethernettechnologyconsortium.org/wp-content/uploads/2020/03/25G-50G-Specification-FINAL.pdf |
+| Wiki of 10_Gigabit_Ethernet | https://en.wikipedia.org/wiki/10_Gigabit_Ethernet |
 
 # Scope
 
@@ -62,10 +67,12 @@ This document describes the high level design of Auto-Negotiation and Link Train
 | AN           | Auto-Negotiation protocol                                          |
 | CDR          | Optical clock and data recovery circuit                            |
 | CLI          | Command-Line Interface                                             |
+| FEC          | Forward Error Correction                                           |
 | LT           | Link Training                                                      |
 | NRZ          | Non-Return-to-Zero, also called Pulse Amplitude Modulation 2-level |
 | PAM4         | Pulse Amplitude Modulation 4-level                                 |
 | SAI          | Switch Abstraction Interface                                       |
+| SLT          | Standalone Link-Training                                           |
 | SONiC        | Software for Open Networking in the Cloud                          |
 | SWSS         | SWitch State Service                                               |
 | TX FIR       | Transmitter Finite Impulse Response (i.e. Pre-emphasis)            |
@@ -74,36 +81,40 @@ This document describes the high level design of Auto-Negotiation and Link Train
 
 Automatic configuration of Ethernet interfaces over twisted-pair links and one fiber 
 optic media type is provided by the Auto-Negotiation protocol. Clause 28 for the twisted-pair
-links, Clause 37 for the 1000BASE-X fiber optic link, and Clause 73 for backplane/copper links >= 1G.
-The Auto-Negotiation system ensures that devices at each end of a link can automatically negotiate their
-configuration to the highest set of common capabilities.
+links, Clause 37 for the 1000BASE-X fiber optic link, and Clause 73 for backplane/copper >= 1G.
+The **Auto-Negotiation system** ensures that devices at each end of a link can automatically
+negotiate their configuration to the **highest set of common capabilities**.
 
-Link Training is another process that can take place when a device is connected to a high-speed Ethernet
+- Clause 28: Twisted-pair links
+- Clause 37: 1000BASE-X fiber optic link
+- Clause 73: Clause 73 for backplane/copper >= 1G.
+
+Link Training(Clause 72 and 93) is another process that can take place when a device is connected to a high-speed Ethernet
 port through a copper cable or backplane. In this case it is important that the characteristics of the 
 transmitted signal are tuned to be optimally carried over the copper cable.
 
+- IEEE 802.3bj-2014
+- Clause 72: 10GBASE-KR
+- Clause 93: 100GBASE-KR4
+
 Without Link Training support, the SONiC platforms will have to provide a set of statically tuned
-tx signal parameters, it's neither scale and nor available on all of the SONiC platforms, and hence,
-it's nice to introduce the Link Training support into SONiC.
+tx signal parameters, it's neither scale nor available on all of the SONiC platforms, hence it's nice to introduce the Link Training support into SONiC.
 
 ## 1.1 Functional Requirements
 
-Link Training could be enabled with or without AN Clause 73, it's performed after the speed is negotiated,
-and hence, AN does not guarantee a compatible mode of operation will result in a link being established or
-maintained.
-
-- The AN is disabled by default for the best backward compatibility.
-- The LT is disabled by default for the best backward compatibility.
-- The LT is not available and should be de-activated for the native copper ports. (e.g. Native RJ45)
+- Both AN and LT are targeting **copper links** (e.g. CX, CR, KX, KR, DAC)
+- The LT is always enabled when AN is enabled  
+    - LT is performed after the speed is negotiated, hence AN does not guarantee a 
+compatible mode of operation will result in a link being established or maintained.
+- The LT could be enabled when AN is disabled, and it will be referred as **Standalone Link-Training(SLT)**  
+    - When SLT is administratively enabled: LT will be enabled when AN is disabled  
+    - When SLT is administratively disabled: LT will be disabled when AN is disabled
+- The AN should be disabled by default for the best backward compatibility.
+- The LT should be disabled by default for the best backward compatibility.
+- The LT should be de-activated for the native copper ports. (e.g. Native Twisted-pair, RJ45)
 - The LT is only available for links greater than or equal to 10G.
-- In the case of 10G optic, the LT is only available if the attached transceiver is with CDR support.
-- The LT should be de-activated if there is a static configuration available in the media_settings.json
-- The AN and standalone-link-training should be configurable individually from the CLI.
-- When the AN is administratively enabled, the orchagent shall automatically update the advertised capabilities of the port as per the transceiver attached.
-- When the AN is administratively enabled, the LT should be activated if appliable to the attached transceiver.
-- When the AN is administratively disabled, the LT should be disabled unless the standalone-link-training is administratively enabled.
-- When the standalone-link-training is administratively enabled, the LT will be enable if appliable to the attached transceiver, regardless of the AN configuration.
-- When the standalone-link-training is administratively disabled, the LT will still be enable if AN is enabled, and the LT will be disabled if AN is disabled.
+- The LT is only available if the attached transceiver is with CDR support.
+- The AN and SLT should be configurable individually from the CLI.
 
 ## 1.2 Configuration and Management Requirements
 
@@ -131,10 +142,8 @@ The AN/LT support is part of the swss docker container. On switch platforms whic
 
 ## 2.1 Target Deployment Use Cases
 
-The AN/LT feature allows an administrator to perform following actions:
-
-- Automatic configuration of Ethernet interfaces over native RJ45 links and fiber optic media (i.e.SFPs)
-- Dynamically tune tx signal parameters to drop the requirement of statically tuned parameters
+- The AN provides automatic configuration of speed and FEC.
+- The LT is to dynamically tune tx signal parameters to drop the requirement of statically tuned parameters
 - View the per-port auto-negotiation results
 - View the per-port link-training results
 
@@ -144,70 +153,46 @@ The AN/LT feature allows an administrator to perform following actions:
 
 ### 3.1.1 Platform Configuration
 
-The AN port capabilities should be defined in the platform specific platform-def.json:
+The per-port AN default configuration should be defined in the platform specific platform-def.json:
 
 **Format** 
 ```
-    "port-autoneg-capabilities": {
-        "EthernetXY": {
-            "Z-lane": [
-                PORTMODE, PORTMODE, ...
-            ]
-
-    XYZ: Integer
-
-    PORTMODE = "speed[:fec[:duplex]]"
-
-        fec defaults to "none" if not specified
-        duplex defaults to "full-duplex" if not specified
+    "default-autoneg-mode": {
+        "EthernetWX-YZ": {
+            "autoneg": "on"
+        }
+    },
 ```
 
 **Example**
 ```
-    "port-autoneg-capabilities": {
-        "Ethernet0-255": {
-            "1-lane": [
-                "50000:rs", "50000:none",
-                "25000:rs", "25000:fc", "25000:none",
-                "10000:rs", "10000:fc", "10000:none"
-            ],
-            "2-lane": [
-                "100000:rs", "100000:none",
-                "50000:rs",  "50000:none"
-            ],
-            "4-lane": [
-                "200000:rs", "200000:none",
-                "100000:rs", "100000:none",
-                "40000:rs", "40000:fc", "40000:none"
-            ],
-            "8-lane": [
-                "400000:rs"
-            ]
+    "default-autoneg-mode": {
+        "Ethernet0-47": {
+            "autoneg": "on"
         }
-    }
+    },
 ```
 
-- The port capabilities of the **MAC** device is specified in **platform-def.json**, and it will later be published to PORT_TABLE of APPL_DB by the **pmon#xcvrd** when pmon startup.
-- The port capabilities of the **PHY** device is determined by the **pmon#xcvrd** as per the transceiver attached to the port, and it will later be published to TRANSCEIVER_INFO of STATE_DB by the **pmon#xcvrd**.
-- The **swss#orchagent** will select the port capabilities based on the lane number of the current portmode, and only advertise the capabilities that's also available on the transceiver.
-- The **swss#orchagent** will use the "fec-mode" specified in the platform-def.json for the FEC types in the AN advertisement.
-- The "lane_speed" could be eliminated for the 1-lane ports, in this case, all the speeds listed in "port_speed" will be flagged in the AN local advertisement.
+- The port capabilities will be automatically determined by the SAI library
+- The user specified AN/LT configurations in the CONFIG_DB is treated as a **hint**, the final result may fall back to driver defaults if none is applicable (e.g. SFP replacement without reconfiguration)
+- The operational AN/LT configuration is available via command **show interface advertise**
 
 ## 3.2 Media Type
 
 The link-training requires the media type to be correctly configured as per the transceiver attached, otherwise, it may not be functional properlly.
 The supported media types are as below, and it's the **pmon#xcvrd** which is responsible for updating the media type as per the attached transceiver.
 
+**Note: The following medium types are Broadcom specific**
+
 - Backplane
 	- Backplane
 	- CAUI-x C2C
-	- CAUI-x C2M (Optics without a CDR/retimer)
-	- 25G/50G Active Optic Cable(AOC) using CAUI-x C2M
+	- CAUI-x C2M (Optics with a CDR/retimer)
 - Copper
 	- Direct Attached Cable
 	- Passive Copper Cable
-	- Active Copper Cable
-- Optic
+	- Active Copper Cable (ACC)
+- Optic **(AN/LT is not supported in this case)**
 	- 10G/40G optics without a CDR/retimer
 	- 10G/40G Active Optic Cable(AOC) using SFI or nPPI
 
@@ -215,94 +200,90 @@ The supported media types are as below, and it's the **pmon#xcvrd** which is res
 
 ### 3.3.1 Auto-negotiation and link-training in CONFIG_DB
 ```
-key               = PORT:EthernetXY
+key             = PORT:EthernetXY
 
-;field            = value
-autoneg           = on|off
-link_training     = on|off   ; This is the standalone-link-training
-admin_advertise   = PORTMODE,PORTMODE....
+;field          = value
+autoneg         = on|off
+link_training   = on|off   ; This is the standalone-link-training
+adv_speeds      = SPEED1,SPEED2...
+; SPEED<n>      = 400000|100000|40000|25000|10000|1000|100|10
 
-; PORTMODE = "speed[:fec[:duplex]]"
-;        fec defaults to "none" if not specified
-;        duplex defaults to "full-duplex" if not specified
+e.g.
+......
+"PORT|Ethernet128": {
+    "type": "hash", 
+    "value": {
+      "autoneg": "on", 
+      "link_training": "off",
+      "adv_speeds": "100000,40000"
+    }
+}, 
+......
 ```
 
 ### 3.3.1 Auto-negotiation and link-training in APPL_DB
 ```
-key               = PORT_TABLE:EthernetXY
+key             = PORT_TABLE:EthernetXY
 
-;field            = value
-autoneg           = on|off
-link_training     = on|off   ; This is the standalone-link-training
-admin_advertise   = PORTMODE,PORTMODE....
+;field             = value
+autoneg            = on|off
+link_training      = on|off     ; Administratively configured standalone link-training
+oper_link_training = on|off     ; Operational link-training state
+oper_speed         = 400000|100000|40000|25000|10000|1000|100|10  ; Operational port speed
+oper_adv_speeds    = SPEED1,SPEED2...
+; SPEED<n>         = 400000|100000|40000|25000|10000|1000|100|10
+oper_fec           = rc|fc|none ; Operational FEC mode
 
-; PORTMODE = "speed[:fec[:duplex]]"
-;        fec defaults to "none" if not specified
-;        duplex defaults to "full-duplex" if not specified
-```
-
-### 3.3.2 Auto-negotiation status in STATE_DB
-```
-key                   = PORT:EthernetXY
-
-;field                = value
-autoneg               = on|off
-admin_advertise       = PORTMODE,PORTMODE....
-oper_local_advertise  = PORTMODE,PORTMODE....
-oper_remote_advertise = PORTMODE,PORTMODE....
-oper_speed            = SPEED
-oper_fec              = FEC
-link_training         = on|off
-
-; PORTMODE = "speed[:fec[:duplex]]"
-;        fec defaults to "none" if not specified
-;        duplex defaults to "full-duplex" if not specified
-```
-
-### 3.3.3 Transceiver capabilities in STATE_DB
-
-```
-key                   = TRANSCEIVER_INFO:EthernetXY
-
-;field                = value
-autoneg_capability    = PORTMODE,PORTMODE....
-medium                = BACKPLANE|COPPER|OPTIC
-
-; PORTMODE = "speed[:fec[:duplex]]"
-;        fec defaults to "none" if not specified
-;        duplex defaults to "full-duplex" if not specified
+e.g.
+......
+"PORT_TABLE:Ethernet128": {
+    "type": "hash", 
+    "value": {
+      "autoneg": "on", 
+      "link_training": "off", 
+      "oper_adv_speeds": "100000,40000", 
+      "oper_fec": "rc", 
+      "oper_link_training": "on", 
+      "oper_speed": "100000", 
+      "oper_status": "up", 
+      ......
+    }
+}, 
+......
 ```
 
 ## 3.4 PMON#XCVRD
 
 The **pmon#xcvrd** process will be enhanced for the following activities:
 
-- Publishing the media type of the attached transceiver to STATE_DB
+- Publishing the media type of the attached transceiver to APPL_DB
 - Publishing the static information of the attached transceiver to STATE_DB
 
 ## 3.5 SWSS#ORCHAGENT
 
 The **swss#orchagent** process will be enhanced for the following activities:
 
-- Subscribing APPL_DB for the **medium** updates, and send the media type updates to syncd.
-- Subscribing APPL_DB for the **admin_advertise** updates, and send the requests to syncd.
-- Subscribing APPL_DB for the **autoneg** updates, and send the Auto-Negotiation requests to syncd.
-- If the link-training is appliable to the attached transceiver, check if **preemphasis** exists in the PORT_TABLE of APPL_DB, if positive activate the link-training, otherwise de-activated link-training and use specific **preemphasis**.
+- Subscribing APPL_DB for the **medium**, and send the media type updates to syncd.
+- Subscribing APPL_DB for the **adv_speeds**, and send the AN advertisement requests to syncd.
+- Subscribing APPL_DB for the **autoneg**, and send the AN requests to syncd.
+- Subscribing APPL_DB for the **link_training**, and send the LT requests to syncd.
+- Publishing the operational link speed (**oper_speed**) to APPL_DB
+- Publishing the operational local AN advertisement (**oper_adv_speeds**) to APPL_DB
+- Publishing the operational remote AN advertisement (**remote_adv_speeds**) to APPL_DB
+- Publishing the operational LT state (**oper_link_training**) to APPL_DB
+- Publishing the operational FEC mode (**oper_fec**) to APPL_DB
 
 ## 3.4 SAI
 
-The AN/LT support is built on top the following SAI port attributes, hence these should be implemented in the SAI library
+The AN/LT support is built on top the following SAI port attributes
 
-- SAI_PORT_ATTR_SUPPORTED_SPEED
-- SAI_PORT_ATTR_SUPPORTED_FEC_MODE
-- SAI_PORT_ATTR_SUPPORTED_HALF_DUPLEX_SPEED
-- SAI_PORT_ATTR_SUPPORTED_AUTO_NEG_MODE
-- SAI_PORT_ATTR_SUPPORTED_MEDIA_TYPE
+- SAI_PORT_ATTR_ADVERTISED_SPEED
+- SAI_PORT_ATTR_AUTO_NEG_MODE
+- SAI_PORT_ATTR_MEDIA_TYPE
 - SAI_PORT_ATTR_REMOTE_ADVERTISED_SPEED
-- SAI_PORT_ATTR_REMOTE_ADVERTISED_FEC_MODE
 - SAI_PORT_ATTR_REMOTE_ADVERTISED_HALF_DUPLEX_SPEED
-- SAI_PORT_ATTR_REMOTE_ADVERTISED_AUTO_NEG_MODE
 - SAI_PORT_ATTR_REMOTE_ADVERTISED_MEDIA_TYPE
+- SAI_PORT_ATTR_SPEED
 
 ## 3.5 User Interface
 *Please follow the SONiC Management Framework Developer Guide - https://drive.google.com/drive/folders/1J5_VVuwoJBa69UZ2BoXLYW8PZCFIi76K*
@@ -317,19 +298,18 @@ module: openconfig-interfaces
         |  ............
         +--rw oc-eth:ethernet
         |  +--rw oc-eth:config
-        |  |  ............
         |  |  +--rw oc-eth:auto-negotiate?                  boolean
         |  |  +--rw oc-eth-ext2:standalone-link-training?   boolean
-        |  |  ............
+        |  |  +--rw oc-eth-ext2:advertised-speed?           string
         |  +--ro oc-eth:state
-        |  |  ............
         |  |  +--ro oc-eth:auto-negotiate?                  boolean
-        |  |  +--ro oc-eth:negotiated-duplex-mode?          enumeration
         |  |  +--ro oc-eth:negotiated-port-speed?           identityref
-        |  |  +--ro oc-eth-ext2:negotiated-port-fec?        identityref
         |  |  +--ro oc-eth-ext2:standalone-link-training?   boolean
+        |  |  +--ro oc-eth-ext2:advertised-speed?           string
+        |  |  +--ro oc-eth-ext2:negotiated-port-fec?        identityref
         |  |  +--ro oc-eth-ext2:oper-link-training?         boolean
-        |  |  ............
+        |  |  +--ro oc-eth-ext2:oper-advertised-speed?      string
+        |  |  +--ro oc-eth-ext2:remote-advertised-speed?    string
 ```
 
 ### 3.5.2 CLI
@@ -338,34 +318,55 @@ module: openconfig-interfaces
 
 **link-training**
 
-**Default** Auto mode is activated
-**Format**  [no] link-training {on|off}
-**Mode**    Interface Config Mode
+**Default** Auto mode is activated  
+**Format**  [no] standalone-link-training  
+**Mode**    Interface Config Mode  
 
-Using this command to enable or disable standalone-link-training and set the mode for the port.
-This command is only applicable to physical ports, as it's to tune the hardware signal.
+Using this command to enable or disable **standalone-link-training** for the port.
 
-| Parameter | Description                                                       |
-| :-------: | :---------------------------------------------------------------- |
-| on        | LT is enabled regardless of AN configuration |
-| off       | LT is disabled if AN is disabled, while LT will still be enabled if AN is enabled |
+Link-training is an automatic tuning of the SerDes transmit and receive parameters
+to ensure an optimal connection over copper links. It is normally run as part of
+the auto negotiation sequence as specified in IEEE 802.3 Clause 73.
+
+**Standalone-link-training** is used when full auto negotiation is not desired on
+an Ethernet link but link training is needed.
+
+This command is only applicable to physical SFP ports, and its value will be ignored
+when auto-negotiation is enabled.
 
 Example:
 
-Having the LT enabled on the port, regardless of the AN configuration<br>
-**Note: The LT will still be deactivated if the per-port static configuration is available in the media_settings.json**
+**Enable Standalone Link-Training on Ethernet0**  
+
 ```
-sonic(config)# interface range Ethernet 0-16
-%Info: Configuring only existing interfaces in range
-sonic(conf-if-range-eth**)# link-training on
+sonic# configure terminal
+sonic(config)# interface Ethernet 0
+sonic(conf-if-Ethernet0)# standalone-link-training
 ```
 
-Having the LT disabled on the port if AN is disabled, while LT will still be enabled if AN is enabled.<br>
-**Note: The LT will still be deactivated if the per-port static configuration is available in the media_settings.json**
+**Disable Standalone Link-Training on Ethernet0**  
 ```
+sonic# configure terminal
+sonic(config)# interface Ethernet 0
+sonic(conf-if-Ethernet0)# no standalone-link-training
+```
+
+**Enable Standalone Link-Training on Ethernet0,Ethernet1...Ethernet16**  
+
+```
+sonic# configure terminal
 sonic(config)# interface range Ethernet 0-16
 %Info: Configuring only existing interfaces in range
-sonic(conf-if-range-eth**)# link-training off
+sonic(conf-if-range-eth**)# standalone-link-training
+```
+
+**Disable Standalone Link-Training on Ethernet0,Ethernet1...Ethernet16**  
+
+```
+sonic# configure terminal
+sonic(config)# interface range Ethernet 0-16
+%Info: Configuring only existing interfaces in range
+sonic(conf-if-range-eth**)# no standalone-link-training
 ```
 
 **speed**
@@ -375,55 +376,129 @@ advertised by that port.
 
 Use the auto keyword to enable auto-negotiation on the port. Use the command without the
 **auto** keyword to disable auto-negotiation and to set the port speed and mode according
-to the command values. If the auto-negotiation is disabled, the speed and duplex mode must
-be set.
+to the command values. If the auto-negotiation is disabled, the speed must be set.
 
-**Default** Auto-negotiation is disabled
-**Format**  speed {SPEED}
-            speed auto {SPEED}[,SPEED]
-**Mode**    Interface Config Mode
+**Default** Auto-negotiation is disabled  
+**Format**  speed {SPEED}  
+            speed auto {SPEED}[,SPEED]  
+**Mode**    Interface Config Mode  
 
-| Parameter | Description                                                       |
-| :-------: | :---------------------------------------------------------------- |
-| SPEED     | Port speed in Mbps, the postfix f/h could be used for duplex mode, and it's full-duplex if not specified |
-
-| Speed     | Description         |
+| Parameter | Description         |
 | :-------: | :------------------ |
-| 400000    | 400G full-duplex    |
-| 100000    | 100G full-duplex    |
-| 25000     | 25G full-duplex     |
-| 10000     | 10G full-duplex     |
-| 1000      | 1G full-duplex      |
-| 100       | 100M full-duplex    |
-| 100f      | 100M full-duplex    |
-| 100h      | 100M half-duplex    |
-| 10        | 10M full-duplex     |
-| 10f       | 10M full-duplex     |
-| 10h       | 10M half-duplex     |
+| SPEED     | Port speed in Mbps  |
 
 Example:
 
-Having auto-negotiation enabled with 25G,10G and 1G in the advertisement
+**Enable auto-negotiation and advertise all the speeds supported in the hardware**  
 ```
-sonic(conf-if-Ethernet0)# speed auto 25000,10000,1000
+sonic(conf-if-Ethernet0)# speed auto
 ```
 
-Having auto-negotiation disabled with 25G full-duplex
+**Enable auto-negotiation and advertise 10G and 1G**  
+```
+sonic(conf-if-Ethernet0)# speed auto 10000,1000
+```
+
+**Enable auto-negotiation and advertise 1G only**  
+```
+sonic(conf-if-Ethernet0)# speed auto 1000
+```
+
+**Disable auto-negotiation and configure the port speed to 25G**  
 ```
 sonic(conf-if-Ethernet0)# speed 25000
 ```
 
-Having auto-negotiation disabled with 100M full-duplex
+**Disable auto-negotiation and restore port speed as-is before auto-negotiation activation**  
 ```
-sonic(conf-if-Ethernet0)# speed 100
+sonic(conf-if-Ethernet0)# no speed auto
 ```
 
-Having auto-negotiation disabled with 100M half-duplex
+**Disable auto-negotiation and configure the port speed to default value**  
 ```
-sonic(conf-if-Ethernet0)# speed 100h
+sonic(conf-if-Ethernet0)# no speed
 ```
 
 #### 3.5.2.2 Show Commands
+
+**show interface status**
+
+Using this command to display the link and auto-negotiation status.
+
+**Format**  show interface status  
+**Mode**    EXEC Mode  
+
+Example:
+```
+sonic# show interface status
+-----------------------------------------------------------------------------------------------------------------------------
+Name                Description                   Admin     Oper      AutoNeg   Speed          MTU            Alternate Name
+-----------------------------------------------------------------------------------------------------------------------------
+Ethernet0           -                             down      down      on        -              9100           Eth1/1/1
+Ethernet1           -                             down      down      on        -              9100           Eth1/1/2
+Ethernet2           -                             down      down      on        -              9100           Eth1/1/3
+Ethernet3           -                             down      down      on        -              9100           Eth1/1/4
+Ethernet8           -                             down      down      on        -              9100           Eth1/2/1
+Ethernet9           -                             down      down      on        -              9100           Eth1/2/2
+Ethernet10          -                             down      down      on        -              9100           Eth1/2/3
+Ethernet11          -                             down      down      on        -              9100           Eth1/2/4
+Ethernet16          -                             down      down      on        -              9100           Eth1/3/1
+Ethernet17          -                             down      down      off       25000          9100           Eth1/3/2
+Ethernet18          -                             down      down      off       25000          9100           Eth1/3/3
+Ethernet19          -                             down      down      off       25000          9100           Eth1/3/4
+Ethernet24          -                             down      down      off       25000          9100           Eth1/4/1
+```
+
+**show interface link-training**
+
+Using this command to display the link-training status.  
+If this command is executed without the optional *Interface* parameter, then it displays
+the link-training status for all the ports.
+
+**Format**  show interface link-training [Interface]  
+**Mode**    EXEC Mode  
+
+Example:
+```
+sonic# show interface link-training Ethernet 0
+                                             Auto          Link-Training
+Interface       Type                      Negotiation  Standalone  Operational
+--------------  ------------------------  -----------  ----------  -----------
+Ethernet0       QSFP56-DD 400GBASE-DR4    off          off         off
+sonic# show interface link-training Ethernet 0-16
+                                             Auto          Link-Training
+Interface       Type                      Negotiation  Standalone  Operational
+--------------  ------------------------  -----------  ----------  -----------
+Ethernet0       QSFP56-DD 400GBASE-DR4    off          off         off
+Ethernet8                                 off          off         off
+Ethernet16                                off          off         off
+sonic# show interface link-training
+                                             Auto          Link-Training
+Interface       Type                      Negotiation  Standalone  Operational
+--------------  ------------------------  -----------  ----------  -----------
+Ethernet0       QSFP56-DD 400GBASE-DR4    off          off         off
+Ethernet8                                 off          off         off
+Ethernet16                                off          off         off
+Ethernet24                                off          off         off
+Ethernet32                                off          off         off
+Ethernet40                                off          off         off
+Ethernet48                                off          off         off
+Ethernet56                                off          off         off
+Ethernet64                                off          off         off
+Ethernet72                                off          off         off
+Ethernet80                                off          off         off
+Ethernet88                                off          off         off
+Ethernet96                                off          off         off
+Ethernet104                               off          off         off
+Ethernet112                               off          off         off
+Ethernet120                               off          off         off
+Ethernet128                               off          off         off
+Ethernet136                               off          off         off
+Ethernet144                               off          off         off
+Ethernet152                               off          off         off
+Ethernet160                               off          off         off
+sonic#
+```
 
 **show interface advertise**
 
@@ -438,8 +513,8 @@ Operational link advertisement will display speed only if it is supported by bot
 as well as link partner. If auto-negotiation is disabled, then operational link advertisement
 is not displayed.
 
-**Format**  show interface advertise [Interface]
-**Mode**    EXEC Mode
+**Format**  show interface advertise [Interface]  
+**Mode**    EXEC Mode  
 
 | Parameter | Description                                                                |
 | :-------: | :------------------------------------------------------------------------- |
@@ -447,29 +522,66 @@ is not displayed.
 
 Example:
 
+**Display the Auto-Negotiation configuration of all ports**  
 ```
-(sonic)# show interface advertise
+sonic# show interface advertise
 
-Name          Type              Auto-Neg  Operational Link Advertisement
-------------  ----------------  --------  -------------------------------------
-Ethernet0     1000BASE-T        Enabled   1G,100f,100h,10f,10h
-Ethernet1     1000BASE-T        Enabled   1G,100f,100h,10f,10h
-Ethernet2     1000BASE-T        Disabled
-Ethernet3     1000BASE-T        Enabled   1G,100f,100h,10f,10h
+Interface       Type                      Auto Neg  Oper Advertised Speed
+--------------  ------------------------  --------  ----------------------------
+Ethernet0       QSFP28 100GBASE-SR4       on        40000,100000
+Ethernet4                                 on        40000,100000
+Ethernet8       QSFP28 100GBASE-SR4       on        40000,100000
+Ethernet12                                on        40000,100000
+Ethernet16                                on        40000,100000
+Ethernet20                                on        40000,100000
+Ethernet24                                on        40000,100000
+Ethernet28                                on        40000,100000
+Ethernet32                                on        40000,100000
+Ethernet36                                on        40000,100000
+Ethernet40                                on        40000,100000
+Ethernet44                                on        40000,100000
+Ethernet48                                on        40000,100000
+Ethernet52                                on        40000,100000
+Ethernet56                                on        40000,100000
+Ethernet60                                on        40000,100000
+Ethernet64                                on        40000,100000
+Ethernet68                                on        40000,100000
+Ethernet72                                on        40000,100000
+Ethernet76                                on        40000,100000
+Ethernet80                                on        40000,100000
+--more--
+```
 
-(sonic)# show interface advertise Ethernet 3
+**Display the Auto-Negotiation configuration of Ethernet0...Ethernet12**  
+```
+sonic# show interface advertise Ethernet 0-12
 
-Name: Ethernet3
-Type: 1000BASE-T
-Link State: Down
-Auto Negotiation: Enabled
-Standalone Link Training: Disabled
-Oper Link Training: Disabled
+Interface       Type                      Auto Neg  Oper Advertised Speed
+--------------  ------------------------  --------  ----------------------------
+Ethernet0       QSFP28 100GBASE-SR4       on        40000,100000
+Ethernet4                                 on        40000,100000
+Ethernet8       QSFP28 100GBASE-SR4       on        40000,100000
+Ethernet12                                on        40000,100000
+sonic#
+```
+
+**Display the Auto-Negotiation configuration of one specific port**  
+```
+sonic# show interface advertise Ethernet 8
+
+Name: Ethernet8
+Type: QSFP28 100GBASE-SR4
+Admin State: DOWN
+Link Status: DOWN
+Auto Negotiation: ON
+Operational FEC Mode:
+
                             400G 100G 40G  25G  10G  1G   100f 100h 10f  10h
                             ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-Admin Local Advertisement   no   no   no   no   no   yes  yes  no   yes  no
-Oper Local Advertisement    no   no   no   no   no   yes  yes  no   yes  no
-Oper Peer Advertisement     no   no   no   no   no   no   yes  yes  yes  yes
+Admin Local Advertisement   no   no   no   no   no   no   no   no   no   no
+Oper Local Advertisement    no   yes  yes  no   no   no   no   no   no   no
+Oper Remote Advertisement   -    -    -    -    -    -    -    -    -    -
+sonic#
 ```
 
 ## 3.6 Warm Boot Support
@@ -494,29 +606,112 @@ None
 
 # 8 Limitations
 
-- Link-training is supported only when per-lane speed >= 10Gb
-- Link-training is supported if the transceiver is a backplane, copper or optic with CDR
-- Link-training is not supported if the transceiver is an optic without CDR
-- Link-training is not targeted to find the optimal TX FIR, it only finds appropriate TX FIR that's sufficient to bring up the link.
-- Link-training requires a longer time for PAM4 links compared to NRZ links.
+- AN/LT is not available on the management ports of the switch silicon.
+- LT is available only when per-lane speed >= 10Gb
+- LT is available only when the media type of the transceiver is either backplane or copper (Broadcom specific)
+- LT finds appropriate TX FIR that's sufficient to bring up the link, instead of the optimal TX FIR
+- LT requires a longer time for PAM4 links compared to NRZ links. (e.g. Max. 15 sec for 400G)
+- AN/LT is not working on an **DR link** between TD4/TH3 and TD3/TH2/TH  
+		- The DR1 modules are with hardware FEC engine on the PHY and it can't be disabled, hence the MAC will need to have FEC disabled  
+		- The system side of DR1 module is actually NRZ mode while the line side is PAM4 mode  
+		- The DR4 modules are without hardware FEC engine on the PHY, hence the MAC will need to have FEC enabled  
+		- The system side and line side of DR4 module is PAM4 mode  
+		- Hence, this AN/LT is not working on a transceiver like this  
+- AN/LT is not working on an **AOC link** between TD4(DELL Z9432) and TH3(DELL Z9332)  
+```
+Ethernet8: SFP EEPROM detected
+        Application Advertisement:
+                1: 400GAUI-8 C2M (Annex 120E) | Active Cable assembly with BER < 2.6x10^-4
+                2: 200GAUI-4 C2M (Annex 120E) | Active Cable assembly with BER < 2.6x10^-4
+                3: 100GAUI-2 C2M (Annex 135G) | Active Cable assembly with BER < 2.6x10^-4
+                4: 50GAUI-1 C2M (Annex 135G) | Active Cable assembly with BER < 2.6x10^-4
+        Connector: No separable connector
+        Identifier: QSFP56-DD
+        Implemented Memory Pages:
+                Bank 0 Implemented
+        Length Cable Assembly(m): 3.0
+        Module State: Ready State
+        Revision Compliance: 3.0
+        Vendor Date Code(YYYY-MM-DD Lot): 2020-05-08:01
+        Vendor Name: DELL EMC
+        Vendor OUI: 00-72-65
+        Vendor PN: DH11M
+        Vendor Rev: A1
+        Vendor SN: CN0F9KR70580072
+```
+- AN remote advertisement is not supported on LTSW switches (e.g. TD4, TH4)  
+```
+$SDK/src/bcm/ltsw/port.c:
+int
+bcm_ltsw_port_autoneg_ability_remote_get(int unit, bcm_port_t port,
+                                     int max_num_ability, bcm_port_speed_ability_t *abilities,
+                                     int *actual_num_ability)
+{
+    return SHR_E_UNAVAIL;
+}
+```
+- AN/LT will not work at 4x100G mode in the case of self-loop
+- AN/LT will not work on the Cu SFPs
+- AN/LT does not work in the case of medium/interface mismatch
+- AN can not change the current medium/interface type, it has to be configured before enabling AN
+- AN/LT will not work between DELL and non-DELL platform, this is due to the missing interface type support on the non-DELL platforms  
+		- While the code changes are ready for this, there are connection failures between AS7816 and AS7326 in the sanity testbed, will circle back on this later.
+- TD3-X7 supports only 10G and 1G for 10G ports and 25G only for 25G ports, this is a VCO hardware constraint.  
+		- 4x10G: Valid advertisement: 10G and 1G  
+		- 4x25G: Valid advertisement: 25G  
 
 # 9 Unit Test
 
 - Verify the links are coming up with IXIA with default config.
-- Verify "show interface preemphasis" works fine with default config, and the TX FIR readings are properlly displayed.
-- Verify "show interface preemphasis" works fine when LT is disabled, and the TX FIR readings are properlly displayed.
-- Verify "show interface preemphasis" works fine when LT is enabled, and the TX FIR readings are properlly displayed.
-- Verify "show interface preemphasis" to ensure we're having different TX FIR upon LT enabled/disabled while the port with physical links established 
-- Verify AN is able to get the link up with max. speed by having 100G and 40G advertised on local, and 40G only from the remote peer, and check if this is up with 40G
-- Verify AN is able to get the link up with max. speed by having 25G and 10G advertised on local, and 10G only from the remote peer, and check if this is up with 10G
-- Verify AN is able to get the link up with expected FEC by having 100G:RS and 100G:NONE advertised on local, and 100G:NONE only from the remote peer, and check if this is up with 100G:NONE
-- Verify AN is able to get the link up with expected FEC by having 100G:RS and 100G:NONE advertised on local, and 100G:RS only from the remote peer, and check if this is up with 100G:RS
-- Verify LT should always be disabled if it's administratively disabled.
-- Verify LT should always be enabled if it's administratively enabled.
-- Verify LT is correctly enabled/disabled as per the media_settings.json, in the case of auto mode.
-- Verify LT is correctly enabled/disabled as per the port speed, if auto mode is activated and media_settings.json does not exist.
-- Verify LT is always disabled for port speed < 10G, regardless of the settings in media_settings.json
+- Verify AN is able to get the link up with 400G by having 400G advertised on both local and remote
+- Verify AN is able to get the link up with 100G by having 100G and 40G advertised on local, and 100G,40G from the remote peer
+- Verify AN is able to get the link up with 100G by having 100G and 40G advertised on local, and 100G only from the remote peer
+- Verify AN is able to get the link up with 40G by having 100G and 40G advertised on local, and 40G only from the remote peer
+- Verify AN is able to get the link up with 40G by having only 40G advertised on local, and 40G only from the remote peer
+- Verify AN is able to get the link up with 10G by having 10G,1G advertised on local, and 10G,1G from the remote peer
+- Verify AN is able to get the link up with 10G by having 10G,1G advertised on local, and 10G from the remote peer
+- Verify AN is able to get the link up with 10G by having 10G advertised on local, and 10G from the remote peer
+- Verify AN is able to get the link up with 1G by having 10G,1G advertised on local, and 1G from the remote peer
+- Verify AN is able to get the link up with 1G by having 1G advertised on local, and 1G from the remote peer
+- Verify AN is able to get the link up with expected FEC, in the case that both DUTs are Broadcom switch
+- Verify LT should always be disabled if both AN and SLT are administratively disabled.
+- Verify LT should always be enabled if either AN or SLT is administratively enabled.
+- Verify the port is using the same pre-emphasis values defined in the media_settings.json when LT is de-activated
+- Verify PHY registers to check if LT is correctly activated if either AN or SLT is administratively enabled.
 
 # 10 Internal Design Information
 
-In the case of Cyrus, this feature will only be available on the TD4-X11 and TH3 platforms.
+In the case of Cyrus, this feature is primarily targeting TD4 and TH3 with TD3 on a best-effort basis.
+
+## Table 3: Supported platform list
+
+| **Vendor**  |  **Platform**  | **Switch** | **Gearbox**  | **AN/LT Support**   |
+|:------------|:---------------|:-----------|:-------------|:--------------------|
+| Accton      | AS4630-54PE    | TD3-X3(HX5)| No           | Yes                 |
+| Accton      | AS5835-54X     | TD3-X5(MV2)| No           | Yes                 |
+| Accton      | AS5835-54T     | TD3-X5(MV2)| Yes          | No                  |
+| Accton      | AS7326-56X     | TD3-X7     | No           | Yes                 |
+| Accton      | AS7712-32X     | TH         | No           | No                  |
+| Accton      | AS7726-32X     | TD3-X7     | No           | Yes                 |
+| Accton      | AS7816-64X     | TH2        | No           | No                  |
+| Accton      | AS9716-32D     | TH3        | No           | Yes                 |
+| AlphaNetworks | BES2348t     | TD3-X3(HR4)| Yes(Ethernet0-23) | Yes (Only available for non-Gearbox ports) |
+| Celestica   | BELGITE        | TD3-X3(HX5)| No           | Yes                 |
+| Dell        | S5212          | TD3-X7     | No           | Yes                 |
+| Dell        | S5224          | TD3-X7     | No           | Yes                 |
+| Dell        | S5232          | TD3-X7     | No           | Yes                 |
+| Dell        | S5248          | TD3-X7     | No           | Yes                 |
+| Dell        | S5296          | TD3-X7     | No           | Yes                 |
+| Dell        | Z9100          | TH         | No           | No                  |
+| Dell        | Z9264          | TH2        | No           | No                  |
+| Dell        | Z9332          | TH3        | No           | Yes                 |
+| Dell        | Z9432          | TD4        | No           | Yes                 |
+| Quanta      | IX4            | TH2        | No           | No                  |
+| Quanta      | IX7            | TD3-X7     | No           | Yes                 |
+| Quanta      | IX7_BWDE       | TD3-X7     | No           | Yes                 |
+| Quanta      | IX7t (SLX9250) | TD3-X7     | No           | Yes                 |
+| Quanta      | IX8            | TD3-X7     | No           | Yes                 |
+| Quanta      | IX8-B          | TD3-X7     | No           | Yes                 |
+| Quanta      | IX8A           | TD3-X5(MV2)| No           | Yes                 |
+| Quanta      | IX8f (SLX9150) | TD3-X7     | No           | Yes                 |
+| Quanta      | IX9            | TH3        | No           | Yes                 |

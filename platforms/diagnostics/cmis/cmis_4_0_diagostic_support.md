@@ -29,12 +29,12 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|:-----------------------------------|
-| 0.5 | 3/22/2021 | Dante (Kuo-Jung) Su | 1. Drop the dependency to the SONiC community pull request for the enhanced media support<br>2. Migrate the database from APPL_DB to CONFIG_DB<br>3. Added PRBS support<br>4. Updated the command syntax
-| 0.4 | 08/05/2020 | William Schwartz | 1. Updated CLI command structure<br>2. Removed references to modifying admin state of the port<br> 3. Updated PORT_TABLE to reflect new change when port is places in diagnostic mode |
-| 0.3 | 07/23/2020 | William Schwartz | 1. Updated yang models<br> 2. Updated TRANSCEIVER_DOM_SENSOR table entries to reflect proper values <br> 3. Removed non-supported CMIS CLI commands<br> 4. Resolved multiple review comments. |
-| 0.2 | 06/25/2020 | William Schwartz | 1. Removed pattern generation / checker references.<br> 2. Corrected link to CMIS 4.0 specification<br> 3. Updated loopback test CLI mode to remove the individual lane enablement (that will be a future advanced feature enhancement)<br>4. Added loopback test Yang Model |
 | 0.1 | 05/15/2020 | William Schwartz | Initial version |
-
+| 0.2 | 06/25/2020 | William Schwartz | 1. Removed pattern generation / checker references.<br> 2. Corrected link to CMIS 4.0 specification<br> 3. Updated loopback test CLI mode to remove the individual lane enablement (that will be a future advanced feature enhancement)<br>4. Added loopback test Yang Model |
+| 0.3 | 07/23/2020 | William Schwartz | 1. Updated yang models<br> 2. Updated TRANSCEIVER_DOM_SENSOR table entries to reflect proper values <br> 3. Removed non-supported CMIS CLI commands<br> 4. Resolved multiple review comments. |
+| 0.4 | 08/05/2020 | William Schwartz | 1. Updated CLI command structure<br>2. Removed references to modifying admin state of the port<br> 3. Updated PORT_TABLE to reflect new change when port is places in diagnostic mode |
+| 0.5 | 03/22/2021 | Dante (Kuo-Jung) Su | 1. Drop the dependency to the SONiC community pull request for the enhanced media support<br>2. Migrate the database from APPL_DB to CONFIG_DB<br>3. Added PRBS support<br>4. Updated the command syntax |
+| 0.6 | 10/14/2021 | Dante (Kuo-Jung) Su | Add support for gNMI on-change subscription, updated YANG tree |
 # About this Manual
 
 This document provides functional requirements and high-level design for providing CMIS 4.0 diagnostic support in SONiC.
@@ -212,85 +212,79 @@ The **TRANSCEIVER_DIAG** table will be newly introduced if the transceiver inser
 
 ## 3.3 Data Model
 
-### 3.4.1 openconfig-platform-ext.yang
+### 3.3.1 openconfig-platform-diagnostics.yang
 
-There is currently no yang model defined for transceiver diagnostics. Therefore, the openconfig-platform/transceiver will be augmented. 
+We'll use openconfig-platform-diagnostics for CMIS transceiver diagnostics.
 
-The YANG tree will look as below:
+The OC YANG is as below:
 ```
-module: openconfig-platform
-  +--rw components
-     +--rw component* [name]
-        +--rw oc-transceiver:transceiver
-        |  +--rw oc-transceiver-ext:diagnostics
-        |     +--rw oc-transceiver-ext:capabilities
-        |     |  +--ro oc-transceiver-ext:state
-        |     |     +--ro oc-transceiver-ext:loopback?            string
-        |     |     +--ro oc-transceiver-ext:pattern?             string
-        |     |     +--ro oc-transceiver-ext:report?              string
-        |     |     +--ro oc-transceiver-ext:pattern-gen-host?    string
-        |     |     +--ro oc-transceiver-ext:pattern-gen-media?   string
-        |     |     +--ro oc-transceiver-ext:pattern-chk-host?    string
-        |     |     +--ro oc-transceiver-ext:pattern-chk-media?   string
-        |     +--rw oc-transceiver-ext:loopbacks
-        |     |  +--rw oc-transceiver-ext:config
-        |     |  |  +--rw oc-transceiver-ext:lb-host-input-enabled?     boolean
-        |     |  |  +--rw oc-transceiver-ext:lb-host-output-enabled?    boolean
-        |     |  |  +--rw oc-transceiver-ext:lb-media-input-enabled?    boolean
-        |     |  |  +--rw oc-transceiver-ext:lb-media-output-enabled?   boolean
-        |     |  +--ro oc-transceiver-ext:state
-        |     |     +--ro oc-transceiver-ext:lb-host-input-enabled?     boolean
-        |     |     +--ro oc-transceiver-ext:lb-host-output-enabled?    boolean
-        |     |     +--ro oc-transceiver-ext:lb-media-input-enabled?    boolean
-        |     |     +--ro oc-transceiver-ext:lb-media-output-enabled?   boolean
-        |     +--rw oc-transceiver-ext:patterns
-        |     |  +--rw oc-transceiver-ext:config
-        |     |  |  +--rw oc-transceiver-ext:pattern-gen-host-enabled?    boolean
-        |     |  |  +--rw oc-transceiver-ext:pattern-gen-media-enabled?   boolean
-        |     |  |  +--rw oc-transceiver-ext:pattern-chk-host-enabled?    boolean
-        |     |  |  +--rw oc-transceiver-ext:pattern-chk-media-enabled?   boolean
-        |     |  +--ro oc-transceiver-ext:state
-        |     |     +--ro oc-transceiver-ext:pattern-gen-host-enabled?    boolean
-        |     |     +--ro oc-transceiver-ext:pattern-gen-media-enabled?   boolean
-        |     |     +--ro oc-transceiver-ext:pattern-chk-host-enabled?    boolean
-        |     |     +--ro oc-transceiver-ext:pattern-chk-media-enabled?   boolean
-        |     +--rw oc-transceiver-ext:reports
-        |        +--rw oc-transceiver-ext:host
-        |        |  +--ro oc-transceiver-ext:state
-        |        |     +--ro oc-transceiver-ext:ber1?   string
-        |        |     +--ro oc-transceiver-ext:ber2?   string
-        |        |     +--ro oc-transceiver-ext:ber3?   string
-        |        |     +--ro oc-transceiver-ext:ber4?   string
-        |        |     +--ro oc-transceiver-ext:ber5?   string
-        |        |     +--ro oc-transceiver-ext:ber6?   string
-        |        |     +--ro oc-transceiver-ext:ber7?   string
-        |        |     +--ro oc-transceiver-ext:ber8?   string
-        |        |     +--ro oc-transceiver-ext:snr1?   string
-        |        |     +--ro oc-transceiver-ext:snr2?   string
-        |        |     +--ro oc-transceiver-ext:snr3?   string
-        |        |     +--ro oc-transceiver-ext:snr4?   string
-        |        |     +--ro oc-transceiver-ext:snr5?   string
-        |        |     +--ro oc-transceiver-ext:snr6?   string
-        |        |     +--ro oc-transceiver-ext:snr7?   string
-        |        |     +--ro oc-transceiver-ext:snr8?   string
-        |        +--rw oc-transceiver-ext:media
-        |           +--ro oc-transceiver-ext:state
-        |              +--ro oc-transceiver-ext:ber1?   string
-        |              +--ro oc-transceiver-ext:ber2?   string
-        |              +--ro oc-transceiver-ext:ber3?   string
-        |              +--ro oc-transceiver-ext:ber4?   string
-        |              +--ro oc-transceiver-ext:ber5?   string
-        |              +--ro oc-transceiver-ext:ber6?   string
-        |              +--ro oc-transceiver-ext:ber7?   string
-        |              +--ro oc-transceiver-ext:ber8?   string
-        |              +--ro oc-transceiver-ext:snr1?   string
-        |              +--ro oc-transceiver-ext:snr2?   string
-        |              +--ro oc-transceiver-ext:snr3?   string
-        |              +--ro oc-transceiver-ext:snr4?   string
-        |              +--ro oc-transceiver-ext:snr5?   string
-        |              +--ro oc-transceiver-ext:snr6?   string
-        |              +--ro oc-transceiver-ext:snr7?   string
-        |              +--ro oc-transceiver-ext:snr8?   string
+module: openconfig-platform-diagnostics
+  +--rw transceiver-diagnostics
+  |  +--rw transceiver-diagnostics-list* [ifname]
+  |     +--rw ifname    -> ../config/ifname
+  |     +--rw config
+  |     |  +--rw ifname?              string
+  |     |  +--rw lb-host-input?       boolean
+  |     |  +--rw lb-host-output?      boolean
+  |     |  +--rw lb-media-input?      boolean
+  |     |  +--rw lb-media-output?     boolean
+  |     |  +--rw pattern-gen-host?    boolean
+  |     |  +--rw pattern-gen-media?   boolean
+  |     |  +--rw pattern-chk-host?    boolean
+  |     |  +--rw pattern-chk-media?   boolean
+  |     +--ro state
+  |        +--ro ifname?              -> ../../config/ifname
+  |        +--ro lb-host-input?       boolean
+  |        +--ro lb-host-output?      boolean
+  |        +--ro lb-media-input?      boolean
+  |        +--ro lb-media-output?     boolean
+  |        +--ro pattern-gen-host?    boolean
+  |        +--ro pattern-gen-media?   boolean
+  |        +--ro pattern-chk-host?    boolean
+  |        +--ro pattern-chk-media?   boolean
+  |        +--ro capabilities
+  |        |  +--ro loopback?            string
+  |        |  +--ro pattern?             string
+  |        |  +--ro report?              string
+  |        |  +--ro pattern-gen-host?    string
+  |        |  +--ro pattern-gen-media?   string
+  |        |  +--ro pattern-chk-host?    string
+  |        |  +--ro pattern-chk-media?   string
+  |        +--ro reports
+  |           +--ro host
+  |           |  +--ro ber1?   string
+  |           |  +--ro ber2?   string
+  |           |  +--ro ber3?   string
+  |           |  +--ro ber4?   string
+  |           |  +--ro ber5?   string
+  |           |  +--ro ber6?   string
+  |           |  +--ro ber7?   string
+  |           |  +--ro ber8?   string
+  |           |  +--ro snr1?   string
+  |           |  +--ro snr2?   string
+  |           |  +--ro snr3?   string
+  |           |  +--ro snr4?   string
+  |           |  +--ro snr5?   string
+  |           |  +--ro snr6?   string
+  |           |  +--ro snr7?   string
+  |           |  +--ro snr8?   string
+  |           +--ro media
+  |              +--ro ber1?   string
+  |              +--ro ber2?   string
+  |              +--ro ber3?   string
+  |              +--ro ber4?   string
+  |              +--ro ber5?   string
+  |              +--ro ber6?   string
+  |              +--ro ber7?   string
+  |              +--ro ber8?   string
+  |              +--ro snr1?   string
+  |              +--ro snr2?   string
+  |              +--ro snr3?   string
+  |              +--ro snr4?   string
+  |              +--ro snr5?   string
+  |              +--ro snr6?   string
+  |              +--ro snr7?   string
+  |              +--ro snr8?   string
 ```
 
 ### 3.5.3 Configuration Commands
@@ -300,10 +294,11 @@ The config commands uses Klish framework. It requires Klish to be in configurati
 #### Configure Loopback Controls
 
 ```
-[no] interface transceiver diagnostics loopback {media-side-input|media-side-output|host-side-input|host-side-output} Ethernet <1|2..N>
+[no] interface transceiver diagnostics loopback {media-side-input|media-side-output|host-side-input|host-side-output} {Interface}
 ```
 
-This command enables the the loopback test mode of the transceiver.
+This command enables the the loopback test mode of the transceiver.  
+If the **Interface** is not specified, this command will be applied to all the switch ports.
 
 |Loopback Type             |Illustraction                                 |
 |--------------------------|----------------------------------------------|
@@ -314,6 +309,13 @@ This command enables the the loopback test mode of the transceiver.
 
 Use no form of the command to disable:
 
+Ex1: Enable/Disable all the loopback controls
+```
+sonic-cli(config)# interface transceiver diagnostics loopback Ethernet 0
+sonic-cli(config)# no interface transceiver diagnostics loopback Ethernet 0
+```
+
+Ex2: Enable/Disable one specific loopback controls
 ```
 sonic-cli(config)# interface transceiver diagnostics loopback media-side-input Ethernet 112
 sonic-cli(config)# no interface transceiver diagnostics loopback media-side-input Ethernet 112
@@ -322,13 +324,21 @@ sonic-cli(config)# no interface transceiver diagnostics loopback media-side-inpu
 #### Configure Pattern Generation and Checking Controls
 
 ```
-[no] interface transceiver diagnostics pattern {checker-host|checker-media|generator-host|generator-media} Ethernet <1|2..N>
+[no] interface transceiver diagnostics pattern {checker-host|checker-media|generator-host|generator-media} {Interface}
 ```
 
-This command enables the pattern generation and checking mode.
+This command enables the pattern generation and checking mode.  
+If the **Interface** is not specified, this command will be applied to all the switch ports.
 
 Use no form of the command to disable:
 
+Ex1: Enable/Disable all the pattern controls
+```
+sonic-cli(config)# interface transceiver diagnostics pattern Ethernet 0
+sonic-cli(config)# no interface transceiver diagnostics pattern Ethernet 0
+```
+
+Ex2: Enable/Disable one specific pattern control
 ```
 sonic-cli(config)# interface transceiver diagnostics pattern checker-host Ethernet 0
 sonic-cli(config)# no interface transceiver diagnostics pattern checker-host Ethernet 0
@@ -339,10 +349,11 @@ sonic-cli(config)# no interface transceiver diagnostics pattern checker-host Eth
 #### Show Loopback Capability
 
 ```
-show interface transceiver diagnostics capability Ethernet <1|2|..N>
+show interface transceiver diagnostics capability {Interface}
 ```
 
-This command shows diagnostics capability of the transceiver. If no specific transceiver is provided, all CMIS diagnostic supported transceivers are displayed with associated loopback capabilities.
+This command shows diagnostics capability of the transceiver.  
+If **Interface** is not specified, the information of all the switch ports will be displayed.
 
 Example output:
 
@@ -401,10 +412,11 @@ sonic#
 #### Show Diagnostics Control Status
 
 ```
-show interface transceiver diagnostics status Ethernet <1|2|..N>
+show interface transceiver diagnostics status {Interface}
 ```
 
-This command shows the loopback diagnostic controls of the transceiver. If no specific transceiver is provided, all CMIS diagnostic supported transceivers are displayed with associated control settings.
+This command shows the loopback diagnostic controls of the transceiver.  
+If **Interface** is not specified, the information of all the switch ports will be displayed.
 
 Example output:
 
@@ -425,19 +437,19 @@ sonic# show interface transceiver diagnostics status Ethernet 0 | no-more
 
 Ethernet0
 ---------------------------------------------------------------------
-Attribute                           :  Value/State
+Attribute                           : Oper           Admin
 ---------------------------------------------------------------------
 Loopback
-    Host Side Input                 :  Enable  ( Enable in Config )
-    Host Side Output                :  Disable ( Enable in Config )
-    Media Side Input                :  Disable ( Disable in Config )
-    Media Side Output               :  Disable ( Disable in Config )
+    Host Side Input                 : Enable         Enable
+    Host Side Output                : Disable        Enable
+    Media Side Input                : Disable        Disable
+    Media Side Output               : Disable        Disable
 
 Pattern Generation and Checking
-    Host Side Pattern Checker       :  Disable ( Disable in Config )
-    Host Side Pattern Generator     :  Disable ( Disable in Config )
-    Media Side Pattern Checker      :  Disable ( Disable in Config )
-    Media Side Pattern Generator    :  Disable ( Disable in Config )
+    Host Side Pattern Checker       : Disable        Disable
+    Host Side Pattern Generator     : Disable        Disable
+    Media Side Pattern Checker      : Disable        Disable
+    Media Side Pattern Generator    : Disable        Disable
 
 Error Information
     Host side BER1                  : 5.0E-1
@@ -476,28 +488,182 @@ Error Information
 sonic#
 ```
 
-  ### 3.5.4 Debug Commands
+### 3.5.4 Debug Commands
 
 No debug commands are planned for at this time.
 
-  ### 3.5.5 REST API Support
+### 3.5.5 REST API Support
 
 This is supported by default with the new management framework.
 
-  # 4 Flow Diagrams
+### 3.5.6 gNMI on-change support
+
+The gNMI on-change subscription is supported in the following path
+```
+/openconfig-platform-diagnostics:transceiver-diagnostics/transceiver-diagnostics-list[ifname=*]/config
+```
+
+The gNMI on-change subscription is **NOT** available in the following path
+```
+/openconfig-platform-diagnostics:transceiver-diagnostics/transceiver-diagnostics-list[ifname=*]/state
+/openconfig-platform-diagnostics:transceiver-diagnostics/transceiver-diagnostics-list[ifname=*]/state/capabilities
+/openconfig-platform-diagnostics:transceiver-diagnostics/transceiver-diagnostics-list[ifname=*]/state/reports
+```
+
+Example
+```
+admin@sonic:~$ redis-cli -n 4 hmset "TELEMETRY|gnmi" client_auth none
+OK
+admin@sonic:~$ sudo systemctl restart telemetry
+admin@sonic:~$ docker exec -it telemetry bash
+root@sonic:/# gnmi_cli -query_type streaming -streaming_type ON_CHANGE -insecure -logtostderr -address localhost:8080 -display_type proto -target OC_YANG -timestamp on -query '/openconfig-platform-diagnostics:transceiver-diagnostics/transceiver-diagnostics-list[ifname=*]/config'
+update: <
+  timestamp: 1634175147259242372
+  prefix: <
+    elem: <
+      name: "openconfig-platform-diagnostics:transceiver-diagnostics"
+    >
+    elem: <
+      name: "transceiver-diagnostics-list"
+      key: <
+        key: "ifname"
+        value: "Ethernet0"
+      >
+    >
+    elem: <
+      name: "config"
+    >
+    target: "OC_YANG"
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-host-output"
+      >
+    >
+    val: <
+      bool_val: true
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-media-input"
+      >
+    >
+    val: <
+      bool_val: true
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-media-output"
+      >
+    >
+    val: <
+      bool_val: true
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "ifname"
+      >
+    >
+    val: <
+      string_val: "Ethernet0"
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-host-input"
+      >
+    >
+    val: <
+      bool_val: true
+    >
+  >
+>
+
+sync_response: true
+
+update: <
+  timestamp: 1634175167515263920
+  prefix: <
+    elem: <
+      name: "openconfig-platform-diagnostics:transceiver-diagnostics"
+    >
+    elem: <
+      name: "transceiver-diagnostics-list"
+      key: <
+        key: "ifname"
+        value: "Ethernet0"
+      >
+    >
+    elem: <
+      name: "config"
+    >
+    target: "OC_YANG"
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-host-input"
+      >
+    >
+    val: <
+      bool_val: false
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-host-output"
+      >
+    >
+    val: <
+      bool_val: false
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-media-input"
+      >
+    >
+    val: <
+      bool_val: false
+    >
+  >
+  update: <
+    path: <
+      elem: <
+        name: "lb-media-output"
+      >
+    >
+    val: <
+      bool_val: false
+    >
+  >
+>
+```
+
+# 4 Flow Diagrams
 
 None
 
 
-  # 5 Serviceability and Debug
+# 5 Serviceability and Debug
 
 The CMIS 4.0 diagnostic feature and does not require serviceability or debug capability.
 
-  # 6 Warm Boot Support
+# 6 Warm Boot Support
 
 The CMIS 4.0 diagnostic feature does not impact warm boot.
 
-  # 7 Scalability
+# 7 Scalability
 
 The CMIS 4.0 diagnostic feature is fully scalable on a SONiC platform and is supported on any port / transceiver which supports the CMIS 4.0 diagnostic features described in this specification.
 

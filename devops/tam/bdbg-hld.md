@@ -2,13 +2,13 @@
 
 ## Highlevel Design Document
 
-### Rev 0.2
+### Rev 0.4
 
 ## Table of Contents
 
 - [Broadcom Debug Application](#broadcom-debug-application)
   - [Highlevel Design Document](#highlevel-design-document)
-    - [Rev 0.1](#rev-01)
+    - [Rev 0.4](#rev-04)
   - [Table of Contents](#table-of-contents)
   - [List of Tables](#list-of-tables)
   - [Revision](#revision)
@@ -30,6 +30,9 @@
 - [2 Functionality](#2-functionality)
   - [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
   - [2.2 Functional Description](#22-functional-description)
+  - [2.3 Data sources for the **congestion** tool](#23-data-sources-for-the-congestion-tool)
+  - [2.3 Data sources for the **drops** tool](#23-data-sources-for-the-drops-tool)
+  - [2.4 Interaction with Data Sources](#24-interaction-with-data-sources)
 - [3 Design](#3-design)
   - [3.1 Overview](#31-overview)
   - [3.2 DB Changes](#32-db-changes)
@@ -44,6 +47,8 @@
     - [3.7.2 Configuration Commands](#372-configuration-commands)
       - [3.7.2.1 Setting up tuning parameters for BDBG](#3721-setting-up-tuning-parameters-for-bdbg)
       - [3.7.2.2 Setting up a congestion definition](#3722-setting-up-a-congestion-definition)
+      - [3.7.2.3 Starting Monitoring](#3723-starting-monitoring)
+      - [3.7.2.4 Stopping Monitoring](#3724-stopping-monitoring)
     - [3.7.3 Show Commands](#373-show-commands)
       - [3.7.3.1 Listing the Global parameters](#3731-listing-the-global-parameters)
       - [3.7.3.2 Listing the Congestion tool parameters](#3732-listing-the-congestion-tool-parameters)
@@ -61,22 +66,23 @@
       - [3.7.4.4 Clearing drop history](#3744-clearing-drop-history)
     - [3.7.5 Debug Commands](#375-debug-commands)
       - [3.7.5.1 Exporting history](#3751-exporting-history)
+      - [3.7.5.2 Dumping internal logs](#3752-dumping-internal-logs)
+      - [3.7.5.3 Displaying support on actual platform](#3753-displaying-support-on-actual-platform)
+      - [3.7.5.4 Set log-level for internal logs](#3754-set-log-level-for-internal-logs)
+      - [3.7.5.5 Dump internal parameters](#3755-dump-internal-parameters)
     - [3.7.6 REST API Support](#376-rest-api-support)
 - [4 Flow Diagrams](#4-flow-diagrams)
-  - [4.1 Config call flow](#41-config-call-flow)
 - [5 Error Handling](#5-error-handling)
-  - [CLI](#cli)
 - [6 Serviceability and Debug](#6-serviceability-and-debug)
 - [7 Warm Boot Support](#7-warm-boot-support)
 - [8 Scalability](#8-scalability)
 - [9 Unit Test](#9-unit-test)
-  - [CLI](#cli-1)
+  - [CLI](#cli)
   - [Functional Unit Tests](#functional-unit-tests)
 - [Broadcom Internal Information : To be removed before publishing externally.](#broadcom-internal-information--to-be-removed-before-publishing-externally)
   - [Revision History](#revision-history)
   - [Key notes](#key-notes)
   - [Specific Limitations](#specific-limitations)
-
 
 
 ## List of Tables
@@ -87,8 +93,10 @@
 
 | Rev |     Date    |       Author       | Change Description                |
 |---|-----------|------------------|-----------------------------------|
-| 0.1 | 07/10/2020  | Sharad Agrawal  | New draft for Broadcom SONiC            |
-| 0.2 | 07/27/2020  | Sharad Agrawal  | Address review comments            |
+| 0.1 | 07/10/2021  | Sharad Agrawal  | New draft for Broadcom SONiC            |
+| 0.2 | 07/27/2021  | Sharad Agrawal  | Address review comments            |
+| 0.3 | 09/13/2021  | Bandaru Viswanath  | 1. Added L2/IPv6 support for command outputs  <br/> 2. Added additional debug commands <br/>3. Adjusted default values for the intervals <br/>4. Added start/stop commands for explicit interaction.           |
+| 0.4 | 12/08/2021  | Bandaru Viswanath  | 1. Clarification on 'active' collection interval </br> 2. Correction of default value for congestion threshold </br> 3. Clarification of the predefined 'device' buffer name. </br> 4. Split the bdbg config command into individual parameter commands. </br> 5. Provisioning details for TAM collector for Drop Monitor Configuration. </br> 6. Correction for the default value for max-retention interval </br> 7. Updated outputs for Congestion tool </br> 8. Added a new flow-type column for flow-based drop monitoring </br> 9. Added a Range and Defaults column for configuration parameters </br> 10. Added clarification for various buffer types. </br> 11. Added `drop-type` column in drops active and history sections and `IngressIntf` column in the historical drops section. |
 
 
 ## About This Manual
@@ -233,6 +241,10 @@ The following diagram depicts a simplified packet pipeline, both on-chip and in 
 
 Note that some of the features that contribute the data sources are in development at the time of this writing. This list and the specific names are meant to be indicative and are not to be considered final. 
 
+## 2.4 Interaction with Data Sources
+
+BDBG aims to collect information reported by the Data sources and present in a consistent and concise manner. However it doesnot provision any SONIC features by itself for effecting the data generation. Admin users are expected to provision the SONIC features to effect the data generation as required. Any specific needs for provisioning are documented at appropriate places in this document.
+
 # 3 Design
 
 ## 3.1 Overview
@@ -302,31 +314,64 @@ NA
 
 Two tuning parameters are supported by BDBG for controlling data collection as well as for historical data retention.
 
-| **Parameter**                 | **Description**                         |
-|--------------------------|-------------------------------------|
-| `collection-interval`    | The data collection periodicity in seconds Range 0 - 3600. 0 indicates disabling periodic collection. Default : 0 |
-| `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. Range 0 - 3600. 0, indicates no historical data retention, Default : 0|
+| **Parameter**                 | **Description**           | **Range & Defaults** | 
+|--------------------------|-------------------------------| --------------| 
+| `collection-interval`    | The data collection periodicity in seconds | Range 0 - 3600. 0 indicates disabling periodic collection. Default : 15 | 
+| `max-retention-interval` | Data retention interval, in seconds, for the historical data, after which the data will be purged. | Range 0 - 5400. 0, indicates no historical data retention, Default : 5400 (1.5hr) | 
 
-Atleast one parameter must be provided in any invocation. Any unsupplied parameter will continue to have the previously configured value. 
 
 The command syntax for setting up the tuning parameters is as follows:
 
 ```
-shell # bdbg config collection-interval <cinterval> max-retention-interval <rinterval>
+shell # bdbg config collection-interval <cinterval> 
+shell # bdbg config max-retention-interval <rinterval>
 ```
 
 #### 3.7.2.2 Setting up a congestion definition
 
 The `congestion` tool allows user to configure a value for buffer utilization beyond which the buffer is considered as undergoing congestion. 
 
-| **Parameter**                 | **Description**                         |
-|--------------------------|-------------------------------------|
-| `congestion-threshold`    | Value for buffer utilization in percentage, beyond which the buffer is considered as undergoing congestion Range 0 - 100. Default : 0 |
+| **Parameter**                 | **Description**           | **Range & Defaults** | 
+|--------------------------|-------------------------------| --------------| 
+| `congestion-threshold`    | Value for buffer utilization in percentage, beyond which the buffer is considered as undergoing congestion. |  Range 0 - 100. Default : 100 |
 
 The command syntax for setting up the parameter is as follows:
 
 ```
 shell # bdbg config congestion congestion-threshold <buffer-utilization> 
+```
+
+#### 3.7.2.3 Starting Monitoring
+
+This command starts the data collection and monitoring. User may start one or more tools with this command.
+
+The command syntax is as follows:
+
+```
+shell # bdbg start { all | congestion | drops } 
+```
+
+On supported platforms, BDBG tool allows per-flow packet drop monitoring via the Drop Monitor feature of SONIC. To enable such per-flow packet drop monitoring, Drop Monitor feature needs to setup the TAM Collector to receive the packets locally. Necessary configuration is as follows:
+
+- A Collector with `local` as the name of the collector
+- One of the locally configured IP addresses on the Switch (as assigned to a  routing interface) as the collector IP address.
+- The collector UDP port must be specified as `8250`.
+
+All DropMonitor sessions must be associated with this collector. 
+An example Collector configuration is provided below.
+
+```
+sonic (config-tam)#collector local ip 20.20.20.4 port 8250 protocol UDP
+```
+
+#### 3.7.2.4 Stopping Monitoring
+
+This command stops the data collection and monitoring. User may stop one or more tools with this command.
+
+The command syntax is as follows:
+
+```
+shell # bdbg stop { all | congestion | drops } 
 ```
 
 
@@ -365,9 +410,7 @@ An example invocation is as below
 shell # bdbg show congestion
 
 Number of Congestion Events             :   360
-Switch Latency  - Minimum               :   less than 1.2us (70%) 
-Switch Latency - Median                 :   10us - 20us (10%) 
-Switch Latency - Maximum                :   above 120us (1%) 
+Congestion Threshold                    :   100
 Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
 
 ```
@@ -394,7 +437,7 @@ Drop Events last cleared at           :   30th Jun 2021, 10:11AM
 
 #### 3.7.3.4 Show active congestion
 
-This command shows the congestion events recorded in the current data collection interval.
+This command shows the congestion events recorded in the current data collection interval. For instance, if the data collection interval is set to 20 (sec), this command displays the congestion events recorded in the last 20 seconds.
 
 ```
 shell # bdbg show congestion active
@@ -406,14 +449,32 @@ shell # bdbg show congestion active
 
 Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
-Buffer             Interface        Direction    Utilization    Drops 
-----------------   --------------   ---------    -------------  -----
-pfc0               -                Ingress      50%            -
-sp1                Ethernet0        Ingress      50%            -          
-queue 0            Ethernet24       Egress       40%            -
-queue 7 [ARP]      CPU              Egress       40%            2048
+
+                                                     Utilization %
+Buffer                  Interface     Direction    SH   HR   UC   MC    Drops
+---------------------   -----------   ---------    ------------------    -----
+device                                             38   0    0    0     0
+queue 0                 Ethernet64    Egress       38   0    0    0     32750
+PG 7                    Ethernet46    Ingress      19   0    0    0     0
+PG 7                    Ethernet47    Ingress      19   0    0    0     0
+ingress_lossless_pool   Ethernet46    Ingress      19   0    0    0     0
+ingress_lossless_pool   Ethernet47    Ingress      19   0    0    0     0
+egress_lossless_pool    Ethernet64    Egress       0    0    4    0     0
+egress_lossy_pool       Ethernet64    Egress       4    0    4    0     0
+egress_lossless_pool                  Egress       38   0    0    0     0
+ingress_lossless_pool                 Ingress      100  0    0    0     0
 
 ```
+The `Utilization` column displays the buffer consumption under various categories, as follows:
+
+| **Name**                 | **Meaning**                         |
+|--------------------------|-------------------------------------|
+| HR                       | Headroom Buffer type | 
+| UC                       | Unicast Buffer type  | 
+| MC                       | Multicast Buffer type| 
+| SH                       | Shared (UC+MC) Buffer type    |
+
+Not all types are supported for every Buffer. Silicon documentation needs to be consulted for more details on specific types supported for each Buffer.
 
 #### 3.7.3.5 Show top congestion sources 
 
@@ -433,14 +494,16 @@ shell # bdbg show congestion top
 Number of Congestion Events             :   360
 Congestion Events last cleared at       :   30th Jun 2021, 10:11AM
 
-Buffer             Interface        Direction    Utilization    Drops      Events
-----------------   --------------   ---------    -----------    -----      ------
-Sp0                Ethernet0        Ingress      50%            -          200
-queue 0            Ethernet24       Egress       40%            -          125
-queue 7 [ARP]      CPU              Egress       40%            2048       25
-queue 24 [BFD]     CPU              Egress       10%            4096       10
+                                                        Utilization %
+Buffer                  Interface     Direction    SH   HR   UC   MC    Drops      Events
+---------------------   -----------   ---------    ------------------   -----      ------
+device                                             38   0    0    0     0          17
+PG 7                    Ethernet47    Ingress      19   0    0    0     0          17
+queue 0                 Ethernet64    Egress       38   0    0    0     21875      17
 
 ```
+
+The `Utilization` column displays the buffer consumption under various categories as described earlier. 
 
 #### 3.7.3.6 Show congestion history for a specific source 
 
@@ -450,9 +513,11 @@ This command shows the congestion events recorded for a specified observation po
 shell # bdbg show congestion history { buffer <buffer-name> | interface <if-name> queue <queue-number> } [limit <num-events>] [around <time>]
 ```
 
+The `buffer` parameter takes buffer name as the value to display the congestion history for that buffer. These names are assigned as part of the switch buffer configuration by the administrator. A predefined name `device` can be used to display the congestion in the Switch level shared buffer.
+
 The optional parameter `num-events` can be used to limit the output to a preferred number of congestion events.
 
-The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
+The optional parameter `time` specified in the `DD:MMM:YYYY:HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
 
 An example invocation is as below.
 
@@ -485,7 +550,7 @@ Id      Timestamp                   Utilization     Drops
 ```
 #### 3.7.3.7 Show active drops
 
-This command shows the drops events recorded in the current data collection interval.
+This command shows the drops events recorded in the current data collection interval. For instance, if the data collection interval is set to 20 (sec), this command displays the drop events recorded in the last 20 seconds.
 
 ```
 shell # bdbg show drops active {flows | reasons | locations | interface <interface-name>} { detail <drop-id> }
@@ -509,13 +574,15 @@ shell # bdbg show drops active flows
 Number of Dropping Flows          :   3
 Active Monitoring interval   :   30th Jun 2021, 10:11AM to 30th Jun 2021, 10:21AM
 
-drop-id    src-ip         dst-ip            drop-reason     Ingress Intf     timestamp
---------   -----------    --------------    ------------    -----------      ----------
-2022       10.10.1.1      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:16AM
-2023       10.10.1.2      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:17AM
-2024       10.10.1.3      10.10.2.2         L3_DEST_MISS    Ethernet24       2021-06-11 10:17AM
+drop-id    src-ip         dst-ip            drop-reason     drop-type     Ingress Intf     timestamp
+--------   -----------    --------------    ------------    ----------    -----------      ----------
+2022       10.10.1.1      10.10.2.2         L3_DEST_MISS    Active        Ethernet24       2021-06-11 10:16AM
+2023       10.10.1.2      10.10.2.2         L3_DEST_MISS    Stopped       Ethernet24       2021-06-11 10:17AM
+2024       10.10.1.3      10.10.2.2         L3_DEST_MISS    Active        Ethernet24       2021-06-11 10:17AM
 
 ```
+
+In the output, the `drop-type` column indicates the type of the Flow Drop Event. An `Active` drop event indicates on-going drops for the specific flow. A `Stopped` drop event indicates that the flow is no longer experiencing any packet drops. It may be noted that not all platforms support both types of events. Certain platforms report only `Active` drop events.
 
 ```
 shell # bdbg show drops active flows detail 2022
@@ -529,12 +596,16 @@ Dst-Ip    :   10.10.2.2
 Src-Port  :   5656
 Dst-Port  :   80
 protocol  :   6
+Src-Mac   :   00:22:44:33:55:00
+Dst-Mac   :   00:22:44:33:55:01
+Vlan-Id   :   2043
 
 Ingress Port  : Ethernet24
 
-Drop Reason   : L3_DEST_MISS
-Drop Location : Ingress Pipeline
-Drop Timestamp: 30th Jun 2021, 10:16AM
+Drop Reason     : L3_DEST_MISS
+Drop Event Type : Active
+Drop Location   : Ingress Pipeline
+Drop Timestamp  : 30th Jun 2021, 10:16AM
 
 ```
 
@@ -609,7 +680,7 @@ shell # bdbg show drops history {flows | reasons | locations | interface <interf
 
 - The optional parameter `num-events` can be used to limit the output to a preferred number of drop events.
 
-- The optional parameter `time` specified in the `HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
+- The optional parameter `time` specified in the `DD:MMM:YYYY:HH:MM:SS` format, can be used to look at the history around a specific time. By default 10 events are shown. If `num-events` is also specified, as many events are shown. 
 
 Example invocations are as below:
 
@@ -619,13 +690,14 @@ shell # bdbg show drops history flows
 Number of Dropping Flows          :   3
 Drop Events last cleared at       :   30th Jun 2021, 10:11AM
 
-src-id         dst-ip            src-port     dst-port     protocol     drop-reason     location     timestamp
------------    --------------    --------     --------     --------     ------------    -----------  ----------
-10.10.1.1      10.10.2.2         5656         80           6            L3_DEST_MISS    data-plane   2021-06-11 11:22AM
-10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    cpu-queue    2021-06-11 11:20AM
-10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    kernel       2021-06-11 11:20AM
+src-id         dst-ip            src-port     dst-port     protocol     drop-reason     location     drop-type     Ingress Intf     timestamp
+-----------    --------------    --------     --------     --------     ------------    -----------  ----------    -----------      ----------
+10.10.1.1      10.10.2.2         5656         80           6            L3_DEST_MISS    data-plane   Active        Ethernet24       2021-06-11 11:22AM
+10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    cpu-queue    Active        Ethernet24       2021-06-11 11:20AM
+10.10.1.1      10.10.2.2         5656         80           6            UNKNOWN_VLAN    kernel       Active        Ethernet24       2021-06-11 11:20AM
 
 ```
+In the output, the `drop-type` column is as described earlier.
 
 ```
 shell # bdbg show drops history reasons
@@ -737,7 +809,7 @@ shell # bdbg export { all | congestion | drops }
 The following command dumps the bdbg internal logs on to the console, useful for debugging.
 
 ```
-shell # bdbg logs 
+shell # bdbg logs [all | congestion | drops]
 ```
 
 #### 3.7.5.3 Displaying support on actual platform
@@ -748,6 +820,22 @@ The following command prints information on specific support available on the un
 shell # bdbg support 
 ```
 
+#### 3.7.5.4 Set log-level for internal logs
+
+The following command sets a log level for the bdbg internal logs, useful for debugging.
+`log-level` is an integer in the range 1 to 10, where higher the number more the logs. The default value is 1 which logs only errors.
+
+```
+shell # bdbg debug { all | congestion | drops } <log-level>
+```
+
+#### 3.7.5.5 Dump internal parameters
+
+The following command dumps current internal parameters for bdbg internal tools, useful for debugging. The specific parameters dumped depend on the tool. This is meant to be useful for developers.
+
+```
+shell # bdbg dump { all | congestion | drops }
+```
 
 ### 3.7.6 REST API Support
 
@@ -783,24 +871,34 @@ Initial measurements will be made to ascertain the ammount of memory needed at a
 The CLI testcases are included as part of individual feature testcases.
 
 ## Functional Unit Tests
-1. Verify that once ‘collection-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
-2. Verify that once ‘max-retention-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
-3. Verify that once ‘congestion-threshold’ configuration is successful, the configuration can be retrieved via the show command properly.
-4. Verify that ‘collection-interval’ configuration can be cleared.
-5. Verify that ‘max-retention-interval’ configuration can be cleared.
-6. Verify that ‘congestion-threshold’ configuration can be cleared.
-7. Verify that congestion on ‘Ingress shared/headroom pool occupancy per PG’ can be retrieved via show commands.
-8. Verify that congestion on ‘Egress shared pool occupancy per queue’ can be retrieved via show commands.
-9. Verify that congestion on ‘CPU Queue’ can be retrieved via show commands.
-10. Verify that congestion on ‘Device buffer’ can be retrieved via show commands.
-11. Verify that congestion on ‘Ingress service pool’ can be retrieved via show commands.
-12. Verify that congestion on ‘Egress service pool’ can be retrieved via show commands.
-13. Verify that packet drop at data-plane (e.g. Unknown Vlan, TTL0) can be retrieved via show commands.
-14. Verify that packet drop at CPU queue (e.g. Unknown Vlan) can be retrieved via show commands.
-15. Verify that packet drop at Kernel (e.g. Unknown Vlan) can be retrieved via show commands.
-16. Verify that count of dropped packets at cpu-queue can be retrieved via show commands.
-17. Verify that count of dropped packets at physical interface (e.g. Ethernet0) can be retrieved via show commands.
-18. Verify that the input parameters provided to CLI are validated for ranges and validity.
+1. Verify that starting of bdbg tool is successful.
+2. Verify that stopping of bdbg tool is successful.
+3. Verify that once ‘collection-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
+4. Verify that once ‘max-retention-interval’ configuration is successful, the configuration can be retrieved via the show command properly.
+5. Verify that once ‘congestion-threshold’ configuration is successful, the configuration can be retrieved via the show command properly.
+6. Verify that ‘collection-interval’ configuration can be cleared.
+7. Verify that ‘max-retention-interval’ configuration can be cleared.
+8. Verify that ‘congestion-threshold’ configuration can be cleared.
+9. Verify that congestion on ‘Ingress shared/headroom pool occupancy per PG’ can be retrieved via show commands.
+10. Verify that congestion on ‘Egress shared pool occupancy per queue’ can be retrieved via show commands.
+11. Verify that congestion on ‘Device buffer’ can be retrieved via show commands.
+12. Verify that congestion on ‘global service pool’ can be retrieved via show commands.
+13. Verify that congestion on 'per port service pool’ can be retrieved via show commands.
+14. Verify that 'congestion top' options shows the data since last cleared.
+15. Verify that 'congestion top limit' shows the data per the specified number.
+16. Verify that per buffer congestion history can be retrieved via show commands.
+17. Verify that per interface per queue congestion history can be retrieved via show commands.
+18. Verify that congestion history 'limit' command shows the data per specified number.
+19. Verify that congestion history 'around' command shows the data per specified number.
+20. Verify that COPP Policer Packet Drops  can be can be retrieved via show commands.
+21. Verify that watermark queue drop counters can be retrieved via show commands.
+22. Verify that /proc/bcm/knet/rx_drop counters can be retrieved via show commands.
+23. Verify that /proc/bcm/knet/dstats counters can be retrieved via show commands.
+24. Verify that packet drops at /proc/net (ifconfig ) can be retrieved via show commands.
+25. Verify that Drop Monitor reported drops are retrieved via show commands
+26. Verify that Forwarding Plane Drop Counters can be retrieved via show commands.
+27. Verify that Forwarding Plane Drop Counters reported dropped flows can be retrieved via show commands.
+28. Verify that clear history command clears the history data.
 
 # Broadcom Internal Information : To be removed before publishing externally.
 

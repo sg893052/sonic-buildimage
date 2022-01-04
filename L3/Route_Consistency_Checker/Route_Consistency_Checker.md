@@ -75,12 +75,12 @@ The RCC is designed to detect in-consistency of the routes & nexthop from Zebra 
 - Kernel
 - APP_DB
 - ASIC_DB
-- H/W
+- SAI
 
 
 # 2 Feature Requirements
 
-The Route Consistency Checker feature enables the user to check the consistency of routes & nexthop. It checks whether the route & nexthop in Zebra is consistent with route & nexthop Kernel, APP_DB, ASIC_DB & Hardware. Any discrepancy in the routes & nexthop will be detected and displayed to user. User will be given option to start & stop the route consistency checker. 
+The Route Consistency Checker feature enables the user to check the consistency of routes & nexthop. It checks whether the route & nexthop in Zebra is consistent with route & nexthop Kernel, APP_DB, ASIC_DB & SAI. Any discrepancy in the routes & nexthop will be detected and displayed to user. User will be given option to start & stop the route consistency checker. 
 
 For Route Consistency Checker the source of truth will be Zebra routing table. 
 
@@ -94,8 +94,7 @@ Route Consistency Checker will,
 - Route consistency will validate ECMP NextHops. It will check the associated egress interface and ARP/neighbor entries
 - Route consistency will validate Tunnel NextHops. It will check the associated egress interface and ARP/neighbor entries for only the overlay nexthops
 - Route consistency checker can be started by user and it will run in background
-- Route consistency checker will dump inconsistent routes into a file that can be viewed by an user CLI.
-- Route consistency checker will store all the previous outputs of inconsistency run in a file
+- Route consistency checker will dump inconsistent routes that can be viewed by an user CLI.
 - As the route consistency checker is a CPU intensive operation, only one instance of checker can be active at any moment
 
 ## 2.2 Configuration and Management Requirements
@@ -136,7 +135,7 @@ The following are the types of consistency checking run
 - **Source/Destination: Zebra/Hardware**
 
 - **Detection:**
-  - Scan the routes in hardware by redirecting "l3 defip show"
+  - Scan the routes in SAI route table
   - Scan the routes in FRR by redirecting the output of "show ip route"
   - Compare the files generated to see any discrepancy in routes alone
 
@@ -144,14 +143,13 @@ The following are the types of consistency checking run
   - **Zebra has more routes** 
   - **Action:**
     - The inconsistency is logged into a file/database.
-  - **Hardware has more routes**
+  - **SAI has more routes**
   - **Action:**
     - The inconsistency is logged into a file/database.
 
 
 Note:
 
-- Routes missing from hardware in hardware route limit hit case will be considered as discrepancy.
 - Newly added routes will be skipped from scanned output and it is determined from the 'uptime' of routes in zebra.
 - Newly deleted routes will be skipped from scanned output. To determine that the route is newly deleted, either the deleted routes could be temporarily stored in a DB by module like RouteSyncd or the snapshot of software routes could be taken prior to snapshot of hardware routes with delay added that could account for route propagation from software to hardware. In addition to delay in taking the snapshot of routes, a watch list with multiple checkings could be carried out in RCC. To reduce the memory consumed, the latter approach where the delayed snapshots & repeated checking will be employed.
 
@@ -208,15 +206,11 @@ Routes or number of nexthops hitting the limit in hardware/kernel will be treate
 
 - **Data: Routes and Nexthops**''
 
-- **Source/Destination: Zebra, ASIC-DB, Hardware**
+- **Source/Destination: Zebra, ASIC-DB, SAI**
 
 - **Detection:**
   - Scan the routes and nexthops in FRR by redirecting the output of "show ip route" and "show ip arp/nd", by doing so for each Route: <RIF, Nexthop IP, Dest MAC> could be mapped. 
-  - Scan the routes in hardware by redirecting below output to file, by doing so for each route Route: <RIF, Nexthop IP, Dest MAC> could be mapped.
-    - "l3 defip show" - (Route: NexthopGroupID)
-    - "l3 egress show" - (NexthopId: RIF, Dest Mac)
-    - "l3 l3table show" - (NexthopId: NexthopIP)
-    - "l3 ecmp egress show" - (NexthopGroupId: NexthopId)
+  - Scan the routes in SAI by fetching SAI tables for Route, Nexthop, Nexthop Group, RIF, Neighbor etc.
   - Scan the below table in ASIC-DB, by doing so for each routeRoute: <RIF, Nexthop IP, Dest MAC> could be mapped, scanning ASIC-DB gives the interface-name for the nexthops.
     - Route Table
     - Nexthop Table 
@@ -229,7 +223,7 @@ Note:
 
 - This handles the case of inconsistent reachability information for both ECMP and non-ECMP case between S/W & H/W  and missing reachability information in H/W.
 
-- **Source/Destination: Zebra,ASIC-DB/Hardware**
+- **Source/Destination: Zebra,ASIC-DB/SAI**
 
 - **Detection:**
   - Scan the routes and nexthops in FRR by redirecting the output of "show ip route" and "show ip arp/nd", by doing so for each Route: <RIF, Nexthop IP, Dest MAC> could be mapped. 
@@ -260,7 +254,7 @@ As depicted in the non-ecmp nexthops consists of below types of nexthops,
 
   
 
-The software non-aware tunnel underlay nexthops and internal nexthops will not have reference count associated with it. So it is not feasible to detect and remove the additional nexthop entries in H/W.
+The software non-aware tunnel underlay nexthops and internal nexthops will not have reference count associated with it. So it is not feasible to detect and remove the additional nexthop entries in H/W (SAI).
 
 The case of nexthop present in orch agent but nexthop not present in H/W will be handled in Route's nexthop discrepancy sec.
 
@@ -290,13 +284,13 @@ Below table describes the summary of discrepancy and its action
 | Src                              | Dst                               | Action                                                       |
 | -------------------------------- | --------------------------------- | ------------------------------------------------------------ |
 | Route in s/w                     | Route **not** in h/w              | Discrepancy is logged to a file                                |
-| Route **not** in s/w             | Route in h/w                      | Discrepancy is logged to a file                           |
+| Route **not** in s/w             | Route in SAI                      | Discrepancy is logged to a file                           |
 | Route & nexthop in s/w           | Route & nexthop **not** in kernel | Discrepancy is logged to a file                                                |
 | Route & nexthop **not** in s/w   | Route & nexthop in kernel         | Discrepancy is logged to a file                                           |
-| Nexthop in s/w                   | Nexthop **not** in h/w            | Discrepancy is logged to a file                                      |
-| Nexthop **not** in s/w           | Nexthop in h/w                    | Discrepancy is logged to a file   |
-| ECMP in s/w                      | ECMP **not** in h/w               | Discrepancy is logged to a file                                        |
-| ECMP **not** in s/w              | ECMP in h/w                       | Discrepancy is logged to a file   |
+| Nexthop in s/w                   | Nexthop **not** in SAI            | Discrepancy is logged to a file                                      |
+| Nexthop **not** in s/w           | Nexthop in SAI                    | Discrepancy is logged to a file   |
+| ECMP in s/w                      | ECMP **not** in SAI               | Discrepancy is logged to a file                                        |
+| ECMP **not** in s/w              | ECMP in SAI                       | Discrepancy is logged to a file   |
 | Routes nexthop is not consistent | Routes nexthop is not consistent  | Discrepancy is logged to a file                                  |
 
 
@@ -334,7 +328,7 @@ There are no configuration command for this feature
 
 ```
 
-Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] [detail]
+Command to trigger: consistency-check start route [[vrf Vrf1] [ address-family {ipv4|ipv6} ]] 
 Command to abort: consistency-check stop route
 
 ```
@@ -377,310 +371,151 @@ The following show command will be provided
 ```
 show consistency-check status route
 ```
-#### Example1: Display status of consistency-check for all VRFs
+#### Example1: Display status of consistency-check 
+sonic# show consistency-check status
+```
+sonic# show consistency-check status 
+-------------------------------------------------------------
+Feature              Consistency-status
+-------------------------------------------------------------
+Access-list          Consistent
+Route                Consistent
+
+```
+show consistency-check status route
+```
+#### Example2: Display status of consistency-check for all VRFs
 sonic# show consistency-check status route
 ```
-Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-Route Check for vrf:default address-family:ipv6 - INCONSISTENT
-Route Check for vrf:Vrf1 address-family:ipv4 - CONSISTENT
-Route Check for vrf:Vrf1 address-family:ipv6 - CONSISTENT
-Route Check for vrf:Vrf2 address-family:ipv4 - INCONSISTENT
-Route Check for vrf:Vrf2 address-family:ipv6 - INCONSISTENT
+```
+Last Route consistency check ran at 12/02/2021, 20:13:11(UTC) took 3.01 seconds
+Final Route consistency check status: Consistent
+  Route check for vrf default and address-family ipv4:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Consistent
+  Route check for vrf default and address-family ipv6:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Consistent
+  Route check for vrf Vrf1 and address-family ipv4:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Consistent
+  Route check for vrf Vrf1 and address-family ipv6:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Consistent    
   
+```
 
 ```
-#### Example2: Display status of consistency-check for a single VRF
-sonic# show consistency-check status route vrf default
+#### Example3: Display status of consistency-check in detail
 ```
-Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-Route Check for vrf:default address-family:ipv6 - INCONSISTENT
+```		      		       
+sonic# show consistency-check status route
+ Last Route consistency check ran at 12/02/2021, 05:13:14(UTC) took 39.09 seconds
+ Final Route consistency check status: Inconsistent
+   Route check for vrf default and address-family ipv4:
+     rib_vs_appdb: Inconsistent
+       Prefixes in rib not available in appdb:
+         121.1.1.0/24
+     rib_vs_asicdb: Inconsistent
+       Prefixes in rib not available in asicdb:
+         121.1.1.0/24
+     rib_vs_fib: Consistent
+     rib_vs_sai: Inconsistent
+       Prefixes in rib not available in sai:
+         121.1.1.0/24
+   Route check for vrf default and address-family ipv6:
+     rib_vs_appdb: Inconsistent
+       Prefixes in rib not available in appdb:
+         121::0/64
+     rib_vs_asicdb: Inconsistent
+       Prefixes in rib not available in appdb:
+         121::0/64     
+     rib_vs_fib: Consistent
+     rib_vs_sai: Inconsistent
+        Prefixes in rib not available in appdb:
+         121::0/64 
 ```
-#### Example3: Display status of consistency-check for a single VRF in detail
+
 ```
-		      		       
-sonic# show consistency-check status route vrf default detail
-Route Check for vrf:default address-family:ipv4 - INCONSISTENT
-  Total number of route in RIB: 22
-    mgmt if routes: 2
-  Total number of route in KERNEL: 23
-    mgmt if routes: 2
-    host-if routes: 1
-  Total number of route in APP_DB: 20
-    drop routes: 1
-   Total number of route in ASIC_DB: 20
-    drop routes: 1   
-  Total number of route in HARDWARE: 20
-    drop routes: 1
-		  
-  Number of routes considered in
-    RIB: 20
-    KERNEL: 20
-    APP_DB: 20
-    ASIC_DB: 19
-    HARDWARE: 19
-
-  Number of common prefixes between RIB and KERNEL: 20
-  Prefixes in rib not available in kernel:
-  Extra prefixes in kernel:
-  Unequal prefixes between rib and kernel:
-  
-  Number of common prefixes between RIB and APP_DB: 20
-  Prefixes in RIB not available in APP_DB:
-  Extra prefixes in APP_DB:
-  Unequal prefixes between RIB and APP_DB:
-  
-  Number of common prefixes between RIB and ASIC_DB: 19
-  Prefixes in RIB not available in ASIC_DB:
-       99.1.1.0/24
-  Extra prefixes in ASIC_DB:
-  Unequal prefixes between RIB and ASIC_DB:
-       40.0.0.0/24 
-                RIB: 2
-                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
-                       (Ethernet0, 10.1.1.3, 00:00:00:01:02:03)
-                HW:  1
-                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03) 
-		       
-  Number of common prefixes between RIB and HARDWARE: 19
-  Prefixes in RIB not available in HARDWARE:
-       99.1.1.0/24
-  Extra prefixes in HARDWARE:
-  Unequal prefixes between RIB and HARDWARE:
-       40.0.0.0/24 
-                RIB: 2
-                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03)
-                       (Ethernet0, 10.1.1.3, 00:00:00:01:02:03)
-                HW:  1
-                       (Ethernet0, 10.1.1.1, 00:00:00:01:02:03) 		       
-		       
-Route Check for vrf:default address-family:ipv6 - INCONSISTENT
-  Total number of route in RIB: 12
-    mgmt if routes: 2
-  Total number of route in KERNEL: 13
-    mgmt if routes: 2
-    host-if routes: 1
-  Total number of route in APP_DB: 11
-    drop routes: 1
-   Total number of route in ASIC_DB: 10
-    drop routes: 1   
-  Total number of route in HARDWARE: 10
-    drop routes: 1
-		  
-  Number of routes considered in
-    RIB: 10
-    KERNEL: 10
-    APP_DB: 10
-    ASIC_DB: 9
-    HARDWARE: 9
-
-  Number of common prefixes between RIB and KERNEL: 10
-  Prefixes in rib not available in kernel:
-  Extra prefixes in kernel:
-  Unequal prefixes between rib and kernel:
-  
-  Number of common prefixes between RIB and APP_DB: 10
-  Prefixes in RIB not available in APP_DB:
-  Extra prefixes in APP_DB:
-  Unequal prefixes between RIB and APP_DB:
-  
-  Number of common prefixes between RIB and ASIC_DB: 9
-  Prefixes in RIB not available in ASIC_DB:
-       99::0/64
-  Extra prefixes in ASIC_DB:
-  Unequal prefixes between RIB and ASIC_DB:
-       40::0/64 
-                RIB: 2
-                       (Ethernet0, 10::1, 00:00:00:01:02:04)
-                       (Ethernet0, 10::3, 00:00:00:01:02:05)
-                HW:  1
-                       (Ethernet0, 10::1, 00:00:00:01:02:04) 
-		       
-  Number of common prefixes between RIB and HARDWARE: 9
-  Prefixes in RIB not available in HARDWARE:
-       99::0/64
-  Extra prefixes in HARDWARE:
-  Unequal prefixes between RIB and HARDWARE:
-       40::0/64
-                RIB: 2
-                       (Ethernet0, 10::1, 00:00:00:01:02:04)
-                       (Ethernet0, 10::3, 00:00:00:01:02:05)
-                HW:  1
-                       (Ethernet0, 10::1, 00:00:00:01:02:04) 
- ```
- #### Example4: Display status of consistency-check for a single VRF in detail
- ```
-sonic# show consistency-check status route vrf Vrf1 detail
-Route Check for vrf:Vrf1 address-family:ipv4 - CONSISTENT
-  Total number of route in RIB: 32
-    mgmt if routes: 2
-  Total number of route in KERNEL: 33
-    mgmt if routes: 2
-    host-if routes: 1
-  Total number of route in APP_DB: 31
-    drop routes: 1
-   Total number of route in ASIC_DB: 31
-    drop routes: 1   
-  Total number of route in HARDWARE: 31
-    drop routes: 1
-		  
-  Number of routes considered in
-    RIB: 30
-    KERNEL: 30
-    APP_DB: 30
-    ASIC_DB: 30
-    HARDWARE: 30
-
-  Number of common prefixes between RIB and KERNEL: 30
-  Prefixes in rib not available in kernel:
-  Extra prefixes in kernel:
-  Unequal prefixes between rib and kernel:
-  
-  Number of common prefixes between RIB and APP_DB: 30
-  Prefixes in RIB not available in APP_DB:
-  Extra prefixes in APP_DB:
-  Unequal prefixes between RIB and APP_DB:
-
-  Number of common prefixes between RIB and ASIC_DB: 30
-  Prefixes in rib not available in ASIC_DB:
-  Extra prefixes in ASIC_DB:
-  Unequal prefixes between rib and ASIC_DB:
-  
-  Number of common prefixes between RIB and HARDWARE: 30
-  Prefixes in RIB not available in HARDWARE:
-  Extra prefixes in HARDWARE:
-  Unequal prefixes between RIB and HARDWARE:
-		       
-		       
-Route Check for vrf:Vrf1 address-family:ipv6 - CONSISTENT
-  Total number of route in RIB: 12
-    mgmt if routes: 2
-  Total number of route in KERNEL: 13
-    mgmt if routes: 2
-    host-if routes: 1
-  Total number of route in APP_DB: 11
-    drop routes: 1
-   Total number of route in ASIC_DB: 11
-    drop routes: 1   
-  Total number of route in HARDWARE: 11
-    drop routes: 1
-		  
-  Number of routes considered in
-    RIB: 10
-    KERNEL: 10
-    APP_DB: 10
-    ASIC_DB: 10
-    HARDWARE: 10
-
-  Number of common prefixes between RIB and KERNEL: 10
-  Prefixes in rib not available in kernel:
-  Extra prefixes in kernel:
-  Unequal prefixes between rib and kernel:
-  
-  Number of common prefixes between RIB and APP_DB: 10
-  Prefixes in RIB not available in APP_DB:
-  Extra prefixes in APP_DB:
-  Unequal prefixes between RIB and APP_DB:
-  
-  Number of common prefixes between RIB and ASIC_DB: 10
-  Prefixes in RIB not available in ASIC_DB:
-  Extra prefixes in ASIC_DB:
-  Unequal prefixes between RIB and ASIC_DB:
-  
-  Number of common prefixes between RIB and HARDWARE: 10
-  Prefixes in RIB not available in HARDWARE:
-  Extra prefixes in HARDWARE:
-  Unequal prefixes between RIB and HARDWARE:  
+ #### Example4: Display status of consistency-check in detail
 ```
-#### Example5: Display status of consistency-check for a single VRF in detail
 ```
-		      		       
-sonic# show consistency-check status route vrf Vrf2 detail
-Route Check for vrf:Vrf2 address-family:ipv4 - INCONSISTENT
-  Total number of route in RIB: 22
-    mgmt if routes: 2
-  Total number of route in KERNEL: 23
-    mgmt if routes: 2
-    host-if routes: 1
-  Total number of route in APP_DB: 21
-    drop routes: 1
-   Total number of route in ASIC_DB: 22
-    drop routes: 1   
-  Total number of route in HARDWARE: 22
-    drop routes: 1
-		  
-  Number of routes considered in
-    RIB: 20
-    KERNEL: 20
-    APP_DB: 20
-    ASIC_DB: 21
-    HARDWARE: 21
-
-  Number of common prefixes between RIB and KERNEL: 20
-  Prefixes in rib not available in kernel:
-  Extra prefixes in kernel:
-  Unequal prefixes between rib and kernel:
-  
-  Number of common prefixes between RIB and APP_DB: 20
-  Prefixes in RIB not available in APP_DB:
-  Extra prefixes in APP_DB:
-  Unequal prefixes between RIB and APP_DB:
-  
-  Number of common prefixes between RIB and ASIC_DB: 21
-  Prefixes in RIB not available in ASIC_DB:
-  Extra prefixes in ASIC_DB:
-       88.1.1.1/24
-  Unequal prefixes between RIB and ASIC_DB:
-	       
-  Number of common prefixes between RIB and HARDWARE: 21
-  Prefixes in RIB not available in HARDWARE:
-  Extra prefixes in HARDWARE:
-  Unequal prefixes between RIB and HARDWARE:
-       88.1.1.1/24
-		       
-		       
-Route Check for vrf:default address-family:ipv6 - CONSISTENT
-  Total number of route in RIB: 12
-    mgmt if routes: 2
-  Total number of route in KERNEL: 13
-    mgmt if routes: 2
-    host-if routes: 1
-  Total number of route in APP_DB: 11
-    drop routes: 1
-   Total number of route in ASIC_DB: 12
-    drop routes: 1   
-  Total number of route in HARDWARE: 12
-    drop routes: 1
-		  
-  Number of routes considered in
-    RIB: 10
-    KERNEL: 10
-    APP_DB: 10
-    ASIC_DB: 11
-    HARDWARE: 11
-
-  Number of common prefixes between RIB and KERNEL: 10
-  Prefixes in rib not available in kernel:
-  Extra prefixes in kernel:
-  Unequal prefixes between rib and kernel:
-  
-  Number of common prefixes between RIB and APP_DB: 10
-  Prefixes in RIB not available in APP_DB:
-  Extra prefixes in APP_DB:
-  Unequal prefixes between RIB and APP_DB:
-  
-  Number of common prefixes between RIB and ASIC_DB: 10
-  Prefixes in RIB not available in ASIC_DB:
-  Extra prefixes in ASIC_DB:
-        88::0/64 
-  Unequal prefixes between RIB and ASIC_DB:
-  
-  Number of common prefixes between RIB and HARDWARE: 10
-  Prefixes in RIB not available in HARDWARE:
-  Extra prefixes in HARDWARE:
-        88::0/64 
-  Unequal prefixes between RIB and HARDWARE:  
- ```
+sonic# show consistency-check status route
+Last Route consistency check ran at 12/02/2021, 20:13:11(UTC) took 3.01 seconds
+Final Route consistency check status: Inconsistent
+  Route check for vrf default and address-family ipv4:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Consistent
+  Route check for vrf default and address-family ipv6:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Consistent
+  Route check for vrf Vrf1 and address-family ipv4:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Inconsistent
+      Unequal prefixes:        
+	99.0.0.1/32 - NHop(s) do not match:
+          rib:1
+            (Ethernet64, 64.0.0.2, 80:a2:35:26:45:61)
+          sai:1
+            (Ethernet68, 68.0.0.2, 80:a2:35:26:45:61)
+  Route check for vrf Vrf1 and address-family ipv6:
+    rib_vs_appdb: Consistent
+    rib_vs_asicdb: Consistent
+    rib_vs_fib: Consistent
+    rib_vs_sai: Inconsistent  
+      Unequal prefixes:        
+	99::1/128 - NHop(s) do not match:
+          rib:1
+            (Ethernet64, 64::2, 80:a2:35:26:45:61)
+          sai:1
+            (Ethernet68, 68::2, 80:a2:35:26:45:61)    
+```
  
+```
+#### Example5: Display status of consistency-check in detail
+```
+```
+		      		       
+sonic# show consistency-check status route
+ Last Route consistency check ran at 12/02/2021, 05:13:14(UTC) took 39.09 seconds
+ Final Route consistency check status: Inconsistent
+   Route check for vrf default and address-family ipv4:
+     rib_vs_appdb: Inconsistent
+       Prefixes in appdb not available in rib:
+        200.0.0.1/32
+     rib_vs_asicdb: Inconsistent
+       Prefixes in asicdb not available in rib:
+        200.0.0.1/32
+     rib_vs_fib: Consistent
+     rib_vs_sai: Inconsistent
+      Prefixes in sai not available in rib:
+        200.0.0.1/32
+   Route check for vrf default and address-family ipv6:
+     rib_vs_appdb: Inconsistent
+       Prefixes in appdb not available in rib:
+        200::1/128
+     rib_vs_asicdb: Inconsistent
+       Prefixes in asicdb not available in rib:
+        200::1/128   
+     rib_vs_fib: Consistent
+     rib_vs_sai: Inconsistent
+       Prefixes in sai not available in rib:
+        200::1/128
+```
 
 ## 6 Serviceability and Debug
 
@@ -689,13 +524,39 @@ The existing logging mechanisms shall be used. Proposed debug framework shall be
 
 
 ## 7 Unit Test cases
-
-|      |      |      |
-| ---- | ---- | ---- |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
-|      |      |      |
+- IPv4 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv6 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv4 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv4 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv6 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv6 connected routes in default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv4 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv6 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, check consistency - Pass
+- IPv4 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv4 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv6 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in APPDB, detect inconsistency - Pass
+- IPv6 connected routes in non-default VRF on Ethernet, Vlan, PortChannel, Eth subif, Po subif, Loopback, modify prefix, nexthop in ASICDB, detect inconsistency - Pass
+- IPv4 static routes in default VRF, check consistency - Pass
+- IPv6 static routes in default VRF, check consistency - Pass
+- IPv4 static routes in non-default VRF, check consistency - Pass
+- IPv6 static routes in non-default VRF, check consistency - Pass
+- Learnt IPv4 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv4 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv4 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv4 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv4 routes in default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv4 routes in non-default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv6 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv6 routes in default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv6 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv6 routes in non-default VRF with nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Learnt IPv6 routes in default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, check consistency - Pass
+- Learnt IPv6 routes in non-default VRF with ECMP nexthop as Ethernet, Vlan, PortChannel, Eth subif, Po subif, vxlan tunnel, create inconsistency of route, nexthop, nbr, detect inconsistency - Pass
+- Scale IPv4 routes to 128k, check consistency - Pass
+- Scale IPv4 routes to 128k, create inconsistency and detect inconsistency - Pass
+- Scale IPv6 routes to 64k, check consistency - Pass
+- Scale IPv6 routes to 64k, create inconsistency and detect inconsistency - Pass
+- Scale IPv4 routes with 64 ECMP path, check consistency - Pass
+- Scale IPv4 routes with 64 ECMP path, create and detect inconsistency - Pass
+- Scale IPv6 routes with 64 ECMP path, check consistency - Pass
+- Scale IPv6 routes with 64 ECMP path, create and detect inconsistency - Pass

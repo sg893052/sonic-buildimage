@@ -74,10 +74,11 @@
 
 # Revision
 
-| Rev | Date |     Author      | Change Description |
-|:---:|:----:|:---------------:|--------------------|
-| 0.1 |      |  Mykola Faryma  | Initial version    |
-| 0.2 |      | Shirisha Dasari | Snapshot Addition  |
+| Rev | Date |     Author      | Change Description              |
+|:---:|:----:|:---------------:|---------------------------------|
+| 0.1 |      |  Mykola Faryma  | Initial version                 |
+| 0.2 |      | Shirisha Dasari | Snapshot Addition               |
+| 0.3 |      | Sharad Agrawal  | Addition buffer counter updates |
 
 # About this Manual
 
@@ -257,11 +258,18 @@ Following is the PR for buffer pool watermark support:
       - SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_XOFF\_ROOM\_WATERMARK\_BYTES
       - SAI\_INGRESS\_PRIORITY\_GROUP\_STAT\_SHARED\_WATERMARK\_BYTES
 
-**For every Buffer Pool (global and per interface) the following should be available in the DB:**
+**For every Global Buffer Pool the following should be available in the DB:**
 
   - "COUNTERS:pool\_vid"
       - SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES
+      - SAI\_BUFFER\_POOL\_STAT\_MULTICAST\_WATERMARK\_BYTES
 
+**For every Port Pool the following should be available in the DB:**
+
+  - "COUNTERS:pool\_vid"
+      - SAI\_PORT\_POOL\_STAT\_SHARED\_WATERMARK\_BYTES
+      - SAI\_PORT\_POOL\_STAT\_UNICAST\_WATERMARK\_BYTES
+  
 **For Device buffer the following should be available in the DB:**
 
   - "COUNTERS:device\_vid"
@@ -270,8 +278,58 @@ Following is the PR for buffer pool watermark support:
 **Additionally a few mappings should be added:**
 
   - "COUNTERS\_PG\_PORT\_MAP" - map PG oid to port oid
-  - "COUNTERS\_PG\_NAME\_MAP" - map PG oid to PG name
+   127.0.0.1:6379[2]> hgetall COUNTERS_PG_PORT_MAP
+   1) "oid:0x1a0000000003bc"
+   2) "oid:0x1000000000015"
+
+  - "COUNTERS\_PG\_NAME\_MAP" - map Port:PG_Index to PG OID
+   127.0.0.1:6379[2]> hgetall COUNTERS_PG_NAME_MAP
+   1) "Ethernet0:0"
+   2) "oid:0x1a000000000111"
+
   - "COUNTERS\_PG\_INDEX\_MAP" - map PG oid to PG index
+   127.0.0.1:6379[2]> hgetall COUNTERS_PG_INDEX_MAP
+   1) "oid:0x1a0000000003bc"
+   2) "3"
+
+  - "COUNTERS\_QUEUE\_NAME\_MAP" - map Port:Queue_Index to Queue oid
+   127.0.0.1:6379[2]> hgetall COUNTERS_QUEUE_NAME_MAP
+   1) "Ethernet40:3"
+   2) "oid:0x1500000000075c"
+
+  - "COUNTERS\_QUEUE\_PORT\_MAP" - map Queue oid to Port OID
+   127.0.0.1:6379[2]> hgetall COUNTERS_QUEUE_PORT_MAP
+   1) "oid:0x1500000000084e"
+   2) "oid:0x1000000000032"
+
+  - "COUNTERS\_QUEUE\_INDEX\_MAP" - map Queue oid to Queue Index
+   127.0.0.1:6379[2]> hgetall COUNTERS_QUEUE_INDEX_MAP
+   1) "oid:0x1500000000084e"
+   2) "5"
+
+  - "COUNTERS\_QUEUE\_TYPE\_MAP" - map Queue oid to Queue Type
+   127.0.0.1:6379[2]> hgetall COUNTERS_QUEUE_TYPE_MAP
+   1) "oid:0x1500000000084e"
+   2) "SAI_QUEUE_TYPE_UNICAST"
+
+  - "COUNTERS\_BUFFER\_POOL\_NAME\_MAP" - map global buffer pool name to buffer pool oid
+   127.0.0.1:6379[2]> hgetall COUNTERS_BUFFER_POOL_NAME_MAP
+   1) "egress_lossless_pool"
+   2) "oid:0x18000000000be2"
+   3) "egress_lossy_pool"
+   4) "oid:0x18000000000c23"
+   5) "ingress_lossless_pool"
+   6) "oid:0x18000000000c64"
+
+  - "COUNTERS\_PORT\_POOL\_NAME\_MAP" - map Port:global_buffer_pool_name to port pool oid
+  127.0.0.1:6379[2]> hgetall COUNTERS_PORT_POOL_NAME_MAP
+  1) "Ethernet0:egress_lossless_pool"
+  2) "oid:0x3e000000000be3"
+
+  - "COUNTERS\_BUFFER\_DEVICE\_NAME\_MAP" - map global device to device oid
+  127.0.0.1:6379[2]> hgetall COUNTERS_BUFFER_DEVICE_NAME_MAP
+  1) "device"
+  2) "oid:0x21000000000000"
 
 The watermark counters are provided via Flex Counter, with a period of
 1s. Flex Counter does clear the value from
@@ -315,10 +373,22 @@ For
       - "SAI\_SWITCH\_STAT\_DEVICE\_WATERMARK\_BYTES"
   - "PERIODIC\_WATERMARKS:pool\_vid"
       - "SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES"
+      - "SAI\_BUFFER\_POOL\_STAT\_MULTICAST\_WATERMARK\_BYTES"
   - "PERSISTENT\_WATERMARKS:pool\_vid"
       - "SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES"
+      - "SAI\_BUFFER\_POOL\_STAT\_MULTICAST\_WATERMARK\_BYTES"
   - "USER\_WATERMARKS:pool\_vid"
       - "SAI\_BUFFER\_POOL\_STAT\_WATERMARK\_BYTES"
+      - "SAI\_BUFFER\_POOL\_STAT\_MULTICAST\_WATERMARK\_BYTES"
+ - "PERIODIC\_WATERMARKS:port_pool\_vid"
+      - "SAI\_PORT\_POOL\_STAT\_SHARED\_WATERMARK\_BYTES"
+      - "SAI\_PORT\_POOL\_STAT\_UNICAST\_WATERMARK\_BYTES"
+  - "PERSISTENT\_WATERMARKS:port_pool\_vid"
+      - "SAI\_PORT\_POOL\_STAT\_SHARED\_WATERMARK\_BYTES"
+      - "SAI\_PORT\_POOL\_STAT\_UNICAST\_WATERMARK\_BYTES"
+  - "USER\_WATERMARKS:port_pool\_vid"
+      - "SAI\_PORT\_POOL\_STAT\_SHARED\_WATERMARK\_BYTES"
+      - "SAI\_PORT\_POOL\_STAT\_UNICAST\_WATERMARK\_BYTES"
 
 ### 3.1.2 CLI
 
@@ -460,25 +530,221 @@ the current telemetry interval ends.
 
 #### 3.1.2.6 KLISH CLI show
 
-    # sonic# show watermark interval
+\# sonic# show watermark interval
 
-    # sonic# show watermark telemetry interval
+     Snapshot interval: 10 second(s)
 
-    # sonic# show priority-group watermark {headroom|shared} [interface Ethernet<num>]
 
-    # sonic# show queue watermark {unicast|multicast|cpu} [interface Ethernet <num>]
- 
-    # sonic# show priority-group persistent-watermark {headroom|shared} [interface Ethernet <num>]
+\# sonic# show watermark telemetry interval
 
-    # sonic# show queue persistent-watermark {unicast|multicast|cpu} [interface Ethernet <num>]
+     Telemetry interval : 120 seconds
 
-    # sonic# show buffer-pool watermark [interface Ethernet <num>]
 
-    # sonic# show buffer-pool persistent-watermark [interface Ethernet <num>]
+\# sonic# show priority-group watermark {headroom|shared} [interface Ethernet\<num\>]
 
-    # sonic# show device watermark
+     sonic# show priority-group watermark shared | no-more
+     Ingress shared pool watermark per PG:
+     -----------------------------------------------------------------------------------------
+     Port        PG0       PG1       PG2       PG3       PG4       PG5       PG6       PG7
+     -----------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0
+     Ethernet1   0         0         0         0         0         0         0         0
+     ...
+     Ethernet46  0         0         0         0         0         0         0         2359808
 
-    # sonic# show device persistent-watermark
+     sonic# show priority-group watermark headroom
+     Ingress headroom watermark per PG:
+     -----------------------------------------------------------------------------------------
+     Port        PG0       PG1       PG2       PG3       PG4       PG5       PG6       PG7
+     -----------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0
+     Ethernet1   0         0         0         0         0         0         0         0
+     Ethernet2   0         0         0         0         0         0         0         0
+
+     sonic# show priority-group watermark shared interface Ethernet 46
+     Ingress shared pool watermark per PG:
+     -------------------------------------------------------------------------------
+     PG0       PG1       PG2       PG3       PG4       PG5       PG6       PG7
+     -------------------------------------------------------------------------------
+     0         0         0         0         0         0         0         2359808
+
+
+\# sonic# show queue watermark {unicast|multicast|cpu} [interface Ethernet \<num\>]
+
+     sonic# show queue watermark unicast | no-more
+     Egress queue watermark per unicast queue:
+     ----------------------------------------------------------------------------------------------------------------
+     Port        UC0       UC1       UC2       UC3       UC4       UC5       UC6       UC7       UC8       UC9
+     ----------------------------------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0         0         0
+     Ethernet1   0         0         0         0         0         0         0         0         0         0
+     ...
+     Ethernet46  12761344  0         0         0         0         0         0         0         0         512
+
+     sonic# show queue watermark multicast | no-more
+     Egress queue watermark per multicast queue:
+     ----------------------------------------------------------------------------------------------------------------
+     Port        MC10      MC11      MC12      MC13      MC14      MC15      MC16      MC17      MC18      MC19
+     ----------------------------------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0         0         0
+     Ethernet1   0         0         0         0         0         0         0         0         0         0
+     ...
+     Ethernet46  4719104   0         0         0         0         0         0         0         0         0
+
+     sonic# show queue watermark unicast interface Ethernet 46
+     Egress queue watermark per unicast queue:
+     ----------------------------------------------------------------------------------------------------
+     UC0       UC1       UC2       UC3       UC4       UC5       UC6       UC7       UC8       UC9
+     ----------------------------------------------------------------------------------------------------
+     12761344  0         0         0         0         0         0         0         0         512
+
+     sonic# show queue watermark multicast interface Ethernet 46
+     Egress queue watermark per multicast queue:
+     ----------------------------------------------------------------------------------------------------
+     MC10      MC11      MC12      MC13      MC14      MC15      MC16      MC17      MC18      MC19
+     ----------------------------------------------------------------------------------------------------
+     4719104   0         0         0         0         0         0         0         0         0
+
+     sonic# show queue watermark CPU
+     Egress queue watermark per CPU queue:
+     -------------------------------------------------------------------
+     TxQ       Bytes
+     -------------------------------------------------------------------
+     CPU0      0
+     CPU1      0
+
+\# sonic# show priority-group persistent-watermark {headroom|shared} [interface Ethernet \<num\>]
+
+     sonic# show priority-group persistent-watermark shared | no-more
+     Ingress shared pool persistent watermark per PG:
+     -----------------------------------------------------------------------------------------
+     Port        PG0       PG1       PG2       PG3       PG4       PG5       PG6       PG7
+     -----------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0
+     Ethernet1   0         0         0         0         0         0         0         0
+     ...
+     Ethernet46  0         0         0         0         0         0         0         2359808
+
+     sonic# show priority-group persistent-watermark headroom
+     Ingress headroom persistent watermark per PG:
+     -----------------------------------------------------------------------------------------
+     Port        PG0       PG1       PG2       PG3       PG4       PG5       PG6       PG7
+     -----------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0
+     Ethernet1   0         0         0         0         0         0         0         0
+
+     sonic# show priority-group persistent-watermark shared interface Ethernet 46
+     Ingress shared pool persistent watermark per PG:
+     -------------------------------------------------------------------------------
+     PG0       PG1       PG2       PG3       PG4       PG5       PG6       PG7
+     -------------------------------------------------------------------------------
+     0         0         0         0         0         0         0         2359808
+
+
+\# sonic# show queue persistent-watermark {unicast|multicast|cpu} [interface Ethernet \<num\>]
+
+     sonic# show queue persistent-watermark unicast
+     Egress shared pool persistent watermark occupancy per unicast queue:
+     ----------------------------------------------------------------------------------------------------------------
+     Port        UC0       UC1       UC2       UC3       UC4       UC5       UC6       UC7       UC8       UC9
+     ----------------------------------------------------------------------------------------------------------------
+     Ethernet0   0         0         0         0         0         0         0         0         0         0
+     ...
+     Ethernet46  12761344  0         0         0         0         0         0         0         0         512
+
+     sonic# show queue persistent-watermark unicast interface Ethernet 46
+     Egress queue persistent watermark per unicast queue:
+     ----------------------------------------------------------------------------------------------------
+     UC0       UC1       UC2       UC3       UC4       UC5       UC6       UC7       UC8       UC9
+     ----------------------------------------------------------------------------------------------------
+     12761344  0         0         0         0         0         0         0         0         512
+
+
+\# sonic# show buffer_pool watermark [interface Ethernet \<num\>]
+
+     sonic# show buffer_pool watermark
+     -----------------------------------------------------------------
+     Pool                          Bytes (Total)     Bytes (Multicast)
+     -----------------------------------------------------------------
+     egress_lossless_pool          23183104          3539712
+     egress_lossy_pool             0                 0
+     ingress_lossless_pool         23187712          0
+
+     sonic# show buffer_pool watermark percentage
+     -----------------------------------------------------------------------
+     Pool                          Percent (Total)       Percent (Multicast)
+     -----------------------------------------------------------------------
+     egress_lossless_pool          70                    10
+     egress_lossy_pool             0                     0
+     ingress_lossless_pool         100                   0
+
+
+     sonic# show buffer_pool watermark interface Ethernet 47
+     ---------------------------------------------------------------
+     Pool                          Bytes (Total)     Bytes (Unicast)
+     ---------------------------------------------------------------
+     egress_lossy_pool             0                 0
+     ingress_lossless_pool         3539712           0
+     egress_lossless_pool          1280              0
+
+     sonic# show buffer_pool watermark percentage interface Ethernet 47
+     ---------------------------------------------------------------------
+     Pool                          Percent (Total)       Percent (Unicast)
+     ---------------------------------------------------------------------
+     ingress_lossless_pool         10                    0
+     egress_lossless_pool          0                     0
+     egress_lossy_pool             0                     0
+
+
+
+\# sonic# show buffer_pool persistent-watermark [interface Ethernet \<num\>]
+
+     sonic# show buffer_pool persistent-watermark
+     -----------------------------------------------------------------
+     Pool                          Bytes (Total)     Bytes (Multicast)
+     -----------------------------------------------------------------
+     egress_lossy_pool             0                 0
+     ingress_lossless_pool         23187712          0
+     egress_lossless_pool          23183104          3539712
+
+     sonic# show buffer_pool persistent-watermark percentage
+     -----------------------------------------------------------------------
+     Pool                          Percent (Total)       Percent (Multicast)
+     -----------------------------------------------------------------------
+     egress_lossless_pool          70                    10
+     egress_lossy_pool             0                     0
+     ingress_lossless_pool         100                   0
+
+
+     sonic# show buffer_pool persistent-watermark interface Ethernet 47
+     ---------------------------------------------------------------
+     Pool                          Bytes (Total)     Bytes (Unicast)
+     ---------------------------------------------------------------
+     ingress_lossless_pool         3539712           0
+     egress_lossless_pool          1280              0
+     egress_lossy_pool             0                 0
+
+     sonic# show buffer_pool persistent-watermark percentage interface Ethernet 47
+     ---------------------------------------------------------------------
+     Pool                          Percent (Total)       Percent (Unicast)
+     ---------------------------------------------------------------------
+     egress_lossy_pool             0                     0
+     ingress_lossless_pool         10                    0
+     egress_lossless_pool          0                     0
+
+
+\# sonic# show device watermark
+
+     sonic# show device watermark
+     Utilization (Bytes)   : 23187712
+     Utilization (Percent) : 69
+
+
+\# sonic# show device persistent-watermark
+
+     sonic# show device watermark
+     Utilization (Bytes)   : 23187712
+     Utilization (Percent) : 69
 
 
 #### 3.1.2.7 KLISH clear 
@@ -491,9 +757,9 @@ the current telemetry interval ends.
 
     # sonic# clear queue persistent-watermark {unicast|multicast} [interface Ethernet <num>]
 
-    # sonic# clear buffer-pool watermark [interface Ethernet <num>]
+    # sonic# clear buffer_pool watermark {shared|multicast} [interface Ethernet <num> {shared|unicast}]
 
-    # sonic# clear buffer-pool persistent-watermark [interface Ethernet <num>]
+    # sonic# clear buffer_pool persistent-watermark {shared|multicast} [interface Ethernet <num> {shared|unicast}]
 
     # sonic# clear device watermark
 
