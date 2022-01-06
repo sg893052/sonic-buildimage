@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.12
+High level design document version 0.13
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -120,6 +120,7 @@ High level design document version 0.12
 | 0.10 | 07/14/2021 | Prabhu Sreenivasan, Amitabha Sen | Added "dot1x pae" command and updated "show authentication interface" for the same. Updated section 6 Serviceability and Debug with syslog messages. Updated section 3.5 SAI with details. |
 | 0.11 | 09/21/2021 | Prabhu Sreenivasan, Amitabha Sen | section 1.3.1, Removed "Critical VLAN" from the requirement. section 3.6.2, Removed commands "aaa authentication pac", "authentication critical recovery max-reauth", "authentication event server dead action", "authentication event server dead action authorize voice" and "authentication event server alive action reinitialize". Updated "show authentication" output. Updated PAC_CONFIG_TABLE on section 3.2.1. Renamed section 2.2.3 to "Dynamic ACL". Updated section 9 - Limitations. Updated PAC_PORT_CONFIG_TABLE on section 3.2.1 and PAC_GLOBAL_CONFIG_TABLE on section 3.2.2.  Removed HOST_APD_STATS_TABLE from section 3.2.4. Removed section 3.3.2.8 Critical VLAN processing |
 | 0.12  | 10/08/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated section 3.6.1 with REST URL details. Updated section 3.2.5 PAC_CLIENT_HISTORY_TABLE schema.  |
+| 0.13  | 01/06/2022 | Kamlesh Agrawal | Removed references to Downloadable ACLs, added few clarifications as per QA observations |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -178,7 +179,6 @@ The following are the requirements for Port Access Control feature:
    - Named ACLs : ACLs that are statically configured on the switch and are used to control authenticated client traffic.
    - Dynamic ACLs : Rules of these ACLs are defined in RADIUS profiles. These rules (excluding ACL name) are sent in the RADIUS Access Accept and then the ACL is applied to the authenticated client.
    - Filter Id : This is a standard RADIUS attribute that is sent in the RADIUS Access Accept message and is used to indicate a statically configured ACL to be used for the authenticated client.
-   - Downloadable ACLs : These ACLs, along with name and their rules, are defined in a RADIUS server. They are downloaded using RADIUS messages and are applied to the authenticated clients. They are also called CISCO-secure-ACLs.
 8. SONiC supports Single-Host mode where only one data client can be authenticated on a port and is granted access to the port at a given time.
 9. SONiC supports Multiple Hosts mode where only one data client can be authenticated on a port and after that access is granted to all clients connected to the port
 10. SONiC supports Multiple Domain Authentication mode where only one data and one voice client can be authenticated on a port.
@@ -291,11 +291,11 @@ Sonic allows:
  - "Out" control: Till the fist client is authorized, all egress data traffic is blocked. After the first client is authorized, all egress traffic is allowed on the client VLAN on the port.   
 
 ### 2.2.3 Dynamic ACL
-Once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Downloadable ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The downloadable ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.   
+Once a client on an access controlled port is authenticated, the external RADIUS server can send ACL attributes based on user profile configuration on the RADIUS server. These are called Dynamic ACL’s. IPv6 and IPv4 ACLs are supported for DACL. The ACL rules per client are sent in extended ACL syntax style. The switch applies the client specific DACL for the duration of the authenticated session.   
 
-The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. The DACL configuration is only applied on the client-connected-port for the duration of the authenticated client session and is not persistent. The downloadable ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The DACLs on the switch are managed by the PAC application and hence cannot be deleted by the user.   
+The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. The ACL configuration is only applied on the client-connected-port for the duration of the authenticated client session and is not persistent. The ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The Dynamic ACLs on the switch are managed by the PAC application and hence cannot be deleted by the user.   
 
-Generally, any static ACLs (created by user) applied on the port are removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However if Open Authentication is configured on the port, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. In situations where the client IP address changes, PAC gets to know about it via dhcp-snooping binding tables and the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.   
+Generally, any static ACLs (created by user) applied on the port are operationally removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However if Open Authentication is configured on the port, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. In situations where the client IP address changes, PAC gets to know about it via dhcp-snooping binding tables and the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.   
 
 
 ### 2.2.4 Named ACLs
@@ -725,7 +725,7 @@ In the event that a port is configured for 802.1X and MAB in this sequence, the 
 
 Authentication Manager allows configuring priority for each authentication method on the port. The default priority of a method is equivalent to its position in the order of the default authentication list.   
  
-After successful authentication, the authentication method returns the Authorization parameters for the client. Authentication Manager uses these parameters for configuring the switch for allowing traffic for authenticated clients.
+After successful authentication, the authentication method returns the Authorization parameters for the client. Authentication Manager uses these parameters for configuring the switch for allowing traffic for authenticated clients. If Authentication Manager cannot apply any of the authorization attributes (DACL, VLAN, etc.) for a client, client authentication will fail.
 
 #### 3.3.2.1 Authentication Manager port modes
 
@@ -778,7 +778,7 @@ Authentication Manager receives the client authorization parameters from the aut
    - *Default*: The client session is torn down and authentication needs to be restarted for the client.
    - *RADIUS*: Re-authentication is initiated for the client.
 - *Filter-Id*: Specifies an ACL of Diffserv policy name. This is used to apply a Static ACL or DiffServ policy on the port for the client. IPv4 and IPv6 ACLs in the “IN” direction are supported. If the Differv policy or ACL is not present in the system, or if a Diffserv policy is already configured on the port, authentication for the client is rejected. These are subject to Monitor Mode configuration. Filter-Id is supported on all Authentication Manager host modes.
-- *Downloadable ACL*: DACLs are supported on all host modes.
+- *Dynamic ACL*: DACLs are supported on all Authentication Manager host modes.
 
 
 #### 3.3.2.5 Dynamic ACL attributes   
@@ -801,12 +801,7 @@ ipv6:inacl[#number]={ extended-access-control-list}
 *Filter-Id Attribute (locally configured ACL)*:   
 ACL’s sent using Filter-Id need to be pre-configured on the switch. On receiving an Access-Accept packet with Filter-Id containing ACL name with direction, the specified ACL is applied on the port. This ACL can be of any type; ipv4, ipv6 or MAC.  Any existing static ACLs on the port are removed and the new ACL is applied prior to authorizing the port to 802.1X. When the 802.1X session terminates, the pre-existing ACLs are restored to the port. If both a Filter-ID and a Cisco AV-Pair (26) containing a DACL are present in the Access Accept, the Access Accept is treated as an Access-Reject.   
 
-*CiscoSecure-Defined-ACL attribute-value pair*:   
-This attribute uses Named ACL’s configured on the RADIUS Server. CiscoSecure-Defined-ACL attribute-value pair can be set with the RADIUS Cisco-AV-Pair vendor-specific attributes (VSAs). This pair specifies the name of the Downloadable ACL on the RADIUS server with the “ACL-Name” attribute.  On receiving CiscoSecure-Defined-ACL attribute, a new Access-Request, with UserName as “ACL-Name” is sent to RADIUS server, to which RADIUS responds with Access-Accept containing Rules in the ACL Set <ACL-Name> of CiscoSecure-Defined-ACL as individual Cisco AV Pair attributes. If there is no response to the 2nd Access-Request or if an Access-Reject is received, the client is Rejected.
-Individual Cisco AVPs containing individual ACL rules can be sent in Access-Accept along with CiscoSecure-Defined-ACL AVP. All the rules/ACLs are applied on the port.
-Also, the rules downloaded as part of the second Access-Request are stored (cached) in a DB on the DUT till there is at least one client (on any port) using (configured with) that ACL. The “ACL-Name” has to be compliant with ACL naming convention as defined by SONiC.   
-
-For each client session, one ACL of each type (IPv4, IPv6) is supported. Prior to applying an ACL sent from RADIUS server, if any ACL’s were configured, they are removed and DACL’s are applied to the port. In case of the last session termination on a port, the removed static ACL’s are restored to the port after deleting the DACL’s.
+For each client session, one ACL of each type (IPv4, IPv6) is supported. Prior to applying an ACL sent from RADIUS server, if any static ACL’s were configured, they are operationally removed and Dynamic ACL’s are applied to the port. In case of the last session termination on a port, the removed static ACL’s are restored to the port after deleting the Dynamic ACL’s.
 
 #### 3.3.2.6 ACL naming convention   
 
@@ -1201,7 +1196,7 @@ This command configures the  number of times authentication may be reattempted b
 | range | 1-5 |
 | Default | 3 |
 | Syntax | no authentication event fail retry |
-| Change history | SONiC 4.0 - Introduced |
+| Change history | SONiC Future |
 
 #### 3.6.2.8 authentication max-users
 This command sets the maximum number of clients supported on an interface when multi-authentication host mode is enabled on the port. The maximum users supported per port is dependent on the product. The count value is in the range 1 - 48.
@@ -1392,8 +1387,7 @@ This command displays the details of the dot1x configuration for a specified por
 | Time left for Session Termination Action | This value indicates the time left for the session termination action to occur. This field is valid only when the “authentication periodic” is configured. |
 | Session Termination Action | This value indicates the action to be taken once the session timeout expires. Possible values are Default and Radius-Request. If the value is Default, the session is terminated and client details are cleared. If the value is Radius-Request, then a reauthentication of the client is performed. |
 | Filter ID | Identifies the Filter ID returned by the RADIUS server when the client was authenticated. This is a configured DiffServ policy name on the switch. |
-| ACS ACL Name | Identifies the Downloadable ACL returned by the RADIUS server when the client was authenticated. The Downloadable ACL is the same as returned using CiscoSecure-Defined-ACL AVP.|
-| DACL | Identifies the Downloadable Dynamic ACL returned by the RADIUS server when the client was authenticated. |
+| DACL | Identifies the Dynamic ACL returned by the RADIUS server when the client was authenticated. |
 
 
 VLAN Assigned Reason can take one of the following values:
