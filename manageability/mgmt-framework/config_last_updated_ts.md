@@ -1,6 +1,6 @@
 # Configuration Last Updated Timestamp
 # High Level Design Document
-#### Rev 0.1
+#### Rev 0.2
 
 # Scope
 This document describes the high level design of supporting a way to retrieve the time of last update of the Configuration Database by the [Management Framework](#mf).
@@ -20,6 +20,7 @@ Provide an interface to return the last updated time of the Config DB by the Man
 ## ConfigDB Schema
 
 No changes to the schema are anticipated. The Concurrent Access of the [DB Access Layer](#dbal) will be updated to note the timestamp of last update during any write transaction.
+The Concurrent Access watch key for the entire ConfigDB, *CONFIG_DB_UPDATED*, will be used to note the timestamp of last update.
 
 ## OC Yang
 
@@ -59,6 +60,7 @@ Both RESTCONF, and gNMI requests should be supported.
 ## KLISH
 
 No KLISH changes are anticipated, since this is largely intended for remote programmatic applications (i.e. controllers).
+However, this does not preclude updating the outputs of KLISH commands like *show version*, *show running-configuration*, or *show system* to display the time of last configuration change.
 
 ## RESTCONF
 
