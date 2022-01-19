@@ -224,9 +224,7 @@ The following table captures the action taken for each DHCPv6 message type.
 
 10. DHCP Server messages received on non-trusted ports are dropped. 
  
-11. VLANs on which DHCP snooping is enabled cannot be deleted without first disabling DHCP snooping.
-
-12. DHCP Snooping is not applied to VLANs on which it is not enabled. DHCP packets received in this VLAN are forwarded.
+11. DHCP Snooping is not applied to VLANs on which it is not enabled. DHCP packets received in this VLAN are forwarded.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 # 3 Design
