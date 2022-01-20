@@ -602,14 +602,16 @@ dacl                = 1*252VCHARS ; Dynamic ACL name
 **PAC_CLIENT_HISTORY_TABLE**   
 ```   
 {
-	"PAC_CLIENT_HISTORY_TABLE": [
+	"PAC_CLIENT_HISTORY_TABLE|Ethernet0|1": [
     {
-      "index": "1",
       "time_stamp": "May 07 2020 13:02:41",
       "client_mac_addr": "00:00:00:11:22:33",
       "authentication_method": "mab",
       "auth_status": "authorized"
     },
+  ]
+
+        "PAC_CLIENT_HISTORY_TABLE|Ethernet0|2": [
     {
       "index": "2",
       "time_stamp": "May 07 2020 13:02:41",
@@ -620,8 +622,7 @@ dacl                = 1*252VCHARS ; Dynamic ACL name
   ]
 }
 
-key                    = PAC_CLIENT_HISTORY_TABLE: index                    ;index
-
+key                    = PAC_CLIENT_HISTORY_TABLE: Interfacename|index    ; Interface name and index
 ;field                 = value
 
 index                  =  1*5DIGIT                                          ;entry index
@@ -1550,8 +1551,8 @@ The following is the support scale for Port Access Control. The following number
 
 | Configuration / Resource   | Scale |
 | ------ | ------------------- |
-| authentication history entries | 1024 |
-| authentication history entries per interface | 20 |
+| authentication history entries | 48*Number of interfaces |
+| authentication history entries per interface | 48 |
 | clients that can be authorized on a port configured in Multi-Auth host mode | 48 |
 | Number of clients supported by the switch | 512 |
 
