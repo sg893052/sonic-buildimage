@@ -601,8 +601,9 @@ dacl                = 1*252VCHARS ; Dynamic ACL name
 
 **PAC_CLIENT_HISTORY_TABLE**   
 ```   
+ "PAC_CLIENT_HISTORY_TABLE"
 {
-	"PAC_CLIENT_HISTORY_TABLE|Ethernet0|1": [
+      "Ethernet0|1": [
     {
       "time_stamp": "May 07 2020 13:02:41",
       "client_mac_addr": "00:00:00:11:22:33",
@@ -611,7 +612,7 @@ dacl                = 1*252VCHARS ; Dynamic ACL name
     },
   ]
 
-        "PAC_CLIENT_HISTORY_TABLE|Ethernet0|2": [
+       "Ethernet0|2": [
     {
       "index": "2",
       "time_stamp": "May 07 2020 13:02:41",
