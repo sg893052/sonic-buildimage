@@ -4,7 +4,7 @@ SpyTest - Message driven Test Development
 
 # High Level Design Document
 
-#### Rev 0.5
+#### Rev 0.6
 
 # Table of Contents
   - [Revision](#revision)
@@ -19,12 +19,13 @@ SpyTest - Message driven Test Development
      - [3.1.3 Generic APIs](#313-generic-apis)
       - [3.1.3.1 Configuration API](#3131-configuration-api)
       - [3.1.3.2 Verification API](#3132-verification-api)
-      - [3.1.3.3 Subscription API](#3133-subscription-class)
+      - [3.1.3.3 Subscription API](#3133-subscription-api)
       - [3.1.3.4 RPC API](#3134-rpc-api)
       - [3.1.3.5 GNOI API](#3135-gnoi-api)
+      - [3.1.3.6 BULK API](#3136-bulk-api)
      - [3.1.4 SpyTest Utils](#314-spytest-utils)
   - [4 Functionality](#4-functionality)
-    - [4.1 Code Generation](#41-code-generation)
+   - [4.1 Code Generation](#41-code-generation)
     - [4.2 Subscription Support](#42-subscription-support)
       - [4.2.1 Connection Management](#421-connection-management)
       - [4.2.2 Creating Subscription](#422-creating-subscription)
@@ -56,6 +57,8 @@ SpyTest - Message driven Test Development
 | 0.3 | 09/30/2021  |   Balachandar Mani | Add verification test details     |
 | 0.4 | 09/30/2021  |   Arun Barboza     | Add RPC and GNOI test details     |
 | 0.5 | 12/16/2021  |   Mohammed Faraaz     | Added details related to Name customization and Error reporting    |
+| 0.6 | 01/20/2022  |   Mohammed Faraaz     | Added details related to Bulk API    |
+
 # About this Manual
 
 This document provides general information about the message driven testing mechanism using the generated message classes.
@@ -180,7 +183,7 @@ The execute() method:
 - If the verify option is given, it compares the returned payload from the DUT with the (generated) payload from the output in the message object
 - Note: Message Classes and python bindings are generated from the corresponding Yang files.
 
-### 3.1.3.4 gNOI API
+### 3.1.3.5 gNOI API
 
 gRPC Network Operations Interface (gNOI) defines a set of gRPC-based microservices for executing operational commands on network devices. These are a collection of classes and a generic method to execute the gNOI Rpc.
 It is part of the spytest infra, and does the following:
@@ -193,6 +196,68 @@ The execute() method.
 - If the verify option is given, it compares the message returned from the DUT with the user supplied expected response message
 - Note: gNOI does not have a corresponding Yang model. Message python bindings are generated from the corresponding .proto service interface definition files(IDL).
 - Note: gNOI RPC with stream message are not supported currently in the telemetry repo, hence no spytest support is provided.
+
+### 3.1.3.6 BULK API
+
+REST and GNMI support Bulking of configurations i.e. they allows multiple edits as part of single transaction. The message drivern infrastructure support the Configuration Bulking using following approaches
+
+### 3.1.3.6.1 BULK using bulkRequest API
+
+**bulkRequest** API sits outside the message class and it allows bulking of configurations across different messages inside a specific YANG subtree.
+
+```python
+def bulkRequest(dut, edits, prefix=None, success=True, **kwargs):
+    """ API for performing Bulk Request
+        Args:
+            dut       Spytest DUT data
+            edits     List of Edits for Bulk operation
+            prefix    PATCH URL (if not provided, it will be Auto-determined)
+            success   Setting it to False will perform negative testing (only works when report_error is enabled)
+            kwargs    keywords arguments(for future use)
+    """
+```
+
+**bulkRequest** API receives configuration information using below ***Edit*** class instance
+
+```python
+class Edit():
+    """ Datastore which stores individual edit's Operation details
+        for Bulk Request.
+    """
+    def __init__(self, obj, operation=Operation.UPDATE, target_attr=None, target_path=None, **kwargs) -> None:
+        """ Args:
+                obj                   Message class object
+		operation             Northbound operations[CREATE, REPLACE, UPDATE]
+                target_attr = None    Deconfigures a full message
+                target_attr = <attr>  Deconfigures a specific attribute in a message
+                target_path = <path>  Deconfigures a attribute which is matched by a path
+                kwargs                keywords arguments(for future use)
+        """
+```
+
+***Usage in Testcase***
+```python
+from apis.yang.codegen.messages.acl import AclSet
+acl1 = AclSet(Name="ACL1", Type="ACL_IPV4")
+edit_1 = Edit(acl1, operation=Operation.CREATE)
+acl1.Description = "000001"
+edit_2 = Edit(acl1, target_attr=acl1.Description)
+bulkRequest(data.D1, prefix="/openconfig-acl:acl", edits=[edit_1, edit_2])
+```
+
+### 3.1.3.6.2 BULK using configure and unconfigure API
+
+Configuration APIs ***configure()*** and ***unconfigure()*** which are part of message class now accept list of values as part of target_attr and target_path.
+If target_attr and target_path contains list of values, then the infra will build and process Bulk request automatically
+
+***Usage in Testcase***
+```python
+from apis.yang.codegen.messages.acl import AclSet
+acl1 = AclSet(Name="ACL1", Type="ACL_IPV4", Description="00001")
+acl1.configure(dut, target_attr=[acl1.Description])
+```
+
+### 3.1.3.6.2 BULK using Configure API
 
 ## 3.1.4 SpyTest Utils
 
