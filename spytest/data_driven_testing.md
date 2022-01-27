@@ -292,6 +292,10 @@ The default location to place the messages is shown below
 - Leafs with python keywords as names will be converted to a special name. For example, if the leaf name is type then it can be converted to type_ in message classes.
 - Class, modules, and attributes can have [custom names](#54-name-customization).
 - A common special property will be generated for leafs which are common in config and state hierarchies. Common property can be used as **target_attr** in all [Generic APIs](#313-generic-apis).
+- Constructor will only have args for following properties
+	- Argument for Common property (This will all set all attributes wrapped by common property)
+	- Argument for properties not part of any common property
+	- Argument for parent (stores parent's reference, if applicable) 
 
 **Sample YANG Snippet**
 ```text
