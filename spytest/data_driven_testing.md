@@ -1462,7 +1462,7 @@ name_mapping:
     /openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry/config/sequence-id: 
       common_name: AclSetRuleId
 ```
-Common property's name derived from the leaf present in config hierarchy. Therefore the XPath should point to config hierarchy's leaf node. If only **custom_name** attribute is provided as shown in the above sample, the config and state leaf names are auto-generated from **custom_name**.
+Common property's name derived from the leaf present in config or state(if config not present) hierarchy. Therefore the XPath should point to config hierarchy's leaf node. If only **common_name** attribute is provided as shown in the above sample, the config and state leaf names are auto-generated from **common_name**.
 Based on the above sample below are the names generated.
 
 - **common property's** name - **AclSetRuleId**
@@ -1471,7 +1471,7 @@ Based on the above sample below are the names generated.
 
 - **/openconfig-acl:acl/acl-sets/acl-set/acl-entries/acl-entry/state/sequence-id's** name - **StateAclSetRuleId**
 
-**Note:** Auto-generated name from **custom_name** directive can be overriden by providing **name** for a a specific leaf using leaf's Xpath.
+**Note:** Auto-generated name from **common_name** directive can be overriden by providing **name** for a a specific leaf using leaf's Xpath.
 
 **Enum and Identity string customization**
 
