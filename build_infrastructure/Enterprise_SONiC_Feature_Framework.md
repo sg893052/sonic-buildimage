@@ -1,6 +1,6 @@
 # Enterprise SONiC Feature Framework
 
-Version 0.1
+Version 0.2
 
 ## Table of Contents
 
@@ -13,7 +13,9 @@ Version 0.1
    4. [Component Presence Checks](#component-presence-checks)
 4. [Generic Package](#generic-package)
 5. [Optional Click Commands](#optional-click-commands)
-6. [Guidelines for SONiC Developers](#guidelines-for-sonic-developers)
+6. [Broadcom Package Recipes](#broadcom-package-recipes)
+7. [Broadcom Exclusive Content](#broadcom-exclusive-content)
+8. [Guidelines for SONiC Developers](#guidelines-for-sonic-developers)
 
 ## Revision History
 
@@ -107,7 +109,7 @@ Minor customizations to SONiC can also be named as a feature. For example, SNMP 
 
 Enterprise SONiC features whose code cannot be excluded from a SONiC package at build time can use a *feature configuration* to decide at runtime if the feature is active or not. The *feature configuration* is made available using *is feature present check* APIs as defined in the *featurecfg* debian package.
 
-Each feature is assigned a unique feature ID and is defined in the file *src/broadcom-exclusive/src/featurecfg/common/src/brcm_package.h*.
+Each feature is assigned a unique feature ID and is defined in the file *src/broadcom-proprietary/src/featurecfg/common/src/brcm_package.h*.
 
 ```
 typedef enum _brcm_feature_t {
@@ -317,7 +319,6 @@ Each supported packages of Enterprise SONiC is compiled using a specific target 
 To enable source code customers and development partners, a generic SONiC image is supported which includes all features and components. Certain proprietary and associated packages may not be available but rest of the features can be made available. The *target/sonic-broadcom.bin* is used to build an unbranded image.
 
 
-
 When building an unbranded image:
 
 - *files/build_templates/init_cfg.json.j2* must include all components
@@ -326,7 +327,7 @@ When building an unbranded image:
 - feature check python APIs and feature-check command always return success
 - component-check and is_present(component=xx) continue to work and refer to the content of /etc/sonic/init_cfg.json. They return True/False based on the input component's presence
 
-To test building an unbranded image, remove the *src/broadcom-exclusive* directory and build the image *target/sonic-broadcom.bin*.
+To test building an unbranded image, remove the *src/broadcom-exclusive* and *src/broadcom-proprietary* directory and build the image *target/sonic-broadcom.bin*.
 
 
 
@@ -335,20 +336,32 @@ To test building an unbranded image, remove the *src/broadcom-exclusive* directo
 The sonic_py_common.device_info.is_present() API can be used to hide unsupported Click CLI commands. It can also be used to report an error when unsupported arguments are used. This API doesn't depend on other components like the database and thus can be used in Click commands without any risk of a race condition.
 
 
+## Broadcom Package Recipes
+
+An Enterprise SONiC package can be identified using the final binary image name. For example an Enterprise Base image is named as *sonic-broadcom-enterprise-base.bin*. To build an Enterprise SONiC image, use *make target/sonic-broadcom-enterprise-advanced.bin*. The recipes to build an Enterprise SONiC image are available in the *src/broadcom-proprietary* repository.
+The *src/broadcom-proprietary/installers.mk* serves as the entry point to the make rules used to build Enterprise SONiC exclusive images and software packages. Each package rules are defined in their individual makefile. For example *src/broadcom-proprietary/installers/cloud.mk* defines rules used to build the campus package *sonic-broadcom-campus.bin*. Docker applications
+are excluded and included in this file. The variable definitions use the same logic used in community SONiC. The *src/broadcom-proprietary/dockers* contains recipes to build dockers used exclusively in the Enterprise SONiC images. The dockers excluded here also need to be reflected in the file*files/build_templates/init_cfg.json.j2*.
+
+
+## Broadcom Exclusive Content
+
+For Enterprise SONiC releases, Broadcom uses source code and make recipes which are hidden from source code customers. Some of these recipes are available to exclusive source code partners. All source code that needs to be hidden from all source code customers at all times needs to be placed in the *src/broadcom-exclusive* repository.
+Some source code can be shared with our partners who are involved in co-development and testing. Such content can be placed in the *src/broadcom-proprietary* repository. Please discuss with the Broadcom PLM team before adding any content to *src/broadcom-exclusive* or *src/broadcom-proprietary* repositories.
+
 
 ## Guidelines for SONiC Developers
 
 - Identify if your application is a component and requires a separate docker container or can be made part of an existing container.
 - Do not create a new container unless it is absolutely necessary. Each new container creates additional resource (CPU, memory, disk) overhead and creates a negative effect on low end platforms.
 - Check with the Enterprise SONiC marketing team if your feature is an optional feature. If yes
-  - Create an enum entry in the "*src/broadcom-exclusive/src/featurecfg/common/src/brcm_package.h*" file
+  - Create an enum entry in the "*src/broadcom-proprietary/src/featurecfg/common/src/brcm_package.h*" file
   - If required, create an appropriate enum in the SAI code *ocp_sai/include/brcm_sai_feature.h*
   - Use FEATURE_XXX naming notation and always include them between FEATURE_START and FEATURE_MAX
-  - Modify appropriate instances of  *src/broadcom-exclusive/src/featurecfg/package-name/src/brcm_package.cpp* to include feature in the feature configuration of that package
+  - Modify appropriate instances of  *src/broadcom-proprietary/src/featurecfg/package-name/src/brcm_package.cpp* to include feature in the feature configuration of that package
 - Define package variant specific docker images for components which exhibit different behavior on include different packages based on package variant
-  - e.g *src/broadcom-exclusive/rules/docker-swss-brcm-campus.mk* and *src/broadcom-exclusive/dockers/docker-swss-brcm*
+  - e.g *src/broadcom-proprietary/rules/docker-swss-brcm-campus.mk* and *src/broadcom-proprietary/dockers/docker-swss-brcm*
 - Include or exclude components from the package installer
-  - e.g "src/broadcom-exclusive/installers/campus.mk" see usage of SONIC_CAMPUS_DOCKERS_EXCLUDED
+  - e.g "src/broadcom-proprietary/installers/campus.mk" see usage of SONIC_CAMPUS_DOCKERS_EXCLUDED
 - Include or exclude components from the init configuration
   - Add conditional entries in *files/build_templates/init_cfg.json.j2*
 - Add dependencies to include the FEATURECFG_XXX debian package or the SONIC_PY_COMMON_PY3 wheel package.
@@ -364,4 +377,4 @@ The sonic_py_common.device_info.is_present() API can be used to hide unsupported
   - /etc/sonic/init_cfg.json
   - Include exclude docker containers from the installer
 - Ensure that all supported packages combinations compile and work
-- Ensure that the unbranded image *sonic-broadcom.bin* can be compiled when the *src/broadcom-exclusive* directory is removed. It must boot fine and also have all optional features available outside the *broadcom-exclusive* repo enabled
+- Ensure that the unbranded image *sonic-broadcom.bin* can be compiled when the *src/broadcom-exclusive* and *src/broadcom-proprietary* directory is removed. It must boot fine and also have all optional features available outside the *broadcom-exclusive* repo enabled
