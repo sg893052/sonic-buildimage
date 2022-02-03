@@ -1,6 +1,6 @@
 # Configuration Last Updated Timestamp
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.3
 
 # Scope
 This document describes the high level design of supporting a way to retrieve the time of last update of the Configuration Database by the [Management Framework](#mf).
@@ -145,7 +145,7 @@ notification: <
 
 - Currently, the existing boot-time leaf is defined in the OC-Yang to be in units of nanoseconds; However, empirical observation of the response received to a RESTCONF Get request shows this to be actually returned in seconds. This is currently under investigation, and hope to multiply this by 10^9 as a fix.
 
-- If a device has not been configured after restart, config-time leaf will not be returned.
+- If a device has not been configured after restart, config-time leaf will either not be returned for a get request on the state container, or be returned as zero("0") for a get request on the config-time leaf
 
 
 # Unit Test
@@ -153,9 +153,10 @@ notification: <
 | **Test**                       | **Description**                             |
 | ------------------------------ | ------------------------------------------- |
 |                                |                                             |
-| TS after boot (RESTCONF)       | Config TimeStamp (RESTCONF) should be absent|
+| TS after boot/reload(RESTCONF) | Config TimeStamp (RESTCONF) should be absent|
+|                                |                             /"0"            |
 |                                |                                             |
-| TS after boot (gNMI)           | Config TimeStamp (gNMI)     should be absent|
+| TS after boot/reload(gNMI)     | Config TimeStamp (gNMI) should be absent/"0"|
 |                                |                                             |
 | TS after write (RESTCONF)      | Config TimeStamp (RESTCONF) should be set   |
 |                                |                                             |
