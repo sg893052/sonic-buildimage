@@ -1263,6 +1263,8 @@ The following commands are used to configure Policy based services
 | Syntax | sonic(config)# **hardware**<br/>sonic(config-hardware)# **access-list**<br/>sonic(config-hardware-acl)# **counters** { **per-entry** \| **per-interface-entry** } <br/>&nbsp;***per-entry*** : ACL counters are aggregated over all interfaces, and reported only per ACL entry. <br/>&nbsp;***per-interface-entry*** : ACL counters are reported per ACL entry and per interface for all ACL bindings. |
 | Change history | SONiC 3.1 - Introduced |
 
+Counter modes can be changed only if ACLs are not applied. Some features like PAC create internal ACLs for its functionality so the recommendation is to change the counter mode with default config to the mode needed and save it. Counter mode change may need HW reprogramming so to avoid traffic impact, error will be returned if the ACLs are currently active.
+
 ##### 3.6.2.1.2 Configuring ACL lookup mode using Click CLI (Deprecated)
 
 ```
@@ -2108,6 +2110,8 @@ Network object-group PAC_IPV4_SIP_ObjGrp_1 address-family ipv4
      IPV4 access-list PAC_IPV4_ACL_1 on Ethernet0
 ```
 
+ACL Counters under such circumstances will be aggregate of the traffic from all hosts and all interfaces if the couunter mode is per ACL. User can enable the counter to per interface mode to get more granular counters but per interface and per host counter is not available as it would exponentially increase the TCAM usage.
+
 #### 3.6.3.5 Show classifier details
 
 ##### 3.6.3.5.1 Show classifier details using Sonic-CLI
@@ -2682,10 +2686,10 @@ The following is the CLI syntax for ACL consistency checker. The following CLIs 
 The following is the sample output for consistency checker with no args. It only shows the final result as <b>brief</b> or <b>detail</b> is not specified.
 
 ```
-sonic# show consistency-checker status access-list
+sonic# show consistency-check status access-list
 ACL consistency checker status: Consistent
 
-sonic# show consistency-checker status access-list
+sonic# show consistency-check status access-list
 ACL consistency checker status: Inconsistent
 ```
 
