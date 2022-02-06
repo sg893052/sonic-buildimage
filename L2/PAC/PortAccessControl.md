@@ -1,7 +1,7 @@
 
 # Port Access Control in SONiC
 
-High level design document version 0.13
+High level design document version 0.14
 
 # Table of Contents
 - **[List of Tables](#list-of-tables)**
@@ -89,6 +89,7 @@ High level design document version 0.13
 			- [3.6.3.6 show dot1x](#3636-show-dot1x)
 		- [3.6.4 Clear Commands](#364-clear-commands)
 			- [3.6.4.1 clear authentication sessions](#3641-clear-authentication-sessions)
+			- [3.6.4.1 clear authentication history](#3642-clear-authentication-history)
 - **[4 Flow Diagrams](#4-flow-diagrams)**
 - **[5 Error Handling](#5-error-handling)**
 - **[6 Serviceability and Debug](#6-serviceability-and-debug)**
@@ -121,6 +122,7 @@ High level design document version 0.13
 | 0.11 | 09/21/2021 | Prabhu Sreenivasan, Amitabha Sen | section 1.3.1, Removed "Critical VLAN" from the requirement. section 3.6.2, Removed commands "aaa authentication pac", "authentication critical recovery max-reauth", "authentication event server dead action", "authentication event server dead action authorize voice" and "authentication event server alive action reinitialize". Updated "show authentication" output. Updated PAC_CONFIG_TABLE on section 3.2.1. Renamed section 2.2.3 to "Dynamic ACL". Updated section 9 - Limitations. Updated PAC_PORT_CONFIG_TABLE on section 3.2.1 and PAC_GLOBAL_CONFIG_TABLE on section 3.2.2.  Removed HOST_APD_STATS_TABLE from section 3.2.4. Removed section 3.3.2.8 Critical VLAN processing |
 | 0.12  | 10/08/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated section 3.6.1 with REST URL details. Updated section 3.2.5 PAC_CLIENT_HISTORY_TABLE schema.  |
 | 0.13  | 01/06/2022 | Kamlesh Agrawal | Removed references to Downloadable ACLs, added few clarifications as per QA observations |
+| 0.14  | 01/06/2022 | Kamlesh Agrawal | Updated few limitations related to Monitor/Open VLANs, hostapd, etc. Added information on new command "clear authentication history" |
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -302,7 +304,9 @@ Generally, any static ACLs (created by user) applied on the port are operational
 RADIUS server can also provide an attribute (filter name/filter id) to have PAC apply a pre-configured ACL on the switch to the client. These pre-configured ACLs are *named ACLs*. These ACLs are created by the user on the switch. Once RADIUS indicates a named ACL is to be applied for a client, PAC replicates the ACL rules, modifies the rules to incorporate the client IP and then provides them as dynamic ACL rules.
 
 ### 2.2.5 RADIUS supplied VLANs
-PAC (port access control) brings in support for access control with the ability to control user profiles from a RADIUS server. Once a client is authenticated, the client authorization parameters from RADIUS can indicate VLAN association for client traffic. The VLAN associated with the client could be a pre-created VLAN on the switch (static VLAN). In the absence of the VLAN on the switch, the VLAN is created on the switch (dynamic VLANs). If RADIUS does not supply a VLAN, the client is authorized on a Default VLAN   
+PAC (port access control) brings in support for access control with the ability to control user profiles from a RADIUS server. Once a client is authenticated, the client authorization parameters from RADIUS can indicate VLAN association for client traffic. The VLAN associated with the client could be a pre-created VLAN on the switch (static VLAN). In the absence of the VLAN on the switch, the VLAN is created on the switch (dynamic VLANs). If RADIUS does not supply a VLAN, the client is authorized on a Default VLAN.
+
+Note: If the client sends traffic tagged with any other VLAN other than the one assigned to it, it will be associated with the VLAN assigned by PAC.
 
 ### 2.2.6 FDB interaction
 PAC interacts with FDB to modify the learning mode of a port and add static FDB entries. The FDB related interactions for PAC are outlined below:
@@ -1226,7 +1230,7 @@ This command sets the authentication mode to use on the specified interface.
 | Mode | Interface Config |
 | ---- | ------ |
 | Syntax | authentication port-control \{ auto \| force-authorized \| force-unauthorized \} |
-| Default | auto  |
+| Default | force-authorized  |
 | Syntax | no authentication port-control |
 | Change history | SONiC 4.0 - Introduced 
 
@@ -1367,7 +1371,7 @@ Number of clients in Monitor mode.............. 0
 ```
 
 #### 3.6.3.3 show authentication clients
-This command displays the details of the dot1x configuration for a specified port.
+This command displays the details of the dot1x configuration.
 
 | Mode   | Exec |
 | ------ | ------------------- |
@@ -1440,11 +1444,11 @@ Session Termination Action..................... Default
 
 
 #### 3.6.3.4 show authentication authentication-history 
-This command displays the authentication manager authentication history log for an interface
+This command displays the authentication manager authentication history log. 
 
 | Mode   | Exec |
 | ------ | ------------------- |
-| Syntax | show authentication authentication-history \{ interface \<slot\/port\> \} |
+| Syntax | show authentication authentication-history \{ all \| \{interface \<slot\/port\>\} \} |
 | Change history | SONiC 4.0 - Introduced |
 
 Example:
@@ -1513,11 +1517,19 @@ Administrative Mode............... Enabled
 ### 3.6.4 Clear Commands
 
 #### 3.6.4.1 clear authentication sessions
-This command  clears information for all Auth Manager sessions. All the authenticated clients are re-intialized and forced to authenticate again.
+This command clears information for all Auth Manager sessions. All the authenticated clients are re-intialized and forced to authenticate again.
 
 | Mode   | Exec |
 | ------ | ------------------- |
 | Syntax | clear authentication session |
+| Change history | SONiC 4.0 - Introduced |
+
+#### 3.6.4.2 clear authentication history
+This command clears authentication history log.
+
+| Mode   | Exec |
+| ------ | ------------------- |
+| Syntax | clear authentication history \{ all \| \{interface \<slot\/port\>\} \} |
 | Change history | SONiC 4.0 - Introduced |
 
 
@@ -1559,6 +1571,8 @@ The following is the support scale for Port Access Control. The following number
 
 
 # 9 Limitation
+- PAC uses RADIUS client from hostapd which does not support DNS names.  PAC resolves the DNS name when user configures the RADIUS server and the resolved IP is used in hostapd config files. Any dynamic change in DNS resolution does not get reflected in the hostapd config files.
+- Clients authenticated in Monitor and Open modes (VLANs) will be assigned default VLAN (1).
 
 
 # 10 Upgrade / Downgrade considerations
