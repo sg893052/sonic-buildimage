@@ -295,7 +295,7 @@ Note that any decrypt/encrypt operations requested for while the Primary encrypt
 
 #### 2.2.7.1 Copy paste of protocol password configuration
 
-When working with the default key, a switch's complete configuration or protocol password configuration is not portable across devices as the key used to encrypt the protocol passwords is unique per switch. Attempting to copy configuration from one device to another can lead to un-expected behavior and must be strictly avoided. In some cases, the protocol password may be decoded to a garbage passphrase leading to a silent protocol error that is difficult to detect and debug. To be able to copy paste protocol passwords configuration from one device to another, the same Primary encryption key must be configured on both the systems.  
+When working with the default key, a switch's complete configuration that involves protocol password configuration is not portable across devices as the key used to encrypt the protocol passwords is unique per switch. Attempting to copy configuration containing protocol password configuration from one device to another can lead to un-expected behavior and must be strictly avoided. In some cases, the protocol password may be decoded to a garbage passphrase leading to a silent protocol error that is difficult to detect and debug. To be able to copy paste protocol passwords configuration from one device to another, the same Primary encryption key must be configured on both the systems.  
 
 If user copied configuration from one switch to another inadvertently and sees protocols not working as expected, the Primary encryption key on both the switches could be different. In this case, it is advised to clear the configuration, configure the same primary encryption pasphrase on both the devices and attempt re-configuration on the target device again.  
 
@@ -321,7 +321,7 @@ The diagram above depicts a sample flow of control when a protocol password is c
 
 **3) Protocol daemons decrypt the encrypted passwords via a D-BUS API (Section 2.2.5.3).**
 
-**4) Config migration for protocol password.** Earlier release/build may have protocol password in plaintext or encrypted form (hardcode encryption key). The protocol password will hence have to be migrated appropriately on an upgrade/downgrade case.
+**4) Config migration for protocol password.** Earlier release/build may have protocol password in plaintext or encrypted form (hardcoded encryption key). The protocol password will hence have to be migrated appropriately on an upgrade/downgrade case.
 
 ## 2.3 Design choice
 
@@ -336,6 +336,8 @@ From early profiling data, the time required to encrypt data from a docker by in
 - Most of the protocol passwords are ultimately saved in respective config files in plaintext. With protocol code being open-source, the passwords are expected to be saved in plaintext. However, the config files are only root accessible.
 
 - The Primary encryption key infra uses D-BUS as an interface rather than a plain API based interface. A round trip over D-BUS (client invoking a D-BUS method and receiving a response) is technically in the order of a few milliseconds. This is typically higher compared to encrypting/decrypting via inline functions in source as is the case today. D-BUS allows us to centralize the service and make sure access to the key is restricted compared to an API interface. Additionally, the encryption/decryption and key update operations are not expected to be frequent operations.
+ 
+- Default primary encryption key derived again post a system MAC change will lead to a new primary encryption key. Any protocol password configuration encrypted via the older default primary encryption key will fail to decrypt successfully with the new key. Caution must be advertised while changing system MAC address for any reason.  
 
   
 
@@ -406,7 +408,9 @@ The configuration commands use the KLISH framework and require KLISH CLI to be i
 This config command configures the Primary encryption passphrase to be used to derive the encryption key that is used to encrypt/decrypt protocol passwords on the system. 
 
 ```
-sonic# key config-key password-encrypt 
+sonic# key config-key password-encrypt
+Primary encryption key update will re-encrypt protocol passwords and save the system configuration post key update. [confirm Y/N]:
+Y
 New key: <enter key>
 Confirm key: <enter key>
 sonic#
@@ -416,6 +420,8 @@ The Primary encryption passphrase can be updated using the same command.
 
 ```
 sonic# key config-key password-encrypt 
+Primary encryption key update will re-encrypt protocol passwords and save the system configuration post key update. [confirm Y/N]:
+Y
 Old key: <enter key>
 New key: <enter key>
 Confirm key: <enter key>
@@ -426,6 +432,8 @@ The "no"version of the command can be used to reset the Primary encryption passp
 
 ```
 sonic# no key config-key password-encrypt 
+Primary encryption key update will re-encrypt protocol passwords and save the system configuration post key update. [confirm Y/N]:
+Y
 WARNING:System will default to device specific primary encryption key.  [confirm Y/N]: Y
 sonic#
 ```
