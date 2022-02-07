@@ -177,21 +177,22 @@ The following are the requirements for Port Access Control feature:
    - MAB (MAC-based authentication bypass).
 5. Both 802.1x and MAB can be enabled on a port together. Their relative order and priority shall be configurable.
 6. PAC shall be supported on ports configured as switch port mode access. Its not supported on trunk ports.
-7. PAC supports the following Dynamic ACLs:
+7. PAC and Port MAC security configuration cannot co-exist on the port. 
+8. PAC supports the following Dynamic ACLs:
    - Named ACLs : ACLs that are statically configured on the switch and are used to control authenticated client traffic.
    - Dynamic ACLs : Rules of these ACLs are defined in RADIUS profiles. These rules (excluding ACL name) are sent in the RADIUS Access Accept and then the ACL is applied to the authenticated client.
    - Filter Id : This is a standard RADIUS attribute that is sent in the RADIUS Access Accept message and is used to indicate a statically configured ACL to be used for the authenticated client.
-8. SONiC supports Single-Host mode where only one data client can be authenticated on a port and is granted access to the port at a given time.
-9. SONiC supports Multiple Hosts mode where only one data client can be authenticated on a port and after that access is granted to all clients connected to the port
-10. SONiC supports Multiple Domain Authentication mode where only one data and one voice client can be authenticated on a port.
-11. SONiC supports Multiple Authentication mode where one voice client and multiple data clients can be authenticated on a port and these clients are then granted access.
-12. SONiC shall support the following VLANs to authorize clients which fail authentication:
+9. SONiC supports Single-Host mode where only one data client can be authenticated on a port and is granted access to the port at a given time.
+10. SONiC supports Multiple Hosts mode where only one data client can be authenticated on a port and after that access is granted to all clients connected to the port
+11. SONiC supports Multiple Domain Authentication mode where only one data and one voice client can be authenticated on a port.
+12. SONiC supports Multiple Authentication mode where one voice client and multiple data clients can be authenticated on a port and these clients are then granted access.
+13. SONiC shall support the following VLANs to authorize clients which fail authentication:
      - Unauthenticated VLAN
      - Guest VLAN
      - Monitor VLAN
      - Open VLAN
-13. SONiC shall support Voice VLAN to authorize Voice clients.
-14. The following PAC port modes are supported on SONiC: 
+14. SONiC shall support Voice VLAN to authorize Voice clients.
+15. The following PAC port modes are supported on SONiC: 
     - Auto : Authentication is enforced on the port. Traffic is only allowed for authenticated clients
     - Force Authorized : Authentication is not enforced on the port and all traffic is allowed.
     - Force Unauthorized : Authentication is not enforced on the port and all traffic is blocked.
