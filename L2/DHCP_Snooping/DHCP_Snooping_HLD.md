@@ -1,7 +1,7 @@
 # DHCP snooping
 
 # High Level Design Document
-#### Rev 0.2
+#### Rev 0.7
 
 # Table of Contents
  - [List of Tables](#list-of-tables)
@@ -14,6 +14,7 @@
     - [1.2 Configuration and Management Requirements](#12-configuration-and-management-requirements)
     - [1.3 Scalability Requirements](#13-scalability-requirements)
     - [1.4 Warm Boot Requirements](#14-warm-boot-requirements)  
+    - [1.5 Support for dynamic VLANs](#15-dynamic-vlan-requirements)  
 - [2 Functionality](#2-functionality)
    - [2.1 Target Deployment Use Cases](#21-target-deployment-use-cases)
    - [2.2 Functional Description](#22-functional-description)
@@ -56,6 +57,7 @@
 | 0.4 | 07/15/2021  |   Ravi Vemuri      | Add Limitations/Future enhancements section              |
 | 0.5 | 08/19/2021  |   Phanindra TV     | Added Click commands                                     |
 | 0.6 | 09/02/2021  |   Ravi Vemuri      | Add REST URI. Update show commands outputs               |
+| 0.7 | 01/15/2022  |   Ravi Vemuri      | details pf DHCP Snooping support for dynamic VLANs added |
 	
 # About this Manual
 This document provides general information about the support for DHCPv4 snooping and DHCPv6 snooping in SONiC.
@@ -105,7 +107,6 @@ Go back to [Beginning of the document](#dhcp-snooping).
 9. Support for simultaneously enabling both DHCPv4 snooping and DHCPv6 snooping.
 10. Support statistics for DHCPv4 and DHCPv6 snooping.
 11. DHCP Snooping feature and DHCP L3 Relay feature are mutually exclusive. 
- 
 
 Go back to [Beginning of the document](#dhcp-snooping).
 ## 1.2 Configuration and Management Requirements
@@ -137,6 +138,12 @@ Go back to [Beginning of the document](#dhcp-snooping).
 DHCP snooping bindings (static and dynamic) are retained after a warm restart.
 
 Go back to [Beginning of the document](#dhcp-snooping).
+
+## 1.5 Support for dynamic VLANs
+DHCP snooping is enabled without administrator intervention for dynamically created VLANs.
+
+Go back to [Beginning of the document](#dhcp-snooping).
+
 # 2 Functionality
 ## 2.1 Target Deployment Use Cases
 
@@ -224,7 +231,7 @@ The following table captures the action taken for each DHCPv6 message type.
 
 10. DHCP Server messages received on non-trusted ports are dropped. 
  
-11. DHCP Snooping is not applied to VLANs on which it is not enabled. DHCP packets received in this VLAN are forwarded.
+11. DHCP Snooping is automatically enabled for VLANs that are dynamically created (like Radius Server assigned VLANs to 802.1x clients). Trusted port needs to be configured for dynamically created VLANs (as an example of an approach, this can be achieved by setting a trusted port as trunk port). DHCP packets received for all other VLANs for which DHCP Snooping is not configured are forwarded to all ports in the VLAN in which the packet is received.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 # 3 Design
@@ -489,14 +496,14 @@ This command is executed in interface mode. This command can be applied on a ran
 
 ##### 3.7.1.1.6 Show commands
 
-	To display general information about DHCP Snooping
+	To display general information about DHCP Snooping. This command displays if DHCP Snooping is enabled or disabled, the VLANs it is configured on and the ports which are marked as Trusted. Dynamic VLANs on which DHCP Snooping is automatically enabled are also shown when displaying the VLANs.
 	sonic# show ip dhcp snooping
 
 
 	To display the DHCP Snooping binding database
 	sonic# show ip dhcp snooping binding
 
-	To display general information about DHCPv6 Snooping
+	To display general information about DHCPv6 Snooping. This command displays if DHCPv6 Snooping is enabled or disabled, the VLANs it is configured on and the ports which are marked as Trusted. Dynamic VLANs on which DHCPv6 Snooping is automatically enabled are also shown when displaying the VLANs.
 	sonic# show ipv6 dhcp snooping
 
 	To display the DHCPv6 Snooping binding database
