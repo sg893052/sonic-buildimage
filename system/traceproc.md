@@ -55,6 +55,7 @@ Sysmonitor daemon currently raises critical syslog message when a process crosse
 
 4. In case of debug image, gdb should be used to obtain backtrace. 
 
+```
 root@sonic:/var/log/process# cat stress_process/15_02_2022_10_55_46/5229/backtrace
 
 0x00005614eb43616f in do_prime ()
@@ -63,6 +64,7 @@ Thread 1 (process 5229):
 0  0x00005614eb43616f in do_prime ()
 1  0x00005614eb4361d0 in main ()
         [Inferior 1 (process 5229) detached]
+```
 
 # 2 Design
 
@@ -73,6 +75,7 @@ This should be the format : /var/log/process/processname/timestamp/pid/taskid
 
 e.g.
 
+```
 root@sonic:/var/log/process# ls -ltr stress_process/
 
 total 8
@@ -96,13 +99,16 @@ total 12
 -r--r--r-- 1 root root  307 Feb 15 10:46 stat
 -r-------- 1 root root   25 Feb 15 10:46 stack
 -r--r--r-- 1 root root 2016 Feb 15 10:46 maps
+```
 
 In case of a multi-threaded process, it is imperative to dump traces of all its threads. See for example traces of syncd below
 
+```
 root@sonic:/var/log/process/syncd/15_02_2022_11_32_24/7661# ls
 
 11428  11605  8056  8059  8062  8064  8103  8145  8290  8294  8296  8363  8365  8412  8416  8529  8557  8567  8569
 11603  7661   8058  8060  8063  8089  8105  8153  8291  8295  8324  8364  8402  8414  8418  8546  8561  8568
+```
 
 
 # 2.1  Log rotation
