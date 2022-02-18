@@ -61,7 +61,7 @@ Rev 1.0
   - [9.2 Negative Test Cases](#9_2-Negative-Test-Cases)
   - [9.3 Warm boot Test Cases](#9_3-Warm-boot-Test-Cases)
 - [10 Configuration Example](#10-Configuration-Example)
-
+- [11 Appendix](#11-Appendix)
 
 # List of Tables
 
@@ -1009,7 +1009,17 @@ Rest of the BGP and MCLAG configurations remain same as described above in this 
 
 # 11 Appendix
 
-## 11.1 `advertise-pip` behavior in FRR
+## 11.1 Advertise-PIP in absense of any unique prefix
+There exists a specical case of network configuration where there are absolutely no routes to be advertised by the LVTEP with PIP next-hop.
+Specifically, it can happen when:
+  (a) the only subnets configured on the VTEPs are static-anycast-gateway (SAG), and
+  (b) there are no orphan ports, or SVIs with MCLAG unique/separate IP address.
+In this case, if an L3 packet is routed by PIP enabled LVTEP, the source VTEP IP address will be PIP in the outgoing encapsulated vxlan frame. And since the remote routers do not have tunnel for the PIP (as they haven't received any EVPN route with PIP), they may drop the frame.
+
+The above scenario can be handled by configuring a Loopback interface with a unique IP address in any of the L3VNI enabled VRFs and redistributing that address into EVPN.
+This will cause remote routers to always have the tunnel for the PIP VTEP address.
+
+## 11.2 `advertise-pip` behavior in FRR
 
 FRR supports `advertise-pip` feature starting from FRR 7.4 and available only for:
 
