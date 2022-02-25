@@ -1012,36 +1012,46 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 
 ## 10.4 UT with gnoi_client tool
 
-gnoi_cli tool can be used for quick verification of the GetSubscribePreferences gNOI API.
+gnoi_client tool can be used for quick verification of the gNOI APIs supported by the telemetry server.
 It will be available in the **telemetry** container.
 It can also be obtained from the build server `sonic-buildimage/src/sonic-telemetry/build/bin/gnoi_client` directory.
-Fix examples:
+
+Following are the few examples of GetSubscribePreferences API calls.
 
 1\) Get preferences for one or more paths
 
 ```
-docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
+gnoi_client -username admin -password YourPaSsWoRd -insecure \
+    -module Debug -rpc GetSubscribePrefs \
     /openconfig-interfaces:interfaces/interface[name=*]/state
 
-docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
-    /openconfig-interfaces:interfaces/interface[name=*]/state \
-    /openconfig-acl:acl
+gnoi_client -username admin -password YourPaSsWoRd -insecure \
+    -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface[name=*]/state /openconfig-acl:acl
 ```
 
 2\) Get preferences for subpaths also (use subpaths=true option)
 
 ```
-docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
-    /openconfig-interfaces:interfaces/interface[name=*]/state \
-    subpaths=true
+gnoi_client -username admin -password YourPaSsWoRd -insecure \
+    -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface/state subpaths=true
 ```
 
 3\) Get preferences for ON_CHANGE supported/not supported paths only (use onchange=true/false option)
 
 ```
-docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
-    /openconfig-interfaces:interfaces/interface[name=*]/state \
-    subpaths=true onchange=true
+gnoi_client -username admin -password YourPaSsWoRd -insecure \
+    -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface/state subpaths=true onchange=true
+```
+
+Use --help option to view the usage info and suppported -module and -rpc values.
+
+```
+gnoi_client --help                  /* list all module and all rpc values */
+gnoi_client -module System --help   /* list all rpcs of 'System' module   */
+gnoi_client -rpc Get* --help        /* list all rpcs matching a glob pattern */
 ```
 
 # 11 Internal Design Information
