@@ -13,6 +13,7 @@
     - [1.2.4 TARGET_DEFINED subscription](#124-target_defined-subscription)
     - [1.2.5 Scalar encoding for telemetry updates](#125-scalar-encoding-for-telemetry-updates)
     - [1.2.6 Translib Subscription Infrastructure for DB data](#126-translib-subscription-infrastructure-for-db-data)
+    - [1.2.7 gNOI API to Get Subscribe Preferences](#127-gnoi-api-to-get-subscribe-preferences)
   - [1.3 Design Overview](#13-Design-Overview)
     - [1.3.1 Basic Approach](#131-Basic-Approach)
     - [1.3.2 Container](#132-Container)
@@ -34,6 +35,7 @@
     - [3.1.10 ONCE Subscription](#3110-once-subscription)
     - [3.1.11 POLL Subscription](#3111-poll-subscription)
     - [3.1.12 Wildcard for non-DB Paths](#3112-wildcard-for-non-db-paths)
+    - [3.1.13 Get Subscribe Preferences API](#3113-Get-Subscribe-Preferences-API)
   - [3.2 DB Changes](#32-DB-Changes)
   - [3.3 Switch State Service Design](#33-Switch-State-Service-Design)
   - [3.4 SyncD](#34-SyncD)
@@ -43,6 +45,7 @@
     - [3.6.2 CLI](#362-CLI)
     - [3.6.3 REST API Support](#363-REST-API-Support)
     - [3.6.4 gNMI Support](#364-gNMI-Support)
+    - [3.6.5 gNOI Support](#365-gNOI-Support)
   - [3.7 Warm Boot Support](#37-Warm-Boot-Support)
   - [3.8 Upgrade and Downgrade Considerations](#38-Upgrade-and-Downgrade-Considerations)
   - [3.9 Resource Needs](#39-Resource-Needs)
@@ -56,7 +59,7 @@
   - [10.1 Test Cases](#101-test-cases)
   - [10.2 UT with Spytest](#102-ut-with-spytest)
   - [10.3 UT with gnmi_cli tool](#103-ut-with-gnmi_cli-tool)
-  - [10.4 Supported YANG Paths](#104-supported-yang-paths)
+  - [10.4 UT with gnoi_client tool](#104-UT-with-gnoi_client-tool)
 - [11 Internal Design Information](#11-Internal-Design-Information)
   - [11.1 IS-CLI Compliance](#111-IS-CLI-Compliance)
   - [11.2 Broadcom Packaging](#112-Broadcom-SONiC-Packaging)
@@ -80,6 +83,7 @@
 | 0.4 | 05/24/2021  | Sachin Holla       | Include detailed design and fixes for few comments     |
 | 0.5 | 06/07/2021  | Sachin Holla       | Mention app's role in wildcard path support            |
 | 0.6 | 08/02/2021  | Sachin Holla       | Intro to spytest's gnmi subscribe test tools           |
+| 0.7 | 22/02/2022  | Sachin Holla       | gNOI API to get subscribe preferences                  |
 
 # About This Manual
 
@@ -94,6 +98,8 @@ These paths are supported using the **Translib** library of the
 
 Scope of this document is limited to the infrastructure components only.
 HLD for individual features will be documented separately by respective feature teams.
+YANG paths that support subscription are listed in
+[Subscribe YANG Path](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md) guide.
 
 # Definition/Abbreviation
 
@@ -115,6 +121,10 @@ https://github.com/openconfig/reference/blob/master/rpc/gnmi/gnmi-specification.
 
 gNMI Protobuf Definition<br>
 https://github.com/openconfig/gnmi/blob/master/proto/gnmi/gnmi.proto
+
+Subscribe Supported YANG Paths
+<br>https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md
+<br>https://github.com/project-arlo/SONiC/blob/master/doc/system-telemetry/telemetry_subscribe_paths.md
 
 # 1 Feature Overview
 
@@ -218,6 +228,28 @@ Translib should provide an infrastructure to handle gNMI subscription requests.
 Translib (and gNMI server) should handle all protocol requirements and DB data monitoring without apps getting involved.
 Apps should be only required to provide yang path to DB mappings and subscription preferences
 (whether ON_CHANGE supported, minimum SAMPLE interval, preferred mode for TARGET_DEFINED subscription).
+
+### 1.2.7 gNOI API to Get Subscribe Preferences
+
+A new gNOI API will be introduced to return subscribe capabilities and preferences of a given path.
+It should accept following inputs:
+
+- One or more subscribe paths (mandatory)
+- A flag to indicate if capabilties of subpaths are also to be returned (optional)
+- Include ON_CHANGE supported only or ON_CHANGE not-supported only paths (optional)
+
+Response should be a stream of following data for every path requested.
+
+- Path
+- Whether ON_CHANGE supported
+- Whether ON_CHANGE is the preffred mode.
+  This indicates whether server uses ON_CHANGE or SAMPLE mode for this path when client sends
+  a TARGET_DEFINED subscription request.
+- Whether wildcard keys supported in the subscribe requests
+- Minimum SAMPLE interval allowed.
+
+API should return a gRPC error status if any of the requested paths are invalid;
+or if there was any error while processing the request.
 
 ## 1.3 Design Overview
 
@@ -623,6 +655,15 @@ This is individual non-DB data source's implementation specific capability and t
 Hence the current design does not support wildcard paths for non-DB data.
 Future releases can enhance this based on how non-DB data access evolves in management framework.
 
+### 3.1.13 Get Subscribe Preferences API
+
+gNOI API details are present in [section 3.6.5](#365-gnoi-support).
+Translib will reuse app module's existing `translateSubscribe` functions to collect requested path's
+DB mappings and subscription preferences similar to TARGET_DEFINED subscription handling.
+Response data for each path (requested path and its subpaths) will be derived from the mapping
+information and streamed out one by one through the channel provided by the gNMI server.
+Response includes a `wildcard_supported` flag, which will be set to true for all db mapped paths.
+
 ## 3.2 DB Changes
 
 No DB schema change required.
@@ -656,6 +697,53 @@ No REST APIs are added/modified.
 ### 3.6.4 gNMI Support
 
 No new APIs are added/modified by the infrastructure.
+
+### 3.6.5 gNOI Support
+
+A new gNOI API **GetSubscribePreferences** will be introduced to return subscribe capabilities
+and preferences for one or more paths.
+This will be defined in a new service `Debug`, in protobuf file `sonic_debug.proto`.
+More APIs to get/set server debug information can be added here in future.
+Following is the draft proto file.
+
+```protobuf
+service Debug {
+  // GetSubscribePreferences returns the subscription capability info for specific
+  // paths and their subpaths.
+  rpc GetSubscribePreferences(SubscribePreferencesReq) returns (stream SubscribePreference);
+}
+
+enum Bool {
+  NOTSET = 0;
+  TRUE   = 1;
+  FALSE  = 2;
+}
+
+// Request message for GetSubscribePreferences RPC
+message SubscribePreferencesReq {
+  // Retrieve subscribe preferences for these paths. Value should be a gNMI path string.
+  repeated string path = 1;
+  // Recursively retrieve subscribe preferences for all the subpaths.
+  bool include_subpaths = 2;
+  // Selects paths based on on_change capability. All paths will be selected
+  // if this property is not set or is Bool.NOTSET.
+  Bool on_change_supported = 3;
+}
+
+// SubscribePreferences holds subscription preference information for a path.
+message SubscribePreference {
+  // Resource path, in gNMI path string syntax.
+  string path = 1;
+  // Indicates if ON_CHANGE subscription supported for this path.
+  bool on_change_supported = 2;
+  // Indicates if ON_CHANGE is the preferred subscription mode for this path.
+  bool on_change_preferred = 3;
+  // Indicates if wildcard keys are supported for this path.
+  bool wildcard_supported = 4;
+  // Minimum SAMPLE interval supported for this path, in nanoseconds.
+  uint64 min_sample_interval = 5;
+}
+```
 
 ## 3.7 Warm Boot Support
 
@@ -795,6 +883,21 @@ ONCE subscription test cases:
 - ONCE subscription for a non-DB path, without wildcard keys
 - ONCE subscription with unknown path
 
+GetSubscribePreferences gNOI API:
+
+- Get preferences for a container path that supports ON_CHANGE and all its subpaths also support ON_CHANGE
+- Get preferences for a container path that supports ON_CHANGE but some of its child paths do not
+- Get preferences for a path that do not support ON_CHANGE
+- Get preferences for a leaf path (with and without ON_CHANGE support)
+- Get preferences for multiple paths
+- Get preferences with include_subpaths=true
+- Get preferences with subscribe_supported filter
+- Get preferences for a non-db path
+- Get preferences without wildcard keys and without module prefexes
+- Check error response for an invalid path
+- Send reuest and close the client stream immediately (manual verification of server logs)
+- Send reuest and close the channel immediately (manual verification of server logs)
+
 ## 10.2 UT with Spytest
 
 Spytest module `apis.yang.utils.gnmi` provides APIs to connect, subscribe and verify notifications.
@@ -907,9 +1010,39 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
     -query openconfig-interfaces:interfaces/interface[name=*]/config,openconfig-acl:acl/acl-sets
 ```
 
-## 10.4 Supported YANG Paths
+## 10.4 UT with gnoi_client tool
 
-Please refer to [Subscribe YANG Path](https://github.com/BRCM-SONIC/sonic_doc_private/blob/master/manageability/mgmt-framework/Telemetry_Subscribe_Paths.md) guide.
+gnoi_cli tool can be used for quick verification of the GetSubscribePreferences gNOI API.
+It will be available in the **telemetry** container.
+It can also be obtained from the build server `sonic-buildimage/src/sonic-telemetry/build/bin/gnoi_client` directory.
+Fix examples:
+
+1\) Get preferences for one or more paths
+
+```
+docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface[name=*]/state
+
+docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface[name=*]/state \
+    /openconfig-acl:acl
+```
+
+2\) Get preferences for subpaths also (use subpaths=true option)
+
+```
+docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface[name=*]/state \
+    subpaths=true
+```
+
+3\) Get preferences for ON_CHANGE supported/not supported paths only (use onchange=true/false option)
+
+```
+docker exec telemetry gnoi_client -insecure -module Debug -rpc GetSubscribePrefs \
+    /openconfig-interfaces:interfaces/interface[name=*]/state \
+    subpaths=true onchange=true
+```
 
 # 11 Internal Design Information
 
