@@ -1,7 +1,7 @@
 # Feature Name
 DHCP Relay Enhancements.
 # High Level Design Document
-#### Rev 1.1
+#### Rev 1.2
 
 # Table of Contents
   * [List of Tables](#list-of-tables)
@@ -41,6 +41,7 @@ DHCP Relay Enhancements.
       * [3.1.10 Handling DHCPv4 packets with relay agent options](#3110-handling-agent-options)
       * [3.1.11 Server Identifier override sub-option](#3111-server-override)
       * [3.1.12 Subinterfaces](#3112-subinterfaces)
+      * [3.1.13 Option 82 circuit-id format](#3113-circuit-id)
     * [3.2 DB Changes](#32-db-changes)
       * [3.2.1 CONFIG DB](#321-config-db)
       * [3.2.2 APP DB](#322-app-db)
@@ -83,6 +84,7 @@ DHCP Relay Enhancements.
 | 0.6 | 12/28/2020   |   Santosh Doke   | Added support for L3 subinterfaces. |
 | 1.0 | 4/1/2021   |   Santosh Doke   | Redesign DHCP relay implementation to support 4K L3 interfaces. |
 | 1.1 | 9/16/2021  |   Santosh Doke   | Updated the OC yang tree. |
+| 1.2 | 12/15/2021  |   Santosh Doke   | Added support for circuit-id formats. |
 ||
 &nbsp;
 # About this Manual
@@ -128,6 +130,7 @@ DHCP relay is used to forward DHCP packets between client and server when they a
 16. Support Virtual subnet selection (VSS) options 151/152 for DHCPv4, and VSS option 68 for DHCPv6, as per RFC 6607.
 17. Support relaying of DHCPv4/DHCPv6 packets when client and server are in different VRFs.
 18. Support DHCPv4/DHCPv6 relay over L3 subinterfaces. Unless otherwise specified, all existing DHCPv4/DHCPv6 functional requirements are supported on L3 subinterfaces.
+19. Support configuration of DHCP relay option 82 circuit-id format per L3 interface.
 
 
 ### 1.1.2 Configuration and Management Requirements
@@ -141,6 +144,7 @@ DHCP relay is used to forward DHCP packets between client and server when they a
 8. Provide configuration option to specify forwarding behavior  of DHCPv4 packets that already contain relay agent options.
 9. All configuration changes must be applied with out restarting the DHCP relay docker.
 10. Extend Click/KLISH configuration and show commands to support DHCPv4/DHCPv6 relay on L3 subinterfaces.
+11. Provide per interface configuration option to include hostname/interface name in DHCP relay option 82 circuit-id.
 
 ### 1.1.3 Scalability Requirements
 #### 1.1.3.1 New Scalability Requirements
@@ -722,6 +726,30 @@ show ip dhcp-relay brief
 
 ```
 
+### 3.1.13 Option 82 Circuit-Id format
+
+By default, the DHCP Relay agent encodes Option 82 Circuit-Id suboption based on the interface name on which the DHCP client packet is received. The Circuit-Id is used to relay the DHCP server response packet back to the right client interface. DHCP server may use the Circuit-ID for assigning IP and other parameters.
+
+The following format types are supported for Circuit-Id:
+
+* `%p` - name of the interface on which request was received, for example: Vlan100. 
+* `%h:%p` - hostname of the switch followed by interface name.
+* `%i` - name of the physical interface on which request was received, for example: Ethernet10. This option is useful to identify physical interface when multiple clients are connected in a VLAN. This will help DHCP server to allocate lease based on the client interface. If VLAN is used in circuit-id, then all clients will have same circuit-id. 
+
+The default format type is `%p`. The format types can be configured per-client interface. The option 82 is applicable to DHCPv4 packets only.
+
+```
+# DHCP Option 82 - circuit id format examples
+
+Agent-Information Option 82, length 28: 
+  Circuit-ID SubOption 1, length 7: "Vlan100"
+  Remote-ID SubOption 2, length 17: 52:54:00:c1:65:6b
+
+Agent-Information Option 82, length 43: 
+  Circuit-ID SubOption 1, length 22: "sonic-acc-sw-01:Vlan100"
+  Remote-ID SubOption 2, length 17: 52:54:00:c1:65:6b
+```
+
 ## 3.2 DB Changes
 ### 3.2.1 CONFIG DB
 To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table is modified to add a new key-value pair where the value is a comma separated list of ipv6-dhcp-relay-addresses.
@@ -731,6 +759,7 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
         "dhcp_servers": ["31.1.0.2", "2.2.2.3", "11.19.0.144"],
         "dhcp_server_vrf": "VrfRed",
         "dhcp_relay_policy_action: "append",
+        "dhcp_relay_circuit_id_format: "%p",
         "dhcpv6_servers": ["2001::2", "3366::1"],
         "dhcpv6_server_vrf": "VrfBlue",
         "dhcpv6_relay_vrf_select": "enable"
@@ -745,6 +774,7 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
             "dhcp_server_vrf": "VrfRed",
             "dhcp_relay_vrf_select": "enable",
             "dhcp_relay_policy_action: "replace",
+            "dhcp_relay_circuit_id_format": "%h:%p",
             "members": [
                 "Ethernet8"
             ],
@@ -773,6 +803,8 @@ To support a list of IPv6 DHCP Relay addresses on an interface, INTERFACE table 
 12) "Loopback0"
 13) "dhcp_relay_policy_action"
 14) "append"
+15) "dhcp_relay_circuit_id_format"
+16) "%h:%p"
 
 Schema looks like this:
 ; key                      = INTERFACE|interface
@@ -926,16 +958,14 @@ config interface ip dhcp-relay remove [OPTIONS] <interface_name>
 - The above command adds or removes source interface selection on the given interface. Only one interface can be specified as the source interface. To update the existing source interface, a new interface needs to be added. If the link-selection option is enabled, the source interface cannot be removed. The link-selection must be disabled before removing the source interface configuration.
 
 ```
-Usage: config interface ip dhcp-relay src-intf add [OPTIONS] <interface_name>
-                                                   <src_intf>
+Usage: config interface ip dhcp-relay src-intf add [OPTIONS] <interface_name> <src_intf>
 
   Set DHCP relay source interface
 
 Options:
   -?, -h, --help  Show this message and exit.
 
-Usage: config interface ip dhcp-relay src-intf remove [OPTIONS]
-                                                      <interface_name>
+Usage: config interface ip dhcp-relay src-intf remove [OPTIONS] <interface_name>
 
   Remove DHCP relay source interface
 
@@ -948,9 +978,7 @@ Options:
 - The above command sets the maximum hop count value on the given interface. Use 'add' option to configure a non-default value. Use 'remove' option to reset the hop count to default value. The 'add' option can also be used to update currently configured value. The range for hop count is 1 to 16. The default value is 10.
 
 ```
-Usage: config interface ip dhcp-relay max-hop-count add [OPTIONS]
-                                                        <interface_name>
-                                                        <max_hop_count>
+Usage: config interface ip dhcp-relay max-hop-count add [OPTIONS] <interface_name> <max_hop_count>
 
   Set DHCP relay max hop count
 
@@ -958,8 +986,7 @@ Options:
   -?, -h, --help  Show this message and exit.
 
 
-Usage: config interface ip dhcp-relay max-hop-count remove [OPTIONS] 
-                                                           <interface_name>
+Usage: config interface ip dhcp-relay max-hop-count remove [OPTIONS] <interface_name>
 
   Reset DHCP relay max hop count
 
@@ -973,16 +1000,14 @@ Options:
 - The above command adds or removes link-selection sub option on the given interface. The sub option is disabled by default. The source interface must be configured before enabling link-selection sub option. If the source interface is not configured, the link-select command fails with error message.
 
 ```
-Usage: config interface ip dhcp-relay link-select add [OPTIONS]
-                                                      <interface_name>
+Usage: config interface ip dhcp-relay link-select add [OPTIONS] <interface_name>
 
   Enable DHCP relay link selection suboption
 
 Options:
   -?, -h, --help  Show this message and exit.
 
-Usage: config interface ip dhcp-relay link-select remove [OPTIONS]
-                                                         <interface_name>
+Usage: config interface ip dhcp-relay link-select remove [OPTIONS] <interface_name>
 
   Disable DHCP relay link selection suboption
 
@@ -996,16 +1021,14 @@ Options:
 - The above command enables or disables VRF selection sub option (VSS) on the given interface. The sub option is disabled by default. If the interface belongs to default/global VRF, the sub option is not added to the relayed packet.
 
 ```
-Usage: config interface ip dhcp-relay vrf-select add [OPTIONS]
-                                                      <interface_name>
+Usage: config interface ip dhcp-relay vrf-select add [OPTIONS] <interface_name>
 
   Enable DHCP relay VRF selection suboption 151
 
 Options:
   -?, -h, --help  Show this message and exit.
 
-Usage: config interface ip dhcp-relay vrf-select remove [OPTIONS]
-                                                         <interface_name>
+Usage: config interface ip dhcp-relay vrf-select remove [OPTIONS] <interface_name>
 
   Disable DHCP relay VRF selection suboption 151
 
@@ -1020,7 +1043,7 @@ Options:
 - The above command controls handling of relay agent options on the given interface. The default is to discard incoming packet with agent options. This command is applicable for DHCPv4 packets only.
 
 ```
-Usage: config interface ip dhcp-relay policy-action <interface_name> [discard|append|replace]                                                     <interface_name>
+Usage: config interface ip dhcp-relay policy-action <interface_name> [discard|append|replace]
 
   Configure the policy for handling of DHCPv4 relay options
 
@@ -1059,21 +1082,34 @@ config interface ipv6 dhcp-relay remove [OPTIONS] <interface_name>
 - The above command adds or removes source interface selection on the given interface. Only one interface can be specified as the source interface. To update the existing source interface, a new interface needs to be added.
 
 ```
-Usage: config interface ipv6 dhcp-relay src-intf add [OPTIONS] <interface_name>
-                                                               <src_intf>
+Usage: config interface ipv6 dhcp-relay src-intf add [OPTIONS] <interface_name> <src_intf>
 
   Set DHCP relay source interface
 
 Options:
   -?, -h, --help  Show this message and exit.
 
-Usage: config interface ipv6 dhcp-relay src-intf remove [OPTIONS]
-                                                        <interface_name>
+Usage: config interface ipv6 dhcp-relay src-intf remove [OPTIONS]  <interface_name>
 
   Remove DHCP relay source interface
 
 Options:
   -?, -h, --help  Show this message and exit.
+```
+
+
+**config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p|%i]**
+
+- The above command defines the encoding of relay agent option 82 circuit-id sub-option on the given interface. The default is "%p". This command is applicable for DHCPv4 packets only.
+
+```
+Usage: config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p|%i]                                                    
+
+  Configure the circuit-id format of DHCPv4 relay option 802
+
+Options:
+  -?, -h, --help  Show this message and exit.
+
 ```
 
 #### 3.6.2.2 Show Commands
@@ -1200,6 +1236,7 @@ Link Select: enable
 VRF Select: enable
 Max Hop Count: 12
 Policy Action: discard
+Circuit-id Format: %p
 
 # show ip dhcp-relay detailed Vlan400
 Server Address: 114.0.0.2
@@ -1209,6 +1246,7 @@ Link Select: disable
 VRF Select: disable
 Max Hop Count: 10
 Policy Action: append
+Circuit-id Format: %h:%p
 
 # show ip dhcp detailed Vlan100
 Usage: show ip dhcp detailed [OPTIONS] <interface_name>
@@ -1280,12 +1318,27 @@ Get DHCP relay statistics on the given interface:
 # curl -X GET "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcpv6/interfaces/interface=Ethernet0/state/counters" -H "accept: application/yang-data+json"
 ```
 
+Configure DHCP relay Option 82 CircuitId format on the given interface:
+```
+#curl -X PUT "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcp/interfaces/interface=Ethernet0/agent-information-option/config/circuit-id" -H "accept: */*" -H "Content-Type: application/yang-data+json" -d "{\"circuit-id\":\"%h:%p\"}"
+```
+
+Reset DHCP relay Option 82 CircuitId format on the given interface:
+```
+#curl -X DELETE "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcp/interfaces/interface=Ethernet0/agent-information-option/config/circuit-id" -H "accept: */*" -H "Content-Type: application/yang-data+json"
+```
+
+Get DHCP relay Option 82 CircuitId format on the given interface:
+```
+#curl -X GET "https://<switch_ip>/restconf/data/openconfig-relay-agent:relay-agent/dhcp/interfaces/interface=Ethernet0/agent-information-option/config/circuit-id" -H "accept: */*" -H "Content-Type: application/yang-data+json"
+```
+
 For list of all REST APIS, go to "https://<switch_ip>/ui". The webserver provides information about all the REST URLs, REST Data, return codes and interactive support to execute REST queries.
 
 The following REST APIs are not supported.  For the detailed list of deviations and unsupported objects, refer to extensions YANG model for DHCP relay. 
 
   * Enabling/Disabling relay agent globally for all interfaces
-  * Configuration of Circuit ID and Remote ID
+  * Configuration of Remote ID
 
 ```
 
@@ -1356,14 +1409,14 @@ The following REST APIs are not supported.  For the detailed list of deviations 
 +    |           |  +--rw oc-relay-ext:link-select?   mode
 -    |           |  +--rw remote-id?                  string
 -    |           |  +--rw enable?                     boolean
--    |           |  +--rw circuit-id?                 string
+     |           |  +--rw circuit-id?                 string
      |           +--ro state
 +    |              +--ro oc-relay-ext:vrf-select?    mode
 +    |              +--ro oc-relay-ext:link-select?   mode
 -    |              +--ro enable?                     boolean
--    |              +--ro circuit-id?                 string
+     |              +--ro circuit-id?                 string
 -    |              +--ro remote-id?                  string
--    |              +--ro sent-circuit-id?            string
+     |              +--ro sent-circuit-id?            string
 -    |              +--ro sent-remote-id?             string
      +--rw dhcpv6
         +--rw config
@@ -1502,6 +1555,16 @@ The below command controls handling of relay agent options on the given interfac
 sonic(conf-if-Vlan100)# ip dhcp-relay policy-action [discard|append|replace]
 ```
 
+The below command configures circuit-id format of relay agent options on the given interface. The default is "%p". This command is applicable for DHCPv4 packets only.
+
+```
+# Set the circuit-id format in option 82 
+sonic(conf-if-Vlan100)# ip dhcp-relay circuit-id [%p|%p:%h]
+
+# Reset the circuit-id format in option 82 to default
+sonic(conf-if-Vlan100)# no ip dhcp-relay circuit-id
+```
+
 **IPv6 commands:**
 
 The below command adds or removes IPv6 DHCP Relay addresses on the given interface. Up to 4 addresses can be specified at a time (separated by space).
@@ -1591,6 +1654,7 @@ Link Select: enable
 VRF Select: enable
 Max Hop Count: 10
 Policy Action: Discard
+Circuit-id Format: %h:%p
 ```
 **IPv6 commands:**
 
@@ -1732,6 +1796,7 @@ Up to 4 DHCP relay addresses can be configured on each L3 interface in the syste
 36. Verify enabling DHCPv4/DHCPv6 relay functionality on 4K L3 interfaces. 
 37. Verify DHCPv4/DHCPv6 statistics on 4K L3 interfaces.
 38. Verify config-reload, fast-reboot, warm-reboot operations with DHCPv4/DHCPv6 relay enabled on 4K L3 interfaces.
+39. Verify configuring different circuit-id formats and ensure that relayed DHCPv4 packet has proper encoding of circuit-id sub-option as per the format.
 
 # 10 Future enhancements
 
