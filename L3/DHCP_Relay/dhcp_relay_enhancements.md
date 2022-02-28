@@ -734,6 +734,7 @@ The following format types are supported for Circuit-Id:
 
 * `%p` - name of the interface on which request was received, for example: Vlan100. 
 * `%h:%p` - hostname of the switch followed by interface name.
+* `%i` - name of the physical interface on which request was received, for example: Ethernet10. This option is useful to identify physical interface when multiple clients are connected in a VLAN. This will help DHCP server to allocate lease based on the client interface. If VLAN is used in circuit-id, then all clients will have same circuit-id. 
 
 The default format type is `%p`. The format types can be configured per-client interface. The option 82 is applicable to DHCPv4 packets only.
 
@@ -1097,12 +1098,12 @@ Options:
 ```
 
 
-**config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p]**
+**config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p|%i]**
 
 - The above command defines the encoding of relay agent option 82 circuit-id sub-option on the given interface. The default is "%p". This command is applicable for DHCPv4 packets only.
 
 ```
-Usage: config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p]                                                    
+Usage: config interface ip dhcp-relay circuit-id <interface_name> [%p|%h:%p|%i]                                                    
 
   Configure the circuit-id format of DHCPv4 relay option 802
 
