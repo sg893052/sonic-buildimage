@@ -235,8 +235,8 @@ A new gNOI API will be introduced to return subscribe capabilities and preferenc
 It should accept following inputs:
 
 - One or more subscribe paths (mandatory)
-- A flag to indicate if capabilties of subpaths are also to be returned (optional)
-- Include ON_CHANGE supported only or ON_CHANGE not-supported only paths (optional)
+- A flag to include preferences for all subpaths too (optional)
+- Filter by ON_CHANGE supported/unsupported capability (optional)
 
 Response should be a stream of following data for every path requested.
 
@@ -702,14 +702,13 @@ No new APIs are added/modified by the infrastructure.
 
 A new gNOI API **GetSubscribePreferences** will be introduced to return subscribe capabilities
 and preferences for one or more paths.
-This will be defined in a new service `Debug`, in protobuf file `sonic_debug.proto`.
+This will be defined in a new service `Debug`, in a new protobuf file `sonic_debug.proto`.
 More APIs to get/set server debug information can be added here in future.
 Following is the draft proto file.
 
 ```protobuf
 service Debug {
-  // GetSubscribePreferences returns the subscription capability info for specific
-  // paths and their subpaths.
+  // Get subscription capability info for specific paths and their subpaths.
   rpc GetSubscribePreferences(SubscribePreferencesReq) returns (stream SubscribePreference);
 }
 
@@ -721,27 +720,18 @@ enum Bool {
 
 // Request message for GetSubscribePreferences RPC
 message SubscribePreferencesReq {
-  // Retrieve subscribe preferences for these paths. Value should be a gNMI path string.
-  repeated string path = 1;
-  // Recursively retrieve subscribe preferences for all the subpaths.
-  bool include_subpaths = 2;
-  // Selects paths based on on_change capability. All paths will be selected
-  // if this property is not set or is Bool.NOTSET.
-  Bool on_change_supported = 3;
+  repeated string path = 1;     // Yang paths as gNMI path strings
+  bool include_subpaths = 2;    // Get preferences for all subpaths also
+  Bool on_change_supported = 3; // Filter by on_change supported/unsupported
 }
 
-// SubscribePreferences holds subscription preference information for a path.
+// SubscribePreference holds subscription preference information for a path.
 message SubscribePreference {
-  // Resource path, in gNMI path string syntax.
-  string path = 1;
-  // Indicates if ON_CHANGE subscription supported for this path.
-  bool on_change_supported = 2;
-  // Indicates if ON_CHANGE is the preferred subscription mode for this path.
-  bool on_change_preferred = 3;
-  // Indicates if wildcard keys are supported for this path.
-  bool wildcard_supported = 4;
-  // Minimum SAMPLE interval supported for this path, in nanoseconds.
-  uint64 min_sample_interval = 5;
+  string path = 1;                // A yang path, in gNMI path string syntax
+  bool on_change_supported = 2;   // Whether on_change supported
+  bool on_change_preferred = 3;   // Whether target_defined maps to on_change
+  bool wildcard_supported = 4;    // Whether wildcard keys supported
+  uint64 min_sample_interval = 5; // Minimum sample interval, in nanoseconds
 }
 ```
 
@@ -891,12 +881,12 @@ GetSubscribePreferences gNOI API:
 - Get preferences for a leaf path (with and without ON_CHANGE support)
 - Get preferences for multiple paths
 - Get preferences with include_subpaths=true
-- Get preferences with subscribe_supported filter
+- Get preferences with on_change_supported filter (both TRUE and FALSE)
 - Get preferences for a non-db path
-- Get preferences without wildcard keys and without module prefexes
+- Get preferences without wildcard keys and without module prefixes
 - Check error response for an invalid path
-- Send reuest and close the client stream immediately (manual verification of server logs)
-- Send reuest and close the channel immediately (manual verification of server logs)
+- Send request and close the client stream immediately (manual verification of server logs)
+- Send request and close the channel immediately (manual verification of server logs)
 
 ## 10.2 UT with Spytest
 
@@ -1014,7 +1004,7 @@ gnmi_cli -insecure -logtostderr -target OC_YANG -address localhost:8080 \
 
 gnoi_client tool can be used for quick verification of the gNOI APIs supported by the telemetry server.
 It will be available in the **telemetry** container.
-It can also be obtained from the build server `sonic-buildimage/src/sonic-telemetry/build/bin/gnoi_client` directory.
+It can also be obtained from the build server `sonic-buildimage/src/sonic-telemetry/build/bin` directory.
 
 Following are the few examples of GetSubscribePreferences API calls.
 
