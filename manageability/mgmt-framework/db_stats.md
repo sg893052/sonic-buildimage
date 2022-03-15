@@ -7,6 +7,7 @@ Management Framework DB Layer Statistics
 | Rev |     Date    |       Author       | Change Description                |
 |:---:|:-----------:|:------------------:|-----------------------------------|
 | 0.1 | 02/18/2022  |   Arun Barboza     | Initial version                   |
+| 0.2 | 03/14/2022  |   Sachin Holla     | Telemetry server stats            |
 
 # Scope
 This document describes the high level design of obtaining the [Management Framework](#management-framework) DB layer statistics.
@@ -83,8 +84,9 @@ A new table "TRANSLIB_DB" is introduced in ConfigDB. It is not expected to be us
 - Send SIGUSR2 (or the re-configure signal) to the rest_server to reconfigure
 - Reconfiguration, with a detectable change, clears the stats.
 - Perform the operations which need to have their DB usage instrumented.
-- Statistics are viewable using the GET method on https://ipaddress/debug/stats.
+- Statistics from REST server are viewable using the GET method on https://ipaddress/debug/stats.
 - Statistics are cleared using the DELETE method.
+- Statistics from Telemetry server can be managed using `GetStats` and `ClearStats` gRPC APIs from the "Debug" gNOI service
 
 # Examples
 
@@ -200,6 +202,109 @@ DB APIs Globals: New: 81 Delete: 81 PeakNew: 9 ZeroGetHits 69
 ()@: ~ $
 
 ```
+
+## Collecting Statistics from Telemetry Server
+
+`gnoi_client` program from the telemetry container can be used for dumping the statistics on any sonic switch.
+This program will also available on the build servers at `sonic-telemetry/build/bin` directory.
+Output will be a JSON value as shown below.
+
+```text
+~ # docker exec telemetry gnoi_client -insecure -username admin -password YourPaSsWoRd -module Debug -rpc GetStats
+Unable to connect to syslogD
+{
+  "cvl-stats": {
+    "Hits": 0,
+    "Time": 0,
+    "Peak": 0
+  },
+  "db-stats": {
+    "new-db": 24,
+    "delete-db": 13,
+    "peak-open": 20,
+    "new-time": 25260500,
+    "peak-new-time": 13473300,
+    "zero-get-ops-db": 6,
+    "dbs": [
+      {
+        "name": "APPL_DB",
+        "all-tables": {
+          "hits": 582,
+          "total-time": 204580500,
+          "peak-time": 1316600,
+          "get-entry-hits": 372,
+          "get-keys-hits": 106,
+          "get-keys-pattern-hits": 210,
+          "get-entry-time": 128736800,
+          "get-keys-time": 39683300,
+          "get-keys-pattern-time": 75843700,
+          "get-entry-peak-time": 1316600,
+          "get-keys-peak-time": 1257000,
+          "get-keys-pattern-peak-time": 1257000
+        },
+        "all-maps": {}
+      },
+      {
+        "name": "COUNTERS_DB",
+        "all-tables": {
+          "hits": 322,
+          "total-time": 98935000,
+          "peak-time": 9217000,
+          "get-entry-hits": 322,
+          "get-entry-time": 98935000,
+          "get-entry-peak-time": 9217000
+        },
+        "all-maps": {
+          "hits": 206,
+          "total-time": 103472600,
+          "peak-time": 1912100,
+          "get-map-all-hits": 206,
+          "get-map-all-time": 103472600,
+          "get-map-all-peak-time": 1912100
+        }
+      },
+      {
+        "name": "CONFIG_DB",
+        "all-tables": {
+          "hits": 909,
+          "total-time": 336121300,
+          "peak-time": 12203100,
+          "get-entry-hits": 589,
+          "get-keys-hits": 216,
+          "get-keys-pattern-hits": 320,
+          "get-entry-time": 203859100,
+          "get-keys-time": 84894200,
+          "get-keys-pattern-time": 132262200,
+          "get-entry-peak-time": 12203100,
+          "get-keys-peak-time": 1191200,
+          "get-keys-pattern-peak-time": 5866800
+        },
+        "all-maps": {}
+      },
+      {
+        "name": "STATE_DB",
+        "all-tables": {
+          "hits": 106,
+          "total-time": 35465800,
+          "peak-time": 1170500,
+          "get-entry-hits": 103,
+          "get-keys-hits": 3,
+          "get-keys-pattern-hits": 3,
+          "get-entry-time": 33627900,
+          "get-keys-time": 1837900,
+          "get-keys-pattern-time": 1837900,
+          "get-entry-peak-time": 1170500,
+          "get-keys-peak-time": 840600,
+          "get-keys-pattern-peak-time": 840600
+        },
+        "all-maps": {}
+      }
+    ]
+  }
+}
+```
+
+Note: Time stats and table stats can be enabled similar to the REST server examples shown in previous sections.
 
 # Limitations
 
