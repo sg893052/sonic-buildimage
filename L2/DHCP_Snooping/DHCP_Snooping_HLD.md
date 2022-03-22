@@ -880,7 +880,10 @@ The DHCP Snooping binding DB is updated to the APP_DB. Post a warm boot, this ta
 Go back to [Beginning of the document](#dhcp-snooping).
 # 7 Scalability
 
-A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). For each pool by IP version type, DHCP Snooping feature allows 1K static entries and 3K dynamic entries. Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
+1. A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). For each pool by IP version type, DHCP Snooping feature allows 1K static entries and 3K dynamic entries. Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
+
+2. DHCP snooping can handle 100 pps on Campus builds. On Enterprise builds, it can handle 300 pps. This limit is per version type (DHCPv4 & DHCPv6). These include all DHCP packet types (DISCOVER, OFFER, etc. in case of DHCPv4 for example) received in a second.
+The number of clients that can successfully complete the exchange per second will be less than the limit as client and server exchange multiple DHCP packets.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 
