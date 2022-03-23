@@ -882,8 +882,7 @@ Go back to [Beginning of the document](#dhcp-snooping).
 
 1. A total of 8K clients are supported (4K for DHCPv4 and 4K for DHCPv6). For each pool by IP version type, DHCP Snooping feature allows 1K static entries and 3K dynamic entries. Beyond the limit, the DHCP Snooping DB is not updated and the DHCP packets are dropped.
 
-2. DHCP snooping can handle 100 pps on Campus builds. On Enterprise builds, it can handle 300 pps. This limit is per version type (DHCPv4 & DHCPv6). These include all DHCP packet types (DISCOVER, OFFER, etc. in case of DHCPv4 for example) received in a second.
-The number of clients that can successfully complete the exchange per second will be less than the limit as client and server exchange multiple DHCP packets.
+2. DHCP COPP rule is configured to rate limit DHCP packets in hardware. This is done to avoid flood of DHCP packets from impacting the CPU/Kernel. The default rate limit depends on the platform and can be changed using COPP CLI commands. The default value on low end platforms is 100 pps, and 300 pps for other platforms. There are different COPP rules for DHCPv4 and DHCPv6 packets, so the rate limit value is applied to DHCPv4 and DHCPv6 packets independently. All DHCP packet types (DISCOVER,OFFER,REQUEST,ACK etc) are included in the PPS limit. This restricts the number of DHCP clients that can get a DHCP lease within a second, as DHCP protocol involves multiple packet exchange. In real world scenarios, it is unlikely that 100s of clients would request for a DHCP lease within a second. And even if such a scenario exists, the DHCP COPP can be modified to have larger rate limit value.
 
 Go back to [Beginning of the document](#dhcp-snooping).
 
