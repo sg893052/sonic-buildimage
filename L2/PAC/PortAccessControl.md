@@ -123,6 +123,7 @@ High level design document version 0.14
 | 0.12  | 10/08/2021 | Prabhu Sreenivasan, Amitabha Sen | Updated section 3.6.1 with REST URL details. Updated section 3.2.5 PAC_CLIENT_HISTORY_TABLE schema.  |
 | 0.13  | 01/06/2022 | Kamlesh Agrawal | Removed references to Downloadable ACLs, added few clarifications as per QA observations |
 | 0.14  | 01/06/2022 | Kamlesh Agrawal | Updated few limitations related to Monitor/Open VLANs, hostapd, etc. Added information on new command "clear authentication history" |
+| 0.15  | 03/28/2022 | Kamlesh Agrawal | Updated Sections 1.1, 1.3.1 and 2.2.3|
 
 # About this Manual
 This document describes the design details of the Port Access Control feature in SONiC. Port Access Control (PAC) feature provides validation of client and user credentials to prevent unauthorized access to a specific switch port.
@@ -154,7 +155,7 @@ Port Access Control (PAC) feature provides validation of client and user credent
 
 Local Area Networks (LANs) are often deployed in environments that permit unauthorized devices to be physically attached to the LAN infrastructure, or permit unauthorized users to attempt to access the LAN through equipment already attached. In such environments, it may be desirable to restrict access to the services offered by the LAN to those users and devices (clients) that are permitted to use those services. PAC provides means for authenticating and authorizing devices attached to a LAN port that has point-to-point connection characteristics and of preventing access to that port in cases in which the authentication and authorization process fails.      
 
-PAC uses authentication methods like 802.1x and MAB for client authentication. These methods in turn use RADIUS for client credential verification and receive the authorization attributes like VLANs, ACLs etc.. for the authenticated clients.
+PAC uses authentication methods like 802.1x and MAB for client authentication. These methods in turn use RADIUS for client credential verification and receive the authorization attributes like VLANs, ACLs etc.. for the authenticated clients. The authentication session needs to be initiated by the client. 
 
 ### 1.1.1 Dot1x 
 
@@ -191,7 +192,7 @@ The following are the requirements for Port Access Control feature:
      - Guest VLAN
      - Monitor VLAN
      - Open VLAN
-14. SONiC shall support Voice VLAN to authorize Voice clients.
+14. SONiC shall support Voice VLAN to authorize Voice clients. VLAN used for Voice VLAN needs to be created statically on the switch.
 15. The following PAC port modes are supported on SONiC: 
     - Auto : Authentication is enforced on the port. Traffic is only allowed for authenticated clients
     - Force Authorized : Authentication is not enforced on the port and all traffic is allowed.
@@ -298,7 +299,7 @@ Once a client on an access controlled port is authenticated, the external RADIUS
 
 The switch does not display RADIUS specified DACL’s in the running configuration. The ACL however shows up in the user interface show commands. The ACL configuration is only applied on the client-connected-port for the duration of the authenticated client session and is not persistent. The ACLs sent by RADIUS are in extended ACL syntax style and are validated just like user created ACLs. The Dynamic ACLs on the switch are managed by the PAC application and hence cannot be deleted by the user.   
 
-Generally, any static ACLs (created by user) applied on the port are operationally removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However if Open Authentication is configured on the port, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. In situations where the client IP address changes, PAC gets to know about it via dhcp-snooping binding tables and the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.   
+Generally, any static ACLs (created by user) applied on the port are operationally removed prior to applying the dynamic ACL on the port. Once the application created dynamic ACL is removed/deleted, the static ACLs is re-applied on the port. Essentially, static ACLs and dynamic ACLs are mutually exclusive. However if Open Authentication is configured on the port, the static ACLs and dynamic ACLs co-exist on the port. In such situations, the static ACLs have lower priority than the dynamic ACLs attached on the port. In situations where the client IP address changes, PAC gets to know about it via dhcp-snooping binding tables and the application created ACLs are automatically updated to accommodate the operational change like a changed client IP address.  If the client IP address change is not known to dhcp-snooping (and to PAC)), traffic flow for the client may not be in sync with the ACLs.
 
 
 ### 2.2.4 Named ACLs
