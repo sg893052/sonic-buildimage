@@ -744,7 +744,7 @@ N/A
 ##### Activating/De-activating a specific TAM feature
 
 * Method : PATCH
-* URI : /restconf/data/openconfig-tam:tam/features/feature={feature-ref}
+* URI : /restconf/data/openconfig-tam:tam/features
 * Data format
 ```json
 {
