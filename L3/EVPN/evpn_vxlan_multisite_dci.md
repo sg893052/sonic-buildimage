@@ -1072,24 +1072,22 @@ Existing debug commands available for BGP/EVPN to be used for multisite as well.
 
 ### 3.5.6 REST API Support
 
-The following are the REST URIs for configuring VxLAN external-IP and Downstream-assigned VNI:
-    
+The following are the REST URIs for configuring BGP fabric-external neighbor, VxLAN external-IP, and VxLAN downstream-assigned VNI:
+
+BGP Fabric-external neighbor:
+curl -v -k -X PATCH -H "Content-type: application/yang-data+json" "https://<switch>/restconf/data/openconfig-network-instance:network-instances/network-instance=default/protocols/protocol=BGP,bgp/bgp/neighbors/neighbor=100.1.1.1/afi-safis/afi-safi=L2VPN_EVPN/config/fabric-external" -d "{\"openconfig-network-instance:fabric-external\": true}"
+
+	
 VxLAN External IP:
-
-curl -v -H "Content-type: application/yang-data+json" -X PATCH https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k -d "{ \"external-ip\": \"12.12.12.13\" }" -k
-
-curl -v -X DELETE -H "Content-type: application/yang-data+json" https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
-
-curl -v -H "Content-type: application/yang-data+json" -X GET https://10.175.126.29:2000/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
+curl -v -H "Content-type: application/yang-data+json" -X PATCH https://<switch>/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k -d "{ \"external-ip\": \"12.12.12.13\" }" -k
+curl -v -X DELETE -H "Content-type: application/yang-data+json" https://<switch>/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
+curl -v -H "Content-type: application/yang-data+json" -X GET https://<switch>:2000/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
 
 
 For Downstream VNI, only SONiC yangs are implemented. 
-
-curl -X POST "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI" -H "Content-Type: application/yang-data+json" -d "{\"sonic-vxlan:VXLAN_DOWNSTREAM_VNI_LIST\":[{\"name\":\"vtep14\",\"ipadd\":\"1.1.1.1\"}]}"     (Use 0.0.0.0 for vni-downstream external)
-
-curl -X DELETE "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST=vtep14,2.3.4.5" 
-
-curl -X GET "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST" 
+curl -X POST "https://<switch>/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI" -H "Content-Type: application/yang-data+json" -d "{\"sonic-vxlan:VXLAN_DOWNSTREAM_VNI_LIST\":[{\"name\":\"vtep14\",\"ipadd\":\"1.1.1.1\"}]}"     (Use 0.0.0.0 for vni-downstream external)
+curl -X DELETE "https://<switch>/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST=vtep14,2.3.4.5" 
+curl -X GET "https://<switch>/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST" 
 
 
 
