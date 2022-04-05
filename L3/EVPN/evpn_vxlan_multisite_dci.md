@@ -1076,20 +1076,20 @@ The following are the REST URIs for configuring VxLAN external-IP and Downstream
     
 VxLAN External IP:
 
-curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X PATCH https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k -d "{ \"external-ip\": \"12.12.12.13\" }" -k
+curl -v -H "Content-type: application/yang-data+json" -X PATCH https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k -d "{ \"external-ip\": \"12.12.12.13\" }" -k
 
-curl -v -u admin:broadcom -X DELETE -H "Content-type: application/yang-data+json" https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
+curl -v -X DELETE -H "Content-type: application/yang-data+json" https://10.59.135.245/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
 
-curl -v -u admin:broadcom -H "Content-type: application/yang-data+json" -X GET https://10.175.126.29:2000/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
+curl -v -H "Content-type: application/yang-data+json" -X GET https://10.175.126.29:2000/restconf/data/openconfig-interfaces:interfaces/interface=vtep1/openconfig-vxlan:vxlan-if/config/external-ip -k
 
 
 For Downstream VNI, only SONiC yangs are implemented. 
 
-curl -X POST "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20=" -H "Content-Type: application/yang-data+json" -d "{\"sonic-vxlan:VXLAN_DOWNSTREAM_VNI_LIST\":[{\"name\":\"vtep14\",\"ipadd\":\"1.1.1.1\"}]}"     (Use 0.0.0.0 for vni-downstream external)
+curl -X POST "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI" -H "Content-Type: application/yang-data+json" -d "{\"sonic-vxlan:VXLAN_DOWNSTREAM_VNI_LIST\":[{\"name\":\"vtep14\",\"ipadd\":\"1.1.1.1\"}]}"     (Use 0.0.0.0 for vni-downstream external)
 
-curl -X DELETE "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST=vtep14,2.3.4.5" -H "accept: */*" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+curl -X DELETE "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST=vtep14,2.3.4.5" 
 
-curl -X GET "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST" -H "accept: application/yang-data+json" -H "Authorization: Basic YWRtaW46YnJvYWRjb20="
+curl -X GET "https://10.59.135.247/restconf/data/sonic-vxlan:sonic-vxlan/VXLAN_DOWNSTREAM_VNI/VXLAN_DOWNSTREAM_VNI_LIST" 
 
 
 
