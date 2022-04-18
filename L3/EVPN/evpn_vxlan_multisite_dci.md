@@ -504,7 +504,25 @@ external_ip = ipv4 ; external IP associated with VTEP.
 
 ```
 
+**BGP_NEIGHBOR_AF**
 
+Procuder: config manager
+
+Consumer: frrcfgd/bgpd
+
+Description: Updated existing table to store multisite fabric-external neighbor type.
+
+Schema:
+```
+;Existing table
+;defines BGP neighbor address-family. Updated to store fabric-external neighbor type.
+;
+;Status: stable
+
+key =  BGP_NEIGHBOR_AF|default|BGP_NEIGHBOR|l2vpn_evpn; BGP_NEIGHBOR as a valid IPv4-address/IPv6-address/unnumbered-interface string.
+fabric_external = true  ; BGP neighbor configured as multisite fabric-external
+
+```
 
 **VXLAN_DOWNSTREAM_VNI_TUNNEL_TABLE**
 
